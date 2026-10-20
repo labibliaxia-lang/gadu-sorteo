@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import type { Profile } from "@/lib/types";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 export function Navbar() {
   const router = useRouter();
@@ -25,6 +24,7 @@ export function Navbar() {
           .select("role")
           .eq("id", u)
           .maybeSingle();
+        // Solo se muestra el botón Admin si el rol es ESTRICTAMENTE 'admin'.
         if (active) setIsAdmin(data?.role === "admin");
       } else {
         setIsAdmin(false);
@@ -59,25 +59,37 @@ export function Navbar() {
           {userId ? (
             <>
               {isAdmin && (
-                <Button variant="ghost" asChild>
-                  <Link href="/admin/sorteos">Admin</Link>
-                </Button>
+                <Link
+                  href="/admin/sorteos"
+                  className={buttonVariants({ variant: "ghost" })}
+                >
+                  Admin
+                </Link>
               )}
-              <Button variant="ghost" asChild>
-                <Link href="/mis-pagos">Mis pagos</Link>
-              </Button>
+              <Link
+                href="/mis-pagos"
+                className={buttonVariants({ variant: "ghost" })}
+              >
+                Mis pagos
+              </Link>
               <Button variant="outline" size="sm" onClick={signOut}>
                 Cerrar sesión
               </Button>
             </>
           ) : (
             <>
-              <Button variant="ghost" asChild>
-                <Link href="/login">Ingresar</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link href="/register">Registrarse</Link>
-              </Button>
+              <Link
+                href="/login"
+                className={buttonVariants({ variant: "ghost" })}
+              >
+                Ingresar
+              </Link>
+              <Link
+                href="/register"
+                className={buttonVariants({ size: "sm" })}
+              >
+                Registrarse
+              </Link>
             </>
           )}
         </nav>

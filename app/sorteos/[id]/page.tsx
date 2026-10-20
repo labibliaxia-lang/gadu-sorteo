@@ -22,6 +22,7 @@ export default async function RafflePage({
   params: { id: string };
 }) {
   const supabase = createClient();
+  const isDev = process.env.NODE_ENV === "development";
 
   const { data: raffle } = await supabase
     .from("raffles")
@@ -90,11 +91,19 @@ export default async function RafflePage({
 
       {raffle.status === "active" && (
         <section className="space-y-2">
-          <h2 className="text-xl font-semibold">Elegí tus números</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xl font-semibold">Elegí tus números</h2>
+            {isDev && (
+              <span className="rounded-full bg-yellow-500/20 px-3 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-300">
+                Modo simulación de pagos activo
+              </span>
+            )}
+          </div>
           <NumbersGrid
             raffleId={raffle.id}
             pricePerNumber={Number(raffle.price_per_number)}
             raffleStatus={raffle.status}
+            isDev={isDev}
           />
         </section>
       )}

@@ -30,12 +30,14 @@ interface NumbersGridProps {
   raffleId: string;
   pricePerNumber: number;
   raffleStatus: string;
+  isDev?: boolean;
 }
 
 export function NumbersGrid({
   raffleId,
   pricePerNumber,
   raffleStatus,
+  isDev = false,
 }: NumbersGridProps) {
   const supabase = useMemo(() => createClient(), []);
   const cols = useColumnCount();
@@ -203,6 +205,49 @@ export function NumbersGrid({
     }
   }
 
+  async function handleMockPayment() {
+    if (!userId) {
+      window.location.href = "/login";
+      return;
+    }
+    if (selected.size === 0) return;
+
+    setCheckingOut(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/mock-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          raffleId,
+          numbers: Array.from(selected).sort((a, b) => a - b),
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json.error ?? "No se pudo simular el pago.");
+        if (json.unavailable) {
+          const unavailable = new Set<number>(json.unavailable);
+          setSelected((prev) => {
+            const next = new Set(prev);
+            unavailable.forEach((n) => next.delete(n));
+            return next;
+          });
+        }
+        return;
+      }
+
+      window.location.href = "/pago/exitoso";
+    } catch {
+      setError("Error de red al simular el pago.");
+    } finally {
+      setCheckingOut(false);
+    }
+  }
+
   const isActive = raffleStatus === "active";
 
   return (
@@ -215,16 +260,33 @@ export function NumbersGrid({
             {formatPrice(totalPrice)}
           </span>
         </div>
-        <Button
-          onClick={handleCheckout}
-          disabled={selected.size === 0 || checkingOut || !isActive}
-        >
-          {checkingOut
-            ? "Preparando pago…"
-            : userId
-              ? "Reservar y pagar"
-              : "Inicia sesión para participar"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {isDev && (
+            <Button
+              onClick={handleMockPayment}
+              disabled={selected.size === 0 || checkingOut || !isActive}
+            >
+              {checkingOut
+                ? "Procesando…"
+                : userId
+                  ? "Simular Pago (Solo Dev)"
+                  : "Inicia sesión para participar"}
+            </Button>
+          )}
+          <Button
+            variant={isDev ? "outline" : "default"}
+            onClick={handleCheckout}
+            disabled={selected.size === 0 || checkingOut || !isActive}
+          >
+            {checkingOut
+              ? "Preparando pago…"
+              : userId
+                ? isDev
+                  ? "Pagar real (MP)"
+                  : "Reservar y pagar"
+                : "Inicia sesión para participar"}
+          </Button>
+        </div>
       </div>
 
       {error && (
