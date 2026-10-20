@@ -19,6 +19,7 @@ import { useTheme } from "next-themes";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { RequestAdminButton } from "@/components/RequestAdminButton";
 
 const NAV_LINKS = [
   { href: "/", label: "Inicio" },
@@ -32,6 +33,7 @@ export function Navbar() {
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [roleRequested, setRoleRequested] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
@@ -45,13 +47,17 @@ export function Navbar() {
       if (u) {
         const { data } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role, role_requested")
           .eq("id", u)
           .maybeSingle();
-        // Solo muestra Admin si el rol es estrictamente "admin".
-        if (active) setIsAdmin(data?.role === "admin");
+        if (active) {
+          // Solo muestra Admin si el rol es estrictamente "admin".
+          setIsAdmin(data?.role === "admin");
+          setRoleRequested(Boolean(data?.role_requested));
+        }
       } else {
         setIsAdmin(false);
+        setRoleRequested(false);
       }
     }
 
@@ -138,6 +144,7 @@ export function Navbar() {
                 <Ticket className="mr-1.5 h-4 w-4" />
                 Mis números
               </Link>
+              {!isAdmin && !roleRequested && <RequestAdminButton />}
               <span className="flex items-center gap-2 rounded-full border px-2 py-1 text-sm">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
                   {initial}
@@ -232,6 +239,7 @@ export function Navbar() {
                 >
                   <Ticket className="h-4 w-4" /> Mis números
                 </Link>
+                {!isAdmin && !roleRequested && <RequestAdminButton />}
                 <button
                   type="button"
                   onClick={() => {
