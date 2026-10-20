@@ -1,42 +1,33 @@
 -- =====================================================================
--- 0003 — Promover un usuario (Google) al rol de administrador
+-- 0003 — Otorgar rol 'admin' al usuario principal
 -- =====================================================================
 -- INSTRUCCIONES:
---   - Usá el email EXACTO con el que iniciaste sesión con Google en la app.
---     Podés verificarlo en: Authentication → Users.
---   - Ejecutá todo el archivo en el SQL Editor de Supabase.
+--   1. Reemplazá 'tu-email@gmail.com' por el email EXACTO de tu cuenta
+--      (el que usás para iniciar sesión con Google en la app).
+--   2. Ejecutá todo el archivo en: Supabase → SQL Editor → New query → Run.
 --
 -- SEGURIDAD:
 --   - Solo actualiza el perfil cuyo auth.users.email coincide.
---   - Si el email no existe, no se modifica NINGUNA fila.
+--   - Si el email no existe, NO modifica ninguna fila.
+--   - No toca la estructura de profiles ni las políticas RLS.
 -- =====================================================================
 
+-- La tabla profiles no guarda el email, por eso lo localizamos cruzando
+-- con auth.users (mismo id).
 update public.profiles
 set role = 'admin'
 where id = (
   select u.id
   from auth.users u
-  where lower(u.email) = lower('francofsm84@gmail.com')
+  where lower(u.email) = lower('tu-email@gmail.com')  -- 👈 REEMPLAZÁ ESTE EMAIL
   limit 1
 );
 
--- Verificación: debe devolver role = 'admin' para tu usuario.
+-- ---------------------------------------------------------------------
+-- Verificación (solo lectura): debe devolver role = 'admin'.
+-- Reemplazá el mismo email que usaste arriba.
+-- ---------------------------------------------------------------------
 select p.id, p.full_name, p.role, u.email
 from public.profiles p
 join auth.users u on u.id = p.id
-where lower(u.email) = lower('francofsm84@gmail.com');
-
--- ---------------------------------------------------------------------
--- ALTERNATIVA: si tu login de Google usa labibliaxia@gmail.com,
--- cambiá el email en las DOS sentencias de arriba por:
---   'labibliaxia@gmail.com'
--- (o descomentá el bloque siguiente y comentá el de arriba).
--- ---------------------------------------------------------------------
--- update public.profiles
--- set role = 'admin'
--- where id = (
---   select u.id
---   from auth.users u
---   where lower(u.email) = lower('labibliaxia@gmail.com')
---   limit 1
--- );
+where lower(u.email) = lower('tu-email@gmail.com');  -- 👈 REEMPLAZÁ ESTE EMAIL

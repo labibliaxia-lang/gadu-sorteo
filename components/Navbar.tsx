@@ -7,7 +7,9 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Moon,
   Receipt,
+  Sun,
   Wrench,
   X,
 } from "lucide-react";
@@ -28,6 +30,7 @@ export function Navbar() {
   const [email, setEmail] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     let active = true;
@@ -60,6 +63,28 @@ export function Navbar() {
       sub.subscription.unsubscribe();
     };
   }, [supabase]);
+
+  // Tema (dark mode) — sincronizado con localStorage y la clase 'dark' en <html>.
+  useEffect(() => {
+    const stored = localStorage.getItem("gadu-theme") as
+      | "light"
+      | "dark"
+      | null;
+    const initial: "light" | "dark" =
+      stored ??
+      (window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light");
+    setTheme(initial);
+    document.documentElement.classList.toggle("dark", initial === "dark");
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+    localStorage.setItem("gadu-theme", next);
+  }
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -101,7 +126,7 @@ export function Navbar() {
             <>
               {isAdmin && (
                 <Link
-                  href="/admin/sorteos"
+                  href="/admin"
                   className={buttonVariants({ variant: "ghost", size: "sm" })}
                 >
                   <LayoutDashboard className="mr-1.5 h-4 w-4" />
@@ -143,6 +168,19 @@ export function Navbar() {
           )}
         </div>
 
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label="Cambiar tema"
+          className="rounded-md p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground"
+        >
+          {theme === "dark" ? (
+            <Sun className="h-5 w-5" />
+          ) : (
+            <Moon className="h-5 w-5" />
+          )}
+        </button>
+
         {/* Toggle móvil */}
         <button
           type="button"
@@ -175,7 +213,7 @@ export function Navbar() {
               <>
                 {isAdmin && (
                   <Link
-                    href="/admin/sorteos"
+                    href="/admin"
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
                   >

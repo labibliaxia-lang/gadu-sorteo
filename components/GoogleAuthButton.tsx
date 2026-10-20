@@ -35,7 +35,7 @@ export function GoogleAuthButton() {
     <Button
       type="button"
       variant="outline"
-      className="w-full"
+      className="w-full shadow-sm"
       onClick={handleSignIn}
       disabled={loading}
     >

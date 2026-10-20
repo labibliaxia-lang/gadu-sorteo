@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LayoutDashboard, Plus, Ticket } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
@@ -28,17 +29,43 @@ export default async function AdminLayout({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Panel de administración</h1>
-          <p className="text-sm text-muted-foreground">
-            Gestioná sorteos, premios y sorteá ganadores.
-          </p>
+      <header className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Panel de administración
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Gestioná sorteos, premios y sorteá ganadores.
+            </p>
+          </div>
+          <Link
+            href="/admin/sorteos/nuevo"
+            className={buttonVariants({ size: "sm" })}
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            Nuevo sorteo
+          </Link>
         </div>
-        <Button asChild>
-          <Link href="/admin/sorteos/nuevo">Nuevo sorteo</Link>
-        </Button>
-      </div>
+
+        <nav className="flex gap-2 border-b pb-1">
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </Link>
+          <Link
+            href="/admin/sorteos"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+          >
+            <Ticket className="h-4 w-4" />
+            Sorteos
+          </Link>
+        </nav>
+      </header>
+
       {children}
     </div>
   );

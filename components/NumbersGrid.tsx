@@ -360,7 +360,7 @@ export function NumbersGrid({
                         disabled={disabled}
                         aria-label={`Número ${formatNumber(num)} - ${status}`}
                         className={cn(
-                          "flex aspect-square items-center justify-center rounded text-[10px] font-semibold transition sm:text-xs",
+                          "flex aspect-square items-center justify-center rounded text-[10px] font-semibold shadow-sm transition sm:text-xs",
                           status === "sold" &&
                             "cursor-not-allowed bg-red-500 text-white",
                           status === "reserved" &&
