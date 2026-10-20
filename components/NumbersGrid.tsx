@@ -358,13 +358,13 @@ export function NumbersGrid({
           <span className="h-3 w-3 rounded bg-emerald-500" /> Disponible
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded bg-yellow-400" /> Reservado
+          <span className="h-3 w-3 rounded-full bg-amber-500" /> Reservado
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded bg-red-500" /> Vendido
+          <span className="h-3 w-3 rounded-full bg-rose-500" /> Vendido
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded bg-blue-600" /> Tu selección
+          <span className="h-3 w-3 rounded-full bg-blue-500" /> Tu selección
         </span>
       </div>
 
@@ -418,20 +418,27 @@ export function NumbersGrid({
                         disabled={disabled}
                         aria-label={`Número ${fmtNum(num)} - ${status}`}
                         className={cn(
-                          "flex items-center justify-center overflow-hidden rounded-md border text-xs font-bold leading-none shadow-sm transition sm:text-sm",
+                          "relative flex items-center justify-center overflow-hidden rounded-md border border-slate-300 bg-card text-xs font-semibold leading-none text-foreground transition hover:border-slate-400 hover:shadow-sm dark:border-slate-700 sm:text-sm",
                           status === "sold" &&
-                            "cursor-not-allowed border-red-600/30 bg-red-500 text-white",
+                            "cursor-not-allowed text-muted-foreground opacity-60",
                           status === "reserved" &&
-                            "cursor-not-allowed border-yellow-600/30 bg-yellow-400 text-black",
-                          status === "available" &&
-                            !isSelected &&
-                            "border-emerald-600/20 bg-emerald-500 text-white hover:scale-105 hover:bg-emerald-600",
-                          status === "available" &&
-                            isSelected &&
-                            "border-blue-700/30 bg-blue-600 text-white ring-2 ring-blue-900",
+                            "cursor-not-allowed text-muted-foreground",
+                          isSelected &&
+                            "border-blue-500 ring-2 ring-blue-500/40",
                           disabled && "cursor-not-allowed",
                         )}
                       >
+                        <span
+                          className={cn(
+                            "absolute right-1 top-1 h-2 w-2 rounded-full",
+                            status === "sold" && "bg-rose-500",
+                            status === "reserved" && "bg-amber-500",
+                            isSelected && "bg-blue-500",
+                            status === "available" &&
+                              !isSelected &&
+                              "bg-emerald-500",
+                          )}
+                        />
                         {fmtNum(num)}
                       </button>
                     );
