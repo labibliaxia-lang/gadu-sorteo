@@ -9,6 +9,7 @@ import {
   AlignLeft,
   CalendarDays,
   Coins,
+  Hash,
   Type,
   UploadCloud,
 } from "lucide-react";
@@ -31,6 +32,11 @@ const schema = z.object({
   description: z.string().optional(),
   draw_date: z.string().min(1, "La fecha del sorteo es obligatoria"),
   price_per_number: z.coerce.number().positive("El precio debe ser mayor a 0"),
+  max_numbers: z.coerce
+    .number()
+    .int("Debe ser un número entero")
+    .min(10, "Mínimo 10 números")
+    .max(10000, "Máximo 10.000 números"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -53,11 +59,15 @@ export default function NuevoSorteoPage() {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { max_numbers: 10000 },
+  });
 
   const title = watch("title");
   const price = watch("price_per_number");
   const drawDate = watch("draw_date");
+  const maxNumbers = watch("max_numbers");
 
   async function uploadFile(file: File | undefined) {
     if (!file) return;
@@ -131,10 +141,10 @@ export default function NuevoSorteoPage() {
       return;
     }
 
-    // Genera los 10.000 números automáticamente.
+    // Genera la cantidad de números elegida automáticamente.
     const { error: numbersError } = await supabase.rpc(
       "create_raffle_numbers",
-      { p_raffle_id: raffle.id },
+      { p_raffle_id: raffle.id, p_max_numbers: values.max_numbers },
     );
 
     if (numbersError) {
@@ -226,6 +236,31 @@ export default function NuevoSorteoPage() {
                   </p>
                 )}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="max_numbers">Cantidad de números</Label>
+              <div className="relative">
+                <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="max_numbers"
+                  type="number"
+                  min={10}
+                  max={10000}
+                  step={1}
+                  className="pl-9"
+                  placeholder="10000"
+                  {...register("max_numbers")}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Entre 10 y 10.000 números.
+              </p>
+              {errors.max_numbers && (
+                <p className="text-sm text-destructive">
+                  {errors.max_numbers.message}
+                </p>
+              )}
             </div>
 
             {/* Dropzone */}
@@ -325,7 +360,9 @@ export default function NuevoSorteoPage() {
 
           <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
             Se generarán{" "}
-            <strong className="text-foreground">10.000 números</strong>{" "}
+            <strong className="text-foreground">
+              {maxNumbers || 0} números
+            </strong>{" "}
             automáticamente al crear el sorteo.
           </div>
 

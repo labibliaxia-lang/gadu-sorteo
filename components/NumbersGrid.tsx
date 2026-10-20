@@ -15,9 +15,9 @@ function useColumnCount() {
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      if (w < 640) setCols(4);
-      else if (w < 1024) setCols(6);
-      else setCols(10);
+      if (w < 640) setCols(5);
+      else if (w < 1024) setCols(10);
+      else setCols(20);
     };
     update();
     window.addEventListener("resize", update);
@@ -55,7 +55,7 @@ export function NumbersGrid({
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 44,
+    estimateSize: () => 48,
     overscan: 6,
   });
 
@@ -331,7 +331,7 @@ export function NumbersGrid({
               return (
                 <div
                   key={virtualRow.key}
-                  className="grid gap-1 p-1"
+                  className="grid gap-1"
                   style={{
                     position: "absolute",
                     top: 0,
@@ -360,7 +360,7 @@ export function NumbersGrid({
                         disabled={disabled}
                         aria-label={`Número ${formatNumber(num)} - ${status}`}
                         className={cn(
-                          "flex aspect-square items-center justify-center rounded text-[10px] font-semibold shadow-sm transition sm:text-xs",
+                          "flex items-center justify-center overflow-hidden rounded text-xs font-bold leading-none shadow-sm transition sm:text-sm",
                           status === "sold" &&
                             "cursor-not-allowed bg-red-500 text-white",
                           status === "reserved" &&

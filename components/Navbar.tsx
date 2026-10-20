@@ -14,6 +14,8 @@ import {
   X,
 } from "lucide-react";
 
+import { useTheme } from "next-themes";
+
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 
@@ -30,7 +32,8 @@ export function Navbar() {
   const [email, setEmail] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [mounted, setMounted] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
 
   useEffect(() => {
     let active = true;
@@ -64,26 +67,13 @@ export function Navbar() {
     };
   }, [supabase]);
 
-  // Tema (dark mode) — sincronizado con localStorage y la clase 'dark' en <html>.
+  // Evita mismatch de hidratación en el ícono de tema.
   useEffect(() => {
-    const stored = localStorage.getItem("gadu-theme") as
-      | "light"
-      | "dark"
-      | null;
-    const initial: "light" | "dark" =
-      stored ??
-      (window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light");
-    setTheme(initial);
-    document.documentElement.classList.toggle("dark", initial === "dark");
+    setMounted(true);
   }, []);
 
   function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.classList.toggle("dark", next === "dark");
-    localStorage.setItem("gadu-theme", next);
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   }
 
   async function signOut() {
@@ -174,7 +164,7 @@ export function Navbar() {
           aria-label="Cambiar tema"
           className="rounded-md p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground"
         >
-          {theme === "dark" ? (
+          {mounted && resolvedTheme === "dark" ? (
             <Sun className="h-5 w-5" />
           ) : (
             <Moon className="h-5 w-5" />

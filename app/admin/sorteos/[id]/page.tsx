@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -58,41 +58,61 @@ export default async function AdminRaffleDetailPage({
             {statusLabel[raffle.status as Raffle["status"]]}
           </Badge>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <p className="text-muted-foreground">{raffle.description}</p>
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div>
-              <p className="text-muted-foreground">Precio por número</p>
-              <p className="font-semibold">
+
+        <CardContent className="space-y-4 text-sm">
+          {raffle.description && (
+            <p className="text-muted-foreground">{raffle.description}</p>
+          )}
+
+          {/* Resumen ejecutivo */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border bg-muted/40 p-4">
+              <p className="text-sm text-muted-foreground">Precio por número</p>
+              <p className="text-lg font-bold">
                 {formatPrice(Number(raffle.price_per_number))}
               </p>
             </div>
-            <div>
-              <p className="text-muted-foreground">Fecha del sorteo</p>
-              <p className="font-semibold">{formatDateTime(raffle.draw_date)}</p>
+            <div className="rounded-xl border bg-muted/40 p-4">
+              <p className="text-sm text-muted-foreground">Números vendidos</p>
+              <p className="text-lg font-bold text-emerald-600">
+                {soldCount ?? 0}
+              </p>
             </div>
-            <div>
-              <p className="text-muted-foreground">Vendidos / Reservados</p>
-              <p className="font-semibold">
-                {soldCount ?? 0} / {reservedCount ?? 0}
+            <div className="rounded-xl border bg-muted/40 p-4">
+              <p className="text-sm text-muted-foreground">Reservados</p>
+              <p className="text-lg font-bold text-amber-600">
+                {reservedCount ?? 0}
               </p>
             </div>
           </div>
 
-          {raffle.status === "drawn" && (
-            <div className="rounded-lg border bg-secondary/50 p-3">
-              🎉 Ganador: {raffle.winner_name ?? "Anónimo"} — Nº{" "}
-              {raffle.winner_number}
-            </div>
-          )}
+          <div className="rounded-xl border bg-muted/40 p-4">
+            <p className="text-sm text-muted-foreground">Fecha del sorteo</p>
+            <p className="font-semibold">{formatDateTime(raffle.draw_date)}</p>
+          </div>
+
+          {/* Ganador */}
+          <div className="rounded-xl border bg-muted/40 p-4">
+            <p className="text-sm text-muted-foreground">Número ganador</p>
+            {raffle.status === "drawn" && raffle.winner_number != null ? (
+              <p className="text-lg font-bold">
+                🎉 {raffle.winner_name ?? "Anónimo"} — Nº {raffle.winner_number}
+              </p>
+            ) : (
+              <p className="text-muted-foreground">
+                Aún no se realizó el sorteo.
+              </p>
+            )}
+          </div>
 
           <div className="flex flex-wrap gap-2">
             <RaffleActions raffleId={raffle.id} status={raffle.status} />
-            <Button asChild variant="outline">
-              <Link href={`/admin/sorteos/${raffle.id}/premios`}>
-                Gestionar premios
-              </Link>
-            </Button>
+            <Link
+              href={`/admin/sorteos/${raffle.id}/premios`}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              Gestionar premios
+            </Link>
           </div>
         </CardContent>
       </Card>
