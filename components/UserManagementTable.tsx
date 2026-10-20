@@ -30,6 +30,7 @@ export function UserManagementTable({ users }: { users: UserRow[] }) {
   );
 
   async function toggleRole(u: UserRow) {
+    if (u.role === "superadmin") return; // el superadmin no se gestiona desde aquí
     const next = u.role === "admin" ? "user" : "admin";
     if (!window.confirm(`¿Cambiar el rol de ${u.full_name ?? u.email} a "${next}"?`)) {
       return;
@@ -72,19 +73,31 @@ export function UserManagementTable({ users }: { users: UserRow[] }) {
                 <td className="p-3 font-medium">{u.full_name || "—"}</td>
                 <td className="p-3 text-muted-foreground">{u.email || "—"}</td>
                 <td className="p-3">
-                  <Badge variant={u.role === "admin" ? "success" : "secondary"}>
+                  <Badge
+                    variant={
+                      u.role === "admin" || u.role === "superadmin"
+                        ? "success"
+                        : "secondary"
+                    }
+                  >
                     {u.role}
                   </Badge>
                 </td>
                 <td className="p-3 text-right">
-                  <Button
-                    size="sm"
-                    variant={u.role === "admin" ? "outline" : "default"}
-                    onClick={() => toggleRole(u)}
-                    disabled={busy === u.id}
-                  >
-                    {u.role === "admin" ? "Quitar admin" : "Hacer admin"}
-                  </Button>
+                  {u.role === "superadmin" ? (
+                    <span className="text-xs text-muted-foreground">
+                      Superadmin
+                    </span>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant={u.role === "admin" ? "outline" : "default"}
+                      onClick={() => toggleRole(u)}
+                      disabled={busy === u.id}
+                    >
+                      {u.role === "admin" ? "Quitar admin" : "Hacer admin"}
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}

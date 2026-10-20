@@ -21,7 +21,7 @@ async function getAdmin(): Promise<{
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") return null;
+  if (profile?.role !== "superadmin") return null;
   return { id: user.id, email: profile.email ?? user.email ?? null };
 }
 

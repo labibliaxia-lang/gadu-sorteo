@@ -50,7 +50,7 @@ export default async function SuperAdminPage({
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") redirect("/");
+  if (profile?.role !== "superadmin") redirect("/");
 
   const range = searchParams.range ?? "all";
   const tab = searchParams.tab ?? "pending";

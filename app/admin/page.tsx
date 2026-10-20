@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   BarChart3,
   CalendarDays,
@@ -44,27 +45,62 @@ const statusVariant: Record<
 export default async function AdminDashboardPage() {
   const supabase = createClient();
 
-  const { data: raffles } = await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  const isSuper = profile?.role === "superadmin";
+
+  let rafflesQuery = supabase
     .from("raffles")
     .select("*")
     .order("created_at", { ascending: false });
 
-  const { count: soldCount } = await supabase
-    .from("raffle_numbers")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "sold");
+  // Organizadores: solo sus propios sorteos; superadmin: todos.
+  if (!isSuper) rafflesQuery = rafflesQuery.eq("created_by", user.id);
 
-  const { data: approvedPayments } = await supabase
-    .from("payments")
-    .select("amount")
-    .eq("status", "approved");
+  const { data: raffles } = await rafflesQuery;
 
   const list = (raffles as Raffle[]) ?? [];
   const activeCount = list.filter((r) => r.status === "active").length;
-  const revenue = (approvedPayments ?? []).reduce(
-    (sum, p) => sum + Number(p.amount),
-    0,
-  );
+  const raffleIds = list.map((r) => r.id);
+
+  // Métricas: globales para superadmin; acotadas al organizador.
+  let soldCount = 0;
+  let revenue = 0;
+  const scoped = !isSuper && raffleIds.length > 0;
+  if (isSuper || scoped) {
+    let soldQuery = supabase
+      .from("raffle_numbers")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "sold");
+    let paymentsQuery = supabase
+      .from("payments")
+      .select("amount")
+      .eq("status", "approved");
+
+    if (scoped) {
+      soldQuery = soldQuery.in("raffle_id", raffleIds);
+      paymentsQuery = paymentsQuery.in("raffle_id", raffleIds);
+    }
+
+    const [soldRes, paymentsRes] = await Promise.all([
+      soldQuery,
+      paymentsQuery,
+    ]);
+
+    soldCount = soldRes.count ?? 0;
+    revenue = (paymentsRes.data ?? []).reduce(
+      (sum, p) => sum + Number(p.amount),
+      0,
+    );
+  }
 
   const stats = [
     { icon: BarChart3, label: "Total de sorteos", value: String(list.length) },

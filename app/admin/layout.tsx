@@ -25,7 +25,7 @@ export default async function AdminLayout({
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") redirect("/");
+  if (profile?.role !== "admin" && profile?.role !== "superadmin") redirect("/");
 
   return (
     <div className="space-y-6">
@@ -63,13 +63,15 @@ export default async function AdminLayout({
             <Ticket className="h-4 w-4" />
             Sorteos
           </Link>
-          <Link
-            href="/admin/super"
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
-          >
-            <Crown className="h-4 w-4" />
-            Super
-          </Link>
+          {profile?.role === "superadmin" && (
+            <Link
+              href="/admin/super"
+              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            >
+              <Crown className="h-4 w-4" />
+              Super
+            </Link>
+          )}
           <Link
             href="/admin/perfil"
             className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"

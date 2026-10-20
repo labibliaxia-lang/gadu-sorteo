@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -31,10 +32,28 @@ const statusVariant: Record<
 
 export default async function AdminSorteosPage() {
   const supabase = createClient();
-  const { data: raffles } = await supabase
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  const isSuper = profile?.role === "superadmin";
+
+  let rafflesQuery = supabase
     .from("raffles")
     .select("*")
     .order("created_at", { ascending: false });
+
+  // Organizadores: solo sus propios sorteos; superadmin: todos.
+  if (!isSuper) rafflesQuery = rafflesQuery.eq("created_by", user.id);
+
+  const { data: raffles } = await rafflesQuery;
 
   return (
     <div className="space-y-4">

@@ -1,4 +1,4 @@
-export type Role = "user" | "admin";
+export type Role = "user" | "admin" | "superadmin";
 export type RaffleStatus = "active" | "closed" | "drawn";
 export type NumberStatus = "available" | "reserved" | "sold";
 export type PaymentStatus =

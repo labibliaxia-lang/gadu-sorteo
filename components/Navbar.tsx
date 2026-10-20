@@ -81,8 +81,8 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
         .maybeSingle();
 
       if (active) {
-        // Solo muestra Admin si el rol es estrictamente "admin".
-        setIsAdmin(data?.role === "admin");
+        // Admin (organizador) o superadmin ven el acceso al panel.
+        setIsAdmin(data?.role === "admin" || data?.role === "superadmin");
         setRoleRequested(Boolean(data?.role_requested));
         setDisplayName(data?.full_name || u.email || null);
         setAvatarUrl(data?.avatar_url || providerAvatar || null);

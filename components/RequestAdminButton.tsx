@@ -36,7 +36,7 @@ export function RequestAdminButton() {
         .maybeSingle();
 
       if (active) {
-        setIsAdmin(data?.role === "admin");
+        setIsAdmin(data?.role === "admin" || data?.role === "superadmin");
         setStatus(data?.admin_request_status ?? "none");
         setLoading(false);
       }

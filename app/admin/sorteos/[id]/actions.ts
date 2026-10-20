@@ -4,12 +4,15 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 
-async function isAdmin(): Promise<boolean> {
+type AdminContext = { id: string; isSuper: boolean } | null;
+
+// Devuelve el admin autenticado (organizador o superadmin), o null.
+async function getAdminUser(): Promise<AdminContext> {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return false;
+  if (!user) return null;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -17,16 +20,34 @@ async function isAdmin(): Promise<boolean> {
     .eq("id", user.id)
     .single();
 
-  return profile?.role === "admin";
+  if (profile?.role !== "admin" && profile?.role !== "superadmin") return null;
+  return { id: user.id, isSuper: profile.role === "superadmin" };
+}
+
+// Verifica que el sorteo pertenezca al admin autenticado actual.
+async function ownsRaffle(raffleId: string, userId: string): Promise<boolean> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("raffles")
+    .select("created_by")
+    .eq("id", raffleId)
+    .single();
+
+  return data?.created_by === userId;
 }
 
 export async function deleteRaffle(raffleId: string) {
-  if (!(await isAdmin())) {
+  const ctx = await getAdminUser();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+  if (!ctx.isSuper && !(await ownsRaffle(raffleId, ctx.id))) {
     return { ok: false, error: "No autorizado" };
   }
 
   const supabase = createClient();
-  const { error } = await supabase.from("raffles").delete().eq("id", raffleId);
+  let query = supabase.from("raffles").delete().eq("id", raffleId);
+  if (!ctx.isSuper) query = query.eq("created_by", ctx.id);
+
+  const { error } = await query;
 
   if (error) return { ok: false, error: error.message };
 
@@ -44,12 +65,14 @@ export async function updateRaffle(
     draw_date: string;
   },
 ) {
-  if (!(await isAdmin())) {
+  const ctx = await getAdminUser();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+  if (!ctx.isSuper && !(await ownsRaffle(raffleId, ctx.id))) {
     return { ok: false, error: "No autorizado" };
   }
 
   const supabase = createClient();
-  const { error } = await supabase
+  let query = supabase
     .from("raffles")
     .update({
       title: data.title,
@@ -58,6 +81,9 @@ export async function updateRaffle(
       draw_date: new Date(data.draw_date).toISOString(),
     })
     .eq("id", raffleId);
+  if (!ctx.isSuper) query = query.eq("created_by", ctx.id);
+
+  const { error } = await query;
 
   if (error) return { ok: false, error: error.message };
 
@@ -67,7 +93,9 @@ export async function updateRaffle(
 }
 
 export async function cloneRaffle(raffleId: string) {
-  if (!(await isAdmin())) {
+  const ctx = await getAdminUser();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+  if (!ctx.isSuper && !(await ownsRaffle(raffleId, ctx.id))) {
     return { ok: false, error: "No autorizado" };
   }
 
@@ -93,10 +121,6 @@ export async function cloneRaffle(raffleId: string) {
     .select("*")
     .eq("raffle_id", raffleId);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   // Fecha futura (30 días) para el clon.
   const futureDate = new Date(
     Date.now() + 30 * 24 * 60 * 60 * 1000,
@@ -111,7 +135,7 @@ export async function cloneRaffle(raffleId: string) {
       cover_image_url: source.cover_image_url,
       draw_date: futureDate,
       status: "active",
-      created_by: user?.id ?? null,
+      created_by: ctx.id,
     })
     .select()
     .single();

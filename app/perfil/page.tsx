@@ -67,7 +67,8 @@ export default function PerfilPage() {
   const initial = (profile?.full_name || user.email || "U")
     .charAt(0)
     .toUpperCase();
-  const isAdmin = profile?.role === "admin";
+  const isAdmin =
+    profile?.role === "admin" || profile?.role === "superadmin";
 
   return (
     <div className="space-y-6">
