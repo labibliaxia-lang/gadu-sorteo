@@ -2,9 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   CalendarDays,
-  CreditCard,
   Eye,
-  MousePointerClick,
   ShieldCheck,
   Truck,
   Trophy,
@@ -13,6 +11,7 @@ import {
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
+import { HowItWorks } from "@/components/HowItWorks";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -40,24 +39,6 @@ const statusVariant: Record<
   closed: "warning",
   drawn: "secondary",
 };
-
-const STEPS = [
-  {
-    icon: MousePointerClick,
-    title: "Elegí tus números",
-    desc: "Seleccioná los números de la suerte en un grid en tiempo real.",
-  },
-  {
-    icon: CreditCard,
-    title: "Pagá con Mercado Pago",
-    desc: "Completá el pago de forma rápida, simple y 100% segura.",
-  },
-  {
-    icon: Trophy,
-    title: "¡Participá y ganá!",
-    desc: "Seguí el sorteo en vivo y descubrí si sos el ganador.",
-  },
-];
 
 const BENEFITS = [
   {
@@ -131,32 +112,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ============ CÓMO FUNCIONA ============ */}
-      <section className="space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight">¿Cómo funciona?</h2>
-          <p className="mt-2 text-muted-foreground">
-            Participar es tan fácil como 1, 2, 3.
-          </p>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          {STEPS.map((step, i) => (
-            <Card key={step.title} className="relative overflow-hidden">
-              <CardContent className="space-y-3 p-6">
-                <span className="absolute right-4 top-3 text-5xl font-black text-muted-foreground/10">
-                  {i + 1}
-                </span>
-                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
-                  <step.icon className="h-6 w-6" />
-                </span>
-                <h3 className="text-lg font-semibold">{step.title}</h3>
-                <p className="text-sm text-muted-foreground">{step.desc}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+      {/* ============ CÓMO FUNCIONA (colapsable) ============ */}
+      <HowItWorks />
 
       {/* ============ BENEFICIOS / GARANTÍAS ============ */}
       <section className="grid gap-6 rounded-3xl border bg-muted/40 p-8 md:grid-cols-3">
