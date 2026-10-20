@@ -101,10 +101,11 @@ export default async function SuperAdminPage({
   let requestsQuery = admin
     .from("profiles")
     .select("id, full_name, phone, role, created_at");
-  if (tab === "pending") requestsQuery = requestsQuery.eq("role_requested", true);
+  if (tab === "pending")
+    requestsQuery = requestsQuery.eq("admin_request_status", "pending");
   else if (tab === "approved")
-    requestsQuery = requestsQuery.eq("role_request_status", "approved");
-  else requestsQuery = requestsQuery.eq("role_request_status", "rejected");
+    requestsQuery = requestsQuery.eq("admin_request_status", "approved");
+  else requestsQuery = requestsQuery.eq("admin_request_status", "rejected");
   const { data: requests } = await requestsQuery.order("created_at", {
     ascending: true,
   });

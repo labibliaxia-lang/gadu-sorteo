@@ -66,6 +66,7 @@ export async function approveRoleRequest(userId: string) {
       role: "admin",
       role_requested: false,
       role_request_status: "approved",
+      admin_request_status: "approved",
     })
     .eq("id", userId);
 
@@ -93,7 +94,11 @@ export async function rejectRoleRequest(userId: string) {
 
   const { error } = await admin
     .from("profiles")
-    .update({ role_requested: false, role_request_status: "rejected" })
+    .update({
+      role_requested: false,
+      role_request_status: "rejected",
+      admin_request_status: "rejected",
+    })
     .eq("id", userId);
 
   if (error) return { ok: false, error: error.message };
