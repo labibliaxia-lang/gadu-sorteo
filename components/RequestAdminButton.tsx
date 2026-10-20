@@ -32,7 +32,7 @@ export function RequestAdminButton() {
 
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ role_requested: true })
+      .update({ role_requested: true, role_request_status: "pending" })
       .eq("id", user.id);
 
     if (updateError) {

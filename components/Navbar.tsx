@@ -11,6 +11,7 @@ import {
   Receipt,
   Sun,
   Ticket,
+  User,
   Wrench,
   X,
 } from "lucide-react";
@@ -144,6 +145,13 @@ export function Navbar() {
                 <Ticket className="mr-1.5 h-4 w-4" />
                 Mis números
               </Link>
+              <Link
+                href="/perfil"
+                className={buttonVariants({ variant: "ghost", size: "sm" })}
+              >
+                <User className="mr-1.5 h-4 w-4" />
+                Perfil
+              </Link>
               {!isAdmin && !roleRequested && <RequestAdminButton />}
               <span className="flex items-center gap-2 rounded-full border px-2 py-1 text-sm">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
@@ -238,6 +246,13 @@ export function Navbar() {
                   className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
                 >
                   <Ticket className="h-4 w-4" /> Mis números
+                </Link>
+                <Link
+                  href="/perfil"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                >
+                  <User className="h-4 w-4" /> Perfil
                 </Link>
                 {!isAdmin && !roleRequested && <RequestAdminButton />}
                 <button
