@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   CreditCard,
   Facebook,
@@ -12,7 +11,7 @@ import {
 export function Footer() {
   return (
     <footer className="mt-16 border-t bg-zinc-950 text-zinc-300">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-3">
         {/* Marca */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-white">
@@ -25,35 +24,6 @@ export function Footer() {
             Sorteos transparentes de herramientas para tu taller. Elegí tus
             números, participá y ganá.
           </p>
-        </div>
-
-        {/* Enlaces rápidos */}
-        <div>
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white">
-            Enlaces
-          </h3>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <Link href="/" className="transition hover:text-amber-400">
-                Inicio
-              </Link>
-            </li>
-            <li>
-              <Link href="/#sorteos" className="transition hover:text-amber-400">
-                Sorteos
-              </Link>
-            </li>
-            <li>
-              <Link href="/mis-pagos" className="transition hover:text-amber-400">
-                Mis pagos
-              </Link>
-            </li>
-            <li>
-              <Link href="/register" className="transition hover:text-amber-400">
-                Crear cuenta
-              </Link>
-            </li>
-          </ul>
         </div>
 
         {/* Pago seguro */}
@@ -117,7 +87,17 @@ export function Footer() {
             © {new Date().getFullYear()} Gadu Sorteos. Todos los derechos
             reservados.
           </p>
-          <p>Hecho con ❤️ para tu taller.</p>
+          <p>
+            desarrollado por{" "}
+            <a
+              href="https://www.instagram.com/jacinto.cards"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-zinc-300 transition hover:text-amber-400"
+            >
+              @jacinto.cards
+            </a>
+          </p>
         </div>
       </div>
     </footer>
