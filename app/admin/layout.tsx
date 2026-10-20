@@ -33,7 +33,7 @@ export default async function AdminLayout({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              Panel de administración
+              Panel de Organizador
             </h1>
             <p className="text-sm text-muted-foreground">
               Gestioná sorteos, premios y sorteá ganadores.

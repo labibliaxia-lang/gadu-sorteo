@@ -50,7 +50,7 @@ export function RequestAdminButton() {
 
   async function request() {
     const confirmed = window.confirm(
-      "¿Querés solicitar ser Administrador/Organizador? Un superadministrador revisará tu pedido.",
+      "¿Querés solicitar ser Organizador? Un superadmin revisará tu pedido.",
     );
     if (!confirmed) return;
 
@@ -90,7 +90,7 @@ export function RequestAdminButton() {
   if (isAdmin || status === "approved") {
     return (
       <p className="text-sm text-emerald-600 dark:text-emerald-400">
-        ✓ Ya sos administrador.
+        ✓ Ya sos organizador.
       </p>
     );
   }
@@ -118,7 +118,7 @@ export function RequestAdminButton() {
         disabled={submitting}
       >
         <ShieldCheck className="mr-1.5 h-4 w-4" />
-        {submitting ? "Enviando…" : "Solicitar ser Administrador"}
+        {submitting ? "Enviando…" : "Solicitar ser Organizador"}
       </Button>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>

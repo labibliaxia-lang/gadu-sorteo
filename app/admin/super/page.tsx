@@ -27,7 +27,7 @@ const RANGES = [
 ];
 
 const ACTION_LABELS: Record<string, string> = {
-  APPROVE_ROLE: "Aprobó rol de admin",
+  APPROVE_ROLE: "Aprobó rol de organizador",
   REJECT_ROLE: "Rechazó solicitud de rol",
   CHANGE_ROLE: "Cambió rol manualmente",
 };
@@ -271,7 +271,7 @@ export default async function SuperAdminPage({
               <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="p-3">Fecha</th>
-                  <th className="p-3">Admin</th>
+                  <th className="p-3">Organizador</th>
                   <th className="p-3">Acción</th>
                   <th className="p-3">Usuario afectado</th>
                 </tr>

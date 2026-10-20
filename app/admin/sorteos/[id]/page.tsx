@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { Grid3x3, Pencil } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -110,6 +110,13 @@ export default async function AdminRaffleDetailPage({
 
           <div className="flex flex-wrap gap-2">
             <RaffleActions raffleId={raffle.id} status={raffle.status} />
+            <Link
+              href={`/admin/sorteos/${raffle.id}/numeros`}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              <Grid3x3 className="mr-1.5 h-4 w-4" />
+              Gestionar números
+            </Link>
             <Link
               href={`/admin/sorteos/${raffle.id}/premios`}
               className={buttonVariants({ variant: "outline" })}

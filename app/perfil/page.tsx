@@ -69,6 +69,12 @@ export default function PerfilPage() {
     .toUpperCase();
   const isAdmin =
     profile?.role === "admin" || profile?.role === "superadmin";
+  const roleLabel =
+    profile?.role === "admin"
+      ? "Organizador"
+      : profile?.role === "superadmin"
+        ? "Superadmin"
+        : "Usuario";
 
   return (
     <div className="space-y-6">
@@ -86,7 +92,7 @@ export default function PerfilPage() {
             <p className="flex flex-wrap items-center gap-2 font-semibold">
               {profile?.full_name || "Usuario"}
               <Badge variant={isAdmin ? "success" : "secondary"}>
-                {profile?.role ?? "user"}
+                {roleLabel}
               </Badge>
             </p>
             {user.email && (
@@ -106,12 +112,12 @@ export default function PerfilPage() {
             <div className="min-w-0 flex-1 space-y-2">
               <p className="font-semibold">¿Querés organizar sorteos?</p>
               <p className="text-sm text-muted-foreground">
-                Solicitá permisos de Administrador y el superadministrador
-                revisará tu pedido.
+                Solicitá permisos de Organizador y el superadmin revisará tu
+                pedido.
               </p>
               {isAdmin ? (
                 <p className="text-sm text-emerald-600 dark:text-emerald-400">
-                  ✓ Ya sos administrador.
+                  ✓ Ya sos organizador.
                 </p>
               ) : (
                 <RequestAdminButton />

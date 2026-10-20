@@ -17,6 +17,12 @@ interface UserRow {
   created_at: string;
 }
 
+function roleLabel(role: string): string {
+  if (role === "admin") return "Organizador";
+  if (role === "superadmin") return "Superadmin";
+  return "Usuario";
+}
+
 export function UserManagementTable({ users }: { users: UserRow[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -32,7 +38,8 @@ export function UserManagementTable({ users }: { users: UserRow[] }) {
   async function toggleRole(u: UserRow) {
     if (u.role === "superadmin") return; // el superadmin no se gestiona desde aquí
     const next = u.role === "admin" ? "user" : "admin";
-    if (!window.confirm(`¿Cambiar el rol de ${u.full_name ?? u.email} a "${next}"?`)) {
+    const nextLabel = next === "admin" ? "organizador" : "usuario";
+    if (!window.confirm(`¿Cambiar el rol de ${u.full_name ?? u.email} a "${nextLabel}"?`)) {
       return;
     }
     setBusy(u.id);
@@ -80,7 +87,7 @@ export function UserManagementTable({ users }: { users: UserRow[] }) {
                         : "secondary"
                     }
                   >
-                    {u.role}
+                    {roleLabel(u.role)}
                   </Badge>
                 </td>
                 <td className="p-3 text-right">
@@ -95,7 +102,9 @@ export function UserManagementTable({ users }: { users: UserRow[] }) {
                       onClick={() => toggleRole(u)}
                       disabled={busy === u.id}
                     >
-                      {u.role === "admin" ? "Quitar admin" : "Hacer admin"}
+                      {u.role === "admin"
+                        ? "Quitar organizador"
+                        : "Hacer organizador"}
                     </Button>
                   )}
                 </td>
