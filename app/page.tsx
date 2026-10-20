@@ -10,6 +10,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { HowItWorks } from "@/components/HowItWorks";
+import { ShareButton } from "@/components/ShareButton";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -185,13 +186,14 @@ export default async function HomePage() {
                   </p>
                 </CardContent>
 
-                <CardFooter>
+                <CardFooter className="gap-2">
                   <Link
                     href={`/sorteos/${raffle.id}`}
-                    className={cn(buttonVariants(), "w-full")}
+                    className={cn(buttonVariants(), "flex-1")}
                   >
                     Participar
                   </Link>
+                  <ShareButton sorteoId={raffle.id} titulo={raffle.title} />
                 </CardFooter>
               </Card>
             ))}

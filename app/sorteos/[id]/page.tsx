@@ -7,6 +7,7 @@ import { NumbersGrid } from "@/components/NumbersGrid";
 import { OrganizerCard } from "@/components/OrganizerCard";
 import { OrganizerContact } from "@/components/OrganizerContact";
 import { PrizeCard } from "@/components/PrizeCard";
+import { ShareButton } from "@/components/ShareButton";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { Prize, Profile, Raffle } from "@/lib/types";
 
@@ -74,6 +75,7 @@ export default async function RafflePage({
               {statusLabel[raffle.status as Raffle["status"]]}
             </Badge>
           </div>
+          <ShareButton sorteoId={raffle.id} titulo={raffle.title} />
           {raffle.description && (
             <p className="text-muted-foreground">{raffle.description}</p>
           )}
