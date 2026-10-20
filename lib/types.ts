@@ -13,6 +13,10 @@ export interface Profile {
   full_name: string;
   phone: string | null;
   role: Role;
+  avatar_url: string | null;
+  instagram_url: string | null;
+  location: string | null;
+  is_verified: boolean;
   created_at: string;
 }
 

@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, Ticket, Trophy } from "lucide-react";
+import { CalendarDays, Copy, Gift, Ticket, Trophy } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { formatDateTime, formatNumber } from "@/lib/utils";
 
@@ -20,9 +20,9 @@ interface RaffleRef {
   winner_name: string | null;
 }
 
-interface PaymentRow {
+interface SoldNumberRow {
   raffle_id: string;
-  numbers: number[];
+  number: number;
   raffles: RaffleRef | null;
 }
 
@@ -34,8 +34,10 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function MisNumerosPage() {
   const supabase = createClient();
-  const [payments, setPayments] = useState<PaymentRow[]>([]);
+  const [rows, setRows] = useState<SoldNumberRow[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -48,32 +50,34 @@ export default function MisNumerosPage() {
         return;
       }
 
-      const { data } = await supabase
-        .from("payments")
-        .select(
-          "raffle_id, numbers, raffles(id, title, cover_image_url, draw_date, status, winner_number, winner_name)",
-        )
-        .eq("user_id", user.id)
-        .eq("status", "approved")
-        .order("created_at", { ascending: false });
+      setUserId(user.id);
 
-      setPayments((data as unknown as PaymentRow[]) ?? []);
+      // Números vendidos al usuario (incluye los gratis por referidos).
+      const { data } = await supabase
+        .from("raffle_numbers")
+        .select(
+          "raffle_id, number, raffles(id, title, cover_image_url, draw_date, status, winner_number, winner_name)",
+        )
+        .eq("sold_to", user.id)
+        .eq("status", "sold")
+        .order("number", { ascending: true });
+
+      setRows((data as unknown as SoldNumberRow[]) ?? []);
       setLoading(false);
     }
     load();
   }, [supabase]);
 
-  // Agrupa los números por sorteo.
   const byRaffle = new Map<string, { raffle: RaffleRef; numbers: number[] }>();
 
-  for (const p of payments) {
-    if (!p.raffles) continue;
-    const current = byRaffle.get(p.raffles.id) ?? {
-      raffle: p.raffles,
+  for (const r of rows) {
+    if (!r.raffles) continue;
+    const current = byRaffle.get(r.raffles.id) ?? {
+      raffle: r.raffles,
       numbers: [],
     };
-    current.numbers.push(...(p.numbers ?? []));
-    byRaffle.set(p.raffles.id, current);
+    current.numbers.push(r.number);
+    byRaffle.set(r.raffles.id, current);
   }
 
   const groups = Array.from(byRaffle.values()).sort(
@@ -82,14 +86,54 @@ export default function MisNumerosPage() {
       new Date(a.raffle.draw_date).getTime(),
   );
 
+  const referralLink = userId
+    ? `${window.location.origin}/?ref=${userId}`
+    : "";
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard no disponible
+    }
+  }
+
   return (
     <div className="space-y-8">
       <header className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Mis números</h1>
         <p className="text-muted-foreground">
-          Los boletos que compraste en cada sorteo.
+          Los boletos que tenés en cada sorteo.
         </p>
       </header>
+
+      {userId && (
+        <Card>
+          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2">
+              <Gift className="mt-0.5 h-5 w-5 text-amber-500" />
+              <div className="space-y-1">
+                <p className="font-semibold">Invitá y ganá</p>
+                <p className="text-sm text-muted-foreground">
+                  Por cada amigo que se registre con tu enlace y compre un
+                  número, recibís un número gratis.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <code className="min-w-0 flex-1 truncate rounded-md bg-muted px-2 py-1.5 text-xs">
+                {referralLink}
+              </code>
+              <Button variant="outline" size="sm" onClick={copyLink}>
+                <Copy className="mr-1.5 h-4 w-4" />
+                {copied ? "¡Copiado!" : "Copiar"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {loading ? (
         <p className="py-16 text-center text-muted-foreground">Cargando…</p>

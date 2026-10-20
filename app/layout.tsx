@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { ReferralCapture } from "@/components/ReferralCapture";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body className="flex min-h-screen flex-col">
         <ThemeProvider>
+          <ReferralCapture />
           <Navbar />
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
             {children}

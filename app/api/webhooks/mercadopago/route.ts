@@ -114,6 +114,24 @@ export async function POST(request: NextRequest) {
       .from("payments")
       .update({ status: "approved", mp_payment_id: String(paymentId) })
       .eq("id", payment.id);
+
+    // Referidos: otorga un número gratis al referente (atómico e idempotente).
+    const { data: referral } = await admin
+      .from("referrals")
+      .select("id")
+      .eq("referred_id", payment.user_id)
+      .eq("rewarded", false)
+      .maybeSingle();
+
+    if (referral) {
+      const { error: rewardError } = await admin.rpc("reward_referral", {
+        p_referral_id: referral.id,
+        p_raffle_id: payment.raffle_id,
+      });
+      if (rewardError) {
+        console.error("Webhook MP: error al recompensar referido", rewardError);
+      }
+    }
   } else if (
     mpStatus === "rejected" ||
     mpStatus === "cancelled" ||

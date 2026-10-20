@@ -4,9 +4,10 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { NumbersGrid } from "@/components/NumbersGrid";
+import { OrganizerCard } from "@/components/OrganizerCard";
 import { PrizeCard } from "@/components/PrizeCard";
 import { formatDateTime, formatPrice } from "@/lib/utils";
-import type { Prize, Raffle } from "@/lib/types";
+import type { Prize, Profile, Raffle } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,14 @@ export default async function RafflePage({
     .select("*")
     .eq("raffle_id", params.id)
     .order("position", { ascending: true });
+
+  const { data: organizer } = raffle.created_by
+    ? await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", raffle.created_by)
+        .single()
+    : { data: null };
 
   return (
     <div className="space-y-8">
@@ -86,6 +95,8 @@ export default async function RafflePage({
               </p>
             </div>
           )}
+
+          {organizer && <OrganizerCard organizer={organizer as Profile} />}
         </div>
       </section>
 

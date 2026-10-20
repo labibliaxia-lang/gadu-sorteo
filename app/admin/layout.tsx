@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, Plus, Ticket } from "lucide-react";
+import { LayoutDashboard, Plus, Ticket, User } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { buttonVariants } from "@/components/ui/button";
@@ -62,6 +62,13 @@ export default async function AdminLayout({
           >
             <Ticket className="h-4 w-4" />
             Sorteos
+          </Link>
+          <Link
+            href="/admin/perfil"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+          >
+            <User className="h-4 w-4" />
+            Perfil
           </Link>
         </nav>
       </header>
