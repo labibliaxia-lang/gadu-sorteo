@@ -27,6 +27,11 @@ export interface Raffle {
   draw_date: string;
   price_per_number: number;
   cover_image_url: string | null;
+  payment_type: "mercadopago" | "transferencia";
+  transfer_alias: string | null;
+  transfer_cbu: string | null;
+  transfer_bank: string | null;
+  whatsapp_contact: string | null;
   status: RaffleStatus;
   winner_number: number | null;
   winner_user_id: string | null;

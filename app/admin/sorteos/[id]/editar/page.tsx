@@ -25,6 +25,11 @@ const schema = z.object({
   description: z.string().optional(),
   draw_date: z.string().min(1, "La fecha del sorteo es obligatoria"),
   price_per_number: z.coerce.number().positive("El precio debe ser mayor a 0"),
+  payment_type: z.enum(["mercadopago", "transferencia"]),
+  transfer_alias: z.string().optional(),
+  transfer_cbu: z.string().optional(),
+  transfer_bank: z.string().optional(),
+  whatsapp_contact: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -54,8 +59,11 @@ export default function EditarSorteoPage({
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  const paymentType = watch("payment_type");
 
   useEffect(() => {
     async function load() {
@@ -76,6 +84,11 @@ export default function EditarSorteoPage({
         description: data.description ?? "",
         price_per_number: data.price_per_number,
         draw_date: data.draw_date ? toLocalInput(data.draw_date) : "",
+        payment_type: data.payment_type ?? "mercadopago",
+        transfer_alias: data.transfer_alias ?? "",
+        transfer_cbu: data.transfer_cbu ?? "",
+        transfer_bank: data.transfer_bank ?? "",
+        whatsapp_contact: data.whatsapp_contact ?? "",
       });
       setLoading(false);
     }
@@ -185,6 +198,65 @@ export default function EditarSorteoPage({
                   )}
                 </div>
               </div>
+
+              {/* Método de pago */}
+              <div className="space-y-2">
+                <Label htmlFor="payment_type">Método de pago</Label>
+                <select
+                  id="payment_type"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  {...register("payment_type")}
+                >
+                  <option value="mercadopago">
+                    Mercado Pago (automático)
+                  </option>
+                  <option value="transferencia">
+                    Transferencia bancaria (manual)
+                  </option>
+                </select>
+              </div>
+
+              {paymentType === "transferencia" && (
+                <div className="space-y-3 rounded-xl border p-4">
+                  <p className="text-sm font-semibold">
+                    Datos de transferencia
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="transfer_alias">Alias</Label>
+                    <Input
+                      id="transfer_alias"
+                      placeholder="Ej: mi.alias.mp"
+                      {...register("transfer_alias")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="transfer_cbu">CBU</Label>
+                    <Input
+                      id="transfer_cbu"
+                      placeholder="22 dígitos"
+                      {...register("transfer_cbu")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="transfer_bank">Banco</Label>
+                    <Input
+                      id="transfer_bank"
+                      placeholder="Ej: Mercado Pago / Banco Nación"
+                      {...register("transfer_bank")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="whatsapp_contact">
+                      WhatsApp del organizador
+                    </Label>
+                    <Input
+                      id="whatsapp_contact"
+                      placeholder="Ej: 5491123456789"
+                      {...register("whatsapp_contact")}
+                    />
+                  </div>
+                </div>
+              )}
 
               {error && <p className="text-sm text-destructive">{error}</p>}
 

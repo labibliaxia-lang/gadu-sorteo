@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { MessageCircle } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatPrice } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import type { RaffleNumber } from "@/lib/types";
 
 const RESERVATION_SECONDS = 10 * 60;
@@ -37,6 +38,14 @@ interface NumbersGridProps {
   pricePerNumber: number;
   raffleStatus: string;
   isDev?: boolean;
+  paymentType?: "mercadopago" | "transferencia";
+  transferInfo?: {
+    alias?: string | null;
+    cbu?: string | null;
+    bank?: string | null;
+    whatsapp?: string | null;
+  };
+  raffleTitle?: string;
 }
 
 export function NumbersGrid({
@@ -44,6 +53,9 @@ export function NumbersGrid({
   pricePerNumber,
   raffleStatus,
   isDev = false,
+  paymentType = "mercadopago",
+  transferInfo,
+  raffleTitle,
 }: NumbersGridProps) {
   const supabase = useMemo(() => createClient(), []);
   const cols = useColumnCount();
@@ -210,6 +222,22 @@ export function NumbersGrid({
 
   const totalPrice = selected.size * pricePerNumber;
 
+  // Enlace de WhatsApp para sorteos por transferencia manual.
+  const isTransfer = paymentType === "transferencia";
+  const whatsappHref = (() => {
+    const raw = transferInfo?.whatsapp;
+    if (!raw) return null;
+    const digits = raw.replace(/\D/g, "");
+    if (!digits) return null;
+    const phone = digits.startsWith("54") ? digits : `54${digits}`;
+    const sorted = Array.from(selected).sort((a, b) => a - b);
+    const numbersText = sorted.length > 0 ? sorted.join(", ") : "a confirmar";
+    const msg = `Hola! Quiero participar en "${
+      raffleTitle ?? "el sorteo"
+    }" con los números: ${numbersText}. Total: ${formatPrice(totalPrice)}`;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  })();
+
   async function handleCheckout() {
     if (!userId) {
       window.location.href = "/login";
@@ -322,31 +350,49 @@ export function NumbersGrid({
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          {isDev && (
-            <Button
-              onClick={handleMockPayment}
-              disabled={selected.size === 0 || checkingOut || !isActive}
+          {isTransfer ? (
+            <a
+              href={whatsappHref ?? "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-disabled={!whatsappHref}
+              className={cn(
+                buttonVariants(),
+                !whatsappHref && "pointer-events-none opacity-50",
+              )}
             >
-              {checkingOut
-                ? "Procesando…"
-                : userId
-                  ? "Simular Pago (Solo Dev)"
-                  : "Inicia sesión para participar"}
-            </Button>
+              <MessageCircle className="mr-1.5 h-4 w-4" />
+              Enviar comprobante por WhatsApp
+            </a>
+          ) : (
+            <>
+              {isDev && (
+                <Button
+                  onClick={handleMockPayment}
+                  disabled={selected.size === 0 || checkingOut || !isActive}
+                >
+                  {checkingOut
+                    ? "Procesando…"
+                    : userId
+                      ? "Simular Pago (Solo Dev)"
+                      : "Inicia sesión para participar"}
+                </Button>
+              )}
+              <Button
+                variant={isDev ? "outline" : "default"}
+                onClick={handleCheckout}
+                disabled={selected.size === 0 || checkingOut || !isActive}
+              >
+                {checkingOut
+                  ? "Preparando pago…"
+                  : userId
+                    ? isDev
+                      ? "Pagar real (MP)"
+                      : "Reservar y pagar"
+                    : "Inicia sesión para participar"}
+              </Button>
+            </>
           )}
-          <Button
-            variant={isDev ? "outline" : "default"}
-            onClick={handleCheckout}
-            disabled={selected.size === 0 || checkingOut || !isActive}
-          >
-            {checkingOut
-              ? "Preparando pago…"
-              : userId
-                ? isDev
-                  ? "Pagar real (MP)"
-                  : "Reservar y pagar"
-                : "Inicia sesión para participar"}
-          </Button>
         </div>
       </div>
 

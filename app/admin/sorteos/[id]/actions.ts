@@ -63,6 +63,11 @@ export async function updateRaffle(
     description?: string | null;
     price_per_number: number;
     draw_date: string;
+    payment_type?: "mercadopago" | "transferencia";
+    transfer_alias?: string | null;
+    transfer_cbu?: string | null;
+    transfer_bank?: string | null;
+    whatsapp_contact?: string | null;
   },
 ) {
   const ctx = await getAdminUser();
@@ -79,6 +84,11 @@ export async function updateRaffle(
       description: data.description ?? null,
       price_per_number: data.price_per_number,
       draw_date: new Date(data.draw_date).toISOString(),
+      payment_type: data.payment_type ?? "mercadopago",
+      transfer_alias: data.transfer_alias ?? null,
+      transfer_cbu: data.transfer_cbu ?? null,
+      transfer_bank: data.transfer_bank ?? null,
+      whatsapp_contact: data.whatsapp_contact ?? null,
     })
     .eq("id", raffleId);
   if (!ctx.isSuper) query = query.eq("created_by", ctx.id);
@@ -136,6 +146,11 @@ export async function cloneRaffle(raffleId: string) {
       draw_date: futureDate,
       status: "active",
       created_by: ctx.id,
+      payment_type: source.payment_type ?? "mercadopago",
+      transfer_alias: source.transfer_alias ?? null,
+      transfer_cbu: source.transfer_cbu ?? null,
+      transfer_bank: source.transfer_bank ?? null,
+      whatsapp_contact: source.whatsapp_contact ?? null,
     })
     .select()
     .single();

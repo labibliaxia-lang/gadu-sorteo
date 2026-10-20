@@ -13,6 +13,12 @@ const checkoutSchema = z.object({
     .max(100, "Máximo 100 números por compra"),
 });
 
+// Mercado Pago no está configurado: se usa el modo de pago simulado (mock).
+function isMockMode(): boolean {
+  const token = process.env.MP_ACCESS_TOKEN;
+  return !token || token.trim() === "" || token === "TEST" || token === "mock";
+}
+
 export async function POST(request: NextRequest) {
   let body: unknown;
   try {
@@ -47,7 +53,7 @@ export async function POST(request: NextRequest) {
   // 2) Sorteo activo y precio
   const { data: raffle, error: raffleError } = await supabase
     .from("raffles")
-    .select("id, title, status, price_per_number")
+    .select("id, title, status, price_per_number, payment_type")
     .eq("id", raffleId)
     .single();
 
@@ -57,6 +63,12 @@ export async function POST(request: NextRequest) {
   if (raffle.status !== "active") {
     return NextResponse.json(
       { error: "El sorteo no está activo" },
+      { status: 409 },
+    );
+  }
+  if (raffle.payment_type === "transferencia") {
+    return NextResponse.json(
+      { error: "Este sorteo se paga por transferencia bancaria" },
       { status: 409 },
     );
   }
@@ -113,6 +125,37 @@ export async function POST(request: NextRequest) {
       { error: "No se pudo registrar el pago" },
       { status: 500 },
     );
+  }
+
+  // 4b) Modo mock: sin Mercado Pago configurado, aprueba localmente.
+  if (isMockMode()) {
+    const admin = createAdminClient();
+    const { error: sellError } = await admin.rpc("sell_numbers", {
+      p_raffle_id: raffleId,
+      p_user_id: user.id,
+      p_numbers: reservedNumbers,
+      p_payment_id: payment.id,
+    });
+
+    if (sellError) {
+      await admin.rpc("release_numbers", {
+        p_raffle_id: raffleId,
+        p_numbers: reservedNumbers,
+        p_user_id: user.id,
+      });
+      await admin.from("payments").delete().eq("id", payment.id);
+      return NextResponse.json({ error: sellError.message }, { status: 500 });
+    }
+
+    await admin
+      .from("payments")
+      .update({ status: "approved", mp_preference_id: "mock" })
+      .eq("id", payment.id);
+
+    return NextResponse.json({
+      mock: true,
+      init_point: "/pago/exitoso?mock=true",
+    });
   }
 
   // 5) Preferencia de Checkout Pro

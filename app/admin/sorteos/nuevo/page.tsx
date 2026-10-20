@@ -37,6 +37,11 @@ const schema = z.object({
     .int("Debe ser un número entero")
     .min(10, "Mínimo 10 números")
     .max(10000, "Máximo 10.000 números"),
+  payment_type: z.enum(["mercadopago", "transferencia"]),
+  transfer_alias: z.string().optional(),
+  transfer_cbu: z.string().optional(),
+  transfer_bank: z.string().optional(),
+  whatsapp_contact: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -61,13 +66,14 @@ export default function NuevoSorteoPage() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { max_numbers: 1000 },
+    defaultValues: { max_numbers: 1000, payment_type: "mercadopago" },
   });
 
   const title = watch("title");
   const price = watch("price_per_number");
   const drawDate = watch("draw_date");
   const maxNumbers = watch("max_numbers");
+  const paymentType = watch("payment_type");
 
   async function uploadFile(file: File | undefined) {
     if (!file) return;
@@ -131,6 +137,11 @@ export default function NuevoSorteoPage() {
         price_per_number: values.price_per_number,
         cover_image_url: coverUrl,
         created_by: user.id,
+        payment_type: values.payment_type,
+        transfer_alias: values.transfer_alias || null,
+        transfer_cbu: values.transfer_cbu || null,
+        transfer_bank: values.transfer_bank || null,
+        whatsapp_contact: values.whatsapp_contact || null,
       })
       .select()
       .single();
@@ -271,6 +282,61 @@ export default function NuevoSorteoPage() {
                 </p>
               )}
             </div>
+
+            {/* Método de pago */}
+            <div className="space-y-2">
+              <Label htmlFor="payment_type">Método de pago</Label>
+              <select
+                id="payment_type"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                {...register("payment_type")}
+              >
+                <option value="mercadopago">Mercado Pago (automático)</option>
+                <option value="transferencia">
+                  Transferencia bancaria (manual)
+                </option>
+              </select>
+            </div>
+
+            {paymentType === "transferencia" && (
+              <div className="space-y-3 rounded-xl border p-4">
+                <p className="text-sm font-semibold">Datos de transferencia</p>
+                <div className="space-y-2">
+                  <Label htmlFor="transfer_alias">Alias</Label>
+                  <Input
+                    id="transfer_alias"
+                    placeholder="Ej: mi.alias.mp"
+                    {...register("transfer_alias")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="transfer_cbu">CBU</Label>
+                  <Input
+                    id="transfer_cbu"
+                    placeholder="22 dígitos"
+                    {...register("transfer_cbu")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="transfer_bank">Banco</Label>
+                  <Input
+                    id="transfer_bank"
+                    placeholder="Ej: Mercado Pago / Banco Nación"
+                    {...register("transfer_bank")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp_contact">
+                    WhatsApp del organizador
+                  </Label>
+                  <Input
+                    id="whatsapp_contact"
+                    placeholder="Ej: 5491123456789"
+                    {...register("whatsapp_contact")}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Dropzone */}
             <div className="space-y-2">

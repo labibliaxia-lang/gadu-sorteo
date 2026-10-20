@@ -111,11 +111,49 @@ export default async function RafflePage({
               </span>
             )}
           </div>
+          {raffle.payment_type === "transferencia" && (
+            <div className="rounded-xl border bg-muted/40 p-4">
+              <p className="text-sm font-semibold">Datos para transferencia</p>
+              <div className="mt-2 grid gap-3 text-sm sm:grid-cols-3">
+                {raffle.transfer_alias && (
+                  <div>
+                    <p className="text-muted-foreground">Alias</p>
+                    <p className="font-mono font-semibold">
+                      {raffle.transfer_alias}
+                    </p>
+                  </div>
+                )}
+                {raffle.transfer_cbu && (
+                  <div>
+                    <p className="text-muted-foreground">CBU</p>
+                    <p className="font-mono font-semibold">
+                      {raffle.transfer_cbu}
+                    </p>
+                  </div>
+                )}
+                {raffle.transfer_bank && (
+                  <div>
+                    <p className="text-muted-foreground">Banco</p>
+                    <p className="font-semibold">{raffle.transfer_bank}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <NumbersGrid
             raffleId={raffle.id}
+            raffleTitle={raffle.title}
             pricePerNumber={Number(raffle.price_per_number)}
             raffleStatus={raffle.status}
             isDev={isDev}
+            paymentType={raffle.payment_type}
+            transferInfo={{
+              alias: raffle.transfer_alias,
+              cbu: raffle.transfer_cbu,
+              bank: raffle.transfer_bank,
+              whatsapp: raffle.whatsapp_contact,
+            }}
           />
         </section>
       )}
