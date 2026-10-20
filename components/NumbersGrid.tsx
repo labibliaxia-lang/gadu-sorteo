@@ -9,6 +9,13 @@ import { Button } from "@/components/ui/button";
 import type { RaffleNumber } from "@/lib/types";
 
 const TOTAL_NUMBERS = 10000;
+const RESERVATION_SECONDS = 10 * 60;
+
+function formatCountdown(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
 function useColumnCount() {
   const [cols, setCols] = useState(5);
@@ -49,6 +56,9 @@ export function NumbersGrid({
   const [userId, setUserId] = useState<string | null>(null);
   const [checkingOut, setCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deadline, setDeadline] = useState<number | null>(null);
+  const [remaining, setRemaining] = useState(0);
+  const [selectionExpired, setSelectionExpired] = useState(false);
 
   const rowCount = Math.ceil(TOTAL_NUMBERS / cols);
 
@@ -109,6 +119,37 @@ export function NumbersGrid({
     return () => sub.subscription.unsubscribe();
   }, [supabase]);
 
+  // 2b) Countdown visual de 10 minutos para la selección (solo frontend).
+  useEffect(() => {
+    if (selected.size > 0) {
+      if (deadline === null) {
+        setDeadline(Date.now() + RESERVATION_SECONDS * 1000);
+      }
+    } else if (deadline !== null) {
+      setDeadline(null);
+      setRemaining(0);
+    }
+  }, [selected.size, deadline]);
+
+  useEffect(() => {
+    if (deadline === null) return;
+
+    const id = setInterval(() => {
+      const diff = deadline - Date.now();
+      if (diff <= 0) {
+        clearInterval(id);
+        setDeadline(null);
+        setRemaining(0);
+        setSelected(new Set());
+        setSelectionExpired(true);
+      } else {
+        setRemaining(Math.ceil(diff / 1000));
+      }
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, [deadline]);
+
   // 3) Realtime: actualiza solo las filas que cambian.
   useEffect(() => {
     const channel = supabase
@@ -146,6 +187,7 @@ export function NumbersGrid({
   }, [supabase, raffleId]);
 
   const toggle = useCallback((num: number) => {
+    setSelectionExpired(false);
     const status = numbers.get(num)?.status ?? "available";
     if (status !== "available") return;
     setSelected((prev) => {
@@ -253,12 +295,19 @@ export function NumbersGrid({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-muted-foreground">
-          {selected.size} número{selected.size === 1 ? "" : "s"} seleccionado
-          {selected.size === 1 ? "" : "s"} · Total:{" "}
-          <span className="font-semibold text-foreground">
-            {formatPrice(totalPrice)}
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <span>
+            {selected.size} número{selected.size === 1 ? "" : "s"} seleccionado
+            {selected.size === 1 ? "" : "s"} · Total:{" "}
+            <span className="font-semibold text-foreground">
+              {formatPrice(totalPrice)}
+            </span>
           </span>
+          {selected.size > 0 && deadline !== null && (
+            <span className="rounded-full bg-secondary px-2 py-0.5 font-mono text-xs font-semibold text-foreground">
+              ⏱ {formatCountdown(remaining)}
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           {isDev && (
@@ -292,6 +341,12 @@ export function NumbersGrid({
       {error && (
         <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {error}
+        </p>
+      )}
+
+      {selectionExpired && (
+        <p className="rounded-md bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">
+          ⚠️ Tu selección expiró. Elegí de nuevo tus números.
         </p>
       )}
 

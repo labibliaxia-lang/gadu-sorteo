@@ -10,6 +10,7 @@ import {
   Moon,
   Receipt,
   Sun,
+  Ticket,
   Wrench,
   X,
 } from "lucide-react";
@@ -130,6 +131,13 @@ export function Navbar() {
                 <Receipt className="mr-1.5 h-4 w-4" />
                 Mis pagos
               </Link>
+              <Link
+                href="/mis-numeros"
+                className={buttonVariants({ variant: "ghost", size: "sm" })}
+              >
+                <Ticket className="mr-1.5 h-4 w-4" />
+                Mis números
+              </Link>
               <span className="flex items-center gap-2 rounded-full border px-2 py-1 text-sm">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
                   {initial}
@@ -216,6 +224,13 @@ export function Navbar() {
                   className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
                 >
                   <Receipt className="h-4 w-4" /> Mis pagos
+                </Link>
+                <Link
+                  href="/mis-numeros"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                >
+                  <Ticket className="h-4 w-4" /> Mis números
                 </Link>
                 <button
                   type="button"

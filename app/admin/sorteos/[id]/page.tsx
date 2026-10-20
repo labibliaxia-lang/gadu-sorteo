@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { RaffleActions } from "@/components/RaffleActions";
 import { RaffleDeleteButton } from "@/components/RaffleDeleteButton";
+import { RaffleCloneButton } from "@/components/RaffleCloneButton";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { Raffle } from "@/lib/types";
 
@@ -122,6 +123,7 @@ export default async function AdminRaffleDetailPage({
               <Pencil className="mr-1.5 h-4 w-4" />
               Editar sorteo
             </Link>
+            <RaffleCloneButton raffleId={raffle.id} />
             <RaffleDeleteButton raffleId={raffle.id} />
           </div>
         </CardContent>
