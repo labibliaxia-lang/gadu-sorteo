@@ -58,6 +58,7 @@ export function NumbersGrid({
   const [deadline, setDeadline] = useState<number | null>(null);
   const [remaining, setRemaining] = useState(0);
   const [selectionExpired, setSelectionExpired] = useState(false);
+  const [loginRequired, setLoginRequired] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
 
   const rowCount = Math.ceil(totalCount / cols);
@@ -187,17 +188,25 @@ export function NumbersGrid({
     };
   }, [supabase, raffleId]);
 
-  const toggle = useCallback((num: number) => {
-    setSelectionExpired(false);
-    const status = numbers.get(num)?.status ?? "available";
-    if (status !== "available") return;
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(num)) next.delete(num);
-      else next.add(num);
-      return next;
-    });
-  }, [numbers]);
+  const toggle = useCallback(
+    (num: number) => {
+      setSelectionExpired(false);
+      // Bloqueo de sesión: sin usuario logueado no se permite seleccionar.
+      if (!userId) {
+        setLoginRequired(true);
+        return;
+      }
+      const status = numbers.get(num)?.status ?? "available";
+      if (status !== "available") return;
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(num)) next.delete(num);
+        else next.add(num);
+        return next;
+      });
+    },
+    [numbers, userId],
+  );
 
   const totalPrice = selected.size * pricePerNumber;
 
@@ -446,6 +455,33 @@ export function NumbersGrid({
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {loginRequired && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setLoginRequired(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border bg-card p-6 text-center shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold">
+              Debes iniciar sesión para participar
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Iniciá sesión con Google para elegir y reservar tus números.
+            </p>
+            <div className="mt-5 flex justify-center gap-2">
+              <Button variant="outline" onClick={() => setLoginRequired(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={() => (window.location.href = "/login")}>
+                Ir a iniciar sesión
+              </Button>
+            </div>
           </div>
         </div>
       )}
