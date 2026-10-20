@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { NumbersGrid } from "@/components/NumbersGrid";
 import { OrganizerCard } from "@/components/OrganizerCard";
+import { OrganizerContact } from "@/components/OrganizerContact";
 import { PrizeCard } from "@/components/PrizeCard";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { Prize, Profile, Raffle } from "@/lib/types";
@@ -133,6 +134,8 @@ export default async function RafflePage({
           </p>
         )}
       </section>
+
+      {organizer && <OrganizerContact organizer={organizer as Profile} />}
     </div>
   );
 }
