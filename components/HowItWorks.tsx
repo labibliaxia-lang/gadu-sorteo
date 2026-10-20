@@ -4,8 +4,11 @@ import { useState } from "react";
 import {
   ChevronDown,
   CreditCard,
+  Eye,
   Info,
   MousePointerClick,
+  ShieldCheck,
+  Truck,
   Trophy,
 } from "lucide-react";
 
@@ -27,6 +30,24 @@ const STEPS = [
     icon: Trophy,
     title: "¡Participá y ganá!",
     desc: "Seguí el sorteo en vivo y descubrí si sos el ganador.",
+  },
+];
+
+const BENEFITS = [
+  {
+    icon: ShieldCheck,
+    title: "Pagos 100% seguros",
+    desc: "Procesados por Mercado Pago con cifrado de extremo a extremo.",
+  },
+  {
+    icon: Eye,
+    title: "Transparencia total",
+    desc: "Todos los números y el ganador se muestran públicamente.",
+  },
+  {
+    icon: Truck,
+    title: "Entrega a todo el país",
+    desc: "Enviamos las herramientas ganadas a cualquier punto de Argentina.",
   },
 ];
 
@@ -54,21 +75,39 @@ export function HowItWorks() {
         )}
       >
         <div className="overflow-hidden">
-          <div className="grid gap-6 pt-2 md:grid-cols-3">
-            {STEPS.map((step, i) => (
-              <Card key={step.title} className="relative overflow-hidden">
-                <CardContent className="space-y-3 p-6">
-                  <span className="absolute right-4 top-3 text-5xl font-black text-muted-foreground/10">
-                    {i + 1}
+          <div className="space-y-6 pt-2">
+            {/* Pasos numerados */}
+            <div className="grid gap-6 md:grid-cols-3">
+              {STEPS.map((step, i) => (
+                <Card key={step.title} className="relative overflow-hidden">
+                  <CardContent className="space-y-3 p-6">
+                    <span className="absolute right-4 top-3 text-5xl font-black text-muted-foreground/10">
+                      {i + 1}
+                    </span>
+                    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+                      <step.icon className="h-6 w-6" />
+                    </span>
+                    <h3 className="text-lg font-semibold">{step.title}</h3>
+                    <p className="text-sm text-muted-foreground">{step.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Garantías / características */}
+            <div className="grid gap-6 rounded-3xl border bg-muted/40 p-8 md:grid-cols-3">
+              {BENEFITS.map((b) => (
+                <div key={b.title} className="flex gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                    <b.icon className="h-5 w-5" />
                   </span>
-                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
-                    <step.icon className="h-6 w-6" />
-                  </span>
-                  <h3 className="text-lg font-semibold">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground">{step.desc}</p>
-                </CardContent>
-              </Card>
-            ))}
+                  <div>
+                    <h3 className="font-semibold">{b.title}</h3>
+                    <p className="text-sm text-muted-foreground">{b.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

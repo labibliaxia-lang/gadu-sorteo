@@ -2,9 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   CalendarDays,
-  Eye,
   ShieldCheck,
-  Truck,
   Trophy,
   Wrench,
 } from "lucide-react";
@@ -39,24 +37,6 @@ const statusVariant: Record<
   closed: "warning",
   drawn: "secondary",
 };
-
-const BENEFITS = [
-  {
-    icon: ShieldCheck,
-    title: "Pagos 100% seguros",
-    desc: "Procesados por Mercado Pago con cifrado de extremo a extremo.",
-  },
-  {
-    icon: Eye,
-    title: "Transparencia total",
-    desc: "Todos los números y el ganador se muestran públicamente.",
-  },
-  {
-    icon: Truck,
-    title: "Entrega a todo el país",
-    desc: "Enviamos las herramientas ganadas a cualquier punto de Argentina.",
-  },
-];
 
 export default async function HomePage() {
   const supabase = createClient();
@@ -114,21 +94,6 @@ export default async function HomePage() {
 
       {/* ============ CÓMO FUNCIONA (colapsable) ============ */}
       <HowItWorks />
-
-      {/* ============ BENEFICIOS / GARANTÍAS ============ */}
-      <section className="grid gap-6 rounded-3xl border bg-muted/40 p-8 md:grid-cols-3">
-        {BENEFITS.map((b) => (
-          <div key={b.title} className="flex gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
-              <b.icon className="h-5 w-5" />
-            </span>
-            <div>
-              <h3 className="font-semibold">{b.title}</h3>
-              <p className="text-sm text-muted-foreground">{b.desc}</p>
-            </div>
-          </div>
-        ))}
-      </section>
 
       {/* ============ SORTEOS ============ */}
       <section id="sorteos" className="space-y-8">
