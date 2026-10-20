@@ -61,7 +61,7 @@ export default function NuevoSorteoPage() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { max_numbers: 10000 },
+    defaultValues: { max_numbers: 1000 },
   });
 
   const title = watch("title");
@@ -252,13 +252,22 @@ export default function NuevoSorteoPage() {
                   min={10}
                   max={10000}
                   step={1}
+                  list="number-options"
                   className="pl-9"
-                  placeholder="10000"
+                  placeholder="1000"
                   {...register("max_numbers")}
                 />
               </div>
+              <datalist id="number-options">
+                <option value="100" />
+                <option value="500" />
+                <option value="1000" />
+                <option value="2000" />
+                <option value="5000" />
+                <option value="10000" />
+              </datalist>
               <p className="text-xs text-muted-foreground">
-                Entre 10 y 10.000 números.
+                Sugeridos: 100, 500, 1000, 2000, 5000 o 10000.
               </p>
               {errors.max_numbers && (
                 <p className="text-sm text-destructive">

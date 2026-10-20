@@ -4,11 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { createClient } from "@/lib/supabase/client";
-import { cn, formatNumber, formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { RaffleNumber } from "@/lib/types";
 
-const TOTAL_NUMBERS = 10000;
 const RESERVATION_SECONDS = 10 * 60;
 
 function formatCountdown(totalSeconds: number): string {
@@ -59,8 +58,9 @@ export function NumbersGrid({
   const [deadline, setDeadline] = useState<number | null>(null);
   const [remaining, setRemaining] = useState(0);
   const [selectionExpired, setSelectionExpired] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const rowCount = Math.ceil(TOTAL_NUMBERS / cols);
+  const rowCount = Math.ceil(totalCount / cols);
 
   const virtualizer = useVirtualizer({
     count: rowCount,
@@ -98,6 +98,7 @@ export function NumbersGrid({
 
       if (!cancelled) {
         setNumbers(map);
+        setTotalCount(map.size > 0 ? Math.max(...map.keys()) : 0);
         setLoading(false);
       }
     }
@@ -291,6 +292,8 @@ export function NumbersGrid({
   }
 
   const isActive = raffleStatus === "active";
+  const digits = totalCount > 0 ? String(totalCount).length : 4;
+  const fmtNum = (n: number) => String(n).padStart(digits, "0");
 
   return (
     <div className="space-y-4">
@@ -352,7 +355,7 @@ export function NumbersGrid({
 
       <div className="mb-2 flex flex-wrap gap-3 text-xs">
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded bg-green-500" /> Disponible
+          <span className="h-3 w-3 rounded bg-emerald-500" /> Disponible
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-3 w-3 rounded bg-yellow-400" /> Reservado
@@ -372,7 +375,7 @@ export function NumbersGrid({
       ) : (
         <div
           ref={parentRef}
-          className="h-[60vh] overflow-auto rounded-lg border"
+          className="h-[60vh] overflow-auto rounded-xl border bg-card p-3 shadow-sm"
         >
           <div
             style={{
@@ -386,7 +389,7 @@ export function NumbersGrid({
               return (
                 <div
                   key={virtualRow.key}
-                  className="grid gap-1"
+                  className="grid gap-1.5"
                   style={{
                     position: "absolute",
                     top: 0,
@@ -399,7 +402,7 @@ export function NumbersGrid({
                 >
                   {Array.from({ length: cols }).map((_, i) => {
                     const num = start + i + 1;
-                    if (num > TOTAL_NUMBERS) {
+                    if (num > totalCount) {
                       return <div key={i} />;
                     }
                     const n = numbers.get(num);
@@ -413,23 +416,23 @@ export function NumbersGrid({
                         type="button"
                         onClick={() => toggle(num)}
                         disabled={disabled}
-                        aria-label={`Número ${formatNumber(num)} - ${status}`}
+                        aria-label={`Número ${fmtNum(num)} - ${status}`}
                         className={cn(
-                          "flex items-center justify-center overflow-hidden rounded text-xs font-bold leading-none shadow-sm transition sm:text-sm",
+                          "flex items-center justify-center overflow-hidden rounded-md border text-xs font-bold leading-none shadow-sm transition sm:text-sm",
                           status === "sold" &&
-                            "cursor-not-allowed bg-red-500 text-white",
+                            "cursor-not-allowed border-red-600/30 bg-red-500 text-white",
                           status === "reserved" &&
-                            "cursor-not-allowed bg-yellow-400 text-black",
+                            "cursor-not-allowed border-yellow-600/30 bg-yellow-400 text-black",
                           status === "available" &&
                             !isSelected &&
-                            "bg-green-500 text-white hover:bg-green-600",
+                            "border-emerald-600/20 bg-emerald-500 text-white hover:scale-105 hover:bg-emerald-600",
                           status === "available" &&
                             isSelected &&
-                            "bg-blue-600 text-white ring-2 ring-blue-900",
+                            "border-blue-700/30 bg-blue-600 text-white ring-2 ring-blue-900",
                           disabled && "cursor-not-allowed",
                         )}
                       >
-                        {formatNumber(num)}
+                        {fmtNum(num)}
                       </button>
                     );
                   })}
