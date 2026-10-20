@@ -142,12 +142,8 @@ export default function NuevoSorteoPage() {
     }
 
     // Genera la cantidad de números elegida automáticamente.
-    console.log("[Sorteo] create_raffle_numbers_v2 =>", {
-      p_raffle_id: raffle.id,
-      p_max_numbers: values.max_numbers,
-    });
     const { error: numbersError } = await supabase.rpc(
-      "create_raffle_numbers_v2",
+      "create_raffle_numbers",
       { p_raffle_id: raffle.id, p_max_numbers: values.max_numbers },
     );
 

@@ -149,7 +149,7 @@ export async function cloneRaffle(raffleId: string) {
   // Genera un pool limpio con la misma cantidad que el original.
   if (numberCount && numberCount > 0) {
     const { error: numbersError } = await supabase.rpc(
-      "create_raffle_numbers_v2",
+      "create_raffle_numbers",
       { p_raffle_id: cloned.id, p_max_numbers: numberCount },
     );
 
