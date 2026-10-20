@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { useTheme } from "next-themes";
+import type { Session } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -28,13 +29,23 @@ const NAV_LINKS = [
   { href: "/mis-pagos", label: "Mis Pagos" },
 ];
 
-export function Navbar() {
+type InitialUser = {
+  id: string;
+  email: string | null;
+  avatarUrl: string | null;
+} | null;
+
+export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
   const router = useRouter();
   const supabase = createClient();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(initialUser?.id ?? null);
+  const [email, setEmail] = useState<string | null>(initialUser?.email ?? null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [roleRequested, setRoleRequested] = useState(false);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(
+    initialUser?.avatarUrl ?? null,
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
@@ -42,31 +53,49 @@ export function Navbar() {
   useEffect(() => {
     let active = true;
 
-    async function refresh(u: string | null, em: string | null) {
-      setUserId(u);
-      setEmail(em);
-      if (u) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("role, role_requested")
-          .eq("id", u)
-          .maybeSingle();
-        if (active) {
-          // Solo muestra Admin si el rol es estrictamente "admin".
-          setIsAdmin(data?.role === "admin");
-          setRoleRequested(Boolean(data?.role_requested));
-        }
-      } else {
+    async function applySession(session: Session | null) {
+      const u = session?.user ?? null;
+
+      // Actualiza la identidad de inmediato para ocultar los botones de
+      // invitado en cuanto exista sesión (sin depender de la red).
+      if (!active) return;
+      setUserId(u?.id ?? null);
+      setEmail(u?.email ?? null);
+
+      if (!u) {
         setIsAdmin(false);
         setRoleRequested(false);
+        setDisplayName(null);
+        setAvatarUrl(null);
+        return;
+      }
+
+      const providerAvatar =
+        (u.user_metadata as { avatar_url?: string } | undefined)?.avatar_url ??
+        null;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("role, role_requested, full_name, avatar_url")
+        .eq("id", u.id)
+        .maybeSingle();
+
+      if (active) {
+        // Solo muestra Admin si el rol es estrictamente "admin".
+        setIsAdmin(data?.role === "admin");
+        setRoleRequested(Boolean(data?.role_requested));
+        setDisplayName(data?.full_name || u.email || null);
+        setAvatarUrl(data?.avatar_url || providerAvatar || null);
       }
     }
 
-    supabase.auth.getUser().then(({ data }) =>
-      refresh(data.user?.id ?? null, data.user?.email ?? null),
-    );
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
-      refresh(session?.user.id ?? null, session?.user.email ?? null),
+    // Estado inicial: lee la sesión desde las cookies (local, sin red), para
+    // que una llamada de red lenta o fallida no pise el estado correcto.
+    supabase.auth.getSession().then(({ data }) => applySession(data.session));
+
+    // Reactividad: login, logout y refresco de token actualizan la UI al instante.
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) =>
+      applySession(session),
     );
 
     return () => {
@@ -90,7 +119,7 @@ export function Navbar() {
     router.refresh();
   }
 
-  const initial = email?.charAt(0).toUpperCase() ?? "U";
+  const initial = (displayName || email || "U").charAt(0).toUpperCase();
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur">
@@ -154,11 +183,21 @@ export function Navbar() {
               </Link>
               {!isAdmin && !roleRequested && <RequestAdminButton />}
               <span className="flex items-center gap-2 rounded-full border px-2 py-1 text-sm">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
-                  {initial}
-                </span>
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatarUrl}
+                    alt={displayName ?? "Usuario"}
+                    referrerPolicy="no-referrer"
+                    className="h-6 w-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
+                    {initial}
+                  </span>
+                )}
                 <span className="hidden max-w-[140px] truncate lg:inline">
-                  {email}
+                  {displayName || email}
                 </span>
               </span>
               <Button variant="outline" size="sm" onClick={signOut}>
@@ -224,6 +263,31 @@ export function Navbar() {
 
             {userId ? (
               <>
+                <div className="mb-2 flex items-center gap-3 rounded-lg bg-accent/50 p-3">
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={avatarUrl}
+                      alt={displayName ?? "Usuario"}
+                      referrerPolicy="no-referrer"
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500 text-lg font-bold text-white">
+                      {initial}
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">
+                      {displayName || email}
+                    </p>
+                    {email && (
+                      <p className="truncate text-xs text-muted-foreground">
+                        {email}
+                      </p>
+                    )}
+                  </div>
+                </div>
                 {isAdmin && (
                   <Link
                     href="/admin"

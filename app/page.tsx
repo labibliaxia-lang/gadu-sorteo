@@ -40,6 +40,9 @@ const statusVariant: Record<
 
 export default async function HomePage() {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const { data: raffles } = await supabase
     .from("raffles")
     .select("*")
@@ -79,15 +82,27 @@ export default async function HomePage() {
             >
               Ver sorteos activos
             </Link>
-            <Link
-              href="/register"
-              className={buttonVariants({
-                variant: "outline",
-                size: "lg",
-              })}
-            >
-              Crear cuenta
-            </Link>
+            {user ? (
+              <Link
+                href="/mis-numeros"
+                className={buttonVariants({
+                  variant: "outline",
+                  size: "lg",
+                })}
+              >
+                Mis números
+              </Link>
+            ) : (
+              <Link
+                href="/register"
+                className={buttonVariants({
+                  variant: "outline",
+                  size: "lg",
+                })}
+              >
+                Crear cuenta
+              </Link>
+            )}
           </div>
         </div>
       </section>
