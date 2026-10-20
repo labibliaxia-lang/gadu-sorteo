@@ -52,6 +52,7 @@ export interface Prize {
   title: string;
   description: string | null;
   image_url: string | null;
+  image_url_2: string | null;
   tool_number: number | null;
   created_at: string;
 }

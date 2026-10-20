@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Pencil } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { RaffleActions } from "@/components/RaffleActions";
+import { RaffleDeleteButton } from "@/components/RaffleDeleteButton";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { Raffle } from "@/lib/types";
 
@@ -113,6 +115,14 @@ export default async function AdminRaffleDetailPage({
             >
               Gestionar premios
             </Link>
+            <Link
+              href={`/admin/sorteos/${raffle.id}/editar`}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              <Pencil className="mr-1.5 h-4 w-4" />
+              Editar sorteo
+            </Link>
+            <RaffleDeleteButton raffleId={raffle.id} />
           </div>
         </CardContent>
       </Card>

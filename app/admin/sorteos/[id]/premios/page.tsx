@@ -32,6 +32,7 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
   const [description, setDescription] = useState("");
   const [toolNumber, setToolNumber] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrl2, setImageUrl2] = useState<string | null>(null);
 
   async function load() {
     const { data } = await supabase
@@ -75,6 +76,7 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
       description: description || null,
       tool_number: toolNumber ? parseInt(toolNumber, 10) : null,
       image_url: imageUrl,
+      image_url_2: imageUrl2,
     });
 
     if (insertError) {
@@ -92,6 +94,7 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
     setDescription("");
     setToolNumber("");
     setImageUrl(null);
+    setImageUrl2(null);
     setSaving(false);
     load();
   }
@@ -142,7 +145,7 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
 
       {prizes.length >= 10 ? (
         <p className="text-sm text-muted-foreground">
-          Ya alcanzaste el máximo de 10 premios.
+          Has alcanzado el límite de 10 premios para este sorteo.
         </p>
       ) : (
         <Card>
@@ -193,9 +196,15 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Imagen del premio</Label>
-                <ImageUploader value={imageUrl} onChange={setImageUrl} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Foto 1 (principal)</Label>
+                  <ImageUploader value={imageUrl} onChange={setImageUrl} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Foto 2 (opcional)</Label>
+                  <ImageUploader value={imageUrl2} onChange={setImageUrl2} />
+                </div>
               </div>
 
               {error && <p className="text-sm text-destructive">{error}</p>}
