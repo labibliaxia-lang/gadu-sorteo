@@ -1,9 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
+import {
+  CalendarDays,
+  CreditCard,
+  Eye,
+  MousePointerClick,
+  ShieldCheck,
+  Truck,
+  Trophy,
+  Wrench,
+} from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatDateTime, formatPrice } from "@/lib/utils";
+import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 import type { Raffle } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -31,85 +41,226 @@ const statusVariant: Record<
   drawn: "secondary",
 };
 
+const STEPS = [
+  {
+    icon: MousePointerClick,
+    title: "Elegí tus números",
+    desc: "Seleccioná los números de la suerte en un grid en tiempo real.",
+  },
+  {
+    icon: CreditCard,
+    title: "Pagá con Mercado Pago",
+    desc: "Completá el pago de forma rápida, simple y 100% segura.",
+  },
+  {
+    icon: Trophy,
+    title: "¡Participá y ganá!",
+    desc: "Seguí el sorteo en vivo y descubrí si sos el ganador.",
+  },
+];
+
+const BENEFITS = [
+  {
+    icon: ShieldCheck,
+    title: "Pagos 100% seguros",
+    desc: "Procesados por Mercado Pago con cifrado de extremo a extremo.",
+  },
+  {
+    icon: Eye,
+    title: "Transparencia total",
+    desc: "Todos los números y el ganador se muestran públicamente.",
+  },
+  {
+    icon: Truck,
+    title: "Entrega a todo el país",
+    desc: "Enviamos las herramientas ganadas a cualquier punto de Argentina.",
+  },
+];
+
 export default async function HomePage() {
   const supabase = createClient();
-  const { data: raffles, error } = await supabase
+  const { data: raffles } = await supabase
     .from("raffles")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    return (
-      <p className="text-destructive">
-        Error al cargar los sorteos: {error.message}
-      </p>
-    );
-  }
+  const activeRaffles = (raffles ?? []).filter((r) => r.status === "active");
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-2">
-        <h1 className="text-3xl font-bold">Sorteos de herramientas</h1>
-        <p className="text-muted-foreground">
-          Elegí tus números, pagá con Mercado Pago y participá.
-        </p>
+    <div className="space-y-16">
+      {/* ============ HERO ============ */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-900 via-zinc-800 to-amber-950 px-6 py-16 text-white shadow-xl sm:px-12 sm:py-20">
+        <Wrench className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 text-white/5" />
+        <Trophy className="pointer-events-none absolute bottom-6 right-8 hidden h-24 w-24 text-white/10 sm:block" />
+
+        <div className="relative max-w-2xl space-y-5">
+          <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-300">
+            <ShieldCheck className="h-4 w-4" />
+            Sorteos 100% online y transparentes
+          </span>
+
+          <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+            ¡Ganá las mejores herramientas para tu taller!
+          </h1>
+
+          <p className="text-lg text-zinc-300">
+            Elegí tus números, pagá con Mercado Pago y participá por
+            herramientas de primera. Simple, seguro y sin vueltas.
+          </p>
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/#sorteos"
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700",
+              )}
+            >
+              Ver sorteos activos
+            </Link>
+            <Link
+              href="/register"
+              className={buttonVariants({
+                variant: "outline",
+                size: "lg",
+              })}
+            >
+              Crear cuenta
+            </Link>
+          </div>
+        </div>
       </section>
 
-      {raffles && raffles.length === 0 ? (
-        <p className="py-16 text-center text-muted-foreground">
-          Todavía no hay sorteos publicados.
-        </p>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {raffles?.map((raffle: Raffle) => (
-            <Card key={raffle.id} className="overflow-hidden">
-              <div className="relative aspect-video w-full bg-muted">
-                {raffle.cover_image_url ? (
-                  <Image
-                    src={raffle.cover_image_url}
-                    alt={raffle.title}
-                    fill
-                    sizes="(max-width: 640px) 100vw, 33vw"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-4xl">
-                    🛠️
-                  </div>
-                )}
-              </div>
-              <CardHeader>
-                <div className="flex items-center justify-between gap-2">
-                  <CardTitle className="text-xl">{raffle.title}</CardTitle>
-                  <Badge variant={statusVariant[raffle.status]}>
-                    {statusLabel[raffle.status]}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-1 text-sm text-muted-foreground">
-                {raffle.description && <p>{raffle.description}</p>}
-                <p>Fecha del sorteo: {formatDateTime(raffle.draw_date)}</p>
-                <p className="font-medium text-foreground">
-                  {formatPrice(Number(raffle.price_per_number))} por número
-                </p>
-                {raffle.status === "drawn" && raffle.winner_number != null && (
-                  <p className="font-medium text-foreground">
-                    🎉 Ganador: {raffle.winner_name ?? "Anónimo"} — Nº{" "}
-                    {raffle.winner_number}
-                  </p>
-                )}
+      {/* ============ CÓMO FUNCIONA ============ */}
+      <section className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold tracking-tight">¿Cómo funciona?</h2>
+          <p className="mt-2 text-muted-foreground">
+            Participar es tan fácil como 1, 2, 3.
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {STEPS.map((step, i) => (
+            <Card key={step.title} className="relative overflow-hidden">
+              <CardContent className="space-y-3 p-6">
+                <span className="absolute right-4 top-3 text-5xl font-black text-muted-foreground/10">
+                  {i + 1}
+                </span>
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+                  <step.icon className="h-6 w-6" />
+                </span>
+                <h3 className="text-lg font-semibold">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.desc}</p>
               </CardContent>
-              <CardFooter>
-                <Button asChild className="w-full">
-                  <Link href={`/sorteos/${raffle.id}`}>
-                    {raffle.status === "active" ? "Participar" : "Ver sorteo"}
-                  </Link>
-                </Button>
-              </CardFooter>
             </Card>
           ))}
         </div>
-      )}
+      </section>
+
+      {/* ============ BENEFICIOS / GARANTÍAS ============ */}
+      <section className="grid gap-6 rounded-3xl border bg-muted/40 p-8 md:grid-cols-3">
+        {BENEFITS.map((b) => (
+          <div key={b.title} className="flex gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+              <b.icon className="h-5 w-5" />
+            </span>
+            <div>
+              <h3 className="font-semibold">{b.title}</h3>
+              <p className="text-sm text-muted-foreground">{b.desc}</p>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* ============ SORTEOS ============ */}
+      <section id="sorteos" className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold tracking-tight">Sorteos activos</h2>
+          <p className="mt-2 text-muted-foreground">
+            Elegí el que más te guste y asegurá tus números.
+          </p>
+        </div>
+
+        {activeRaffles.length === 0 ? (
+          <Card className="mx-auto max-w-md border-dashed text-center">
+            <CardContent className="space-y-4 py-12">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                <Wrench className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-semibold">
+                  Todavía no hay sorteos activos
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Estamos preparando nuevas rifas de herramientas. Dejá tu
+                  cuenta lista para no perderte el próximo sorteo.
+                </p>
+              </div>
+              <Link href="/register" className={buttonVariants()}>
+                Crear cuenta gratis
+              </Link>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {activeRaffles.map((raffle: Raffle) => (
+              <Card
+                key={raffle.id}
+                className="overflow-hidden transition hover:shadow-lg"
+              >
+                <div className="relative aspect-video w-full bg-muted">
+                  {raffle.cover_image_url ? (
+                    <Image
+                      src={raffle.cover_image_url}
+                      alt={raffle.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, 33vw"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-5xl">
+                      🛠️
+                    </div>
+                  )}
+                  <Badge
+                    variant={statusVariant[raffle.status]}
+                    className="absolute right-2 top-2"
+                  >
+                    {statusLabel[raffle.status]}
+                  </Badge>
+                </div>
+
+                <CardHeader>
+                  <CardTitle className="text-xl">{raffle.title}</CardTitle>
+                </CardHeader>
+
+                <CardContent className="space-y-2 text-sm text-muted-foreground">
+                  <p className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    {formatDateTime(raffle.draw_date)}
+                  </p>
+                  <p className="text-lg font-semibold text-foreground">
+                    {formatPrice(Number(raffle.price_per_number))}{" "}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      por número
+                    </span>
+                  </p>
+                </CardContent>
+
+                <CardFooter>
+                  <Link
+                    href={`/sorteos/${raffle.id}`}
+                    className={cn(buttonVariants(), "w-full")}
+                  >
+                    Participar
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
