@@ -126,11 +126,11 @@ export function RequestAdminButton() {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
           onClick={() => setOpen(false)}
         >
           <div
-            className="max-h-[90vh] w-[95%] max-w-lg overflow-y-auto rounded-2xl border bg-card p-4 shadow-2xl sm:p-6"
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border bg-card p-4 shadow-2xl sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-2">
