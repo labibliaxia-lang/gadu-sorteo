@@ -130,7 +130,7 @@ export function RequestAdminButton() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border bg-card p-4 shadow-2xl sm:p-6"
+            className="max-h-[90vh] w-[95%] max-w-lg overflow-y-auto rounded-2xl border bg-card p-4 shadow-2xl sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-2">
