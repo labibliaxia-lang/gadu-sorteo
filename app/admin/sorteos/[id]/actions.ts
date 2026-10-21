@@ -63,6 +63,7 @@ export async function updateRaffle(
     description?: string | null;
     price_per_number: number;
     draw_date: string;
+    cover_image_url?: string | null;
     payment_type?: "mercadopago" | "transferencia";
     transfer_alias?: string | null;
     transfer_cbu?: string | null;
@@ -84,6 +85,7 @@ export async function updateRaffle(
       description: data.description ?? null,
       price_per_number: data.price_per_number,
       draw_date: new Date(data.draw_date).toISOString(),
+      cover_image_url: data.cover_image_url ?? null,
       payment_type: data.payment_type ?? "mercadopago",
       transfer_alias: data.transfer_alias ?? null,
       transfer_cbu: data.transfer_cbu ?? null,
@@ -147,10 +149,12 @@ export async function cloneRaffle(raffleId: string) {
       status: "active",
       created_by: ctx.id,
       payment_type: source.payment_type ?? "mercadopago",
-      transfer_alias: source.transfer_alias ?? null,
-      transfer_cbu: source.transfer_cbu ?? null,
-      transfer_bank: source.transfer_bank ?? null,
-      whatsapp_contact: source.whatsapp_contact ?? null,
+      // Los datos de contacto/pago son personales del organizador: NO se
+      // copian del sorteo origen para no heredar el número del dueño original.
+      transfer_alias: null,
+      transfer_cbu: null,
+      transfer_bank: null,
+      whatsapp_contact: null,
     })
     .select()
     .single();

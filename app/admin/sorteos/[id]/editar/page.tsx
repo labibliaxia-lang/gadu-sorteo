@@ -5,7 +5,16 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlignLeft, CalendarDays, Coins, Type } from "lucide-react";
+import {
+  AlignLeft,
+  CalendarDays,
+  Coins,
+  CreditCard,
+  Landmark,
+  MessageCircle,
+  Type,
+  Wallet,
+} from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,6 +27,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUploader } from "@/components/ImageUploader";
+import { cn } from "@/lib/utils";
 import { updateRaffle } from "@/app/admin/sorteos/[id]/actions";
 
 const schema = z.object({
@@ -54,6 +65,7 @@ export default function EditarSorteoPage({
   const [notFound, setNotFound] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
 
   const {
     register,
@@ -90,6 +102,7 @@ export default function EditarSorteoPage({
         transfer_bank: data.transfer_bank ?? "",
         whatsapp_contact: data.whatsapp_contact ?? "",
       });
+      setCoverUrl(data.cover_image_url ?? null);
       setLoading(false);
     }
     load();
@@ -100,7 +113,10 @@ export default function EditarSorteoPage({
     setSaving(true);
     setError(null);
 
-    const res = await updateRaffle(params.id, values);
+    const res = await updateRaffle(params.id, {
+      ...values,
+      cover_image_url: coverUrl,
+    });
 
     if (!res.ok) {
       setError(res.error ?? "No se pudo guardar los cambios.");
@@ -130,6 +146,11 @@ export default function EditarSorteoPage({
             <p className="text-muted-foreground">Cargando…</p>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <div className="space-y-2">
+                <Label>Imagen de portada</Label>
+                <ImageUploader value={coverUrl} onChange={setCoverUrl} />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="title">Título</Label>
                 <div className="relative">
@@ -200,20 +221,76 @@ export default function EditarSorteoPage({
               </div>
 
               {/* Método de pago */}
-              <div className="space-y-2">
-                <Label htmlFor="payment_type">Método de pago</Label>
-                <select
-                  id="payment_type"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  {...register("payment_type")}
-                >
-                  <option value="mercadopago">
-                    Mercado Pago (automático)
-                  </option>
-                  <option value="transferencia">
-                    Transferencia bancaria (manual)
-                  </option>
-                </select>
+              <div className="space-y-3">
+                <Label>Método de pago</Label>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label
+                    className={cn(
+                      "cursor-pointer rounded-xl border-2 p-4 transition",
+                      paymentType === "mercadopago"
+                        ? "border-amber-500 bg-amber-500/5"
+                        : "border-slate-300 hover:border-slate-400 dark:border-slate-700",
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      value="mercadopago"
+                      className="sr-only"
+                      {...register("payment_type")}
+                    />
+                    <div className="flex items-start gap-3">
+                      <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+                      <div className="space-y-0.5">
+                        <p className="font-semibold">Mercado Pago</p>
+                        <p className="text-xs text-muted-foreground">
+                          Automático / Modo Mock de Pruebas
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label
+                    className={cn(
+                      "cursor-pointer rounded-xl border-2 p-4 transition",
+                      paymentType === "transferencia"
+                        ? "border-emerald-500 bg-emerald-500/5"
+                        : "border-slate-300 hover:border-slate-400 dark:border-slate-700",
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      value="transferencia"
+                      className="sr-only"
+                      {...register("payment_type")}
+                    />
+                    <div className="flex items-start gap-3">
+                      <Landmark className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                      <div className="space-y-0.5">
+                        <p className="font-semibold">Transferencia Bancaria</p>
+                        <p className="text-xs text-muted-foreground">
+                          Alias (Manual)
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {paymentType === "mercadopago" ? (
+                  <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
+                    Si no hay un token real de Mercado Pago configurado, la
+                    plataforma activará automáticamente el{" "}
+                    <strong className="text-foreground">
+                      Modo Simulación (Mock)
+                    </strong>{" "}
+                    para hacer pruebas locales sin costo.
+                  </p>
+                ) : (
+                  <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
+                    Los compradores verán tus datos de transferencia y te
+                    enviarán el comprobante por WhatsApp.
+                  </p>
+                )}
               </div>
 
               {paymentType === "transferencia" && (
@@ -223,37 +300,53 @@ export default function EditarSorteoPage({
                   </p>
                   <div className="space-y-2">
                     <Label htmlFor="transfer_alias">Alias</Label>
-                    <Input
-                      id="transfer_alias"
-                      placeholder="Ej: mi.alias.mp"
-                      {...register("transfer_alias")}
-                    />
+                    <div className="relative">
+                      <Wallet className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="transfer_alias"
+                        className="pl-9"
+                        placeholder="Ej: mi.alias.mp"
+                        {...register("transfer_alias")}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="transfer_cbu">CBU</Label>
-                    <Input
-                      id="transfer_cbu"
-                      placeholder="22 dígitos"
-                      {...register("transfer_cbu")}
-                    />
+                    <div className="relative">
+                      <Wallet className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="transfer_cbu"
+                        className="pl-9"
+                        placeholder="22 dígitos"
+                        {...register("transfer_cbu")}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="transfer_bank">Banco</Label>
-                    <Input
-                      id="transfer_bank"
-                      placeholder="Ej: Mercado Pago / Banco Nación"
-                      {...register("transfer_bank")}
-                    />
+                    <div className="relative">
+                      <Landmark className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="transfer_bank"
+                        className="pl-9"
+                        placeholder="Ej: Mercado Pago / Banco Nación"
+                        {...register("transfer_bank")}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="whatsapp_contact">
-                      WhatsApp del organizador
+                      WhatsApp de contacto
                     </Label>
-                    <Input
-                      id="whatsapp_contact"
-                      placeholder="Ej: 5491123456789"
-                      {...register("whatsapp_contact")}
-                    />
+                    <div className="relative">
+                      <MessageCircle className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="whatsapp_contact"
+                        className="pl-9"
+                        placeholder="Ej: 5491123456789"
+                        {...register("whatsapp_contact")}
+                      />
+                    </div>
                   </div>
                 </div>
               )}

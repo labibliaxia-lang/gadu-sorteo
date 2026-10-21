@@ -154,7 +154,7 @@ export default async function RafflePage({
               alias: raffle.transfer_alias,
               cbu: raffle.transfer_cbu,
               bank: raffle.transfer_bank,
-              whatsapp: raffle.whatsapp_contact,
+              whatsapp: raffle.whatsapp_contact || organizer?.phone || null,
             }}
           />
         </section>

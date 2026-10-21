@@ -230,11 +230,12 @@ export function OrganizerNumbersManager({ raffleId }: { raffleId: string }) {
                         onClick={() => toggle(num)}
                         aria-label={`Número ${fmtNum(num)} - ${status}`}
                         className={cn(
-                          "relative flex items-center justify-center overflow-hidden rounded-md border border-slate-300 bg-card text-xs font-semibold leading-none text-foreground transition hover:border-slate-400 hover:shadow-sm dark:border-slate-700 sm:text-sm",
+                          "relative flex h-9 items-center justify-center overflow-hidden rounded-lg border border-slate-300 bg-card text-xs font-semibold leading-none text-foreground transition-all duration-150 hover:border-slate-400 hover:shadow-sm active:scale-95 dark:border-slate-700 sm:h-10 sm:text-sm",
                           status === "sold" &&
-                            "text-muted-foreground opacity-60",
-                          status === "reserved" && "text-muted-foreground",
-                          isSelected && "border-blue-500 ring-2 ring-blue-500/40",
+                            "bg-muted/40 text-muted-foreground opacity-70",
+                          status === "reserved" &&
+                            "bg-amber-500/10 text-amber-800 dark:text-amber-300",
+                          isSelected && "border-blue-500 ring-2 ring-blue-500/60",
                         )}
                       >
                         <span
