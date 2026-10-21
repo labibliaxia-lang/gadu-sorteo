@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RoleRequestActions } from "@/components/RoleRequestActions";
 import { UserManagementTable } from "@/components/UserManagementTable";
+import { VerificationActions } from "@/components/VerificationActions";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -122,6 +123,30 @@ export default async function SuperAdminPage({
     .select("*")
     .order("created_at", { ascending: false })
     .limit(50);
+
+  // Verificaciones de identidad pendientes (con URLs firmadas del bucket privado).
+  const { data: pendingKyc } = await admin
+    .from("profiles")
+    .select("id, full_name, email, dni_front_url, face_url")
+    .eq("verification_status", "pending")
+    .not("dni_front_url", "is", null);
+
+  const pendingVerifications = await Promise.all(
+    (pendingKyc ?? []).map(async (p) => {
+      const sign = async (path: string | null) => {
+        if (!path) return null;
+        const { data } = await admin.storage
+          .from("organizer-kyc")
+          .createSignedUrl(path, 3600);
+        return data?.signedUrl ?? null;
+      };
+      return {
+        ...p,
+        dniUrl: await sign(p.dni_front_url),
+        faceUrl: await sign(p.face_url),
+      };
+    }),
+  );
 
   function qs(next: Partial<SearchParams>): string {
     const r = next.range ?? range;
@@ -238,6 +263,74 @@ export default async function SuperAdminPage({
                       {tab === "approved" ? "Aprobada" : "Rechazada"}
                     </Badge>
                   )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Verificaciones de identidad */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Verificaciones de identidad</h2>
+        {pendingVerifications.length === 0 ? (
+          <Card className="border-dashed text-center">
+            <CardContent className="py-12 text-muted-foreground">
+              No hay verificaciones pendientes.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {pendingVerifications.map((p) => (
+              <Card key={p.id}>
+                <CardContent className="space-y-3 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0 space-y-1">
+                      <p className="font-semibold">
+                        {p.full_name || "Sin nombre"}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {p.email || p.id}
+                      </p>
+                    </div>
+                    <VerificationActions userId={p.id} />
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        DNI (frente)
+                      </p>
+                      {p.dniUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={p.dniUrl}
+                          alt="DNI frente"
+                          className="aspect-[16/10] w-full rounded-lg border object-cover"
+                        />
+                      ) : (
+                        <div className="flex aspect-[16/10] items-center justify-center rounded-lg border text-sm text-muted-foreground">
+                          Sin DNI
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Selfie
+                      </p>
+                      {p.faceUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={p.faceUrl}
+                          alt="Selfie"
+                          className="aspect-[16/10] w-full rounded-lg border object-cover"
+                        />
+                      ) : (
+                        <div className="flex aspect-[16/10] items-center justify-center rounded-lg border text-sm text-muted-foreground">
+                          Sin selfie
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}

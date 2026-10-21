@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -62,6 +62,10 @@ export default function NuevoSorteoPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(
+    null,
+  );
+  const [checkingVerification, setCheckingVerification] = useState(true);
 
   const {
     register,
@@ -78,6 +82,32 @@ export default function NuevoSorteoPage() {
   const drawDate = watch("draw_date");
   const maxNumbers = watch("max_numbers");
   const paymentType = watch("payment_type");
+
+  useEffect(() => {
+    let active = true;
+    async function check() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        if (active) setCheckingVerification(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("profiles")
+        .select("verification_status")
+        .eq("id", user.id)
+        .single();
+      if (active) {
+        setVerificationStatus(data?.verification_status ?? "pending");
+        setCheckingVerification(false);
+      }
+    }
+    check();
+    return () => {
+      active = false;
+    };
+  }, [supabase]);
 
   async function uploadFile(file: File | undefined) {
     if (!file) return;
@@ -170,6 +200,25 @@ export default function NuevoSorteoPage() {
 
     router.push(`/admin/sorteos/${raffle.id}`);
     router.refresh();
+  }
+
+  if (checkingVerification) {
+    return <p className="text-muted-foreground">Verificando identidad…</p>;
+  }
+
+  if (verificationStatus !== "approved") {
+    return (
+      <div className="mx-auto max-w-lg space-y-4 rounded-xl border bg-muted/40 p-8 text-center">
+        <h1 className="text-xl font-bold">Debés verificar tu identidad</h1>
+        <p className="text-sm text-muted-foreground">
+          Para crear y publicar sorteos, primero tenés que validar tu identidad
+          (DNI + selfie). Es un requisito de seguridad.
+        </p>
+        <Button onClick={() => router.push("/admin/verificacion")}>
+          Ir a verificación de identidad
+        </Button>
+      </div>
+    );
   }
 
   return (

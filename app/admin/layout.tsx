@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Crown, LayoutDashboard, Plus, Ticket, User } from "lucide-react";
+import {
+  Crown,
+  LayoutDashboard,
+  Plus,
+  ShieldCheck,
+  Ticket,
+  User,
+} from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { buttonVariants } from "@/components/ui/button";
@@ -63,6 +70,15 @@ export default async function AdminLayout({
             <Ticket className="h-4 w-4" />
             Sorteos
           </Link>
+          {profile?.role === "admin" && (
+            <Link
+              href="/admin/verificacion"
+              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Verificación
+            </Link>
+          )}
           {profile?.role === "superadmin" && (
             <Link
               href="/admin/super"
