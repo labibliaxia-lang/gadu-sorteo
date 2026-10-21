@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Coins, Ticket, Users, Wrench } from "lucide-react";
+import { Coins, MessageCircle, Ticket, Users, Wrench } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RoleRequestActions } from "@/components/RoleRequestActions";
@@ -32,6 +33,15 @@ const ACTION_LABELS: Record<string, string> = {
   REJECT_ROLE: "Rechazó solicitud de rol",
   CHANGE_ROLE: "Cambió rol manualmente",
 };
+
+function waLink(phone: string | null): string | null {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  if (!digits) return null;
+  const withCountry = digits.startsWith("54") ? digits : `54${digits}`;
+  return `https://wa.me/${withCountry}?text=${encodeURIComponent(
+    "Hola! Recibí tu solicitud para ser organizador en Gadu Sorteos. Quería charlar comisiones y condiciones.",
+  )}`;
+}
 
 export default async function SuperAdminPage({
   searchParams,
@@ -101,7 +111,7 @@ export default async function SuperAdminPage({
   // Solicitudes según pestaña.
   let requestsQuery = admin
     .from("profiles")
-    .select("id, full_name, phone, role, created_at");
+    .select("id, full_name, phone, email, request_message, role, created_at");
   if (tab === "pending")
     requestsQuery = requestsQuery.eq("admin_request_status", "pending");
   else if (tab === "approved")
@@ -246,23 +256,46 @@ export default async function SuperAdminPage({
             {requests.map((r) => (
               <Card key={r.id}>
                 <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
-                  <div className="min-w-0 space-y-1">
+                  <div className="min-w-0 flex-1 space-y-1">
                     <p className="font-semibold">{r.full_name || "Sin nombre"}</p>
+                    {r.email && (
+                      <p className="truncate text-xs text-muted-foreground">
+                        {r.email}
+                      </p>
+                    )}
                     <p className="truncate text-xs text-muted-foreground">
                       {r.phone || "Sin teléfono"}
                     </p>
-                    <p className="truncate font-mono text-xs text-muted-foreground">
-                      {r.id}
-                    </p>
+                    {r.request_message && (
+                      <p className="rounded-md bg-muted/50 p-2 text-xs">
+                        💬 {r.request_message}
+                      </p>
+                    )}
                   </div>
 
-                  {tab === "pending" ? (
-                    <RoleRequestActions userId={r.id} />
-                  ) : (
-                    <Badge variant={tab === "approved" ? "success" : "secondary"}>
-                      {tab === "approved" ? "Aprobada" : "Rechazada"}
-                    </Badge>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {waLink(r.phone) && (
+                      <a
+                        href={waLink(r.phone)!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={buttonVariants({
+                          variant: "outline",
+                          size: "sm",
+                        })}
+                      >
+                        <MessageCircle className="mr-1.5 h-4 w-4 text-emerald-600" />
+                        WhatsApp
+                      </a>
+                    )}
+                    {tab === "pending" ? (
+                      <RoleRequestActions userId={r.id} />
+                    ) : (
+                      <Badge variant={tab === "approved" ? "success" : "secondary"}>
+                        {tab === "approved" ? "Aprobada" : "Rechazada"}
+                      </Badge>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}

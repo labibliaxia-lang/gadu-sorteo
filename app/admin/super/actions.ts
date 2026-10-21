@@ -82,6 +82,7 @@ export async function approveRoleRequest(userId: string) {
   });
 
   revalidatePath("/admin/super");
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 
@@ -113,6 +114,7 @@ export async function rejectRoleRequest(userId: string) {
   });
 
   revalidatePath("/admin/super");
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 
@@ -140,5 +142,6 @@ export async function setUserRole(userId: string, role: "user" | "admin") {
   });
 
   revalidatePath("/admin/super");
+  revalidatePath("/", "layout");
   return { ok: true };
 }

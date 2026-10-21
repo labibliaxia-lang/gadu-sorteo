@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck } from "lucide-react";
+import { Phone, ShieldCheck, X } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type RequestStatus = "none" | "pending" | "approved" | "rejected";
 
@@ -15,6 +18,9 @@ export function RequestAdminButton() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -31,13 +37,14 @@ export function RequestAdminButton() {
 
       const { data } = await supabase
         .from("profiles")
-        .select("role, admin_request_status")
+        .select("role, admin_request_status, phone")
         .eq("id", user.id)
         .maybeSingle();
 
       if (active) {
         setIsAdmin(data?.role === "admin" || data?.role === "superadmin");
         setStatus(data?.admin_request_status ?? "none");
+        setPhone(data?.phone ?? "");
         setLoading(false);
       }
     }
@@ -48,12 +55,7 @@ export function RequestAdminButton() {
     };
   }, [supabase]);
 
-  async function request() {
-    const confirmed = window.confirm(
-      "¿Querés solicitar ser Organizador? Un superadmin revisará tu pedido.",
-    );
-    if (!confirmed) return;
-
+  async function submitRequest() {
     setSubmitting(true);
     setError(null);
 
@@ -69,6 +71,8 @@ export function RequestAdminButton() {
     const { error: updateError } = await supabase
       .from("profiles")
       .update({
+        phone: phone || null,
+        request_message: message || null,
         role_requested: true,
         role_request_status: "pending",
         admin_request_status: "pending",
@@ -83,6 +87,7 @@ export function RequestAdminButton() {
 
     setStatus("pending");
     setSubmitting(false);
+    setOpen(false);
   }
 
   if (loading) return null;
@@ -110,17 +115,83 @@ export function RequestAdminButton() {
   }
 
   return (
-    <div className="space-y-1">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={request}
-        disabled={submitting}
-      >
-        <ShieldCheck className="mr-1.5 h-4 w-4" />
-        {submitting ? "Enviando…" : "Solicitar ser Organizador"}
-      </Button>
-      {error && <p className="text-xs text-destructive">{error}</p>}
-    </div>
+    <>
+      <div className="space-y-1">
+        <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+          <ShieldCheck className="mr-1.5 h-4 w-4" />
+          Solicitar ser Organizador
+        </Button>
+        {error && <p className="text-xs text-destructive">{error}</p>}
+      </div>
+
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border bg-card p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-semibold">
+                  Solicitar ser Organizador
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Dejanos tu WhatsApp y una propuesta para negociar comisiones
+                  y condiciones.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Cerrar"
+                className="rounded-md p-1 text-muted-foreground transition hover:bg-accent hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="wa">Teléfono / WhatsApp</Label>
+                <div className="relative">
+                  <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="wa"
+                    className="pl-9"
+                    placeholder="Ej: 5491123456789"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="msg">Mensaje / Propuesta (opcional)</Label>
+                <Textarea
+                  id="msg"
+                  placeholder="Contá qué querés sortear, comisiones, etc."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+              </div>
+
+              {error && <p className="text-xs text-destructive">{error}</p>}
+
+              <Button
+                type="button"
+                className="w-full"
+                onClick={submitRequest}
+                disabled={submitting}
+              >
+                {submitting ? "Enviando…" : "Enviar solicitud"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
