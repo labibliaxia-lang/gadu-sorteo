@@ -130,7 +130,7 @@ export function RequestAdminButton() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border bg-card p-6 shadow-xl"
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border bg-card p-4 shadow-2xl sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-2">
@@ -172,6 +172,7 @@ export function RequestAdminButton() {
                 <Label htmlFor="msg">Mensaje / Propuesta (opcional)</Label>
                 <Textarea
                   id="msg"
+                  rows={3}
                   placeholder="Contá qué querés sortear, comisiones, etc."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
