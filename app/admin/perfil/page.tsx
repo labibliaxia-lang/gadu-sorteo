@@ -18,12 +18,15 @@ import {
 import { ImageUploader } from "@/components/ImageUploader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const schema = z.object({
   full_name: z.string().min(2, "Ingresá tu nombre"),
   phone: z.string().optional(),
   instagram_url: z.string().optional(),
   location: z.string().optional(),
+  purchase_message: z.string().optional(),
+  prize_message: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -68,6 +71,8 @@ export default function AdminPerfilPage() {
           phone: data.phone ?? "",
           instagram_url: data.instagram_url ?? "",
           location: data.location ?? "",
+          purchase_message: data.purchase_message ?? "",
+          prize_message: data.prize_message ?? "",
         });
         setAvatarUrl(data.avatar_url ?? null);
       }
@@ -99,6 +104,8 @@ export default function AdminPerfilPage() {
         instagram_url: values.instagram_url || null,
         location: values.location || null,
         avatar_url: avatarUrl,
+        purchase_message: values.purchase_message || null,
+        prize_message: values.prize_message || null,
       })
       .eq("id", user.id);
 
@@ -186,6 +193,31 @@ export default function AdminPerfilPage() {
                   className="pl-9"
                   placeholder="Alta Gracia, Córdoba"
                   {...register("location")}
+                />
+              </div>
+            </div>
+
+            {/* Mensajes de notificación */}
+            <div className="space-y-3 rounded-xl border p-4">
+              <p className="text-sm font-semibold">Mensajes de notificación</p>
+              <div className="space-y-2">
+                <Label htmlFor="purchase_message">
+                  Mensaje de confirmación de compra
+                </Label>
+                <Textarea
+                  id="purchase_message"
+                  rows={3}
+                  placeholder="Ej: ¡Gracias por tu compra! Tus números quedaron confirmados…"
+                  {...register("purchase_message")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="prize_message">Mensaje de premios</Label>
+                <Textarea
+                  id="prize_message"
+                  rows={3}
+                  placeholder="Ej: ¡Felicitaciones! Te contactaremos para coordinar la entrega…"
+                  {...register("prize_message")}
                 />
               </div>
             </div>

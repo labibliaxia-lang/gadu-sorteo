@@ -159,59 +159,85 @@ export default function MisNumerosPage() {
       ) : (
         <div className="space-y-4">
           {groups.map((g) => (
-            <Card key={g.raffle.id}>
-              <CardContent className="flex gap-4 p-4">
-                <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-muted">
-                  {g.raffle.cover_image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={g.raffle.cover_image_url}
-                      alt={g.raffle.title}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-3xl">
-                      🛠️
-                    </div>
-                  )}
-                </div>
+            <Card key={g.raffle.id} className="overflow-hidden">
+              <div className="flex flex-col sm:flex-row">
+                {/* Lado principal del boleto */}
+                <div className="flex flex-1 gap-4 p-5">
+                  <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl border bg-muted">
+                    {g.raffle.cover_image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={g.raffle.cover_image_url}
+                        alt={g.raffle.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-3xl">
+                        🛠️
+                      </div>
+                    )}
+                  </div>
 
-                <div className="min-w-0 flex-1 space-y-2">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <CardTitle className="text-lg">{g.raffle.title}</CardTitle>
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                      🎟 Boleto digital
+                    </p>
+                    <CardTitle className="text-lg leading-tight">
+                      {g.raffle.title}
+                    </CardTitle>
+                    <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <CalendarDays className="h-4 w-4" />
+                      {formatDateTime(g.raffle.draw_date)}
+                    </p>
                     <Badge variant="secondary">
                       {STATUS_LABEL[g.raffle.status] ?? g.raffle.status}
                     </Badge>
-                  </div>
 
-                  <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CalendarDays className="h-4 w-4" />
-                    {formatDateTime(g.raffle.draw_date)}
-                  </p>
-
-                  {g.raffle.status === "drawn" &&
-                    g.raffle.winner_number != null && (
-                      <div className="flex items-center gap-2 rounded-lg border bg-secondary/50 p-2 text-sm">
-                        <Trophy className="h-4 w-4 text-amber-500" />
-                        <span>
-                          Ganador: {g.raffle.winner_name ?? "Anónimo"} — Nº{" "}
-                          {g.raffle.winner_number}
-                        </span>
-                      </div>
-                    )}
-
-                  <div className="flex flex-wrap gap-1.5">
-                    {g.numbers.map((n) => (
-                      <span
-                        key={`${g.raffle.id}-${n}`}
-                        className="rounded-md bg-amber-500/15 px-2 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300"
-                      >
-                        {formatNumber(n)}
-                      </span>
-                    ))}
+                    {g.raffle.status === "drawn" &&
+                      g.raffle.winner_number != null && (
+                        <div className="flex items-center gap-2 rounded-lg border bg-secondary/50 p-2 text-sm">
+                          <Trophy className="h-4 w-4 text-amber-500" />
+                          <span>
+                            Ganador: {g.raffle.winner_name ?? "Anónimo"} — Nº{" "}
+                            {g.raffle.winner_number}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 </div>
-              </CardContent>
+
+                {/* Línea perforada */}
+                <div className="relative hidden border-l border-dashed border-border sm:block" />
+
+                {/* Talón con los números */}
+                <div className="flex flex-col justify-between gap-4 border-t border-dashed p-5 sm:w-64 sm:border-l-0 sm:border-t-0">
+                  <div>
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Tus números
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {g.numbers.map((n) => (
+                        <span
+                          key={`${g.raffle.id}-${n}`}
+                          className="rounded-md border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 font-mono text-sm font-bold text-amber-700 dark:text-amber-300"
+                        >
+                          {formatNumber(n)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <Link
+                    href={`/sorteos/${g.raffle.id}`}
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "sm",
+                      className: "w-full",
+                    })}
+                  >
+                    Ver sorteo
+                  </Link>
+                </div>
+              </div>
             </Card>
           ))}
         </div>

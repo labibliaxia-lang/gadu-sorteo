@@ -1,43 +1,14 @@
-import Image from "next/image";
 import Link from "next/link";
-import {
-  CalendarDays,
-  ShieldCheck,
-  Trophy,
-  Wrench,
-} from "lucide-react";
+import { ShieldCheck, Trophy, Wrench } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
-import { Badge } from "@/components/ui/badge";
 import { HowItWorks } from "@/components/HowItWorks";
-import { ShareButton } from "@/components/ShareButton";
+import { RafflesList } from "@/components/RafflesList";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { cn, formatDateTime, formatPrice } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { Raffle } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-const statusLabel: Record<Raffle["status"], string> = {
-  active: "Activo",
-  closed: "Cerrado",
-  drawn: "Sorteado",
-};
-
-const statusVariant: Record<
-  Raffle["status"],
-  "success" | "warning" | "secondary"
-> = {
-  active: "success",
-  closed: "warning",
-  drawn: "secondary",
-};
 
 export default async function HomePage() {
   const supabase = createClient();
@@ -48,8 +19,6 @@ export default async function HomePage() {
     .from("raffles")
     .select("*")
     .order("created_at", { ascending: false });
-
-  const activeRaffles = (raffles ?? []).filter((r) => r.status === "active");
 
   return (
     <div className="space-y-16">
@@ -111,95 +80,8 @@ export default async function HomePage() {
       {/* ============ CÓMO FUNCIONA (colapsable) ============ */}
       <HowItWorks />
 
-      {/* ============ SORTEOS ============ */}
-      <section id="sorteos" className="space-y-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight">Sorteos activos</h2>
-          <p className="mt-2 text-muted-foreground">
-            Elegí el que más te guste y asegurá tus números.
-          </p>
-        </div>
-
-        {activeRaffles.length === 0 ? (
-          <Card className="mx-auto max-w-md border-dashed text-center">
-            <CardContent className="space-y-4 py-12">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                <Wrench className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-xl font-semibold">
-                  Todavía no hay sorteos activos
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Estamos preparando nuevas rifas de herramientas. Dejá tu
-                  cuenta lista para no perderte el próximo sorteo.
-                </p>
-              </div>
-              <Link href="/register" className={buttonVariants()}>
-                Crear cuenta gratis
-              </Link>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {activeRaffles.map((raffle: Raffle) => (
-              <Card
-                key={raffle.id}
-                className="group overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-amber-500/50 hover:shadow-2xl"
-              >
-                <div className="relative aspect-video w-full bg-muted">
-                  {raffle.cover_image_url ? (
-                    <Image
-                      src={raffle.cover_image_url}
-                      alt={raffle.title}
-                      fill
-                      sizes="(max-width: 640px) 100vw, 33vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-5xl">
-                      🛠️
-                    </div>
-                  )}
-                  <Badge
-                    variant={statusVariant[raffle.status]}
-                    className="absolute right-2 top-2"
-                  >
-                    {statusLabel[raffle.status]}
-                  </Badge>
-                </div>
-
-                <CardHeader>
-                  <CardTitle className="text-xl">{raffle.title}</CardTitle>
-                </CardHeader>
-
-                <CardContent className="space-y-2 text-sm text-muted-foreground">
-                  <p className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4" />
-                    {formatDateTime(raffle.draw_date)}
-                  </p>
-                  <p className="text-lg font-semibold text-foreground">
-                    {formatPrice(Number(raffle.price_per_number))}{" "}
-                    <span className="text-sm font-normal text-muted-foreground">
-                      por número
-                    </span>
-                  </p>
-                </CardContent>
-
-                <CardFooter className="gap-2">
-                  <Link
-                    href={`/sorteos/${raffle.id}`}
-                    className={cn(buttonVariants(), "flex-1")}
-                  >
-                    Participar
-                  </Link>
-                  <ShareButton sorteoId={raffle.id} titulo={raffle.title} />
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
+      {/* ============ SORTEOS (filtros + búsqueda) ============ */}
+      <RafflesList raffles={(raffles ?? []) as Raffle[]} />
     </div>
   );
 }
