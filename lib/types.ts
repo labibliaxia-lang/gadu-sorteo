@@ -8,6 +8,10 @@ export type PaymentStatus =
   | "cancelled"
   | "expired";
 
+export type VerificationStatus = "pending" | "approved" | "rejected";
+
+export type AdminRequestStatus = "none" | "pending" | "approved" | "rejected";
+
 export interface Profile {
   id: string;
   full_name: string;
@@ -17,6 +21,16 @@ export interface Profile {
   instagram_url: string | null;
   location: string | null;
   is_verified: boolean;
+  email: string | null;
+  role_requested: boolean;
+  role_request_status: string | null;
+  admin_request_status: AdminRequestStatus;
+  verification_status: VerificationStatus;
+  dni_front_url: string | null;
+  face_url: string | null;
+  dni_verified: boolean;
+  face_verified: boolean;
+  request_message: string | null;
   created_at: string;
 }
 
