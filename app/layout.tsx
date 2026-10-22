@@ -25,6 +25,36 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Auto-reparación: si el usuario autenticado aún no tiene perfil en
+  // public.profiles, lo creamos al vuelo (RLS: auth.uid() = id).
+  if (user) {
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      const meta = user.user_metadata as {
+        full_name?: string;
+        name?: string;
+      };
+      await supabase.from("profiles").upsert(
+        {
+          id: user.id,
+          full_name:
+            meta.full_name ||
+            meta.name ||
+            user.email?.split("@")[0] ||
+            "Usuario",
+          email: user.email ?? null,
+          role: "user",
+        },
+        { onConflict: "id", ignoreDuplicates: true },
+      );
+    }
+  }
+
   const initialUser = user
     ? {
         id: user.id,
