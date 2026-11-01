@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   Crown,
   LayoutDashboard,
+  Lock,
   Plus,
   ShieldCheck,
   Ticket,
@@ -11,6 +12,7 @@ import {
 
 import { createClient } from "@/lib/supabase/server";
 import { buttonVariants } from "@/components/ui/button";
+import { lockAdminSession } from "@/app/admin/verify/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -95,6 +97,16 @@ export default async function AdminLayout({
             <User className="h-4 w-4" />
             Perfil
           </Link>
+
+          <form action={lockAdminSession} className="ml-auto">
+            <button
+              type="submit"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              <Lock className="mr-1.5 h-4 w-4" />
+              Bloquear panel
+            </button>
+          </form>
         </nav>
       </header>
 
