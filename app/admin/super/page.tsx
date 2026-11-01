@@ -8,7 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RoleRequestActions } from "@/components/RoleRequestActions";
-import { UserManagementTable } from "@/components/UserManagementTable";
+import { SuperAdminDashboard } from "@/components/SuperAdminDashboard";
 import { VerificationActions } from "@/components/VerificationActions";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 
@@ -32,6 +32,9 @@ const ACTION_LABELS: Record<string, string> = {
   APPROVE_ROLE: "Aprobó rol de organizador",
   REJECT_ROLE: "Rechazó solicitud de rol",
   CHANGE_ROLE: "Cambió rol manualmente",
+  CREATE_ORGANIZER: "Alta manual de organizador",
+  SUSPEND_USER: "Suspendió organizador",
+  DELETE_USER: "Eliminó usuario",
 };
 
 function waLink(phone: string | null): string | null {
@@ -379,7 +382,7 @@ export default async function SuperAdminPage({
             {users?.length ?? 0} registrados
           </span>
         </div>
-        <UserManagementTable users={users ?? []} />
+        <SuperAdminDashboard users={users ?? []} />
       </div>
 
       {/* Auditoría */}
