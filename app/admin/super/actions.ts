@@ -378,3 +378,112 @@ export async function deleteUsers(userIds: string[]) {
   if (count === 0) return { ok: false, error: lastError ?? "No se pudo eliminar" };
   return { ok: true, count };
 }
+
+// Verifica si un email ya está registrado (para el label del modal).
+export async function checkEmailRegistered(email: string) {
+  const adminUser = await getAdmin();
+  if (!adminUser) return { ok: false, registered: false };
+
+  const term = email.trim();
+  if (!term || !term.includes("@")) return { ok: true, registered: false };
+
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("profiles")
+    .select("id")
+    .ilike("email", term)
+    .maybeSingle();
+
+  return { ok: true, registered: Boolean(data) };
+}
+
+// Revoca el rol de organizador (lote): admin -> user.
+export async function demoteOrganizers(userIds: string[]) {
+  const adminUser = await getAdmin();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  const ids = userIds.filter((id) => id !== adminUser.id);
+  if (ids.length === 0) return { ok: false, error: "Selección inválida" };
+
+  const admin = createAdminClient();
+  const { data: targets } = await admin
+    .from("profiles")
+    .select("id, email, role")
+    .in("id", ids);
+
+  const valid = (targets ?? []).filter((t) => t.role === "admin");
+  if (valid.length === 0)
+    return { ok: false, error: "No hay organizadores seleccionados" };
+
+  const validIds = valid.map((t) => t.id);
+  const { error } = await admin
+    .from("profiles")
+    .update({ role: "user" })
+    .in("id", validIds);
+
+  if (error) return { ok: false, error: error.message };
+
+  for (const t of valid) {
+    await logAction({
+      adminId: adminUser.id,
+      adminEmail: adminUser.email,
+      action: "CHANGE_ROLE",
+      targetUserId: t.id,
+      targetEmail: t.email,
+      details: JSON.stringify({ to: "user", via: "revoke" }),
+    });
+  }
+
+  revalidatePath("/admin/super");
+  revalidatePath("/", "layout");
+  return { ok: true, count: valid.length };
+}
+
+// Bloqueo permanente: ban de auth.users (~100 años) + demote.
+export async function blockUsers(userIds: string[]) {
+  const adminUser = await getAdmin();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  const ids = userIds.filter((id) => id !== adminUser.id);
+  if (ids.length === 0) return { ok: false, error: "Selección inválida" };
+
+  const admin = createAdminClient();
+  const { data: targets } = await admin
+    .from("profiles")
+    .select("id, email, role")
+    .in("id", ids);
+
+  const valid = (targets ?? []).filter((t) => t.role !== "superadmin");
+  if (valid.length === 0)
+    return { ok: false, error: "No se puede bloquear al superadmin" };
+
+  let count = 0;
+  let lastError: string | null = null;
+
+  for (const t of valid) {
+    const { error } = await admin.auth.admin.updateUserById(t.id, {
+      ban_duration: "876000h",
+    });
+    if (error) {
+      lastError = error.message;
+      continue;
+    }
+    await admin.from("profiles").update({ role: "user" }).eq("id", t.id);
+    count += 1;
+    await logAction({
+      adminId: adminUser.id,
+      adminEmail: adminUser.email,
+      action: "BLOCK_USER",
+      targetUserId: t.id,
+      targetEmail: t.email,
+      details: JSON.stringify({ ban_duration: "876000h" }),
+    });
+  }
+
+  revalidatePath("/admin/super");
+  revalidatePath("/", "layout");
+
+  if (count === 0)
+    return { ok: false, error: lastError ?? "No se pudo bloquear" };
+  return { ok: true, count };
+}

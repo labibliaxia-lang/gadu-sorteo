@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Trash2, UserX, X } from "lucide-react";
+import { Ban, Plus, Search, Trash2, UserMinus, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  blockUsers,
+  checkEmailRegistered,
   createOrganizer,
   deleteUsers,
-  suspendUsers,
+  demoteOrganizers,
 } from "@/app/admin/super/actions";
 
 export interface SuperAdminUser {
@@ -42,6 +44,7 @@ export function SuperAdminDashboard({
 
   const [modalOpen, setModalOpen] = useState(false);
   const [newOrgInput, setNewOrgInput] = useState("");
+  const [emailRegistered, setEmailRegistered] = useState<boolean | null>(null);
 
   const filtered = useMemo(
     () =>
@@ -60,6 +63,25 @@ export function SuperAdminDashboard({
   const allSelected =
     selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
 
+  // Chequeo en vivo: ¿el email ingresado ya está registrado?
+  useEffect(() => {
+    if (!modalOpen) return;
+    const email = newOrgInput.trim();
+    if (!email.includes("@")) {
+      setEmailRegistered(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const res = await checkEmailRegistered(email);
+      if (!cancelled) setEmailRegistered(res.registered);
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [newOrgInput, modalOpen]);
+
   function toggle(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -72,7 +94,6 @@ export function SuperAdminDashboard({
   function toggleAll() {
     setSelected((prev) => {
       if (allSelected) return new Set();
-      // Conserva las selecciones que ya estaban si no eran "todas".
       const next = new Set(prev);
       selectableIds.forEach((id) => next.add(id));
       return next;
@@ -96,26 +117,48 @@ export function SuperAdminDashboard({
       setNotice(msg);
       setModalOpen(false);
       setNewOrgInput("");
+      setEmailRegistered(null);
       router.refresh();
     }
     setBusy(false);
   }
 
-  async function handleSuspend() {
+  async function handleDemote() {
     if (selected.size === 0) return;
     if (
       !window.confirm(
-        `¿Suspender ${selected.size} usuario(s)? Perderán el rol de organizador.`,
+        `¿Quitar el rol de organizador a ${selected.size} usuario(s)? Pasarán a ser usuarios comunes.`,
       )
     )
       return;
     setBusy(true);
     setError(null);
     setNotice(null);
-    const res = await suspendUsers(Array.from(selected));
-    if (!res.ok) setError(res.error ?? "Error al suspender");
+    const res = await demoteOrganizers(Array.from(selected));
+    if (!res.ok) setError(res.error ?? "Error al quitar el rol");
     else {
-      setNotice(`Suspendidos: ${res.count ?? 0}`);
+      setNotice(`Rol revocado a: ${res.count ?? 0}`);
+      setSelected(new Set());
+      router.refresh();
+    }
+    setBusy(false);
+  }
+
+  async function handleBlock() {
+    if (selected.size === 0) return;
+    if (
+      !window.confirm(
+        `¿Bloquear permanentemente a ${selected.size} usuario(s)? No podrán volver a iniciar sesión.`,
+      )
+    )
+      return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    const res = await blockUsers(Array.from(selected));
+    if (!res.ok) setError(res.error ?? "Error al bloquear");
+    else {
+      setNotice(`Bloqueados: ${res.count ?? 0}`);
       setSelected(new Set());
       router.refresh();
     }
@@ -142,6 +185,9 @@ export function SuperAdminDashboard({
     }
     setBusy(false);
   }
+
+  const trimmed = newOrgInput.trim();
+  const inviteMode = trimmed.includes("@") && emailRegistered === false;
 
   return (
     <div className="space-y-3">
@@ -235,18 +281,27 @@ export function SuperAdminDashboard({
 
       {/* Barra flotante de acciones múltiples */}
       {selected.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border bg-background px-4 py-2 shadow-2xl">
+        <div className="fixed bottom-6 left-1/2 z-50 flex max-w-[95vw] -translate-x-1/2 flex-wrap items-center justify-center gap-2 rounded-2xl border bg-background px-4 py-2 shadow-2xl">
           <span className="text-sm font-medium">
             {selected.size} seleccionado{selected.size === 1 ? "" : "s"}
           </span>
           <Button
             size="sm"
             variant="outline"
-            onClick={handleSuspend}
+            onClick={handleDemote}
             disabled={busy}
           >
-            <UserX className="mr-1.5 h-4 w-4" />
-            Suspender
+            <UserMinus className="mr-1.5 h-4 w-4" />
+            Quitar rol
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleBlock}
+            disabled={busy}
+          >
+            <Ban className="mr-1.5 h-4 w-4" />
+            Bloquear
           </Button>
           <Button
             size="sm"
@@ -283,7 +338,7 @@ export function SuperAdminDashboard({
                 <h3 className="text-lg font-semibold">Nuevo Organizador</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Asigná el rol por email o ID. Si el email no tiene cuenta, se
-                  crea una invitación que se activa en su primer inicio de
+                  enviará una invitación que se activa en su primer inicio de
                   sesión.
                 </p>
               </div>
@@ -306,13 +361,26 @@ export function SuperAdminDashboard({
                   if (e.key === "Enter") handleCreate();
                 }}
               />
+
+              {inviteMode && (
+                <p className="rounded-lg bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
+                  Ese email no tiene cuenta: se enviará una invitación para ser
+                  organizador.
+                </p>
+              )}
+
               {error && <p className="text-xs text-destructive">{error}</p>}
+
               <Button
                 className="w-full"
                 onClick={handleCreate}
-                disabled={busy || !newOrgInput.trim()}
+                disabled={busy || !trimmed}
               >
-                {busy ? "Asignando…" : "Asignar rol de organizador"}
+                {busy
+                  ? "Procesando…"
+                  : inviteMode
+                    ? "Enviar invitación por email"
+                    : "Asignar rol de organizador"}
               </Button>
             </div>
           </div>
