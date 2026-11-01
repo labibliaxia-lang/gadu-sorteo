@@ -29,7 +29,7 @@ async function logAction(params: {
   adminId: string;
   adminEmail: string | null;
   action: string;
-  targetUserId: string;
+  targetUserId: string | null;
   targetEmail: string | null;
   details: string;
 }) {
@@ -149,13 +149,27 @@ export async function setUserRole(userId: string, role: "user" | "admin") {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Alta manual de organizador por email o id (UUID).
-export async function createOrganizer(input: string) {
+// Alta manual de organizador por email o id (UUID). Si el email no existe,
+// crea una pre-asignación (invitación) que se aplica en el primer login.
+export async function createOrganizer(input: string): Promise<{
+  ok: boolean;
+  error?: string;
+  mode?: "assigned" | "invited" | "already-invited";
+  emailSent?: boolean;
+  userId?: string;
+  message?: string;
+}> {
   const adminUser = await getAdmin();
   if (!adminUser) return { ok: false, error: "No autorizado" };
 
   const term = input.trim();
   if (!term) return { ok: false, error: "Ingresá un email o ID" };
+
+  const isEmail = term.includes("@");
+  const isUuid = UUID_RE.test(term);
+  if (!isEmail && !isUuid) {
+    return { ok: false, error: "Ingresá un email válido o un ID (UUID)" };
+  }
 
   const admin = createAdminClient();
 
@@ -178,37 +192,104 @@ export async function createOrganizer(input: string) {
     target = byId;
   }
 
-  if (!target)
-    return { ok: false, error: "No se encontró un usuario con ese email/ID" };
-  if (target.role === "superadmin")
-    return { ok: false, error: "Ese usuario ya es superadmin" };
-  if (target.role === "admin")
-    return { ok: false, error: "Ese usuario ya es organizador" };
+  // --- Usuario existente: asignar rol directamente ---
+  if (target) {
+    if (target.role === "superadmin")
+      return { ok: false, error: "Ese usuario ya es superadmin" };
+    if (target.role === "admin")
+      return { ok: false, error: "Ese usuario ya es organizador" };
 
-  const { error } = await admin
-    .from("profiles")
-    .update({
-      role: "admin",
-      role_requested: false,
-      role_request_status: "approved",
-      admin_request_status: "approved",
-    })
-    .eq("id", target.id);
+    const { error } = await admin
+      .from("profiles")
+      .update({
+        role: "admin",
+        role_requested: false,
+        role_request_status: "approved",
+        admin_request_status: "approved",
+      })
+      .eq("id", target.id);
 
-  if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: error.message };
+
+    await logAction({
+      adminId: adminUser.id,
+      adminEmail: adminUser.email,
+      action: "CREATE_ORGANIZER",
+      targetUserId: target.id,
+      targetEmail: target.email,
+      details: JSON.stringify({ via: "manual", input: term }),
+    });
+
+    revalidatePath("/admin/super");
+    revalidatePath("/", "layout");
+    return { ok: true, mode: "assigned", userId: target.id };
+  }
+
+  // --- Usuario nuevo: pre-asignación por invitación ---
+  if (!isEmail) {
+    return { ok: false, error: "No se encontró un usuario con ese ID" };
+  }
+
+  const { data: existingInv } = await admin
+    .from("organizer_invitations")
+    .select("id, status")
+    .ilike("email", term)
+    .maybeSingle();
+
+  if (existingInv && existingInv.status === "pending") {
+    return {
+      ok: true,
+      mode: "already-invited",
+      message: "Ya existe una invitación pendiente para ese email.",
+    };
+  }
+
+  if (existingInv) {
+    await admin
+      .from("organizer_invitations")
+      .update({
+        status: "pending",
+        invited_by: adminUser.id,
+        accepted_at: null,
+      })
+      .eq("id", existingInv.id);
+  } else {
+    const { error: invError } = await admin
+      .from("organizer_invitations")
+      .insert({ email: term, invited_by: adminUser.id, status: "pending" });
+    if (invError) return { ok: false, error: invError.message };
+  }
+
+  // Best-effort: envía el correo de invitación (si el SMTP está configurado).
+  let emailSent = false;
+  try {
+    const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(
+      term,
+    );
+    if (!inviteError) emailSent = true;
+  } catch {
+    // SMTP no configurado o usuario ya existente: se aplica al primer login.
+  }
 
   await logAction({
     adminId: adminUser.id,
     adminEmail: adminUser.email,
-    action: "CREATE_ORGANIZER",
-    targetUserId: target.id,
-    targetEmail: target.email,
-    details: JSON.stringify({ via: "manual", input: term }),
+    action: "INVITE_ORGANIZER",
+    targetUserId: null,
+    targetEmail: term,
+    details: JSON.stringify({ invited: true, emailSent }),
   });
 
   revalidatePath("/admin/super");
   revalidatePath("/", "layout");
-  return { ok: true, userId: target.id };
+  return {
+    ok: true,
+    mode: "invited",
+    emailSent,
+    message: emailSent
+      ? "Invitación creada y correo enviado."
+      : "Invitación creada. Se asignará el rol al primer inicio de sesión.",
+  };
 }
 
 // Suspensión (lote): quita el rol de organizador (role -> user).

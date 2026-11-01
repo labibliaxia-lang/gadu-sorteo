@@ -33,6 +33,7 @@ const ACTION_LABELS: Record<string, string> = {
   REJECT_ROLE: "Rechazó solicitud de rol",
   CHANGE_ROLE: "Cambió rol manualmente",
   CREATE_ORGANIZER: "Alta manual de organizador",
+  INVITE_ORGANIZER: "Invitó organizador por email",
   SUSPEND_USER: "Suspendió organizador",
   DELETE_USER: "Eliminó usuario",
 };

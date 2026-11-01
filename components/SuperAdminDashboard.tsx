@@ -88,7 +88,12 @@ export function SuperAdminDashboard({
     if (!res.ok) {
       setError(res.error ?? "Error al asignar organizador");
     } else {
-      setNotice("Organizador asignado correctamente.");
+      const msg =
+        res.mode === "assigned"
+          ? "Organizador asignado correctamente."
+          : res.message ??
+            "Invitación creada. Se asignará el rol al primer inicio de sesión.";
+      setNotice(msg);
       setModalOpen(false);
       setNewOrgInput("");
       router.refresh();
@@ -277,7 +282,9 @@ export function SuperAdminDashboard({
               <div>
                 <h3 className="text-lg font-semibold">Nuevo Organizador</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Asigná el rol de organizador por email o ID de usuario.
+                  Asigná el rol por email o ID. Si el email no tiene cuenta, se
+                  crea una invitación que se activa en su primer inicio de
+                  sesión.
                 </p>
               </div>
               <button
