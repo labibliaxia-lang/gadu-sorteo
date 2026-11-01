@@ -149,6 +149,25 @@ export async function setUserRole(userId: string, role: "user" | "admin") {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Traduce los errores crudos de Supabase Auth a mensajes accionables.
+function friendlyInviteError(message: string): string {
+  const m = message.toLowerCase();
+
+  if (m.includes("already") && (m.includes("registered") || m.includes("exists"))) {
+    return "ese email ya tiene una cuenta (asignale el rol directamente)";
+  }
+  if (m.includes("smtp") || m.includes("sending") || m.includes("email")) {
+    return "el servicio de correo (SMTP) no está configurado en Supabase";
+  }
+  if (m.includes("rate limit") || m.includes("too many")) {
+    return "se superó el límite de envíos; probá más tarde";
+  }
+  if (m.includes("invalid") && m.includes("email")) {
+    return "el email ingresado no es válido";
+  }
+  return message;
+}
+
 // Alta manual de organizador por email o id (UUID). Si el email no existe,
 // crea una pre-asignación (invitación) que se aplica en el primer login.
 export async function createOrganizer(input: string): Promise<{
@@ -230,45 +249,68 @@ export async function createOrganizer(input: string): Promise<{
     return { ok: false, error: "No se encontró un usuario con ese ID" };
   }
 
-  const { data: existingInv } = await admin
-    .from("organizer_invitations")
-    .select("id, status")
-    .ilike("email", term)
-    .maybeSingle();
+  // Guarda la pre-asignación. Si la tabla todavía no existe en la BD,
+  // NO se rompe el flujo: se sigue con el envío del correo.
+  let invitationStored = true;
+  let inviteCheckError: string | null = null;
 
-  if (existingInv && existingInv.status === "pending") {
-    return {
-      ok: true,
-      mode: "already-invited",
-      message: "Ya existe una invitación pendiente para ese email.",
-    };
+  try {
+    const { data: existingInv, error: selectError } = await admin
+      .from("organizer_invitations")
+      .select("id, status")
+      .ilike("email", term)
+      .maybeSingle();
+
+    if (selectError) throw selectError;
+
+    if (existingInv && existingInv.status === "pending") {
+      invitationStored = true;
+    } else if (existingInv) {
+      const { error: updateError } = await admin
+        .from("organizer_invitations")
+        .update({
+          status: "pending",
+          invited_by: adminUser.id,
+          accepted_at: null,
+        })
+        .eq("id", existingInv.id);
+      if (updateError) throw updateError;
+    } else {
+      const { error: insertError } = await admin
+        .from("organizer_invitations")
+        .insert({ email: term, invited_by: adminUser.id, status: "pending" });
+      if (insertError) throw insertError;
+    }
+  } catch (e) {
+    invitationStored = false;
+    inviteCheckError =
+      e instanceof Error
+        ? e.message
+        : "No se pudo registrar la invitación pendiente";
+    console.error(
+      "[createOrganizer] organizer_invitations no disponible:",
+      inviteCheckError,
+    );
   }
 
-  if (existingInv) {
-    await admin
-      .from("organizer_invitations")
-      .update({
-        status: "pending",
-        invited_by: adminUser.id,
-        accepted_at: null,
-      })
-      .eq("id", existingInv.id);
-  } else {
-    const { error: invError } = await admin
-      .from("organizer_invitations")
-      .insert({ email: term, invited_by: adminUser.id, status: "pending" });
-    if (invError) return { ok: false, error: invError.message };
-  }
-
-  // Best-effort: envía el correo de invitación (si el SMTP está configurado).
+  // Envío del correo de invitación (Supabase Auth / SMTP configurado).
   let emailSent = false;
+  let emailError: string | null = null;
+
   try {
     const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(
       term,
+      { redirectTo: `${process.env.NEXT_PUBLIC_URL ?? ""}/auth/callback` },
     );
-    if (!inviteError) emailSent = true;
-  } catch {
-    // SMTP no configurado o usuario ya existente: se aplica al primer login.
+    if (inviteError) {
+      emailError = friendlyInviteError(inviteError.message);
+    } else {
+      emailSent = true;
+    }
+  } catch (e) {
+    emailError = friendlyInviteError(
+      e instanceof Error ? e.message : "Error desconocido al enviar el correo",
+    );
   }
 
   await logAction({
@@ -277,18 +319,32 @@ export async function createOrganizer(input: string): Promise<{
     action: "INVITE_ORGANIZER",
     targetUserId: null,
     targetEmail: term,
-    details: JSON.stringify({ invited: true, emailSent }),
+    details: JSON.stringify({ invitationStored, emailSent, emailError }),
   });
 
   revalidatePath("/admin/super");
   revalidatePath("/", "layout");
+
+  if (emailSent) {
+    return {
+      ok: true,
+      mode: "invited",
+      emailSent: true,
+      message: "Invitación enviada por correo.",
+    };
+  }
+
   return {
     ok: true,
     mode: "invited",
-    emailSent,
-    message: emailSent
-      ? "Invitación creada y correo enviado."
-      : "Invitación creada. Se asignará el rol al primer inicio de sesión.",
+    emailSent: false,
+    message: invitationStored
+      ? `Invitación registrada. No se pudo enviar el correo${
+          emailError ? `: ${emailError}` : ""
+        }. El rol se aplicará en su primer inicio de sesión.`
+      : `Pre-asignación no guardada (falta aplicar la migración 0021)${
+          emailError ? ` y el correo falló: ${emailError}` : ""
+        }.`,
   };
 }
 

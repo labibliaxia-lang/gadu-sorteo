@@ -29,6 +29,11 @@ create policy "organizer_invitations_superadmin_all"
   using (public.is_superadmin())
   with check (public.is_superadmin());
 
+-- Permisos explícitos: el service_role (Server Actions) necesita acceso
+-- total; el authenticated solo lee (RLS restringe a superadmin).
+grant all on public.organizer_invitations to service_role;
+grant select on public.organizer_invitations to authenticated;
+
 -- Trigger de signup: crea el perfil y aplica invitaciones pendientes.
 create or replace function public.handle_new_user()
 returns trigger
@@ -39,11 +44,17 @@ as $$
 declare
   v_invited boolean := false;
 begin
-  select exists (
-    select 1 from public.organizer_invitations
-    where lower(email) = lower(coalesce(new.email, ''))
-      and status = 'pending'
-  ) into v_invited;
+  -- La búsqueda de invitación NUNCA debe romper el alta de usuarios:
+  -- si la tabla no existe todavía, se sigue como usuario normal.
+  begin
+    select exists (
+      select 1 from public.organizer_invitations
+      where lower(email) = lower(coalesce(new.email, ''))
+        and status = 'pending'
+    ) into v_invited;
+  exception when others then
+    v_invited := false;
+  end;
 
   insert into public.profiles as p (id, full_name, phone, role, email, avatar_url)
   values (
