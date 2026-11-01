@@ -1,5 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Lock, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,13 +10,9 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { verifyAdmin } from "@/app/admin/verify/actions";
 
-export const dynamic = "force-dynamic";
-
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: "Código de administrador incorrecto. Intentá de nuevo.",
   forbidden: "Tu cuenta no tiene permisos de superadministrador.",
-  config:
-    "Falta configurar ADMIN_ACCESS_CODE en el entorno del servidor. El panel permanece bloqueado por seguridad.",
 };
 
 export default function AdminVerifyPage({
@@ -21,6 +20,8 @@ export default function AdminVerifyPage({
 }: {
   searchParams: { next?: string; error?: string };
 }) {
+  const [showCode, setShowCode] = useState(false);
+
   const rawNext = searchParams.next ?? "";
   const next =
     rawNext.startsWith("/admin") && !rawNext.startsWith("//")
@@ -62,20 +63,32 @@ export default function AdminVerifyPage({
               <Input
                 id="code"
                 name="code"
-                type="password"
-                className="pl-9"
+                type={showCode ? "text" : "password"}
+                className="pl-9 pr-10"
                 placeholder="••••••••"
                 autoComplete="current-password"
                 autoFocus
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowCode((v) => !v)}
+                aria-label={
+                  showCode ? "Ocultar código" : "Mostrar código"
+                }
+                title={showCode ? "Ocultar código" : "Mostrar código"}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition hover:bg-accent hover:text-foreground"
+              >
+                {showCode ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
             </div>
           </div>
 
-          <button
-            type="submit"
-            className={cn(buttonVariants(), "w-full")}
-          >
+          <button type="submit" className={cn(buttonVariants(), "w-full")}>
             <Lock className="mr-1.5 h-4 w-4" />
             Desbloquear panel
           </button>

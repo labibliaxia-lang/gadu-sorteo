@@ -9,12 +9,21 @@ import { createClient } from "@/lib/supabase/server";
 const ADMIN_COOKIE = "admin_verified";
 const MAX_AGE_SECONDS = 30 * 60; // 30 minutos
 
-function sessionSecret(): string | null {
-  return (
-    process.env.ADMIN_SESSION_SECRET ??
-    process.env.ADMIN_ACCESS_CODE ??
-    null
-  );
+// Código maestro de fallback para que el panel no quede bloqueado si la
+// variable de entorno no está configurada. En producción se recomienda
+// definir ADMIN_ACCESS_CODE con un valor propio y largo.
+const DEFAULT_ADMIN_CODE = "gadu2026";
+
+function adminAccessCode(): string {
+  const fromEnv = process.env.ADMIN_ACCESS_CODE?.trim();
+  if (fromEnv) return fromEnv;
+  return DEFAULT_ADMIN_CODE;
+}
+
+function sessionSecret(): string {
+  const fromEnv = process.env.ADMIN_SESSION_SECRET?.trim();
+  if (fromEnv) return fromEnv;
+  return adminAccessCode();
 }
 
 function sign(payload: string, key: string): string {
@@ -37,11 +46,8 @@ export async function verifyAdmin(formData: FormData) {
   const next = safeNext(formData.get("next"));
   const code = String(formData.get("code") ?? "");
 
-  const expected = process.env.ADMIN_ACCESS_CODE;
+  const expected = adminAccessCode();
   const key = sessionSecret();
-
-  // Fail-closed: sin código configurado no se puede desbloquear el panel.
-  if (!expected || !key) redirect("/admin/verify?error=config");
 
   const supabase = createClient();
   const {

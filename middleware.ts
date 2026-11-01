@@ -5,12 +5,18 @@ const ADMIN_COOKIE = "admin_verified";
 const ADMIN_PREFIX = "/admin";
 const ADMIN_VERIFY = "/admin/verify";
 
-function sessionSecret(): string | null {
-  return (
-    process.env.ADMIN_SESSION_SECRET ??
-    process.env.ADMIN_ACCESS_CODE ??
-    null
-  );
+// Debe coincidir con la lógica de `app/admin/verify/actions.ts` para que la
+// cookie firmada por la Server Action sea validada correctamente.
+const DEFAULT_ADMIN_CODE = "gadu2026";
+
+function adminAccessCode(): string {
+  const value = process.env.ADMIN_ACCESS_CODE?.trim();
+  return value || DEFAULT_ADMIN_CODE;
+}
+
+function sessionSecret(): string {
+  const value = process.env.ADMIN_SESSION_SECRET?.trim();
+  return value || adminAccessCode();
 }
 
 /** HMAC-SHA256 en base64url usando Web Crypto (compatible con Edge runtime). */
