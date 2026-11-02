@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Grid3x3, Pencil } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
+import { requireAdminSession } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -33,6 +34,12 @@ export default async function AdminRaffleDetailPage({
 }) {
   const supabase = createClient();
 
+  // P0: un organizador no puede espiar el detalle de un sorteo ajeno. RLS de
+  // `raffles` es pública por diseño (la página pública lo necesita), así que la
+  // pertenencia se valida acá, en el servidor.
+  const actor = await requireAdminSession();
+  if (!actor) redirect("/login");
+
   const { data: raffle } = await supabase
     .from("raffles")
     .select("*")
@@ -40,6 +47,7 @@ export default async function AdminRaffleDetailPage({
     .single();
 
   if (!raffle) notFound();
+  if (!actor.isSuper && raffle.created_by !== actor.id) notFound();
 
   const { count: soldCount } = await supabase
     .from("raffle_numbers")

@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const ADMIN_COOKIE = "admin_verified";
-const ADMIN_PREFIX = "/admin";
+const SUPER_PREFIX = "/admin/super";
 const ADMIN_VERIFY = "/admin/verify";
 
 // Debe coincidir con la lógica de `app/admin/verify/actions.ts` para que la
@@ -127,8 +127,14 @@ function redirectKeepingCookies(
 /**
  * Refresca la sesión de Supabase Auth en cada petición navegada
  * (patrón recomendado para App Router con cookies) y aplica una capa
- * adicional de seguridad sobre `/admin/*`: exige una re-autenticación
+ * adicional de seguridad sobre `/admin/super`: exige una re-autenticación
  * reciente con el código maestro de administrador.
+ *
+ * El resto del panel (`/admin`, `/admin/sorteos`, `/admin/perfil`,
+ * `/admin/verificacion`) no pide la cookie: entra cualquier usuario con rol
+ * `admin` o `superadmin`, y la autorización real la hacen el layout, las
+ * Server Actions y RLS. Los organizadores comunes quedaban afuera con el
+ * esquema anterior, que exigía la cookie en todo `/admin/*`.
  */
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -166,12 +172,12 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isAdminArea =
-    pathname === ADMIN_PREFIX || pathname.startsWith(`${ADMIN_PREFIX}/`);
-  const isVerifyPage =
-    pathname === ADMIN_VERIFY || pathname.startsWith(`${ADMIN_VERIFY}/`);
+  const isSuperArea =
+    pathname === SUPER_PREFIX || pathname.startsWith(`${SUPER_PREFIX}/`);
 
-  if (isAdminArea && !isVerifyPage) {
+  // Solo el panel de superadmin conserva el segundo factor. Las demás rutas
+  // del panel se autorizan por rol en `app/admin/layout.tsx` y en cada action.
+  if (isSuperArea) {
     if (!user) {
       return redirectKeepingCookies(request, supabaseResponse, "/login");
     }

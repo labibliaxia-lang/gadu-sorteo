@@ -2,16 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 
+import {
+  requireAdminSession,
+  requireSuperadminSession,
+} from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-async function getCurrentUserId(): Promise<string | null> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user?.id ?? null;
-}
 
 // Sube un archivo al bucket privado organizador-kyc/<userId>/<filename>.<ext>.
 // Devuelve la RUTA (no una URL pública) para guardarla en el perfil.
@@ -34,8 +30,9 @@ async function uploadKycFile(
 }
 
 export async function submitDni(formData: FormData) {
-  const userId = await getCurrentUserId();
-  if (!userId) return { ok: false, error: "No autenticado" };
+  const actor = await requireAdminSession();
+  if (!actor) return { ok: false, error: "No autorizado" };
+  const userId = actor.id;
 
   const file = formData.get("dni") as File | null;
   if (!file || !file.type.startsWith("image/")) {
@@ -58,8 +55,9 @@ export async function submitDni(formData: FormData) {
 }
 
 export async function submitSelfie(formData: FormData) {
-  const userId = await getCurrentUserId();
-  if (!userId) return { ok: false, error: "No autenticado" };
+  const actor = await requireAdminSession();
+  if (!actor) return { ok: false, error: "No autorizado" };
+  const userId = actor.id;
 
   const file = formData.get("selfie") as File | null;
   if (!file || !file.type.startsWith("image/")) {
@@ -81,24 +79,9 @@ export async function submitSelfie(formData: FormData) {
   return { ok: true };
 }
 
-async function isSuperAdmin(): Promise<boolean> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return false;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  return profile?.role === "superadmin";
-}
-
 export async function approveVerification(userId: string) {
-  if (!(await isSuperAdmin())) return { ok: false, error: "No autorizado" };
+  const actor = await requireSuperadminSession();
+  if (!actor) return { ok: false, error: "No autorizado" };
 
   const admin = createAdminClient();
   const { error } = await admin
@@ -118,7 +101,8 @@ export async function approveVerification(userId: string) {
 }
 
 export async function rejectVerification(userId: string) {
-  if (!(await isSuperAdmin())) return { ok: false, error: "No autorizado" };
+  const actor = await requireSuperadminSession();
+  if (!actor) return { ok: false, error: "No autorizado" };
 
   const admin = createAdminClient();
   const { error } = await admin

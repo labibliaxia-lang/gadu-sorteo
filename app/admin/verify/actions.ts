@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { requireSuperadminSession } from "@/lib/auth";
 
 const ADMIN_COOKIE = "admin_verified";
 const MAX_AGE_SECONDS = 30 * 60; // 30 minutos
@@ -79,20 +80,14 @@ export async function verifyAdmin(formData: FormData) {
   const next = safeNext(formData.get("next"));
   const code = String(formData.get("code") ?? "").trim();
 
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "superadmin") {
-    redirect("/admin/verify?error=forbidden");
+  const actor = await requireSuperadminSession();
+  if (!actor) {
+    // Sin sesión se va al login; con sesión pero sin rol, al aviso de permiso.
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    redirect(user ? "/admin/verify?error=forbidden" : "/login");
   }
 
   // Paso 2: hash SHA-256 de la entrada y comparación segura.
@@ -114,7 +109,7 @@ export async function verifyAdmin(formData: FormData) {
 
   // Paso 4: cookie firmada de corta duración.
   const exp = String(Date.now() + MAX_AGE_SECONDS * 1000);
-  const payload = `v1.${user.id}.${exp}`;
+  const payload = `v1.${actor.id}.${exp}`;
   const value = `${payload}.${sign(payload, key)}`;
 
   cookies().set(ADMIN_COOKIE, value, {

@@ -1,15 +1,18 @@
 import Image from "next/image";
-import { BadgeCheck, MapPin } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Profile } from "@/lib/types";
+import type { PublicOrganizer } from "@/lib/types";
 
 /**
  * Tarjeta de identidad del organizador (sin botones de contacto):
  * la información de contacto vive en OrganizerContact, al final de la página.
+ *
+ * Recibe la fila de la vista pública `public_organizers`: no tiene email,
+ * teléfono, ubicación ni datos del KYC.
  */
-export function OrganizerCard({ organizer }: { organizer: Profile }) {
+export function OrganizerCard({ organizer }: { organizer: PublicOrganizer }) {
   const initial = (organizer.full_name || "O").charAt(0).toUpperCase();
 
   return (
@@ -39,12 +42,6 @@ export function OrganizerCard({ organizer }: { organizer: Profile }) {
             </p>
             {organizer.is_verified && (
               <Badge variant="success">✓ Identidad Verificada</Badge>
-            )}
-            {organizer.location && (
-              <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" />
-                {organizer.location}
-              </p>
             )}
           </div>
         </div>

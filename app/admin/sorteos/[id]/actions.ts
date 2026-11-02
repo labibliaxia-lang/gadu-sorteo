@@ -2,29 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 
+import { requireAdminSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-type AdminContext = { id: string; isSuper: boolean } | null;
-
-// Devuelve el admin autenticado (organizador o superadmin), o null.
-async function getAdminUser(): Promise<AdminContext> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "admin" && profile?.role !== "superadmin") return null;
-  return { id: user.id, isSuper: profile.role === "superadmin" };
-}
-
-// Verifica que el sorteo pertenezca al admin autenticado actual.
+// Verifica que el sorteo pertenezca al admin autenticado actual. Es una
+// segunda capa: las políticas RLS de 0030 ya acotan la escritura al dueño.
 async function ownsRaffle(raffleId: string, userId: string): Promise<boolean> {
   const supabase = createClient();
   const { data } = await supabase
@@ -37,7 +19,7 @@ async function ownsRaffle(raffleId: string, userId: string): Promise<boolean> {
 }
 
 export async function deleteRaffle(raffleId: string) {
-  const ctx = await getAdminUser();
+  const ctx = await requireAdminSession();
   if (!ctx) return { ok: false, error: "No autorizado" };
   if (!ctx.isSuper && !(await ownsRaffle(raffleId, ctx.id))) {
     return { ok: false, error: "No autorizado" };
@@ -71,7 +53,7 @@ export async function updateRaffle(
     whatsapp_contact?: string | null;
   },
 ) {
-  const ctx = await getAdminUser();
+  const ctx = await requireAdminSession();
   if (!ctx) return { ok: false, error: "No autorizado" };
   if (!ctx.isSuper && !(await ownsRaffle(raffleId, ctx.id))) {
     return { ok: false, error: "No autorizado" };
@@ -117,7 +99,7 @@ export async function markReservationPaid(
   raffleId: string,
   numbers: number[],
 ): Promise<MarkPaidResult> {
-  const ctx = await getAdminUser();
+  const ctx = await requireAdminSession();
   if (!ctx) return { ok: false, error: "No autorizado" };
 
   const clean = Array.from(
@@ -150,7 +132,7 @@ export async function markReservationPaid(
 }
 
 export async function cloneRaffle(raffleId: string) {
-  const ctx = await getAdminUser();
+  const ctx = await requireAdminSession();
   if (!ctx) return { ok: false, error: "No autorizado" };
   if (!ctx.isSuper && !(await ownsRaffle(raffleId, ctx.id))) {
     return { ok: false, error: "No autorizado" };

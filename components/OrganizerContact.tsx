@@ -2,7 +2,12 @@ import { Instagram, MessageCircle } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Profile } from "@/lib/types";
+
+/** Datos de contacto públicos. Salen del sorteo y no del perfil (sin PII). */
+export interface OrganizerContactInfo {
+  phone: string | null;
+  instagram_url: string | null;
+}
 
 function waLink(phone: string | null): string | null {
   const digits = (phone ?? "").replace(/\D/g, "");
@@ -21,7 +26,11 @@ function igLink(instagram: string | null): string | null {
  * Sección secundaria de contacto con el organizador.
  * Se ubica al final de la página para no quitar protagonismo al grid de números.
  */
-export function OrganizerContact({ organizer }: { organizer: Profile }) {
+export function OrganizerContact({
+  organizer,
+}: {
+  organizer: OrganizerContactInfo;
+}) {
   const whatsapp = waLink(organizer.phone);
   const instagram = igLink(organizer.instagram_url);
 

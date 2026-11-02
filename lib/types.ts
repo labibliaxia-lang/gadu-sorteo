@@ -13,6 +13,17 @@ export type VerificationStatus = "pending" | "approved" | "rejected";
 
 export type AdminRequestStatus = "none" | "pending" | "approved" | "rejected";
 
+/**
+ * Datos públicos del organizador (vista `public_organizers`, migración 0030).
+ * Sin email, teléfono ni rutas del KYC: eso ya no se expone a anónimos.
+ */
+export interface PublicOrganizer {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+  is_verified: boolean;
+}
+
 export interface Profile {
   id: string;
   full_name: string;

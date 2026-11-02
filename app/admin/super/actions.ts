@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { requireSuperadminSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -40,26 +41,6 @@ function escapeLike(value: string): string {
  */
 function sanitizeOrTerm(value: string): string {
   return value.replace(/[,()"\\]/g, " ").replace(/\s+/g, " ").trim();
-}
-
-async function getAdmin(): Promise<{
-  id: string;
-  email: string | null;
-} | null> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, email")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "superadmin") return null;
-  return { id: user.id, email: profile.email ?? user.email ?? null };
 }
 
 interface TargetProfile {
@@ -210,7 +191,7 @@ export async function listUsers(params: {
   page?: number;
   role?: string;
 } = {}): Promise<ListUsersResult> {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   const pageSize = USERS_PAGE_SIZE;
   const page = Math.max(1, Math.floor(Number(params.page) || 1));
 
@@ -302,7 +283,7 @@ export async function listUsers(params: {
 // =====================================================================
 
 export async function approveRoleRequest(userId: string): Promise<ActionResult> {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
   if (!UUID_RE.test(userId)) return { ok: false, error: "Usuario inválido" };
   if (userId === adminUser.id)
@@ -352,7 +333,7 @@ export async function approveRoleRequest(userId: string): Promise<ActionResult> 
 }
 
 export async function rejectRoleRequest(userId: string): Promise<ActionResult> {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
   if (!UUID_RE.test(userId)) return { ok: false, error: "Usuario inválido" };
 
@@ -400,7 +381,7 @@ export async function setUserRole(
   userId: string,
   role: AssignableRole,
 ): Promise<ActionResult> {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
   if (!ASSIGNABLE_ROLES.includes(role))
     return { ok: false, error: "Rol inválido" };
@@ -507,7 +488,7 @@ export async function createOrganizer(input: string): Promise<{
   userId?: string;
   message?: string;
 }> {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
 
   const term = input.trim();
@@ -717,7 +698,7 @@ function friendlyInviteError(message: string): string {
 
 /** Revoca el rol de organizador (lote): admin -> user. */
 export async function demoteOrganizers(userIds: string[]): Promise<ActionResult> {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
 
   const loaded = await loadTargets(adminUser.id, userIds);
@@ -763,7 +744,7 @@ export async function demoteOrganizers(userIds: string[]): Promise<ActionResult>
 
 /** Verifica si un email ya está registrado (para el label del modal). */
 export async function checkEmailRegistered(email: string) {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, registered: false };
 
   const term = email.trim().toLowerCase();
@@ -783,7 +764,7 @@ export async function checkEmailRegistered(email: string) {
 
 /** Bloqueo permanente: ban de auth.users (~100 años) + demote. */
 export async function blockUsers(userIds: string[]): Promise<ActionResult> {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
 
   const loaded = await loadTargets(adminUser.id, userIds);
@@ -838,7 +819,7 @@ export async function blockUsers(userIds: string[]): Promise<ActionResult> {
 
 /** Eliminación (lote) de usuarios de auth (cascadea el perfil). */
 export async function deleteUsers(userIds: string[]): Promise<ActionResult> {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
 
   const loaded = await loadTargets(adminUser.id, userIds);
@@ -911,7 +892,7 @@ export async function deleteUsers(userIds: string[]): Promise<ActionResult> {
 export async function generateLicenseCode(
   plan: string = "organizador",
 ): Promise<ActionResult> {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
 
   if (!LICENSE_PLANS.includes(plan as LicensePlan)) {
@@ -946,7 +927,7 @@ export async function generateLicenseCode(
 // Revoca un código de licencia activo (solo superadmin).
 // `codeId` acepta el UUID del código o el propio código alfanumérico.
 export async function revokeLicenseCode(codeId: string): Promise<ActionResult> {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
 
   const term = codeId.trim();
@@ -1005,7 +986,7 @@ export async function revokeLicenseCode(codeId: string): Promise<ActionResult> {
 export async function revokeLicenseBenefit(
   codeId: string,
 ): Promise<ActionResult> {
-  const adminUser = await getAdmin();
+  const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
 
   const term = codeId.trim();

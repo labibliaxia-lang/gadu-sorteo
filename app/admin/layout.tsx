@@ -98,15 +98,19 @@ export default async function AdminLayout({
             Perfil
           </Link>
 
-          <form action={lockAdminSession} className="ml-auto">
-            <button
-              type="submit"
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              <Lock className="mr-1.5 h-4 w-4" />
-              Bloquear panel
-            </button>
-          </form>
+          {/* El bloqueo del panel es del segundo factor, exclusivo del
+              superadmin: un organizador común nunca abrió la cookie maestra. */}
+          {profile?.role === "superadmin" && (
+            <form action={lockAdminSession} className="ml-auto">
+              <button
+                type="submit"
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                <Lock className="mr-1.5 h-4 w-4" />
+                Bloquear panel
+              </button>
+            </form>
+          )}
         </nav>
       </header>
 

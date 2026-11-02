@@ -2,9 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 
+import { requireAdminSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export async function markNumbersSold(raffleId: string, numbers: number[]) {
+  const actor = await requireAdminSession();
+  if (!actor) return { ok: false, error: "No autorizado" };
+
   const supabase = createClient();
   const { data, error } = await supabase.rpc("organizer_mark_sold", {
     p_raffle_id: raffleId,
@@ -19,6 +23,9 @@ export async function markNumbersSold(raffleId: string, numbers: number[]) {
 }
 
 export async function releaseNumbers(raffleId: string, numbers: number[]) {
+  const actor = await requireAdminSession();
+  if (!actor) return { ok: false, error: "No autorizado" };
+
   const supabase = createClient();
   const { data, error } = await supabase.rpc("organizer_release_numbers", {
     p_raffle_id: raffleId,

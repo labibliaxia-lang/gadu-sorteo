@@ -10,7 +10,7 @@ import { OrganizerContact } from "@/components/OrganizerContact";
 import { PrizeCard } from "@/components/PrizeCard";
 import { ShareButton } from "@/components/ShareButton";
 import { formatDateTime, formatPrice } from "@/lib/utils";
-import type { Prize, Profile, Raffle } from "@/lib/types";
+import type { Prize, PublicOrganizer, Raffle } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -73,9 +73,12 @@ export default async function RafflePage({
     .eq("raffle_id", params.id)
     .order("position", { ascending: true });
 
+  // Perfil público del organizador: se lee de la vista `public_organizers`
+  // (migración 0030), que no expone email, teléfono ni datos del KYC. Anon ya
+  // no tiene SELECT sobre `profiles`.
   const { data: organizer } = raffle.created_by
     ? await supabase
-        .from("profiles")
+        .from("public_organizers")
         .select("*")
         .eq("id", raffle.created_by)
         .single()
@@ -131,7 +134,9 @@ export default async function RafflePage({
             </div>
           )}
 
-          {organizer && <OrganizerCard organizer={organizer as Profile} />}
+          {organizer && (
+            <OrganizerCard organizer={organizer as PublicOrganizer} />
+          )}
         </div>
       </section>
 
@@ -186,7 +191,8 @@ export default async function RafflePage({
               alias: raffle.transfer_alias,
               cbu: raffle.transfer_cbu,
               bank: raffle.transfer_bank,
-              whatsapp: raffle.whatsapp_contact || organizer?.phone || null,
+              // El WhatsApp sale del sorteo; el perfil ya no expone teléfono.
+              whatsapp: raffle.whatsapp_contact || null,
             }}
           />
         </section>
@@ -207,7 +213,14 @@ export default async function RafflePage({
         )}
       </section>
 
-      {organizer && <OrganizerContact organizer={organizer as Profile} />}
+      {organizer && (
+        <OrganizerContact
+          organizer={{
+            phone: raffle.whatsapp_contact,
+            instagram_url: null,
+          }}
+        />
+      )}
     </div>
   );
 }
