@@ -13,6 +13,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "**.supabase.co",
       },
+      {
+        // Avatares de Google (inicio de sesión con Google).
+        protocol: "https",
+        hostname: "**.googleusercontent.com",
+      },
     ],
   },
 };
