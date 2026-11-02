@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
@@ -20,6 +21,56 @@ const statusLabel: Record<Raffle["status"], string> = {
   closed: "Cerrado",
   drawn: "Sorteado",
 };
+
+/**
+ * Metadata por sorteo: es lo que se ve al compartir el link por WhatsApp o
+ * redes. No incluye el nombre del ganador (PII): título, premio y fecha.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const supabase = createClient();
+  const { data: raffle } = await supabase
+    .from("raffles")
+    .select(
+      "title, description, cover_image_url, draw_date, price_per_number",
+    )
+    .eq("id", params.id)
+    .maybeSingle();
+
+  if (!raffle) {
+    return { title: "Sorteo no encontrado | Gadu Sorteos" };
+  }
+
+  const description = raffle.description?.trim()
+    ? String(raffle.description).trim().slice(0, 160)
+    : `Participá por ${raffle.title} en Gadu Sorteos. Precio por número: ${formatPrice(
+        Number(raffle.price_per_number),
+      )}. Sorteo: ${formatDateTime(raffle.draw_date)}.`;
+
+  const images = raffle.cover_image_url
+    ? [{ url: raffle.cover_image_url as string }]
+    : undefined;
+
+  return {
+    title: `${raffle.title} | Gadu Sorteos`,
+    description,
+    openGraph: {
+      title: raffle.title,
+      description,
+      type: "website",
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: raffle.title,
+      description,
+      images: images?.map((image) => image.url),
+    },
+  };
+}
 
 export default async function RafflePage({
   params,

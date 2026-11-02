@@ -39,10 +39,10 @@ export default async function HomePage() {
           </h1>
 
           <p className="text-lg text-zinc-300">
-            Elegí tus números, pagá de forma segura con Mercado Pago y participá
-            por autos, tecnología, experiencias, herramientas y mucho más.
-            Transparente de punta a punta: números, premios y ganadores a la
-            vista.
+            Elegí tus números, pagá por transferencia y enviá el comprobante por
+            WhatsApp. Participá por autos, tecnología, experiencias, herramientas
+            y mucho más. Transparente de punta a punta: números, premios y
+            ganadores a la vista.
           </p>
 
           <div className="flex flex-wrap gap-3">

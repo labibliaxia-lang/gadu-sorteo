@@ -58,8 +58,22 @@ se usa sobre chip blanco en lugar de flotando sobre fondos oscuros.
 se consigue un PNG con transparencia, se reemplazan `logo-gadu-wordmark.png` y los íconos sin tocar
 código.
 
+## Ampliación: Hero coherente y metadata por sorteo
+
+**Hero.** `app/page.tsx` decía «pagá de forma segura con Mercado Pago», que está oculto. Ahora dice
+«pagá por transferencia y enviá el comprobante por WhatsApp», igual que el flujo real y que la
+descripción del sitio.
+
+**Metadata por sorteo.** `app/sorteos/[id]/page.tsx` agrega `generateMetadata`: título
+«<sorteo> | Gadu Sorteos», descripción con el premio, el precio por número y la fecha, e imagen de
+portada en Open Graph y Twitter. No incluye el nombre del ganador (PII). Al compartir un sorteo por
+WhatsApp, la tarjeta muestra la portada del premio y no la genérica del sitio.
+
+**Pendiente.** El commit del logo (`95884ce`) y estos arreglos quedan locales: el push a GitHub pide
+iniciar sesión interactiva y no se puede completar desde el agente.
+
+**Evidencia observada.** `typecheck` 0, `lint` 0 warnings, `test` 38/38, `build` 0.
+
 ## Next
 
-Ver en el deploy el favicon real de la pestaña y compartir un sorteo por WhatsApp para comprobar la
-tarjeta con imagen. Si se quiere una preview distinta por sorteo, se puede armar un `opengraph-image`
-dinámico con la portada del premio.
+Pushear desde la terminal del usuario (`git push origin main`) para deployar el logo y la metadata.
