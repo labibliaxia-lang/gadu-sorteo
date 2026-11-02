@@ -139,7 +139,7 @@ export default function NuevoSorteoPage() {
     return () => {
       active = false;
     };
-  }, [supabase]);
+  }, [supabase, setValue]);
 
   const planContext = getPlanContext({ plan, role });
   const numbersLimit = planContext.isSuperadmin

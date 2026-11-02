@@ -5,15 +5,10 @@ import {
   getMercadoPagoPayment,
   verifyWebhookSignature,
 } from "@/lib/mercadopago";
-
-const TERMINAL_STATUSES = new Set([
-  "approved",
-  "rejected",
-  "cancelled",
-  "refunded",
-  "charged_back",
-  "expired",
-]);
+import {
+  isTerminalPaymentStatus,
+  mapMpFailureStatus,
+} from "@/lib/payments";
 
 /**
  * Webhook de Mercado Pago.
@@ -105,9 +100,12 @@ export async function POST(request: NextRequest) {
   const mpStatus = mpPayment.status ?? "pending";
 
   // Idempotencia: si ya está en estado terminal, no repetir acciones.
-  if (TERMINAL_STATUSES.has(payment.status)) {
+  if (isTerminalPaymentStatus(payment.status)) {
     return NextResponse.json({ received: true });
   }
+
+  // null cuando el pago sigue en curso: en ese caso no se tocan los números.
+  const failureStatus = mapMpFailureStatus(mpStatus);
 
   if (mpStatus === "approved") {
     // Transición atómica reserved -> sold. Es idempotente: si ya se vendieron,
@@ -146,12 +144,7 @@ export async function POST(request: NextRequest) {
         console.error("Webhook MP: error al recompensar referido", rewardError);
       }
     }
-  } else if (
-    mpStatus === "rejected" ||
-    mpStatus === "cancelled" ||
-    mpStatus === "refunded" ||
-    mpStatus === "charged_back"
-  ) {
+  } else if (failureStatus) {
     // Libera los números reservados.
     await admin.rpc("release_numbers", {
       p_raffle_id: payment.raffle_id,
@@ -159,14 +152,9 @@ export async function POST(request: NextRequest) {
       p_user_id: payment.user_id,
     });
 
-    const finalStatus =
-      mpStatus === "rejected" || mpStatus === "refunded" || mpStatus === "charged_back"
-        ? "rejected"
-        : "cancelled";
-
     await admin
       .from("payments")
-      .update({ status: finalStatus, mp_payment_id: String(paymentId) })
+      .update({ status: failureStatus, mp_payment_id: String(paymentId) })
       .eq("id", payment.id);
   } else {
     // pending / in_process / authorized / in_mediation: no tocar números.

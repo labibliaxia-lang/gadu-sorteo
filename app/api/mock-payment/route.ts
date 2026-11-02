@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { computeAmount } from "@/lib/payments";
 
 const mockSchema = z.object({
   raffleId: z.string().uuid("Sorteo inválido"),
@@ -94,9 +95,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const amount =
-    Math.round(reservedNumbers.length * Number(raffle.price_per_number) * 100) /
-    100;
+  const amount = computeAmount(
+    reservedNumbers.length,
+    raffle.price_per_number,
+  );
 
   const admin = createAdminClient();
 

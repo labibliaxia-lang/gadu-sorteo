@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPreference } from "@/lib/mercadopago";
+import { computeAmount } from "@/lib/payments";
 
 const checkoutSchema = z.object({
   raffleId: z.string().uuid("Sorteo inválido"),
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 4) Registro del pago en estado "pending"
-  const amount = Math.round(reservedNumbers.length * pricePerNumber * 100) / 100;
+  const amount = computeAmount(reservedNumbers.length, pricePerNumber);
 
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
