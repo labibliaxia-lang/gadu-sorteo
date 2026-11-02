@@ -57,7 +57,8 @@ const ACTION_LABELS: Record<string, string> = {
   BLOCK_USER: "Bloqueó usuario",
   DELETE_USER: "Eliminó usuario",
   GENERATE_LICENSE: "Generó código de licencia",
-  REVOKE_LICENSE: "Revocó código de licencia",
+  REVOKE_LICENSE: "Anuló código de licencia",
+  REVOKE_LICENSE_BENEFIT: "Quitó el beneficio de una licencia",
 };
 
 const WA_MESSAGE =

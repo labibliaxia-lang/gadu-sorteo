@@ -10,12 +10,14 @@ import {
   KeyRound,
   Loader2,
   Sparkles,
+  UserMinus,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   generateLicenseCode,
+  revokeLicenseBenefit,
   revokeLicenseCode,
 } from "@/app/admin/super/actions";
 
@@ -80,6 +82,7 @@ export function LicenseCodesPanel({ codes }: { codes: LicenseCode[] }) {
   const [generated, setGenerated] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [revokingBenefit, setRevokingBenefit] = useState<string | null>(null);
 
   async function handleGenerate() {
     setBusy(true);
@@ -102,7 +105,7 @@ export function LicenseCodesPanel({ codes }: { codes: LicenseCode[] }) {
   async function handleRevoke(code: string) {
     if (
       !window.confirm(
-        "¿Revocar este código? Ya no podrá canjearse.",
+        "¿Anular este código? No podrá volver a canjearse. NO quita el plan ni el rol que ya otorgó: para eso está «Quitar beneficio».",
       )
     ) {
       return;
@@ -115,12 +118,42 @@ export function LicenseCodesPanel({ codes }: { codes: LicenseCode[] }) {
     const res = await revokeLicenseCode(code);
 
     if (!res.ok) {
-      setError(res.error ?? "Error al revocar el código");
+      setError(res.error ?? "Error al anular el código");
     } else {
-      setNotice("Código revocado correctamente.");
+      setNotice("Código anulado: ya no se puede canjear.");
       router.refresh();
     }
     setRevoking(null);
+  }
+
+  async function handleRevokeBenefit(code: string, plan: string) {
+    const efecto =
+      plan === "premium"
+        ? "el plan vuelve a organizador"
+        : "el rol de organizador vuelve a usuario";
+
+    if (
+      !window.confirm(
+        `¿Quitar el beneficio de este código? Se aplica sobre quien lo canjeó: ${efecto}.\n\n` +
+          "No restaura un estado anterior, y no distingue si ese plan o rol lo dio este código o una asignación manual. No cierra sorteos ya publicados.",
+      )
+    ) {
+      return;
+    }
+
+    setRevokingBenefit(code);
+    setError(null);
+    setNotice(null);
+
+    const res = await revokeLicenseBenefit(code);
+
+    if (!res.ok) {
+      setError(res.error ?? "Error al quitar el beneficio");
+    } else {
+      setNotice(res.message ?? "Beneficio retirado.");
+      router.refresh();
+    }
+    setRevokingBenefit(null);
   }
 
   async function copyCode(code: string) {
@@ -250,19 +283,35 @@ export function LicenseCodesPanel({ codes }: { codes: LicenseCode[] }) {
                     {formatDate(c.redeemed_at)}
                   </td>
                   <td className="p-3 text-right">
-                    {c.status === "active" ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRevoke(c.code)}
-                        disabled={revoking === c.code}
-                      >
-                        <Ban className="mr-1.5 h-4 w-4" />
-                        Revocar
-                      </Button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
+                    <div className="flex items-center justify-end gap-2">
+                      {c.status === "active" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRevoke(c.code)}
+                          disabled={revoking === c.code}
+                          title="Impide volver a canjearlo. No quita beneficios ya otorgados."
+                        >
+                          <Ban className="mr-1.5 h-4 w-4" />
+                          Anular
+                        </Button>
+                      )}
+                      {c.status === "redeemed" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRevokeBenefit(c.code, c.plan)}
+                          disabled={revokingBenefit === c.code}
+                          title="Quita el plan o rol que este código otorgó a quien lo canjeó."
+                        >
+                          <UserMinus className="mr-1.5 h-4 w-4" />
+                          Quitar beneficio
+                        </Button>
+                      )}
+                      {c.status === "revoked" && (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

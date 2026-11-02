@@ -11,6 +11,7 @@ import {
   UUID_RE,
   USERS_PAGE_SIZE,
   canDemoteSuperadmin,
+  licenseBenefit,
   type AssignableRole,
   type LicensePlan,
 } from "@/lib/superadmin";
@@ -984,4 +985,102 @@ export async function revokeLicenseCode(codeId: string): Promise<ActionResult> {
 
   revalidatePath("/admin/super");
   return { ok: true, count: affected };
+}
+
+// ---------------------------------------------------------------------
+// Quitar el beneficio que un código YA CANJEADO otorgó.
+//
+// Es una acción distinta de anular el código: anular impide volver a
+// canjearlo; esto revierte lo que se otorgó. Antes no existía, así que
+// "revocar" prometía algo que no hacía.
+//
+// Límites conocidos, dichos en la UI antes de confirmar:
+//   * No restaura un estado anterior (no está registrado): quita el beneficio
+//     actual. premium -> organizador (los dos únicos valores del CHECK de 0023)
+//     y admin -> user.
+//   * No distingue si el rol lo dio este código o una asignación manual.
+//   * No cierra sorteos ya publicados: sólo impide publicar más allá del límite
+//     del plan resultante (enforce_plan_raffle_limit).
+// ---------------------------------------------------------------------
+export async function revokeLicenseBenefit(
+  codeId: string,
+): Promise<ActionResult> {
+  const adminUser = await getAdmin();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  const term = codeId.trim();
+  if (!term) return { ok: false, error: "Código inválido" };
+
+  const admin = createAdminClient();
+  const byId = UUID_RE.test(term);
+
+  const { data, error } = byId
+    ? await admin
+        .from("license_codes")
+        .select("id, code, plan, status, redeemed_by")
+        .eq("id", term)
+        .maybeSingle()
+    : await admin
+        .from("license_codes")
+        .select("id, code, plan, status, redeemed_by")
+        .eq("code", term)
+        .maybeSingle();
+
+  if (error) return { ok: false, error: error.message };
+  if (!data) return { ok: false, error: "No se encontró el código" };
+  if (!data.redeemed_by) {
+    return { ok: false, error: "Ese código no fue canjeado por nadie" };
+  }
+
+  const benefit = licenseBenefit(String(data.plan ?? ""));
+  if (!benefit) {
+    return { ok: false, error: `Plan desconocido en el código: ${data.plan}` };
+  }
+
+  // El segundo `eq` es la guarda: sólo se toca la fila si hoy tiene el valor
+  // que el código otorgó. Nunca toca a un superadmin (nunca es `admin`).
+  const { data: updated, error: updateError } = await admin
+    .from("profiles")
+    .update({ [benefit.field]: benefit.to })
+    .eq("id", data.redeemed_by)
+    .eq(benefit.field, benefit.from)
+    .select("id");
+
+  if (updateError) return { ok: false, error: updateError.message };
+
+  const applied = Boolean(updated && updated.length > 0);
+  const details: Record<string, unknown> = {
+    code: data.code,
+    plan: data.plan,
+    targetUserId: data.redeemed_by,
+    from: benefit.from,
+    to: benefit.to,
+    applied,
+  };
+
+  await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "REVOKE_LICENSE_BENEFIT",
+    targetUserId: data.redeemed_by,
+    targetEmail: null,
+    details,
+  });
+
+  revalidateAdminViews();
+
+  if (!applied) {
+    return {
+      ok: true,
+      message: "El usuario ya no tenía ese beneficio: no hubo nada que quitar.",
+    };
+  }
+
+  return {
+    ok: true,
+    message:
+      benefit.field === "plan"
+        ? "Plan premium retirado: vuelve a organizador."
+        : "Rol de organizador retirado: vuelve a usuario.",
+  };
 }

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   ASSIGNABLE_ROLES,
   canDemoteSuperadmin,
+  licenseBenefit,
   normalizeParam,
   pickAllowed,
   roleLabel,
@@ -25,6 +26,40 @@ describe("canDemoteSuperadmin", () => {
   it("permite degradar cuando queda otro superadmin", () => {
     expect(canDemoteSuperadmin(2)).toBe(true);
     expect(canDemoteSuperadmin(7)).toBe(true);
+  });
+});
+
+describe("licenseBenefit", () => {
+  it("una licencia premium revierte el plan", () => {
+    expect(licenseBenefit("premium")).toEqual({
+      field: "plan",
+      from: "premium",
+      to: "organizador",
+    });
+  });
+
+  it("una licencia de organizador revierte el rol", () => {
+    expect(licenseBenefit("organizador")).toEqual({
+      field: "role",
+      from: "admin",
+      to: "user",
+    });
+  });
+
+  it("normaliza mayúsculas y espacios", () => {
+    expect(licenseBenefit("  PREMIUM ")).not.toBeNull();
+  });
+
+  it("con un plan desconocido devuelve null: no se adivina qué revertir", () => {
+    expect(licenseBenefit("vip")).toBeNull();
+    expect(licenseBenefit("")).toBeNull();
+  });
+
+  it("el rol revierte admin -> user, nunca superadmin", () => {
+    const benefit = licenseBenefit("organizador");
+    expect(benefit?.field).toBe("role");
+    expect(benefit?.from).toBe("admin");
+    expect(benefit?.to).toBe("user");
   });
 });
 

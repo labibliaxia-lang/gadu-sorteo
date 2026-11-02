@@ -9,8 +9,7 @@ export const ASSIGNABLE_ROLES = ["user", "admin", "superadmin"] as const;
 
 export type AssignableRole = (typeof ASSIGNABLE_ROLES)[number];
 
-/** Roles con etiqueta legible, en el orden en que se ofrecen en la UI. */
-export const ROLE_OPTIONS: { value: AssignableRole; label: string }[] = [
+/** Roles con etiqueta legible, en el orden en que se ofrecen en la UI. */export const ROLE_OPTIONS: { value: AssignableRole; label: string }[] = [
   { value: "user", label: "Usuario" },
   { value: "admin", label: "Organizador" },
   { value: "superadmin", label: "Superadmin" },
@@ -20,6 +19,33 @@ export const ROLE_OPTIONS: { value: AssignableRole; label: string }[] = [
 export const LICENSE_PLANS = ["organizador", "premium"] as const;
 
 export type LicensePlan = (typeof LICENSE_PLANS)[number];
+
+/** Qué columna toca revertir una licencia canjeada, y entre qué valores. */
+export type LicenseBenefit =
+  | { field: "plan"; from: "premium"; to: "organizador" }
+  | { field: "role"; from: "admin"; to: "user" };
+
+/**
+ * Beneficio que otorgó un código según su plan, para poder revertirlo.
+ *
+ * `premium` desbloquea el plan; `organizador` asciende el rol. Son los dos
+ * únicos valores que admite el CHECK de 0023. Devuelve null con un plan
+ * desconocido: nunca se adivina qué revertir.
+ *
+ * Ojo: esto describe el beneficio ACTUAL que se quita, no el estado previo.
+ * El estado previo no está registrado (ver `license_codes`), así que una
+ * reversión puede quitar algo que el código no dio.
+ */
+export function licenseBenefit(plan: string): LicenseBenefit | null {
+  const normalized = (plan ?? "").trim().toLowerCase();
+  if (normalized === "premium") {
+    return { field: "plan", from: "premium", to: "organizador" };
+  }
+  if (normalized === "organizador") {
+    return { field: "role", from: "admin", to: "user" };
+  }
+  return null;
+}
 
 /** Tamaño de página del listado de usuarios. */
 export const USERS_PAGE_SIZE = 25;

@@ -168,6 +168,25 @@ aplicada» hasta que alguien consulta el catálogo. Propuesta: `supabase link` +
   `0027` queda pendiente de aplicar; el verificador la delata.
 - **Evidence.** `02-DOCS/wiki/ftd/raffle-visits-integrity.md`. La caída real del contador y el rechazo de
   inserciones ajenas quedan como no observados hasta la prueba en la base.
+
+## 2026-11-02 — Licencias: «anular» y «quitar beneficio» son cosas distintas (FTD)
+
+- **Context.** Hallazgo #4: «Revocar» sólo marcaba el código como `revoked`; el plan o el rol ya
+  otorgados quedaban para siempre. El modal era honesto («Ya no podrá canjearse»), el nombre del botón no.
+- **Options considered.**
+  1. Renombrar a «Anular código» y no ofrecer reversión. Rejected — deja al dueño sin herramienta el día
+     de un reembolso o un fraude.
+  2. **Dos acciones separadas**: «Anular código» (lo de hoy) y «Quitar beneficio» (revierte
+     `premium → organizador`, `admin → user`), con confirmación que enumera los límites. **Chosen.**
+  3. Registrar `granted_plan`/`previous_plan` al canjear y restaurar exacto. Deferred — exige migración y
+     tocar `0022`, que ya está probada, y no arregla los canjes viejos.
+- **Why.** La ambigüedad era el bug. Separar los verbos la elimina sin adivinar nada; y lo que no se puede
+  hacer bien (restaurar el estado previo) se dice antes de confirmar, no después.
+- **Consequences.** El rol sólo se revierte `admin → user`: un `superadmin` nunca entra en la guarda. Un
+  plan desconocido no revierte nada (`licenseBenefit` devuelve null). Queda registrado en la auditoría con
+  `applied`, incluido el caso «ya no tenía el beneficio». **No ejecutado contra la base**: la regla está
+  testeada, el efecto sobre datos no.
+- **Evidence.** `02-DOCS/wiki/ftd/license-void-vs-revoke-benefit.md`.
 - **Operational note recorded, because it cost two failed builds:** `.next` is one shared directory and
   two `next build` runs in the same folder corrupt it. It happened twice: once from a build of this
   session that stayed alive after its pipeline returned an error, and once with **another session
