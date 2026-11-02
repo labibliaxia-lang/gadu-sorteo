@@ -8,9 +8,34 @@ import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_URL?.trim() || "http://localhost:3000",
+  ),
   title: "Gadu Sorteos",
   description:
-    "Participa en sorteos con premios de todo tipo, elige tus números y paga con Mercado Pago.",
+    "Participa en sorteos con premios de todo tipo, elige tus números y paga por transferencia con comprobante por WhatsApp.",
+  openGraph: {
+    title: "Gadu Sorteos",
+    description:
+      "Sorteos transparentes con premios de todo tipo. Elegí tus números, participá y ganá.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Gadu Sorteos",
+      },
+    ],
+    type: "website",
+    locale: "es_AR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Gadu Sorteos",
+    description:
+      "Sorteos transparentes con premios de todo tipo. Elegí tus números, participá y ganá.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default async function RootLayout({

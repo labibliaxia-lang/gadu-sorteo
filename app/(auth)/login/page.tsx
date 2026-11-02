@@ -1,4 +1,4 @@
-import { Wrench } from "lucide-react";
+import Image from "next/image";
 
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 
@@ -19,8 +19,15 @@ export default function LoginPage({
   return (
     <div className="flex min-h-[70vh] items-center justify-center">
       <div className="w-full max-w-sm rounded-2xl border bg-card p-8 text-center shadow-sm">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow">
-          <Wrench className="h-7 w-7" />
+        <div className="mx-auto mb-5 flex w-fit items-center justify-center rounded-2xl bg-white px-4 py-2.5 shadow ring-1 ring-black/5">
+          <Image
+            src="/logo-gadu-wordmark.png"
+            alt="Gadu Sorteos"
+            width={128}
+            height={50}
+            className="h-8 w-auto"
+            priority
+          />
         </div>
 
         <h1 className="text-2xl font-bold tracking-tight">

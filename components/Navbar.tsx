@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -12,7 +13,6 @@ import {
   Sun,
   Ticket,
   User,
-  Wrench,
   X,
 } from "lucide-react";
 
@@ -127,12 +127,20 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm">
-            <Wrench className="h-5 w-5" />
-          </span>
-          <span className="text-lg font-bold tracking-tight">
-            Gadu <span className="text-amber-600">Sorteos</span>
+        <Link
+          href="/"
+          className="flex items-center gap-2"
+          aria-label="Gadu Sorteos — inicio"
+        >
+          <span className="rounded-lg bg-white px-2 py-1.5 shadow-sm ring-1 ring-black/5">
+            <Image
+              src="/logo-gadu-wordmark.png"
+              alt="Gadu Sorteos"
+              width={112}
+              height={44}
+              className="h-7 w-auto"
+              priority
+            />
           </span>
         </Link>
 

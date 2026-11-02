@@ -1,11 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   CreditCard,
   Facebook,
   Instagram,
   ShieldCheck,
   Twitter,
-  Wrench,
   Youtube,
 } from "lucide-react";
 
@@ -15,11 +15,16 @@ export function Footer() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         {/* Marca */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-white">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600">
-              <Wrench className="h-5 w-5 text-white" />
+          <div className="flex items-center">
+            <span className="rounded-lg bg-white px-2 py-1.5 ring-1 ring-white/10">
+              <Image
+                src="/logo-gadu-wordmark.png"
+                alt="Gadu Sorteos"
+                width={112}
+                height={44}
+                className="h-7 w-auto"
+              />
             </span>
-            <span className="font-bold">Gadu Sorteos</span>
           </div>
           <p className="text-sm text-zinc-400">
             Sorteos transparentes con premios de todo tipo. Elegí tus números,
