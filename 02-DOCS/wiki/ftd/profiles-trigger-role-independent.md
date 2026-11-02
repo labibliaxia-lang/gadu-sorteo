@@ -104,6 +104,31 @@ repositorio declara con lo que hay en la base y devuelve una celda con `OK` / `F
 dominio, funciones clave, el grant de `sell_numbers`, la política de auditoría, `superadmin_metrics`,
 licencias, índices de `0025` y columnas sensibles. Corre en segundos y no modifica nada.
 
+**Línea base observada (2026-11-02, tras aplicar `0025` completo):**
+
+```text
+OK      trigger prevent_role_self_update (0014)
+OK      trigger prevent_sensitive_self_update (0025)
+OK      prevent_sensitive_self_update controla el plan
+OK      no depende del rol de conexión
+OK      prevent_sensitive_self_update es SECURITY INVOKER
+OK      tablas del dominio presentes
+OK      RLS activo en todas las tablas presentes
+OK      funciones clave presentes
+OK      sell_numbers: sólo service_role
+OK      auditoría legible sólo por superadmin
+OK      sin política de auditoría para organizadores
+OK      superadmin_metrics (0025)
+OK      licencias: tabla y RPC presentes (0022)
+OK      índices de métricas presentes (0025)
+OK      columnas sensibles presentes (plan, KYC, solicitudes)
+AVISO   sin ledger de migraciones: "está en el repo" no prueba que esté en la base
+```
+
+Quince `OK` y un `AVISO`. El `AVISO` se deja a propósito: un ledger autoinformado puede decir «aplicada»
+sin serlo, mientras que las comprobaciones por objeto no pueden mentir. Vale la pena añadirlo igual para
+las migraciones futuras que no creen objetos (cambios de datos), pero no es lo que sostiene la garantía.
+
 Segunda respuesta, cuando se quiera cerrar del todo: `supabase link` + `supabase db push`, o una tabla
 `_applied_migrations(version text primary key, applied_at timestamptz)` que cada archivo inserte al final.
 
