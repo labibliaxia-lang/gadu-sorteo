@@ -69,16 +69,19 @@ y loguea. La app funciona igual.
 **7 — observado.** `npm run typecheck` → 0. `npm run lint` → `✔ No ESLint warnings or errors`.
 `npm test` → 38/38. `npm run build` → 0.
 
-**Consentimiento.** No hay columna de aceptación de términos y la instrucción prohíbe tocar la base.
-La aceptación se considera al registrarse (así lo dicen los Términos publicados) y solo se envía a la
-cuenta propia, a compradores con números vendidos en el sorteo o al ganador del sorteo. Si más
-adelante se agrega `terms_accepted_at`, el gate debe moverse ahí.
+**Consentimiento (0036) — implementado.** `supabase/migrations/0036_email_consent.sql` agrega
+`terms_accepted_at` y `email_opt_in` (default `true`), backfillea la aceptación de las cuentas
+existentes con su fecha de alta y un trigger completa la aceptación al crear el perfil (los Términos
+publicados dicen que registrarse implica aceptarlos). `/perfil` muestra una tarjeta «Avisos por
+email» para activar/desactivar; al activar se registra `terms_accepted_at` si faltaba, con enlaces a
+Términos y Privacidad. Los tres envíos verifican `email_opt_in = true AND terms_accepted_at IS NOT
+NULL`: si falta cualquiera, no se manda nada.
 
 **Fuera de alcance.** El pago por Mercado Pago (oculto hoy) aprueba números desde el webhook y no
 dispara este email: se puede sumar cuando se reactive el cobro automático.
 
 ## Next
 
-Configurar `RESEND_API_KEY` y `RESEND_FROM_EMAIL` (dominio verificado en Resend) y probar los tres
-correos. Después: preferencias de notificación por usuario y email al organizador cuando entra una
-reserva.
+Aplicar `0036`, configurar `RESEND_API_KEY`/`RESEND_FROM_EMAIL` y probar los tres correos, además de
+activar y desactivar los avisos desde `/perfil`. Después: email al organizador cuando entra una
+reserva y preferencias por tipo de aviso.

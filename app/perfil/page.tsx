@@ -6,8 +6,9 @@ import { CreditCard, Mail, ShieldCheck, Ticket } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { setEmailPreference } from "@/app/perfil/actions";
 
 interface ProfileData {
   full_name: string | null;
@@ -18,6 +19,8 @@ interface ProfileData {
   phone: string | null;
   location: string | null;
   instagram_url: string | null;
+  email_opt_in: boolean;
+  terms_accepted_at: string | null;
 }
 
 export default function PerfilPage() {
@@ -25,6 +28,8 @@ export default function PerfilPage() {
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [savingEmail, setSavingEmail] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -37,7 +42,7 @@ export default function PerfilPage() {
         const { data } = await supabase
           .from("profiles")
           .select(
-            "full_name, role, role_requested, avatar_url, email, phone, location, instagram_url",
+            "full_name, role, role_requested, avatar_url, email, phone, location, instagram_url, email_opt_in, terms_accepted_at",
           )
           .eq("id", user.id)
           .maybeSingle();
@@ -47,6 +52,33 @@ export default function PerfilPage() {
     }
     load();
   }, [supabase]);
+
+  async function toggleEmailPreference() {
+    if (!profile || savingEmail) return;
+
+    setSavingEmail(true);
+    setEmailError(null);
+
+    const next = !profile.email_opt_in;
+    const result = await setEmailPreference(next);
+
+    if (!result.ok) {
+      setEmailError(result.error);
+    } else {
+      setProfile((current) =>
+        current
+          ? {
+              ...current,
+              email_opt_in: next,
+              terms_accepted_at:
+                current.terms_accepted_at ?? new Date().toISOString(),
+            }
+          : current,
+      );
+    }
+
+    setSavingEmail(false);
+  }
 
   if (loading) {
     return <p className="text-muted-foreground">Cargando…</p>;
@@ -126,6 +158,57 @@ export default function PerfilPage() {
                   Ver planes y precios
                 </Link>
               )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-4 p-6">
+          <div className="flex items-start gap-2">
+            <Mail className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <p className="font-semibold">Avisos por email</p>
+              <p className="text-sm text-muted-foreground">
+                Te avisamos cuando reservás números, cuando el organizador
+                confirma tu pago y si ganás un sorteo. No los usamos para otra
+                cosa. Al activarlos aceptás los{" "}
+                <Link href="/terminos" className="underline underline-offset-4">
+                  Términos
+                </Link>{" "}
+                y la{" "}
+                <Link
+                  href="/privacidad"
+                  className="underline underline-offset-4"
+                >
+                  Política de Privacidad
+                </Link>
+                .
+              </p>
+              <p
+                className={
+                  profile?.email_opt_in
+                    ? "text-xs font-medium text-emerald-600 dark:text-emerald-400"
+                    : "text-xs font-medium text-muted-foreground"
+                }
+              >
+                {profile?.email_opt_in ? "Activados" : "Desactivados"}
+              </p>
+              {emailError && (
+                <p className="text-xs text-destructive">{emailError}</p>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={toggleEmailPreference}
+                disabled={savingEmail}
+              >
+                {savingEmail
+                  ? "Guardando…"
+                  : profile?.email_opt_in
+                    ? "Desactivar avisos"
+                    : "Activar avisos"}
+              </Button>
             </div>
           </div>
         </CardContent>

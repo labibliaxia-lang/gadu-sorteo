@@ -51,6 +51,16 @@ export async function notifyReservation(
 
     if (!raffle) return;
 
+    // Consentimiento: sin aceptación de Términos o con avisos desactivados,
+    // no se envía nada.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email_opt_in, terms_accepted_at")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!profile?.email_opt_in || !profile.terms_accepted_at) return;
+
     await sendReservationEmail({
       to: user.email,
       raffleTitle: raffle.title as string,

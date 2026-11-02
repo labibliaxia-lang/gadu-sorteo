@@ -51,11 +51,11 @@ async function notifyPaidBuyers(
 
     const { data: profiles } = await admin
       .from("profiles")
-      .select("email")
+      .select("email, email_opt_in, terms_accepted_at")
       .in("id", buyerIds);
 
     for (const profile of profiles ?? []) {
-      if (profile.email) {
+      if (profile.email && profile.email_opt_in && profile.terms_accepted_at) {
         await sendPaymentApprovedEmail({
           to: profile.email as string,
           raffleTitle: title,
@@ -81,11 +81,11 @@ async function notifyWinner(
     const admin = createAdminClient();
     const { data: profile } = await admin
       .from("profiles")
-      .select("email")
+      .select("email, email_opt_in, terms_accepted_at")
       .eq("id", winnerUserId)
       .maybeSingle();
 
-    if (profile?.email) {
+    if (profile?.email && profile.email_opt_in && profile.terms_accepted_at) {
       await sendWinnerEmail({
         to: profile.email as string,
         raffleTitle: title,
