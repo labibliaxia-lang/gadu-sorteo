@@ -21,15 +21,28 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const MIGRATIONS_DIR = join(ROOT, "supabase", "migrations");
 const SOURCE_DIRS = ["app", "lib", "components"];
 
+/** Desde esta versión, cada migración debe registrarse en el ledger (0028). */
+const LEDGER_FROM = "0028";
+
 const IDENT = "[a-zA-Z_][a-zA-Z_0-9]*";
 
 /** Todo el SQL de las migraciones, en orden de archivo. */
 function migrationsSql(): string {
-  return readdirSync(MIGRATIONS_DIR)
-    .filter((f) => f.endsWith(".sql"))
-    .sort()
-    .map((f) => readFileSync(join(MIGRATIONS_DIR, f), "utf8"))
+  return migrationFiles()
+    .map((f) => f.sql)
     .join("\n");
+}
+
+/** Cada migración con su versión y su nombre de archivo. */
+function migrationFiles(): { version: string; name: string; sql: string }[] {
+  return readdirSync(MIGRATIONS_DIR)
+    .filter((f) => /^\d{4}_.*\.sql$/.test(f))
+    .sort()
+    .map((f) => ({
+      version: f.slice(0, 4),
+      name: f,
+      sql: readFileSync(join(MIGRATIONS_DIR, f), "utf8"),
+    }));
 }
 
 /** Archivos .ts/.tsx del código de la app. */
@@ -144,5 +157,24 @@ describe("código y migraciones", () => {
       expect(RPCS.has(name), `${name} debería usarse en el código`).toBe(true);
       expect(FUNCTIONS.has(name), `${name} debería estar declarada`).toBe(true);
     }
+  });
+
+  it("toda migración desde 0028 se registra en el ledger", () => {
+    // El ledger sólo vale si no se puede olvidar. Las versiones anteriores no
+    // tienen fila: no hay registro de que hayan corrido, y no se inventa.
+    const files = migrationFiles().filter((f) => f.version >= LEDGER_FROM);
+
+    // Sin esto, el test pasaría por vacío si el lector no encontrara archivos.
+    expect(files.length).toBeGreaterThan(0);
+
+    const missing = files
+      .filter(
+        (f) =>
+          !/insert\s+into\s+public\._applied_migrations/i.test(f.sql) ||
+          !f.sql.includes(`'${f.version}'`),
+      )
+      .map((f) => f.name);
+
+    expect(missing).toEqual([]);
   });
 });

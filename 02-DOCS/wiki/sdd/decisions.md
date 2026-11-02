@@ -203,6 +203,24 @@ aplicada» hasta que alguien consulta el catálogo. Propuesta: `supabase link` +
   mentira, así que no depende de secretos. Lo que sigue siendo manual y por eso más frágil: el verificador
   de esquema y el ledger de migraciones.
 - **Evidence.** `02-DOCS/wiki/ftd/gates-enforced-ci.md`. El workflow no se ejecutó en Actions todavía.
+
+## 2026-11-02 — Ledger de migraciones, sin inventar el pasado (FTD)
+
+- **Context.** Último `AVISO` del verificador. Sin registro de ejecución, «está en el repo» no prueba que
+  esté en la base — es lo que dejó pasar el hallazgo #2.
+- **Options considered.**
+  1. `supabase link` + `db push`. Mejor solución de fondo, pero exige credenciales y cambiar el flujo de
+     trabajo del dueño.
+  2. Tabla `_applied_migrations` + `insert` al final de cada migración desde `0028`, con un test que obliga
+     a no olvidarlo. **Chosen.**
+  3. Backfill de 0001-0027 «porque los objetos están». Rejected — nadie observó esas ejecuciones; un
+     ledger que inventa filas miente y deja de servir para lo único que sirve: saber qué corrió.
+- **Why.** El ledger tiene que registrar hechos, no expectativas. El pasado lo cubre el verificador por
+  objetos, que es una prueba más fuerte que una fila autoinformada.
+- **Consequences.** La tabla no es legible por `anon`/`authenticated` (RLS sin políticas + `revoke`).
+  Toda migración desde `0028` que no se registre rompe `npm test` y el CI. Los canjes de 0001-0027 quedan
+  sin fila, y eso está escrito en la propia migración.
+- **Evidence.** `02-DOCS/wiki/ftd/migration-ledger.md` — test mutado a propósito para verlo fallar.
 - **Operational note recorded, because it cost two failed builds:** `.next` is one shared directory and
   two `next build` runs in the same folder corrupt it. It happened twice: once from a build of this
   session that stayed alive after its pipeline returned an error, and once with **another session
