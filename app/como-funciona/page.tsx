@@ -84,25 +84,29 @@ export default function ComoFuncionaPage() {
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground">
             <Hash className="h-5 w-5" />
           </span>
-          <h2 className="text-xl font-semibold">Verificación con hashes</h2>
+          <h2 className="text-xl font-semibold">
+            Verificación con hashes y semilla comprometida
+          </h2>
         </div>
         <p className="mt-3 text-sm text-muted-foreground">
-          Al ejecutarse el sorteo, la base calcula dos huellas digitales
-          SHA-256: una del listado completo de números vendidos y otra del mismo
-          listado junto con el número ganador. Ambas quedan publicadas en la
-          página del sorteo y congeladas: no se pueden modificar después.
+          Antes de sortear, el organizador publica el compromiso: el hash
+          SHA-256 de una semilla secreta que genera el sistema. Nadie conoce esa
+          semilla hasta el momento del sorteo, y el compromiso queda congelado:
+          no se puede cambiar ni retirar.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Con el listado vendido que ves en la página, podés recalcular esas
-          huellas y compararlas. Si coinciden, el listado y el resultado son
-          exactamente los que se registraron el día del sorteo. El formato
-          exacto y el paso a paso están en la sección «Huellas del sorteo» de
-          cada sorteo finalizado.
+          Al ejecutarse el sorteo, la base usa esa semilla junto con el listado
+          de números vendidos para calcular al ganador, y revela la semilla.
+          Cualquiera puede entonces recalcular el ganador y comprobar dos cosas:
+          que la semilla era la misma que se había comprometido antes, y que el
+          resultado se deriva de ella. Eso prueba que el ganador no se eligió
+          después de conocer los números.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Las huellas prueban que nada se modificó después del sorteo. No
-          predicen ni eligen al ganador: el número se selecciona al azar entre
-          los vendidos.
+          Además, la base calcula dos huellas SHA-256: una del listado completo
+          de números vendidos y otra del mismo listado junto con el número
+          ganador. Ambas quedan publicadas y congeladas en la página del sorteo,
+          con el paso a paso exacto para verificarlas.
         </p>
       </section>
 

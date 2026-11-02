@@ -98,10 +98,13 @@ export default function TerminosPage() {
           acepta que el resultado del sorteo es definitivo, vinculante e
           inapelable. Una vez ejecutado el sorteo, el resultado queda registrado
           en la Plataforma y no puede alterarse: ni Gadu Sorteos ni el
-          Organizador tienen la capacidad de modificarlo. Al ejecutarse el
-          sorteo, la Plataforma publica una huella digital SHA-256 del listado de
-          números vendidos y otra del resultado, de modo que cualquier persona
-          pueda recalcularlas y comprobar que no se modificaron.
+          Organizador tienen la capacidad de modificarlo. Antes de ejecutar el
+          sorteo, el Organizador publica el compromiso (hash SHA-256 de una
+          semilla secreta generada por el sistema); al sortear, la semilla se
+          revela y la Plataforma publica además las huellas SHA-256 del listado
+          de números vendidos y del resultado, de modo que cualquier persona
+          pueda recalcular el ganador y comprobar que no se eligió después de
+          conocer los números.
         </p>
       </section>
 

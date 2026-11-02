@@ -68,6 +68,11 @@ export interface Raffle {
   numbers_hash: string | null;
   result_hash: string | null;
   hashes_at: string | null;
+  /** Compromiso de semilla antes del sorteo y semilla revelada (0034). */
+  draw_commitment: string | null;
+  draw_commitment_at: string | null;
+  draw_seed: string | null;
+  draw_seed_revealed_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

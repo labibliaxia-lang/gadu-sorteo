@@ -140,6 +140,32 @@ export default async function RafflePage({
         </div>
       </section>
 
+      {raffle.status !== "drawn" && raffle.draw_commitment && (
+        <section className="space-y-3 rounded-xl border bg-muted/30 p-5">
+          <h2 className="text-lg font-semibold">
+            Compromiso del sorteo publicado
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            El organizador publicó, antes del sorteo, el hash de una semilla
+            secreta. Nadie conoce la semilla hasta que se sortea: cuando se
+            revele, cualquiera podrá comprobar que el ganador se calculó a partir
+            de ella y de los números vendidos. El compromiso ya no se puede
+            cambiar.
+          </p>
+          <div className="space-y-1 text-xs">
+            <p className="font-medium">Compromiso (hash de la semilla)</p>
+            <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+              {raffle.draw_commitment}
+            </code>
+            {raffle.draw_commitment_at && (
+              <p className="text-muted-foreground">
+                Publicado: {formatDateTime(raffle.draw_commitment_at)}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+
       {raffle.status === "drawn" &&
         raffle.numbers_hash &&
         raffle.result_hash && (
@@ -150,9 +176,11 @@ export default async function RafflePage({
               </h2>
               <p className="text-sm text-muted-foreground">
                 Estas huellas SHA-256 se calcularon en el momento del sorteo y
-                quedaron congeladas. Con el listado de números vendidos que se
-                muestra en esta página, cualquiera puede recalcularlas y
-                comprobar que el resultado no se modificó.
+                quedaron congeladas. Además, la semilla del sorteo se publicó
+                comprometida antes de sortear y ahora está revelada: con el
+                listado de números vendidos que se muestra en esta página,
+                cualquiera puede recomputar el ganador y comprobar que no se
+                eligió después de conocer los números.
               </p>
               {raffle.hashes_at && (
                 <p className="text-xs text-muted-foreground">
@@ -179,6 +207,32 @@ export default async function RafflePage({
                   {raffle.result_hash}
                 </code>
               </div>
+              {raffle.draw_commitment && (
+                <div className="space-y-1">
+                  <p className="font-medium">
+                    Compromiso publicado antes del sorteo{" "}
+                    (<code>draw_commitment</code>)
+                  </p>
+                  <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                    {raffle.draw_commitment}
+                  </code>
+                </div>
+              )}
+              {raffle.draw_seed && (
+                <div className="space-y-1">
+                  <p className="font-medium">
+                    Semilla revelada (<code>draw_seed</code>)
+                  </p>
+                  <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                    {raffle.draw_seed}
+                  </code>
+                  {raffle.draw_seed_revealed_at && (
+                    <p className="text-muted-foreground">
+                      Revelada: {formatDateTime(raffle.draw_seed_revealed_at)}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <details className="rounded-md border p-3 text-sm">
@@ -187,28 +241,43 @@ export default async function RafflePage({
               </summary>
               <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
                 <li>
-                  Tomá los números vendidos de este sorteo y ordenalos de menor a
-                  mayor, separados por coma y sin espacios:{" "}
-                  <code className="font-mono">n1,n2,...,nN</code>.
+                  <strong>Compromiso:</strong> calculá el SHA-256 (hexadecimal) de{" "}
+                  <code className="break-all font-mono">
+                    gadu:v1|raffle:{raffle.id}|seed:&lt;semilla&gt;
+                  </code>
+                  . Tiene que coincidir con <code>draw_commitment</code>: eso
+                  prueba que la semilla ya estaba fijada antes del sorteo.
                 </li>
                 <li>
-                  Calculá el SHA-256 (hexadecimal) del texto{" "}
+                  <strong>Listado vendido:</strong> tomá los números vendidos de
+                  este sorteo, ordenados de menor a mayor, separados por coma y
+                  sin espacios: <code className="font-mono">n1,n2,...,nN</code>.
+                </li>
+                <li>
+                  <strong>Ganador:</strong> calculá el SHA-256 de{" "}
+                  <code className="break-all font-mono">
+                    gadu:v1|raffle:{raffle.id}|seed:&lt;semilla&gt;|numbers:n1,n2,...,nN
+                  </code>
+                  . Tomá sus primeros 15 caracteres hexadecimales como número,
+                  dividilo por la cantidad de números vendidos y usá el resto
+                  como posición (empezando en 0) del listado ordenado: ese es el
+                  número ganador y tiene que coincidir con el publicado.
+                </li>
+                <li>
+                  <strong>Huellas:</strong> el SHA-256 de{" "}
                   <code className="break-all font-mono">
                     gadu:v1|raffle:{raffle.id}|numbers:n1,n2,...,nN
-                  </code>
-                  . Tiene que coincidir con <code>numbers_hash</code>.
-                </li>
-                <li>
-                  Calculá el SHA-256 de{" "}
+                  </code>{" "}
+                  debe ser <code>numbers_hash</code>, y el de{" "}
                   <code className="break-all font-mono">
                     gadu:v1|raffle:{raffle.id}|winner:{raffle.winner_number}
                     |numbers:n1,n2,...,nN
-                  </code>
-                  . Tiene que coincidir con <code>result_hash</code>.
+                  </code>{" "}
+                  debe ser <code>result_hash</code>.
                 </li>
                 <li>
-                  Cualquier diferencia significa que el listado o el resultado se
-                  modificaron después del sorteo.
+                  Cualquier diferencia significa que la semilla, el listado o el
+                  resultado se modificaron después del sorteo.
                 </li>
               </ol>
             </details>

@@ -432,3 +432,35 @@ export async function cloneRaffle(raffleId: string) {
   revalidatePath("/admin/sorteos");
   return { ok: true, raffleId: cloned.id };
 }
+
+/**
+ * Publica el compromiso del sorteo (hash de una semilla que genera el
+ * servidor y que nadie ve hasta el sorteo). A partir de acá el compromiso es
+ * público e inmutable: es lo que permite probar que el ganador no se eligió
+ * después de conocer los números.
+ */
+export async function publishDrawCommitment(
+  raffleId: string,
+): Promise<ActionResult> {
+  const ctx = await requireAdminSession();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  const id = uuidSchema.safeParse(raffleId);
+  if (!id.success) return { ok: false, error: firstIssue(id.error) };
+
+  if (!(await ownsRaffle(id.data))) {
+    return { ok: false, error: "No autorizado" };
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc("commit_draw_seed", {
+    p_raffle_id: id.data,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/sorteos/${id.data}`);
+  revalidatePath(`/sorteos/${id.data}`);
+  return { ok: true };
+}

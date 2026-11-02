@@ -235,7 +235,11 @@ export default async function AdminDashboardPage() {
                       <Gift className="mr-1.5 h-4 w-4" />
                       Premios
                     </Link>
-                    <RaffleActions raffleId={raffle.id} status={raffle.status} />
+                    <RaffleActions
+                      raffleId={raffle.id}
+                      status={raffle.status}
+                      hasCommitment={Boolean(raffle.draw_commitment)}
+                    />
                   </div>
                 </CardContent>
               </Card>

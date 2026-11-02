@@ -181,7 +181,11 @@ export default async function AdminRaffleDetailPage({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <RaffleActions raffleId={raffle.id} status={raffle.status} />
+            <RaffleActions
+              raffleId={raffle.id}
+              status={raffle.status}
+              hasCommitment={Boolean(raffle.draw_commitment)}
+            />
             <Link
               href={`/admin/sorteos/${raffle.id}/numeros`}
               className={buttonVariants({ variant: "outline" })}
