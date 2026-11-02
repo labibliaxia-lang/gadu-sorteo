@@ -1,4 +1,5 @@
 export type Role = "user" | "admin" | "superadmin";
+export type Plan = "organizador" | "premium";
 export type RaffleStatus = "active" | "closed" | "drawn";
 export type NumberStatus = "available" | "reserved" | "sold";
 export type PaymentStatus =
@@ -17,6 +18,7 @@ export interface Profile {
   full_name: string;
   phone: string | null;
   role: Role;
+  plan: Plan;
   avatar_url: string | null;
   instagram_url: string | null;
   location: string | null;
