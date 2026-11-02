@@ -179,9 +179,10 @@ security definer
 set search_path = public
 as $$
 declare
-  v_uid   uuid := auth.uid();
-  v_code  text := trim(coalesce(p_code, ''));
-  v_row   public.license_codes%rowtype;
+  v_uid      uuid := auth.uid();
+  v_code     text := trim(coalesce(p_code, ''));
+  v_row      public.license_codes%rowtype;
+  v_promoted boolean := false;
 begin
   if v_uid is null then
     return query select false, null::text, 'Debés iniciar sesión para canjear un código';
@@ -225,7 +226,32 @@ begin
       redeemed_at = now()
   where id = v_row.id;
 
-  return query select true, v_row.plan, 'Código canjeado correctamente';
+  -- Plan "organizador": asciende al usuario a organizador.
+  -- Nunca degrada a un admin/superadmin existente (filtro role = 'user').
+  -- El trigger prevent_role_self_update bloquea cambios de rol cuando
+  -- auth.uid() no es nulo y el usuario no es admin; para esta promoción
+  -- controlada limpiamos los claims SOLO dentro de esta transacción.
+  if lower(coalesce(v_row.plan, '')) = 'organizador' then
+    perform set_config('request.jwt.claim.sub', '', true);
+    perform set_config('request.jwt.claims', '', true);
+
+    update public.profiles
+    set role = 'admin'
+    where id = v_uid
+      and role = 'user';
+
+    if found then
+      v_promoted := true;
+    end if;
+  end if;
+
+  return query select
+    true,
+    v_row.plan,
+    case
+      when v_promoted then 'Código canjeado correctamente. Ahora sos organizador.'
+      else 'Código canjeado correctamente'
+    end;
 end;
 $$;
 

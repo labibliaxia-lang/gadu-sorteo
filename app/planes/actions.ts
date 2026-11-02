@@ -46,7 +46,10 @@ export async function redeemLicenseCode(formData: FormData): Promise<RedeemResul
     return { ok: false, message: "No se pudo canjear el código." };
   }
 
+  // RSC: refresca el canje y el panel (el rol pudo cambiar a organizador).
   revalidatePath("/planes");
+  revalidatePath("/admin");
+  revalidatePath("/", "layout");
 
   return {
     ok: Boolean(row.ok),
