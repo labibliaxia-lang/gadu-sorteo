@@ -96,11 +96,19 @@ rompió nada — ni el flujo de subir documentos ni el canje de licencias, el pa
 
 `tabla_de_migraciones_del_cli` es `null`: las migraciones se aplican a mano en el SQL Editor y no queda
 registro de qué corrió. Por eso `0025` pudo quedar a medias sin síntoma — y por eso una auditoría que
-sólo lee archivos puede afirmar que algo está protegido cuando no lo está. Dos salidas: `supabase link` +
-`supabase db push`, o una tabla `_applied_migrations(version text primary key, applied_at timestamptz)`
-que cada archivo inserte al final. La segunda no necesita red ni contraseñas.
+sólo lee archivos puede afirmar que algo está protegido cuando no lo está.
+
+Primera respuesta, mientras no haya ledger: `supabase/tests/verificar_esquema.sql` compara lo que el
+repositorio declara con lo que hay en la base y devuelve una celda con `OK` / `FALTA` / `AVISO` /
+`CRÍTICO`. Cubre los dos triggers de `profiles`, el cuerpo del trigger sensible, RLS de las tablas del
+dominio, funciones clave, el grant de `sell_numbers`, la política de auditoría, `superadmin_metrics`,
+licencias, índices de `0025` y columnas sensibles. Corre en segundos y no modifica nada.
+
+Segunda respuesta, cuando se quiera cerrar del todo: `supabase link` + `supabase db push`, o una tabla
+`_applied_migrations(version text primary key, applied_at timestamptz)` que cada archivo inserte al final.
 
 ## Next
 
-Aplicar el mismo criterio a las migraciones restantes: comprobar en `pg_trigger` / `pg_proc` /
-`information_schema` que lo que el repositorio declara existe en la base, en vez de leer sólo el archivo.
+Correr `verificar_esquema.sql` después de cada migración, y aplicar el mismo criterio a las que ya
+están: comprobar en `pg_trigger` / `pg_proc` / `information_schema` que lo declarado existe, en vez de
+leer sólo el archivo.
