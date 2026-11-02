@@ -7,6 +7,7 @@ import { MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatPrice } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { notifyReservation } from "@/app/sorteos/actions";
 import type { RaffleNumber } from "@/lib/types";
 
 const RESERVATION_SECONDS = 10 * 60;
@@ -342,6 +343,9 @@ export function NumbersGrid({
       });
       setSelected(new Set());
       setDeadline(null);
+
+      // Email de respaldo: no bloquea la reserva ni la apertura del resumen.
+      void notifyReservation(raffleId, reserved).catch(() => {});
     } catch {
       setError("Error de red al reservar los números.");
     } finally {

@@ -4,9 +4,99 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth";
+import { sendPaymentApprovedEmail, sendWinnerEmail } from "@/lib/email";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const uuidSchema = z.string().uuid("Identificador inválido");
+
+async function raffleTitle(raffleId: string): Promise<string> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("raffles")
+    .select("title")
+    .eq("id", raffleId)
+    .maybeSingle();
+
+  return (data?.title as string | undefined) ?? "el sorteo";
+}
+
+/**
+ * Avisos por email. Se disparan en segundo plano (no bloquean la operación) y
+ * nunca lanzan: `sendEmail` ya absorbe los errores.
+ */
+async function notifyPaidBuyers(
+  raffleId: string,
+  numbers: number[],
+  title: string,
+): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const { data: rows } = await admin
+      .from("raffle_numbers")
+      .select("sold_to")
+      .eq("raffle_id", raffleId)
+      .in("number", numbers)
+      .eq("status", "sold");
+
+    const buyerIds = Array.from(
+      new Set(
+        (rows ?? [])
+          .map((row) => row.sold_to as string | null)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    );
+
+    if (buyerIds.length === 0) return;
+
+    const { data: profiles } = await admin
+      .from("profiles")
+      .select("email")
+      .in("id", buyerIds);
+
+    for (const profile of profiles ?? []) {
+      if (profile.email) {
+        await sendPaymentApprovedEmail({
+          to: profile.email as string,
+          raffleTitle: title,
+          raffleId,
+          numbers,
+        });
+      }
+    }
+  } catch (error) {
+    console.error("[email] pago aprobado:", error);
+  }
+}
+
+async function notifyWinner(
+  raffleId: string,
+  winnerUserId: string | null,
+  winnerNumber: number,
+  title: string,
+): Promise<void> {
+  try {
+    if (!winnerUserId) return;
+
+    const admin = createAdminClient();
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("email")
+      .eq("id", winnerUserId)
+      .maybeSingle();
+
+    if (profile?.email) {
+      await sendWinnerEmail({
+        to: profile.email as string,
+        raffleTitle: title,
+        raffleId,
+        winnerNumber,
+      });
+    }
+  } catch (error) {
+    console.error("[email] ganador:", error);
+  }
+}
 
 /**
  * Pertenencia del sorteo, resuelta en la base con `owns_raffle()` (0030).
@@ -320,6 +410,10 @@ export async function markReservationPaid(
 
   if (error) return { ok: false, error: error.message };
 
+  // Aviso por email al comprador (segundo plano, no bloquea la respuesta).
+  const title = await raffleTitle(raffleId);
+  void notifyPaidBuyers(raffleId, clean, title);
+
   revalidatePath("/admin");
   revalidatePath("/admin/sorteos");
   revalidatePath(`/admin/sorteos/${raffleId}`);
@@ -327,6 +421,56 @@ export async function markReservationPaid(
   revalidatePath(`/sorteos/${raffleId}`);
 
   return { ok: true, count: Number(data ?? 0) };
+}
+
+export type DrawResult =
+  | { ok: true; winningNumber: number }
+  | { ok: false; error: string };
+
+/**
+ * Ejecuta el sorteo desde el servidor (RPC `draw_winner`) y avisa por email al
+ * ganador. El RPC sigue validando dueño, compromiso publicado y estado.
+ */
+export async function drawWinner(raffleId: string): Promise<DrawResult> {
+  const ctx = await requireAdminSession();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  const id = uuidSchema.safeParse(raffleId);
+  if (!id.success) return { ok: false, error: firstIssue(id.error) };
+
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("draw_winner", {
+    p_raffle_id: id.data,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  const row = (Array.isArray(data) ? data[0] : data) as
+    | {
+        winning_number?: number;
+        winner_user?: string | null;
+      }
+    | null;
+
+  const winningNumber = Number(row?.winning_number ?? 0);
+  if (!winningNumber) {
+    return { ok: false, error: "No se pudo determinar el ganador." };
+  }
+
+  const title = await raffleTitle(id.data);
+  void notifyWinner(
+    id.data,
+    row?.winner_user ?? null,
+    winningNumber,
+    title,
+  );
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/sorteos/${id.data}`);
+  revalidatePath(`/sorteos/${id.data}`);
+  revalidatePath("/ganadores");
+
+  return { ok: true, winningNumber };
 }
 
 export async function cloneRaffle(raffleId: string) {

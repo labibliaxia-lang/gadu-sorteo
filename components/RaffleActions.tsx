@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { publishDrawCommitment } from "@/app/admin/sorteos/[id]/actions";
+import { publishDrawCommitment, drawWinner as drawRaffleWinner } from "@/app/admin/sorteos/[id]/actions";
 
 interface RaffleActionsProps {
   raffleId: string;
@@ -60,10 +60,8 @@ export function RaffleActions({
   async function drawWinner() {
     setBusy("draw");
     setError(null);
-    const { error: drawError } = await supabase.rpc("draw_winner", {
-      p_raffle_id: raffleId,
-    });
-    if (drawError) setError(drawError.message);
+    const result = await drawRaffleWinner(raffleId);
+    if (!result.ok) setError(result.error);
     setBusy(null);
     router.refresh();
   }
