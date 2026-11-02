@@ -22,13 +22,14 @@ ni rutas protegidas.
 **In:** `app/page.tsx`, sección Hero (el componente equivalente: el Hero está inline en la home, no
 existe `components/Hero.tsx`). Badge, H1, subtítulo, icono decorativo del Hero. Y, aprobado en el
 mismo paso, una línea de `components/HowItWorks.tsx` (el beneficio «Entrega a todo el país», que
-seguía prometiendo herramientas).
+seguía prometiendo herramientas). En un segundo paso aprobado, las cuatro menciones viejas que
+quedaban: `components/Footer.tsx:24`, la metadata de `app/layout.tsx:13`,
+`app/(auth)/login/page.tsx:31` y el placeholder de `app/admin/sorteos/nuevo/page.tsx:319`.
 
-**Out:** `components/Navbar.tsx`, `components/Footer.tsx` (su línea 24 todavía dice «para tu
-taller»), `app/layout.tsx:13` (metadata, también con «herramientas»), `app/(auth)/login/page.tsx:31`,
-el placeholder del admin, Mercado Pago (`app/api/checkout`, `app/api/webhooks/mercadopago`),
-`components/NumbersGrid.tsx`, middleware y rutas protegidas, `.env.local`. Quedan anotados como
-restos del mensaje viejo, no se tocan acá.
+**Out:** `components/Navbar.tsx` (no tenía el mensaje viejo), los dos iconos de marca `Wrench` que
+siguen en el Footer (`:19`) y en el login (`:23`) —son la marca, no copy, y cambiarlos es decisión
+de diseño aparte—, Mercado Pago (`app/api/checkout`, `app/api/webhooks/mercadopago`),
+`components/NumbersGrid.tsx`, middleware, rutas protegidas y `.env.local`.
 
 ## Checklist
 
@@ -42,6 +43,11 @@ restos del mensaje viejo, no se tocan acá.
 | 6 | TypeScript limpio | `npm run typecheck` |
 | 7 | Build de producción limpio | `npm run build` |
 | 8 | El beneficio «Entrega a todo el país» ya no promete herramientas | Lectura de `components/HowItWorks.tsx:50` |
+| 9 | El Footer ya no habla de «herramientas para tu taller» | Lectura de `components/Footer.tsx:24-25` |
+| 10 | La metadata de la app ya no habla de sorteos de herramientas | Lectura de `app/layout.tsx:13` |
+| 11 | El login ya no promete «las mejores herramientas» | Lectura de `app/(auth)/login/page.tsx:31` |
+| 12 | El placeholder del admin es multirrubro | Lectura de `app/admin/sorteos/nuevo/page.tsx:319` |
+| 13 | Ninguna mención vieja sobrevive fuera de la lista de premios del Hero | `grep "herramientas\|taller"` en `app/` y `components/` |
 
 ## Evidence
 
@@ -77,15 +83,27 @@ load, `ƒ Middleware 86.8 kB`. Además el copy nuevo aparece en el bundle compil
 cualquier punto de Argentina» a «Coordinamos la entrega de tu premio en cualquier punto de
 Argentina». Sirve igual para un auto que para una experiencia.
 
-**Quedan restos del mensaje viejo (fuera de alcance).** Un grep de `herramientas|taller` en `*.tsx`
-todavía encuentra: `components/Footer.tsx:24` («Sorteos transparentes de herramientas para tu
-taller»), `app/layout.tsx:13` (metadata/SEO, «sorteos de herramientas»), `app/(auth)/login/page.tsx:31`
-y un placeholder del admin. El más visible es el Footer; la metadata es la que ve Google. Ninguno se
-tocó en este cambio.
+**9, 10, 11, 12 — observed.** Segundo paso, cuatro copys:
+
+- `components/Footer.tsx:24` → «Sorteos transparentes con premios de todo tipo. Elegí tus números,
+  participá y ganá.»
+- `app/layout.tsx:13` (metadata/SEO) → «Participa en sorteos con premios de todo tipo, elige tus
+  números y paga con Mercado Pago.»
+- `app/(auth)/login/page.tsx:31` → «…para elegir tus números y participar por premios de todo
+  tipo.»
+- `app/admin/sorteos/nuevo/page.tsx:319` → `placeholder="Ej: Sorteo de autos"`.
+
+**13 — observed.** `grep "herramientas|taller"` en `app/**/*.tsx` devuelve **una** coincidencia:
+`app/page.tsx:42`, donde «herramientas» es un ítem legítimo de la lista de premios («autos,
+tecnología, experiencias, herramientas y mucho más»). En `components/**/*.tsx`, cero.
+
+**Sigue habiendo un `Wrench` (fuera de alcance).** El Footer (`:19`) y el login (`:23`) usan la
+llave como icono de marca. Ya no hay texto que prometa herramientas, pero el símbolo todavía las
+sugiere. Cambiarlo es decisión de diseño, no de copy: queda anotado.
 
 ## Next
 
-Commitear `app/page.tsx`, `components/HowItWorks.tsx` y este documento. Después, si el mensaje
-multirrubro se sostiene, alinear Footer (`:24`), la metadata de `app/layout.tsx` y el login en un
-cambio aparte con su propio documento.
+Correr `npm run typecheck` y `npm run build` sobre el segundo paso, commitearlo aparte y pushear.
+Después queda solo lo visual: decidir si la marca (el `Wrench` del Footer y del login) sigue
+siendo una llave o pasa a algo multirrubro.
 

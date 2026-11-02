@@ -316,7 +316,7 @@ export default function NuevoSorteoPage() {
                 <Input
                   id="title"
                   className="pl-9"
-                  placeholder="Ej: Sorteo de herramientas"
+                  placeholder="Ej: Sorteo de autos"
                   {...register("title")}
                 />
               </div>

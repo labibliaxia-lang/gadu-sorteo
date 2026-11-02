@@ -21,8 +21,8 @@ export function Footer() {
             <span className="font-bold">Gadu Sorteos</span>
           </div>
           <p className="text-sm text-zinc-400">
-            Sorteos transparentes de herramientas para tu taller. Elegí tus
-            números, participá y ganá.
+            Sorteos transparentes con premios de todo tipo. Elegí tus números,
+            participá y ganá.
           </p>
         </div>
 

@@ -28,7 +28,7 @@ export default function LoginPage({
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Iniciá sesión con tu cuenta de Google para elegir tus números y
-          participar por las mejores herramientas.
+          participar por premios de todo tipo.
         </p>
 
         {notice && (

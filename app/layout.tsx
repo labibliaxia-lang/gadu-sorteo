@@ -10,7 +10,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Gadu Sorteos",
   description:
-    "Participa en sorteos de herramientas, elige tus números y paga con Mercado Pago.",
+    "Participa en sorteos con premios de todo tipo, elige tus números y paga con Mercado Pago.",
 };
 
 export default async function RootLayout({
