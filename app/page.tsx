@@ -73,6 +73,12 @@ export default async function HomePage() {
                 Crear cuenta
               </Link>
             )}
+            <Link
+              href="/planes"
+              className={buttonVariants({ variant: "outline", size: "lg" })}
+            >
+              Canjear código
+            </Link>
           </div>
         </div>
       </section>

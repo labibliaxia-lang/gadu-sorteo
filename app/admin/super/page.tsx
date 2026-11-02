@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RoleRequestActions } from "@/components/RoleRequestActions";
 import { SuperAdminDashboard } from "@/components/SuperAdminDashboard";
+import { LicenseCodesPanel } from "@/components/LicenseCodesPanel";
 import { VerificationActions } from "@/components/VerificationActions";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 
@@ -130,6 +131,13 @@ export default async function SuperAdminPage({
     .from("profiles")
     .select("id, full_name, email, role, created_at")
     .order("created_at", { ascending: false });
+
+  // Códigos de licencia recientes.
+  const { data: licenseCodes } = await admin
+    .from("license_codes")
+    .select("code, plan, status, created_at, redeemed_at")
+    .order("created_at", { ascending: false })
+    .limit(12);
 
   // Registro de auditoría.
   const { data: logs } = await admin
@@ -373,6 +381,17 @@ export default async function SuperAdminPage({
             ))}
           </div>
         )}
+      </div>
+
+      {/* Códigos de licencia */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Códigos de licencia</h2>
+          <span className="text-sm text-muted-foreground">
+            {licenseCodes?.length ?? 0} recientes
+          </span>
+        </div>
+        <LicenseCodesPanel codes={licenseCodes ?? []} />
       </div>
 
       {/* Gestión de usuarios */}

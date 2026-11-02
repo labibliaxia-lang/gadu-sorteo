@@ -543,3 +543,34 @@ export async function blockUsers(userIds: string[]) {
     return { ok: false, error: lastError ?? "No se pudo bloquear" };
   return { ok: true, count };
 }
+
+// Genera un código de licencia de 25 caracteres (solo superadmin).
+export async function generateLicenseCode(plan: string = "organizador") {
+  const adminUser = await getAdmin();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("create_license_code", {
+    p_plan: plan,
+  });
+
+  if (error) {
+    return {
+      ok: false,
+      error:
+        "No se pudo generar el código. ¿Aplicaste la migración 0022?",
+    };
+  }
+
+  await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "GENERATE_LICENSE",
+    targetUserId: null,
+    targetEmail: null,
+    details: JSON.stringify({ plan }),
+  });
+
+  revalidatePath("/admin/super");
+  return { ok: true, code: data as string };
+}
