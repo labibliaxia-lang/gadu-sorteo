@@ -57,8 +57,31 @@ lo haría pasar por vacío.
 **5 — observed.** `npm run typecheck` → 0 · `npm run lint` → sin warnings · `npm test` → 4 archivos, 38
 tests · `npm run build` → exit 0.
 
-**Lo que sigue sin observarse:** la migración no está aplicada. Hasta que se corra, el verificador seguirá
-diciendo `AVISO   sin ledger de migraciones`.
+**Lo que seguía sin observarse:** la migración no estaba aplicada. **Ya está** — `0028` corrió y el
+verificador quedó limpio:
+
+```text
+OK      trigger prevent_role_self_update (0014)
+OK      trigger prevent_sensitive_self_update (0025)
+OK      prevent_sensitive_self_update controla el plan
+OK      no depende del rol de conexión
+OK      prevent_sensitive_self_update es SECURITY INVOKER
+OK      tablas del dominio presentes
+OK      RLS activo en todas las tablas presentes
+OK      funciones clave presentes
+OK      sell_numbers: sólo service_role
+OK      auditoría legible sólo por superadmin
+OK      sin política de auditoría para organizadores
+OK      superadmin_metrics (0025)
+OK      licencias: tabla y RPC presentes (0022)
+OK      índices de métricas presentes (0025)
+OK      columnas sensibles presentes (plan, KYC, solicitudes)
+OK      ledger de migraciones presente (public._applied_migrations)
+OK      visitas: sólo se aceptan de sorteos activos (0027)
+```
+
+17 `OK`, 0 `AVISO`. Es la primera corrida del verificador sin nada pendiente: el repositorio, la base y el
+registro de lo que corrió coinciden.
 
 ## Next
 
