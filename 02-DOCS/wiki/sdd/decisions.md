@@ -130,6 +130,23 @@ Append-only. Every significant decision gets a date, the options considered, and
   Editor. **No se ejecutó**: no hay Postgres local y no se corren pruebas contra la base remota sin
   permiso explícito.
 - **Evidence.** `02-DOCS/wiki/ftd/profiles-trigger-role-independent.md`.
+
+### Resultado observado (mismo día)
+
+El script de prueba devolvió cuatro `FALLO` —el usuario sí podía cambiarse el plan, aprobarse el KYC y
+aprobarse la solicitud— y el diagnóstico mostró por qué: **la función existía y el trigger no estaba
+enganchado**. `0025` se había aplicado a medias, y sin ledger de migraciones nada lo delataba.
+
+- Se aplicó `0025` completo y `pg_trigger` muestra ahora los dos triggers sobre `public.profiles`.
+- Tras aplicarlo: `A OK -> No tenés permisos para cambiar tu plan` (con rol privilegiado y claims de
+  usuario), `B OK` (cambio legítimo), `C OK` (servidor).
+- **Corrección de una afirmación previa de esta misma auditoría:** dije que el *harden* de `profiles`
+  era cierto leyendo la migración. La migración decía eso; la base no. Una migración sin aplicar no
+  protege nada, y sin ledger no hay forma de detectarlo leyendo el repositorio.
+
+**Deuda abierta de proceso:** `supabase_migrations` no existe. Cualquier migración es «probablemente
+aplicada» hasta que alguien consulta el catálogo. Propuesta: `supabase link` + `db push`, o una tabla
+`_applied_migrations` que cada archivo inserte al final.
 - **Operational note recorded, because it cost two failed builds:** `.next` is one shared directory and
   two `next build` runs in the same folder corrupt it. It happened twice: once from a build of this
   session that stayed alive after its pipeline returned an error, and once with **another session

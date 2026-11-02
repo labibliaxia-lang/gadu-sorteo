@@ -3,80 +3,104 @@ author: Gadu
 branch: main
 status: in-progress
 ---
-# Trigger de profiles: proteger sin mirar el rol de conexión
+# Trigger de profiles: la protección que existía en el repo y no en la base
 
 ## Intent
 
-La auditoría del panel dejó un hallazgo **a verificar** (el #2): la versión de `0025` que estaba sin
-commitear quitaba `security definer` al trigger `prevent_sensitive_self_update` y añadía una exención
-por nombre de rol:
+La auditoría del panel dejó un hallazgo a verificar: la versión de `0025` sin commitear eximía por
+nombre de rol (`current_user not in ('anon','authenticated','service_role')`). Con PostgREST funciona,
+pero si el proyecto conecta con otro rol la protección del paywall y del KYC desaparece **en silencio**.
 
-```sql
-if current_user::text not in ('anon', 'authenticated', 'service_role') then
-  return new;
-end if;
-```
-
-Con PostgREST esto funciona, porque cada petición hace `SET ROLE` según el claim del JWT. Pero convierte
-la protección en algo que **depende del rol con el que se conecta el cliente**: si un día el proyecto
-usa otro rol (pooler en modo sesión, un rol propio, `postgres` por error), el trigger no falla: deja de
-proteger **en silencio**. Un control que deja de controlar sin avisar es peor que no tenerlo, y este
-protege el paywall (`plan`) y el KYC (`verification_status`, `dni_verified`, `face_verified`).
-
-Objetivo: que la protección dependa de si hay un usuario final actuando, no del nombre del rol.
+Lo que empezó como «verificar la semántica de un trigger» terminó destapando algo más grande: **la
+protección no estaba aplicada en la base**. No era una discusión sobre `current_user`; era una migración
+a medias.
 
 ## Scope
 
-**In:** la función `prevent_sensitive_self_update` de `0025` (se elimina la exención por
-`current_user`, se conserva `SECURITY INVOKER` y el orden de comprobaciones); un script de prueba
-ejecutable en `supabase/tests/0025_profiles_hardening.sql`; el commit de la migración, que estaba
-modificada sin commitear (git y el working tree tenían versiones distintas del mismo archivo).
+**In:** el cuerpo de `prevent_sensitive_self_update` en `0025` (sin exención por rol de conexión); dos
+scripts de prueba ejecutables; la aplicación de la migración en el proyecto.
 
-**Out:** la prueba del camino de canje de licencias de `0022` (necesita un código real y dos sesiones);
-una función SQL `demote_superadmin` (ver el FTD de superadmin); cualquier cambio en las políticas RLS,
-que ya limitan la escritura a la fila propia.
+**Out:** el ledger de migraciones (ver «deuda de proceso» al final); una función SQL
+`demote_superadmin`; cualquier cambio en políticas RLS.
 
 ## Checklist
 
 | # | Task | Proof it is done |
 |---|------|------------------|
-| 1 | El trigger ya no consulta `current_user` | Leer la función |
+| 1 | El trigger no consulta `current_user` | Leer la función |
 | 2 | La exención es «no hay usuario final» (`auth.uid() is null`) | Leer la función |
-| 3 | El camino de `0022` sigue funcionando (limpia los claims) | Leer `0022:258-259` y el orden nuevo |
-| 4 | Existe un script que demuestra los 7 casos, sin dejar cambios | `supabase/tests/0025_profiles_hardening.sql` |
-| 5 | La migración está commiteada, no sólo en el working tree | `git status` limpio para ese archivo |
-| 6 | Nada de la app se rompe | typecheck, lint, tests, build |
+| 3 | Un script devuelve el veredicto de cada caso en una celda | Corrida real |
+| 4 | Un script diagnostica por qué no bloquea, si no bloquea | Corrida real |
+| 5 | La migración está aplicada y el trigger enganchado | `pg_trigger` |
+| 6 | Bloquea el cambio de plan propio aun con rol privilegiado | Caso A de la corrida final |
+| 7 | No rompe cambios legítimos ni el servidor | Casos B y C |
 
 ## Evidence
 
-**1-3 — observed by reading.** `supabase/migrations/0025:34-60`: la función es `SECURITY INVOKER` (sin
-`security definer`), no menciona `current_user`, y empieza por `if auth.uid() is null then return new`.
-El caso del canje de licencias sigue exento porque `0022:258-259` limpia `request.jwt.claim.sub` y
-`request.jwt.claims` antes de escribir, así que `auth.uid()` es null dentro de esa transacción.
+**1-2 — observed by reading.** `supabase/migrations/0025:41-54`: `SECURITY INVOKER`, sin mención de
+`current_user`, primera condición `if auth.uid() is null then return new`. El canje de licencias sigue
+exento por la vía correcta (`0022:258-259` limpia los claims antes de escribir).
 
-**4 — escrito, NO ejecutado.** `supabase/tests/0025_profiles_hardening.sql` recorre siete casos dentro
-de una transacción que termina en `ROLLBACK`:
+**3 — observed, y su primer resultado fue el hallazgo.** El script de 7 casos
+(`supabase/tests/0025_profiles_hardening_report.sql`, tras dos fallos propios: `42501` por una tabla
+temporal ajena al rol `authenticated`, y `42P01` por depender del search_path) devolvió:
 
-1. un usuario no puede ponerse `plan='premium'`;
-2. no puede aprobarse el KYC;
-3. sí puede volver el KYC a `pending`;
-4. no puede aprobarse una solicitud de organizador;
-5. sí puede abrir su solicitud;
-6. sin usuario final (servidor) la escritura pasa;
-7. **con claims de usuario sobre un rol privilegiado que saltea RLS, el trigger sigue bloqueando**.
+```text
+1 FALLO -> el usuario se puso plan=premium
+2 FALLO -> el usuario se aprobó su verificación
+3 OK -> pudo volver el KYC a pending
+4 FALLO -> el usuario aprobó su solicitud
+5 OK -> pudo abrir su solicitud
+6 OK -> el servidor pudo escribir
+7 FALLO -> la protección depende del rol de conexión
+```
 
-El caso 7 es la prueba del hallazgo. **No pude ejecutarlo:** no hay Docker ni `psql` en esta máquina y el
-proyecto apunta a un Supabase remoto (`mjgcoeck…`, host del `.env.local`); correr el script contra su
-base requiere pegar el archivo en el SQL Editor. Los resultados reales siguen pendientes.
+Los casos 1, 2 y 4 «funcionaron» de más: el `UPDATE` afectó 1 fila. Como RLS usa `auth.uid()`, eso probó
+que los claims llegaban bien y que la exención por «sin usuario final» no era la causa.
 
-**5 — observed.** La migración entra en el mismo commit que este documento.
+**4 — observed.** `supabase/tests/0025_diagnostico.sql` (reescrito una vez: un `CASE` no evita que el
+planificador resuelva un nombre inexistente) devolvió:
 
-**6 — observed antes y después del cambio, sin variación:** la migración es SQL, no la ejecutan los
-gates; `npm run typecheck`, `npm run lint`, `npm test` (27 tests) y `npm run build` verdes en el mismo
-árbol.
+```json
+{
+  "auth_uid": "378bfac9-…", "es_superadmin": false,
+  "triggers_en_profiles": [ { "trigger": "prevent_role_self_update", "funcion": "prevent_role_self_update" } ],
+  "funciones_prevent_existentes": [
+    { "nombre": "prevent_role_self_update", "security_definer": true, "lineas": 10 },
+    { "nombre": "prevent_sensitive_self_update", "security_definer": false, "lineas": 57 }
+  ],
+  "tabla_de_migraciones_del_cli": null
+}
+```
+
+**La función existía; el trigger no estaba enganchado.** `0025` se había aplicado a medias: nadie
+ejecutaba la lógica. No era un problema de `current_user`, era una migración incompleta — y sin ledger
+(`supabase_migrations` no existe) no había forma de saberlo leyendo el repositorio.
+
+**5 — observed after applying `0025` complete.** `pg_trigger` sobre `public.profiles` devuelve ahora dos
+triggers: `prevent_role_self_update` y `prevent_sensitive_self_update`.
+
+**6-7 — observed.** Tres comprobaciones sobre la base ya migrada
+(`A` con claims de usuario y rol privilegiado que saltea RLS; `B` cambio legítimo; `C` sin usuario final):
+
+```text
+A OK -> No tenés permisos para cambiar tu plan
+B OK -> el cambio legítimo pasa
+C OK -> el servidor puede escribir
+```
+
+`A` es la prueba del hallazgo: la protección no depende del rol de conexión. `B` y `C` prueban que no se
+rompió nada — ni el flujo de subir documentos ni el canje de licencias, el panel, el webhook o el cron.
+
+## Deuda de proceso, no de código
+
+`tabla_de_migraciones_del_cli` es `null`: las migraciones se aplican a mano en el SQL Editor y no queda
+registro de qué corrió. Por eso `0025` pudo quedar a medias sin síntoma — y por eso una auditoría que
+sólo lee archivos puede afirmar que algo está protegido cuando no lo está. Dos salidas: `supabase link` +
+`supabase db push`, o una tabla `_applied_migrations(version text primary key, applied_at timestamptz)`
+que cada archivo inserte al final. La segunda no necesita red ni contraseñas.
 
 ## Next
 
-Pegar `supabase/tests/0025_profiles_hardening.sql` en el SQL Editor del proyecto y leer los `NOTICE`:
-el único aceptable es `OK` en los siete casos. Si el caso 7 dijera `FALLO`, la protección de `plan` y
-KYC no se está aplicando y hay que revisar qué rol abre las conexiones.
+Aplicar el mismo criterio a las migraciones restantes: comprobar en `pg_trigger` / `pg_proc` /
+`information_schema` que lo que el repositorio declara existe en la base, en vez de leer sólo el archivo.
