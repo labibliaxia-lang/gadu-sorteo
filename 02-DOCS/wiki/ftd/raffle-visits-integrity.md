@@ -47,26 +47,31 @@ decisión no lo hago yo: es del dueño del producto.
 descartar renders que no son navegación. El insert ya no está envuelto en `try/catch`: se mira
 `{ error: visitError }` y se registra con `console.warn`.
 
-**3 — escrito, NO aplicado todavía.** `supabase/migrations/0027_raffle_visits_hardening.sql` reemplaza
-la política por `with check (exists (select 1 from public.raffles r where r.id = raffle_visits.raffle_id
-and r.status = 'active'))`. El tráfico legítimo no cambia: la página ya sólo inserta para sorteos
-activos.
+**3 — aplicado y observado.** `0027` corrió en la base. `supabase/tests/0027_visits_policy.sql` devolvió:
+
+```text
+A OK -> la política de INSERT exige un sorteo válido (0027)
+B OK -> bloqueado por RLS: new row violates row-level security policy for table "raffle_visits"
+C OK -> el tracking legítimo sigue funcionando
+```
+
+`B` es la prueba del hallazgo: un anónimo ya no puede insertar una visita en un sorteo que no está
+activo. `C` prueba que no se rompió el tracking legítimo.
 
 **4 — observed by reading.** `components/admin/AdvancedAnalytics.tsx`: «Embudo: renders → pago» con la
 nota «Una visita = una navegación; el mismo visitante cuenta varias veces», tarjetas «Visitas (por
 render)» y «Pagos por visita (por render)», y las mismas etiquetas en el CSV. No se toca el cálculo:
 sigue siendo `pagos / visitas`.
 
-**5 — escrito, NO ejecutado.** `verificar_esquema.sql` comprobación 17: si la política de `INSERT` no
-menciona `raffles`, avisa que el contador se puede inflar desde fuera. Hoy debería decir `AVISO` hasta
-que se aplique `0027`.
+**5 — escrito; la condición que vigila ya se cumple.** La comprobación 17 del verificador pregunta
+exactamente lo que respondió el caso `A` (que la política de `INSERT` mencione `raffles`), así que debería
+leer `OK`. La corrida completa del verificador no se repitió después de aplicar `0027`.
 
 **6 — observed.** `npm run typecheck` → exit 0 · `npm run lint` → sin warnings · `npm test` → 4
 archivos, 32 tests · `npm run build` → exit 0.
 
-**NOT OBSERVED.** No se midió la caída real del contador (hace falta tráfico real y `0027` aplicada), ni
-se probó que un anónimo ya no pueda insertar visitas de un sorteo cerrado. Ambas quedan pendientes de la
-prueba en la base.
+**Sigue NO OBSERVADO:** cuánto bajó el contador real. Eso necesita tráfico y tiempo, no una consulta. La
+métrica seguirá contando varias veces al mismo visitante, y por eso se rotula «por render».
 
 ## Next
 
