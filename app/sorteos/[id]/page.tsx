@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
@@ -35,17 +36,35 @@ export default async function RafflePage({
 
   if (!raffle) notFound();
 
-  // Tracking de visitas para las analíticas del organizador. Nunca debe
-  // romper la página: si la tabla no existe (migración 0026 pendiente),
-  // el error se ignora silenciosamente.
-  try {
-    if (raffle.status === "active") {
-      await supabase
-        .from("raffle_visits")
-        .insert({ raffle_id: raffle.id });
+  // Tracking de visitas para las analíticas del organizador.
+  //
+  // Antes contaba CUALQUIER render: cada prefetch del router de Next, cada
+  // revalidación y cada recarga sumaban una visita, así que el número que veía
+  // el organizador salía inflado y la "conversión visitas → pago" quedaba
+  // artificialmente baja. Ahora sólo cuenta una navegación real.
+  //
+  // El error se lee: `insert` de supabase no lanza, devuelve `{ error }`, así
+  // que el `try/catch` anterior no atrapaba nada y un fallo de RLS o una tabla
+  // ausente se perdían en silencio.
+  const requestHeaders = headers();
+  const isPrefetch = Boolean(
+    requestHeaders.get("next-router-prefetch") ??
+      requestHeaders.get("sec-purpose") ??
+      requestHeaders.get("purpose"),
+  );
+  const fetchMode = requestHeaders.get("sec-fetch-mode");
+  const isNavigation = fetchMode === null || fetchMode === "navigate";
+
+  if (raffle.status === "active" && !isPrefetch && isNavigation) {
+    const { error: visitError } = await supabase
+      .from("raffle_visits")
+      .insert({ raffle_id: raffle.id });
+
+    // Sin tracking disponible (migración 0026 pendiente): no rompe la página,
+    // pero deja de ser invisible.
+    if (visitError) {
+      console.warn("[visitas] no se pudo registrar:", visitError.message);
     }
-  } catch {
-    // Sin tracking disponible.
   }
 
   const { data: prizes } = await supabase

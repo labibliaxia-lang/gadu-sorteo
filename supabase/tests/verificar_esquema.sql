@@ -182,4 +182,17 @@ from (
   select 16, case when to_regclass('supabase_migrations.schema_migrations') is null
       then 'AVISO   sin ledger de migraciones: "está en el repo" no prueba que esté en la base'
     else 'OK      ledger de migraciones presente' end
+
+  -- ------------------------------------------------------------------
+  -- 11) Visitas: que no se puedan inflar desde fuera (0027)
+  -- ------------------------------------------------------------------
+  union all
+  select 17, case when to_regclass('public.raffle_visits') is null
+      then 'FALTA   tabla raffle_visits (0026)'
+    when exists (
+      select 1 from pg_policies
+      where schemaname = 'public' and tablename = 'raffle_visits' and cmd = 'INSERT'
+        and coalesce(with_check, '') ilike '%raffles%'
+    ) then 'OK      visitas: sólo se aceptan de sorteos activos (0027)'
+    else 'AVISO   política de visitas sin restringir: cualquiera puede inflar el contador (aplicá 0027)' end
 ) checks;

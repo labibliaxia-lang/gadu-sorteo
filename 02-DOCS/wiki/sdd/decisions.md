@@ -147,6 +147,27 @@ enganchado**. `0025` se había aplicado a medias, y sin ledger de migraciones na
 **Deuda abierta de proceso:** `supabase_migrations` no existe. Cualquier migración es «probablemente
 aplicada» hasta que alguien consulta el catálogo. Propuesta: `supabase link` + `db push`, o una tabla
 `_applied_migrations` que cada archivo inserte al final.
+
+## 2026-11-02 — Visitas: no inflar y no prometer lo que no mide (FTD)
+
+- **Context.** Hallazgo #5: la página pública insertaba una visita en cada render (con
+  `force-dynamic`), la política de `0026` era `with check (true)` y la UI lo rotulaba «conversión». El
+  `try/catch` no atrapaba nada porque el cliente de Supabase devuelve `{ error }` en vez de lanzar.
+- **Options considered.**
+  1. Sólo cambiar el rótulo. Rejected — deja el contador inflable desde fuera.
+  2. Filtrar renders que no son navegación, restringir la política a sorteos activos, leer el error y
+     rotular «por render». **Chosen.**
+  3. Deduplicar por visitante con hash diario de IP+UA. Rejected *por ahora*: guarda un dato pseudónimo
+     y contradice la promesa explícita de `0026` («no guarda datos personales»). Es una decisión del
+     dueño del producto, no del agente.
+  4. Sustituir la métrica por analítica del hosting. Deferred — cuesta dependencia externa.
+- **Why.** Un número que se puede inflar desde fuera y se presenta como medido es peor que no tenerlo:
+  el organizador decide con él. Arreglar el rótulo y cerrar la puerta de inserción se puede hacer sin
+  tocar la privacidad; deduplicar de verdad, no.
+- **Consequences.** La métrica se llama «por render» en UI y CSV, y no se usa para precios ni comisiones.
+  `0027` queda pendiente de aplicar; el verificador la delata.
+- **Evidence.** `02-DOCS/wiki/ftd/raffle-visits-integrity.md`. La caída real del contador y el rechazo de
+  inserciones ajenas quedan como no observados hasta la prueba en la base.
 - **Operational note recorded, because it cost two failed builds:** `.next` is one shared directory and
   two `next build` runs in the same folder corrupt it. It happened twice: once from a build of this
   session that stayed alive after its pipeline returned an error, and once with **another session

@@ -181,9 +181,9 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
     lines.push(`Conversion;${(data.kpis.conversion * 100).toFixed(2)}%`);
     lines.push(`Numeros vendidos;${data.kpis.sold}`);
     lines.push(`Numeros reservados;${data.kpis.reserved}`);
-    lines.push(`Visitas;${data.kpis.visits ?? ""}`);
+    lines.push(`Visitas por render;${data.kpis.visits ?? ""}`);
     lines.push(
-      `Conversion visitas a pago;${
+      `Pagos por visita (por render);${
         data.kpis.visitConversion === null
           ? ""
           : (data.kpis.visitConversion * 100).toFixed(2)
@@ -386,7 +386,10 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
       <Card>
         <CardContent className="space-y-3 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold">Embudo: visitas → pago</p>
+            <p className="text-sm font-semibold">Embudo: renders → pago</p>
+            <span className="text-xs text-muted-foreground">
+              Una visita = una navegación; el mismo visitante cuenta varias veces
+            </span>
             {kpis?.visits === null && (
               <span className="text-xs text-muted-foreground">
                 Tracking de visitas no activo (aplicá la migración 0026)
@@ -396,7 +399,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
 
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Visitas</p>
+              <p className="text-xs text-muted-foreground">Visitas (por render)</p>
               <p className="text-lg font-bold">
                 {loading || !kpis ? "—" : (kpis.visits ?? "—")}
               </p>
@@ -409,7 +412,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
             </div>
             <div className="rounded-lg border p-3">
               <p className="text-xs text-muted-foreground">
-                Conversión visitas → pago
+                Pagos por visita (por render)
               </p>
               <p className="text-lg font-bold">
                 {loading || !kpis || kpis.visitConversion === null
