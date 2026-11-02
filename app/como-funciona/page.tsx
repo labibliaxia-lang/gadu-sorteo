@@ -108,6 +108,12 @@ export default function ComoFuncionaPage() {
           ganador. Ambas quedan publicadas y congeladas en la página del sorteo,
           con el paso a paso exacto para verificarlas.
         </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          En cada sorteo finalizado hay un verificador automático: se ejecuta en
+          tu navegador, no consulta la base, y te dice si la semilla, el listado
+          y el ganador coinciden con lo publicado. También podés pegar otro
+          listado para ver qué pasaría si alguien lo hubiera cambiado.
+        </p>
       </section>
 
       <section className="rounded-2xl border p-6 sm:p-8">

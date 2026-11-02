@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
+import { DrawVerifier } from "@/components/DrawVerifier";
 import { NumbersGrid } from "@/components/NumbersGrid";
 import { OrganizerCard } from "@/components/OrganizerCard";
 import { OrganizerContact } from "@/components/OrganizerContact";
@@ -83,6 +84,21 @@ export default async function RafflePage({
         .eq("id", raffle.created_by)
         .single()
     : { data: null };
+
+  // Listado vendido para el verificador: es público por RLS (solo números).
+  const { data: soldNumbersData } =
+    raffle.status === "drawn" && raffle.draw_seed
+      ? await supabase
+          .from("raffle_numbers")
+          .select("number")
+          .eq("raffle_id", raffle.id)
+          .eq("status", "sold")
+          .order("number", { ascending: true })
+      : { data: null };
+
+  const soldNumbers = ((soldNumbersData ?? []) as { number: number }[]).map(
+    (row) => row.number,
+  );
 
   return (
     <div className="space-y-8">
@@ -234,6 +250,20 @@ export default async function RafflePage({
                 </div>
               )}
             </div>
+
+            {raffle.draw_seed &&
+              raffle.draw_commitment &&
+              raffle.winner_number != null && (
+                <DrawVerifier
+                  raffleId={raffle.id}
+                  seed={raffle.draw_seed}
+                  commitment={raffle.draw_commitment}
+                  winnerNumber={raffle.winner_number}
+                  numbersHash={raffle.numbers_hash!}
+                  resultHash={raffle.result_hash!}
+                  soldNumbers={soldNumbers}
+                />
+              )}
 
             <details className="rounded-md border p-3 text-sm">
               <summary className="cursor-pointer font-medium">
