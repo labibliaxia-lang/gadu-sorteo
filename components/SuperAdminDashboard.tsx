@@ -372,9 +372,30 @@ export function SuperAdminDashboard({
                     </td>
                     <td className="p-3">
                       {isSuper ? (
-                        <span className="text-xs text-muted-foreground">
-                          Protegido
-                        </span>
+                        // Antes decía "Protegido" y no había salida: un
+                        // superadmin sólo se podía degradar por SQL. Ahora se
+                        // puede degradar, nunca ascender desde aquí, y el
+                        // servidor rechaza degradar al último.
+                        <select
+                          aria-label={`Degradar el rol de ${u.email ?? u.id}`}
+                          title="Un superadmin sólo se puede degradar; el último no se puede tocar"
+                          className="rounded-md border bg-background px-2 py-1 text-xs disabled:opacity-60"
+                          value="superadmin"
+                          disabled={rowBusy === u.id || busy}
+                          onChange={(e) => {
+                            const next = e.target.value as AssignableRole;
+                            if (next !== "superadmin") void changeRole(u, next);
+                          }}
+                        >
+                          <option value="superadmin">Superadmin (actual)</option>
+                          {ROLE_OPTIONS.filter(
+                            (option) => option.value !== "superadmin",
+                          ).map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
                       ) : (
                         <select
                           aria-label={`Rol de ${u.email ?? u.id}`}

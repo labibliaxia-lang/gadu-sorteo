@@ -24,6 +24,17 @@ export type LicensePlan = (typeof LICENSE_PLANS)[number];
 /** Tamaño de página del listado de usuarios. */
 export const USERS_PAGE_SIZE = 25;
 
+/**
+ * ¿Se puede degradar a un superadmin?
+ *
+ * Nunca si es el último (`remaining <= 1`), y nunca si el conteo no se pudo
+ * obtener (`null`): ante la duda, no se degrada. Se expone como función pura
+ * para que la regla se pueda probar sin base de datos.
+ */
+export function canDemoteSuperadmin(remaining: number | null): boolean {
+  return remaining !== null && remaining > 1;
+}
+
 /** Etiqueta legible de un rol. */
 export function roleLabel(role: string): string {
   if (role === "superadmin") return "Superadmin";

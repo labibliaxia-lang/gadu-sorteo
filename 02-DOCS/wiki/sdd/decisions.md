@@ -83,6 +83,53 @@ Append-only. Every significant decision gets a date, the options considered, and
 - **Consequences.** `npm run lint` and `npm test` are part of done (constitution v1.1.0). New money
   logic must ship with its unit test. Still open: no coverage floor, no route-level tests.
 - **Evidence.** `02-DOCS/wiki/ftd/quality-gates-eslint-vitest.md`.
+
+## 2026-11-02 — Superadmin degradable y KYC borrado en orden (FTD)
+
+- **Context.** Auditoría del panel `126fe20`: `deleteUsers` borraba los archivos KYC antes de borrar la
+  cuenta, y `superadmin` no se podía degradar desde el panel en ningún camino.
+- **Options considered.**
+  1. Dejar la degradación como operación manual por SQL. Rejected — el día que alguien se va o una
+     cuenta se compromete, la respuesta no puede ser "abrí el SQL Editor".
+  2. Permitir degradar sin guarda. Rejected — el sistema puede quedarse sin ningún superadmin y
+     nadie podría volver a entrar al panel.
+  3. Degradar con doble control (conteo previo + reversión posterior) y regla pura testeada.
+     **Chosen.**
+  4. Añadir una función SQL `demote_superadmin` con `for update` para cerrar la carrera por completo.
+     Rejected *for now*: exige una migración nueva que hay que aplicar antes de que el panel funcione;
+     la doble comprobación cubre el caso real (un solo operador) y queda anotada como el siguiente
+     paso si el equipo crece.
+- **Why.** Un privilegio que no se puede revocar es un problema de seguridad; dos operaciones cuyo
+  orden decide si se pierde evidencia es un problema de datos. Ninguno de los dos se arregla con
+  documentación.
+- **Consequences.** El panel puede degradar a un superadmin (nunca a sí mismo, nunca al último) y la
+  fila de superadmin ya no es un callejón sin salida. El borrado de un usuario elimina primero la
+  cuenta y después sus archivos KYC, con `kycPurged` en la auditoría.
+- **Evidence.** `02-DOCS/wiki/ftd/superadmin-demote-and-kyc-purge-order.md`: regla pura con tests,
+  orden de llamadas verificado por lectura, y los cuatro gates en verde. La ejecución real contra
+  Supabase queda pendiente y está declarada como no observada.
+
+## 2026-11-02 — El trigger de profiles no mira el rol de conexión (FTD)
+
+- **Context.** Hallazgo #2 de la auditoría: la versión sin commitear de `0025` eximía por nombre de rol
+  (`current_user not in ('anon','authenticated','service_role')`). Con PostgREST funciona, pero si el
+  proyecto conecta con otro rol la protección del paywall y del KYC desaparece sin ningún error.
+  Además, git y el working tree tenían versiones distintas del mismo archivo.
+- **Options considered.**
+  1. Volver a `SECURITY DEFINER` con `auth.uid()` (lo que estaba commiteado). Rejected — un trigger
+     `SECURITY DEFINER` corre con privilegios del dueño y es superficie de escalada que aquí no compra
+     nada.
+  2. Mantener la exención por `current_user` y añadir sólo el script de prueba. Rejected — deja el modo
+     de fallo silencioso; el test lo detectaría el día que se corra, no antes.
+  3. Quitar la exención por rol y decidir por `auth.uid() is null`, conservando `SECURITY INVOKER`.
+     **Chosen**: la protección depende de si hay un usuario final, no del nombre del rol.
+- **Why.** Un control que deja de controlar sin avisar es peor que no tenerlo. El camino del canje de
+  licencias sigue exento por la vía correcta: `0022` limpia los claims antes de escribir.
+- **Consequences.** El comportamiento ya no depende de cómo se conecte el cliente. Se añade
+  `supabase/tests/0025_profiles_hardening.sql` (7 casos, termina en `ROLLBACK`) para probarlo en el SQL
+  Editor. **No se ejecutó**: no hay Postgres local y no se corren pruebas contra la base remota sin
+  permiso explícito.
+- **Evidence.** `02-DOCS/wiki/ftd/profiles-trigger-role-independent.md`.
 - **Operational note recorded, because it cost two failed builds:** `.next` is one shared directory and
   two `next build` runs in the same folder corrupt it. It happened twice: once from a build of this
   session that stayed alive after its pipeline returned an error, and once with **another session

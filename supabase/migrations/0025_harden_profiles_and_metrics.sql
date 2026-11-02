@@ -20,18 +20,35 @@
 -- Se usa to_jsonb(old/new) para no depender de que las migraciones 0011,
 -- 0013, 0017 y 0023 estén aplicadas: si la columna no existe, el valor es
 -- null a ambos lados y la comparación da "sin cambio".
+--
+-- La función es SECURITY INVOKER (el default) a propósito: no necesita más
+-- privilegios que quien hace el UPDATE, y un trigger con SECURITY DEFINER es
+-- superficie de escalada que aquí no compra nada.
+--
+-- ⚠️ La protección NO mira el rol de conexión (`current_user`). Mira si la
+-- petición trae un usuario final (`auth.uid()`). Es a propósito: si alguien
+-- conecta con otro rol —pooler en modo sesión, `postgres`, un rol propio— un
+-- filtro por nombre de rol se saltearía el control **en silencio**, y un
+-- control que deja de controlar sin avisar es peor que no tenerlo.
+--
+-- Queda exenta la escritura sin usuario final: service_role (Server Actions,
+-- cron, webhooks), `postgres` (migraciones, DBA) y las funciones SECURITY
+-- DEFINER que limpian los claims antes de escribir, como el canje de licencias
+-- de 0022 (líneas 258-259):
+--   * rama 'premium'  -> update profiles set plan='premium'  (0022:270-274)
+--   * rama organizador-> update profiles set role='admin'
 -- ---------------------------------------------------------------------
 create or replace function public.prevent_sensitive_self_update()
 returns trigger
 language plpgsql
-security definer
 set search_path = public
 as $$
 declare
   v_old jsonb := to_jsonb(old);
   v_new jsonb := to_jsonb(new);
 begin
-  -- service_role (Server Actions, webhooks): auth.uid() es null -> sin límites.
+  -- Sin usuario final (service_role, cron, webhooks, migraciones, funciones
+  -- SECURITY DEFINER con los claims limpios): sin límites.
   if auth.uid() is null then
     return new;
   end if;

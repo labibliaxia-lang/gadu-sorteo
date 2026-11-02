@@ -10,6 +10,7 @@ import {
   LICENSE_PLANS,
   UUID_RE,
   USERS_PAGE_SIZE,
+  canDemoteSuperadmin,
   type AssignableRole,
   type LicensePlan,
 } from "@/lib/superadmin";
@@ -131,6 +132,21 @@ function requestStateFor(
     role_request_status: "approved" as const,
     admin_request_status: "approved" as const,
   };
+}
+
+/** Cantidad de superadmins actuales, o null si no se pudo contar. */
+async function countSuperadmins(): Promise<number | null> {
+  const admin = createAdminClient();
+  const { count, error } = await admin
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .eq("role", "superadmin");
+
+  if (error) {
+    console.error("[countSuperadmins] no se pudo contar:", error.message);
+    return null;
+  }
+  return count ?? 0;
 }
 
 function revalidateAdminViews() {
@@ -400,24 +416,44 @@ export async function setUserRole(
 
   if (findError) return { ok: false, error: findError.message };
   if (!target) return { ok: false, error: "Usuario no encontrado" };
-  if (target.role === "superadmin")
-    return { ok: false, error: "No se puede modificar a otro superadmin" };
-  if (target.role === role)
+
+  const demotingSuperadmin = target.role === "superadmin";
+
+  if (demotingSuperadmin && role === "superadmin")
     return { ok: true, message: "El usuario ya tiene ese rol" };
+  if (!demotingSuperadmin && target.role === role)
+    return { ok: true, message: "El usuario ya tiene ese rol" };
+
+  // Degradar un superadmin es posible (antes era irreversible sin SQL), pero
+  // nunca a costa de dejar el sistema sin ninguno. Si el conteo falla, se
+  // rechaza: ante la duda, no se degrada.
+  if (demotingSuperadmin) {
+    const remaining = await countSuperadmins();
+    if (!canDemoteSuperadmin(remaining)) {
+      return {
+        ok: false,
+        error: "No se puede degradar al último superadmin",
+      };
+    }
+  }
 
   const requestState = requestStateFor(
     target,
     role === "user" ? "none" : "approved",
   );
 
-  const { data: updated, error } = await admin
+  let update = admin
     .from("profiles")
     .update({ role, ...requestState })
-    .eq("id", userId)
-    // Doble red: si entre la lectura y la escritura el usuario pasó a ser
-    // superadmin, la fila no coincide y no se toca.
-    .neq("role", "superadmin")
-    .select("id");
+    .eq("id", userId);
+
+  // Doble red contra la carrera entre la lectura y la escritura: la fila sólo
+  // se toca si el rol sigue siendo el que se leyó.
+  update = demotingSuperadmin
+    ? update.eq("role", "superadmin")
+    : update.neq("role", "superadmin");
+
+  const { data: updated, error } = await update.select("id");
 
   if (error) return { ok: false, error: error.message };
   if (!updated || updated.length === 0)
@@ -426,13 +462,34 @@ export async function setUserRole(
       error: "No se aplicó el cambio: el usuario ya no admite modificaciones",
     };
 
+  // Segunda comprobación: si dos degradaciones simultáneas pasaron el control
+  // previo, se deshace el cambio antes que quedarse sin superadmins.
+  if (demotingSuperadmin) {
+    const after = await countSuperadmins();
+    if (after === 0) {
+      await admin
+        .from("profiles")
+        .update({ role: "superadmin" })
+        .eq("id", userId);
+      return {
+        ok: false,
+        error: "No se aplicó: el sistema quedaría sin ningún superadmin",
+      };
+    }
+  }
+
   await logAction({
     adminId: adminUser.id,
     adminEmail: adminUser.email,
     action: "CHANGE_ROLE",
     targetUserId: userId,
     targetEmail: target.email ?? null,
-    details: { from: target.role, to: role, via: "row" },
+    details: {
+      from: target.role,
+      to: role,
+      via: "row",
+      ...(demotingSuperadmin ? { demotion: "superadmin" } : {}),
+    },
   });
 
   revalidateAdminViews();
@@ -791,22 +848,13 @@ export async function deleteUsers(userIds: string[]): Promise<ActionResult> {
   let lastError: string | null = null;
 
   for (const t of loaded.targets) {
-    // Privacidad: los documentos KYC viven en un bucket privado y NO se
-    // borran con el usuario; hay que eliminarlos explícitamente.
+    // Privacidad: los documentos KYC viven en un bucket privado y NO se borran
+    // con el usuario. Las rutas se capturan antes (loadTargets) y los archivos
+    // se eliminan DESPUÉS de borrar la cuenta: si se borraran primero y el
+    // deleteUser fallara, se perdía la evidencia sin haber eliminado al usuario.
     const files = [t.dni_front_url, t.face_url].filter(
       (f): f is string => Boolean(f),
     );
-    if (files.length > 0) {
-      const { error: storageError } = await admin.storage
-        .from("organizer-kyc")
-        .remove(files);
-      if (storageError) {
-        console.error(
-          "[deleteUsers] no se pudieron borrar los archivos KYC:",
-          storageError.message,
-        );
-      }
-    }
 
     const { error } = await admin.auth.admin.deleteUser(t.id);
     if (error) {
@@ -814,13 +862,37 @@ export async function deleteUsers(userIds: string[]): Promise<ActionResult> {
       continue;
     }
     count += 1;
+
+    let kycPurged = false;
+    if (files.length > 0) {
+      const { error: storageError } = await admin.storage
+        .from("organizer-kyc")
+        .remove(files);
+      if (storageError) {
+        // La cuenta ya no existe: queda un archivo huérfano, no un usuario sin
+        // evidencia. Se reporta para poder purgarlo a mano.
+        console.error(
+          "[deleteUsers] la cuenta se eliminó pero quedaron archivos KYC:",
+          storageError.message,
+          { userId: t.id, files },
+        );
+      } else {
+        kycPurged = true;
+      }
+    }
+
     await logAction({
       adminId: adminUser.id,
       adminEmail: adminUser.email,
       action: "DELETE_USER",
       targetUserId: null,
       targetEmail: t.email,
-      details: { deletedUserId: t.id, role: t.role, kycFiles: files.length },
+      details: {
+        deletedUserId: t.id,
+        role: t.role,
+        kycFiles: files.length,
+        kycPurged,
+      },
     });
   }
 
