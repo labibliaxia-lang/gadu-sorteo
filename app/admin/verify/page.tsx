@@ -15,12 +15,15 @@ const ERROR_MESSAGES: Record<string, string> = {
   forbidden: "Tu cuenta no tiene permisos de superadministrador.",
 };
 
+const CODE_LENGTH = 25;
+
 export default function AdminVerifyPage({
   searchParams,
 }: {
   searchParams: { next?: string; error?: string };
 }) {
   const [showCode, setShowCode] = useState(false);
+  const [code, setCode] = useState("");
 
   const rawNext = searchParams.next ?? "";
   const next =
@@ -43,8 +46,9 @@ export default function AdminVerifyPage({
           Verificación de administrador
         </h1>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Por seguridad, ingresá el código de administrador. La sesión del panel
-          dura 30 minutos.
+          Por seguridad, ingresá la clave maestra de 25 caracteres. Se valida
+          en el servidor mediante hash SHA-256. La sesión del panel dura 30
+          minutos.
         </p>
 
         {error && (
@@ -57,16 +61,27 @@ export default function AdminVerifyPage({
           <input type="hidden" name="next" value={next} />
 
           <div className="space-y-2">
-            <Label htmlFor="code">Código de administrador</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="code">Código de administrador</Label>
+              <span className="font-mono text-xs text-muted-foreground">
+                {code.length}/{CODE_LENGTH}
+              </span>
+            </div>
             <div className="relative">
               <ShieldCheck className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="code"
                 name="code"
                 type={showCode ? "text" : "password"}
-                className="pl-9 pr-10"
-                placeholder="••••••••"
-                autoComplete="current-password"
+                value={code}
+                onChange={(e) => setCode(e.target.value.slice(0, CODE_LENGTH))}
+                maxLength={CODE_LENGTH}
+                className="pl-9 pr-10 font-mono"
+                placeholder="•••••••••••••••••••••••••"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
                 autoFocus
                 required
               />

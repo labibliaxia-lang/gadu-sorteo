@@ -7,16 +7,39 @@ const ADMIN_VERIFY = "/admin/verify";
 
 // Debe coincidir con la lógica de `app/admin/verify/actions.ts` para que la
 // cookie firmada por la Server Action sea validada correctamente.
-const DEFAULT_ADMIN_CODE = "gadu2026";
+// Solo se manejan hashes SHA-256 (nunca la clave maestra en texto plano).
+const DEFAULT_ACCESS_CODE_HASH =
+  "5c0291ed411451dee115a19613f36034e94971bdec689228be2a7e65f52532e8";
 
-function adminAccessCode(): string {
-  const value = process.env.ADMIN_ACCESS_CODE?.trim();
-  return value || DEFAULT_ADMIN_CODE;
+const HASH_RE = /^[0-9a-f]{64}$/;
+
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value),
+  );
+  const bytes = new Uint8Array(digest);
+  let hex = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    hex += bytes[i].toString(16).padStart(2, "0");
+  }
+  return hex;
 }
 
-function sessionSecret(): string {
+async function accessCodeHash(): Promise<string> {
+  const fromEnv = process.env.ADMIN_ACCESS_CODE_HASH?.trim().toLowerCase();
+  if (fromEnv && HASH_RE.test(fromEnv)) return fromEnv;
+
+  const legacy = process.env.ADMIN_ACCESS_CODE?.trim();
+  if (legacy) return await sha256Hex(legacy);
+
+  return DEFAULT_ACCESS_CODE_HASH;
+}
+
+async function sessionSecret(): Promise<string> {
   const value = process.env.ADMIN_SESSION_SECRET?.trim();
-  return value || adminAccessCode();
+  if (value) return value;
+  return await accessCodeHash();
 }
 
 /** HMAC-SHA256 en base64url usando Web Crypto (compatible con Edge runtime). */
@@ -50,7 +73,7 @@ async function hasValidAdminSession(
   request: NextRequest,
   userId: string,
 ): Promise<boolean> {
-  const key = sessionSecret();
+  const key = await sessionSecret();
   if (!key) return false;
 
   const raw = request.cookies.get(ADMIN_COOKIE)?.value;

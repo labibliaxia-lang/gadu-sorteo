@@ -164,6 +164,46 @@ Abrí `http://localhost:3000`.
 
 ---
 
+## 5.1. Clave maestra del panel `/admin` (recomendado)
+
+El panel `/admin` exige una re-autenticación con una **clave maestra de 25
+caracteres**. La clave **nunca se guarda en el código**: solo su **hash
+SHA-256** en la variable `ADMIN_ACCESS_CODE_HASH`.
+
+1. Elegí una clave robusta de 25 caracteres (mayúsculas, minúsculas, números y
+   símbolos).
+2. Calculá su hash SHA-256:
+
+```powershell
+# PowerShell
+$s = 'TU_CLAVE_DE_25_CARACTERES'
+[BitConverter]::ToString(
+  [Security.Cryptography.SHA256]::Create().ComputeHash(
+    [Text.Encoding]::UTF8.GetBytes($s)
+  )
+).Replace('-', '').ToLower()
+```
+
+```bash
+# Alternativa Node.js
+node -e "console.log(require('crypto').createHash('sha256').update('TU_CLAVE').digest('hex'))"
+```
+
+3. Pegá el resultado (64 caracteres hexadecimales) en `.env.local`:
+
+```env
+ADMIN_ACCESS_CODE_HASH=<hash_sha256_de_tu_clave>
+# Opcional pero recomendado: secreto propio para firmar la cookie admin
+ADMIN_SESSION_SECRET=<cadena_larga_y_aleatoria>
+```
+
+> Si no definís `ADMIN_ACCESS_CODE_HASH` se usa un hash de respaldo interno
+> (útil en desarrollo, pero **configurá tu propia clave en producción**).
+> La cookie `admin_verified` dura 30 minutos, es `HttpOnly` y solo contiene
+> una firma HMAC ligada a tu usuario.
+
+---
+
 ## 6. Probar el webhook en local con ngrok
 
 Mercado Pago necesita una URL pública para notificar. Usá [ngrok](https://ngrok.com):
