@@ -19,6 +19,8 @@ export type AdminRequestStatus = "none" | "pending" | "approved" | "rejected";
  */
 export interface PublicOrganizer {
   id: string;
+  /** Slug público (migración 0035). Puede faltar en cuentas viejas. */
+  slug: string | null;
   full_name: string;
   avatar_url: string | null;
   is_verified: boolean;

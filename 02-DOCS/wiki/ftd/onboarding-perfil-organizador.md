@@ -65,8 +65,33 @@ sorteo pasa `/organizador/<created_by>`.
 superadmin, no tiene perfil público y la tarjeta del organizador no se muestra (tampoco antes de este
 cambio). El slug es el UUID; no hay URL amigable por nombre porque no existe columna de slug.
 
+## Ampliación: slug amigable y sorteos finalizados (0035)
+
+**Slug.** `supabase/migrations/0035_organizer_slug.sql` agrega `profiles.slug` (único, parcial),
+normaliza el nombre con `slugify()` (minúsculas, sin acentos, no alfanumérico a guiones), backfillea
+organizadores y superadmins existentes y asigna slug a las cuentas nuevas de panel con un trigger. El
+slug es estable (no se regenera si cambian el nombre) y el propio usuario no puede cambiarlo: el
+trigger rechaza la modificación salvo para superadmin o service_role. La vista `public_organizers`
+ahora expone `slug` e incluye a los superadmins, así que los sorteos creados por el dueño también
+tienen perfil público.
+
+**Compatibilidad.** `/organizador/[slug]` resuelve primero por slug y, si no lo encuentra y el valor
+tiene forma de UUID, por id: los enlaces viejos siguen funcionando. La tarjeta del organizador en el
+sorteo público enlaza con el slug y cae al id si la cuenta todavía no lo tiene.
+
+**Sorteos finalizados.** El perfil muestra los sorteos activos y, debajo, hasta 9 finalizados con
+título, fecha y número ganador (sin nombre del ganador: la PII se mantiene acotada).
+
+**Evidencia observada.** `npm run typecheck` → 0, `npm run lint` → 0 warnings, `npm test` → 38/38 y
+`npm run build` → 0 tras limpiar un `.next` corrupto por un build concurrente (el repo documenta ese
+`ENOENT`; no era un error del código). `npm test` valida el ledger de 0035.
+
+**Pendiente real.** Aplicar `0035` en Supabase. Hasta entonces la página sigue resolviendo por UUID y
+la tarjeta enlaza con el id; después de aplicarla, los links pasan a `/<nombre-apellido>`.
+
 ## Next
 
-Probar el onboarding con una cuenta de organizador sin sorteos y el perfil desde un sorteo activo.
-Después: slug amigable (nombre + sufijo) con migración propia, y en el perfil mostrar también los
-sorteos finalizados del organizador.
+Aplicar 0035, entrar al perfil desde un sorteo y confirmar que la URL es legible. Después: página de
+perfil del organizador enlazada desde el Muro de Ganadores, y slug editable por el superadmin si hace
+falta corregir uno.
+

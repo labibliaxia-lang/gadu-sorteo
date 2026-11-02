@@ -154,9 +154,11 @@ export default async function RafflePage({
             <OrganizerCard
               organizer={organizer as PublicOrganizer}
               href={
-                raffle.created_by
-                  ? `/organizador/${raffle.created_by}`
-                  : null
+                organizer.slug
+                  ? `/organizador/${organizer.slug}`
+                  : raffle.created_by
+                    ? `/organizador/${raffle.created_by}`
+                    : null
               }
             />
           )}
