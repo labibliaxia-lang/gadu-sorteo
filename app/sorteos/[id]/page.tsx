@@ -35,6 +35,19 @@ export default async function RafflePage({
 
   if (!raffle) notFound();
 
+  // Tracking de visitas para las analíticas del organizador. Nunca debe
+  // romper la página: si la tabla no existe (migración 0026 pendiente),
+  // el error se ignora silenciosamente.
+  try {
+    if (raffle.status === "active") {
+      await supabase
+        .from("raffle_visits")
+        .insert({ raffle_id: raffle.id });
+    }
+  } catch {
+    // Sin tracking disponible.
+  }
+
   const { data: prizes } = await supabase
     .from("prizes")
     .select("*")

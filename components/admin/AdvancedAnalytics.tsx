@@ -40,14 +40,26 @@ interface AnalyticsKpis {
   conversion: number;
   sold: number;
   reserved: number;
+  visits: number | null;
+  visitConversion: number | null;
   activeRaffles: number;
   totalRaffles: number;
+}
+
+interface ComparisonKpis {
+  label: string;
+  revenue: number;
+  approvedPayments: number;
+  totalPayments: number;
+  avgTicket: number;
+  conversion: number;
 }
 
 export interface AnalyticsData {
   range: AnalyticsRange;
   generatedAt: string;
   kpis: AnalyticsKpis;
+  comparison: ComparisonKpis | null;
   daily: DailyPoint[];
   byRaffle: RaffleRow[];
 }
@@ -73,6 +85,41 @@ function shortDate(date: string): string {
   // "2026-11-02" → "02/11"
   const [, month, day] = date.split("-");
   return `${day}/${month}`;
+}
+
+/** Variación porcentual contra el período anterior. */
+function Delta({
+  current,
+  previous,
+  label,
+}: {
+  current: number;
+  previous: number;
+  label: string;
+}) {
+  if (previous === 0) {
+    return (
+      <span className="text-[11px] text-muted-foreground">
+        {current > 0 ? "sin base previa" : "sin cambios"} · vs {label}
+      </span>
+    );
+  }
+
+  const change = ((current - previous) / previous) * 100;
+  const positive = change >= 0;
+
+  return (
+    <span
+      className={cn(
+        "text-[11px] font-medium",
+        positive
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-destructive",
+      )}
+    >
+      {positive ? "▲" : "▼"} {Math.abs(change).toFixed(1)}% vs {label}
+    </span>
+  );
 }
 
 export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
@@ -134,8 +181,28 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
     lines.push(`Conversion;${(data.kpis.conversion * 100).toFixed(2)}%`);
     lines.push(`Numeros vendidos;${data.kpis.sold}`);
     lines.push(`Numeros reservados;${data.kpis.reserved}`);
+    lines.push(`Visitas;${data.kpis.visits ?? ""}`);
+    lines.push(
+      `Conversion visitas a pago;${
+        data.kpis.visitConversion === null
+          ? ""
+          : (data.kpis.visitConversion * 100).toFixed(2)
+      }%`,
+    );
     lines.push(`Sorteos activos;${data.kpis.activeRaffles}`);
     lines.push(`Sorteos totales;${data.kpis.totalRaffles}`);
+    if (data.comparison) {
+      lines.push("");
+      lines.push(`Comparativa vs ${data.comparison.label};Valor`);
+      lines.push(`Recaudacion previa;${data.comparison.revenue}`);
+      lines.push(`Pagos aprobados previos;${data.comparison.approvedPayments}`);
+      lines.push(`Ticket promedio previo;${data.comparison.avgTicket.toFixed(2)}`);
+      lines.push(
+        `Tasa de aprobacion previa;${(
+          data.comparison.conversion * 100
+        ).toFixed(2)}%`,
+      );
+    }
     lines.push("");
     lines.push("Fecha;Recaudacion;Pagos aprobados");
     data.daily.forEach((d) => {
@@ -234,6 +301,13 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
               <p className="truncate text-xl font-bold">
                 {loading || !kpis ? "—" : formatPrice(kpis.revenue)}
               </p>
+              {data?.comparison && kpis && (
+                <Delta
+                  current={kpis.revenue}
+                  previous={data.comparison.revenue}
+                  label={data.comparison.label}
+                />
+              )}
             </div>
           </CardContent>
         </Card>
@@ -250,6 +324,13 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
               <p className="truncate text-xl font-bold">
                 {loading || !kpis ? "—" : kpis.approvedPayments}
               </p>
+              {data?.comparison && kpis && (
+                <Delta
+                  current={kpis.approvedPayments}
+                  previous={data.comparison.approvedPayments}
+                  label={data.comparison.label}
+                />
+              )}
             </div>
           </CardContent>
         </Card>
@@ -266,6 +347,13 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
               <p className="truncate text-xl font-bold">
                 {loading || !kpis ? "—" : formatPrice(kpis.avgTicket)}
               </p>
+              {data?.comparison && kpis && (
+                <Delta
+                  current={kpis.avgTicket}
+                  previous={data.comparison.avgTicket}
+                  label={data.comparison.label}
+                />
+              )}
             </div>
           </CardContent>
         </Card>
@@ -282,10 +370,65 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
               <p className="truncate text-xl font-bold">
                 {loading || !kpis ? "—" : pct(kpis.conversion)}
               </p>
+              {data?.comparison && kpis && (
+                <Delta
+                  current={kpis.conversion}
+                  previous={data.comparison.conversion}
+                  label={data.comparison.label}
+                />
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Embudo: visitas → pago */}
+      <Card>
+        <CardContent className="space-y-3 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold">Embudo: visitas → pago</p>
+            {kpis?.visits === null && (
+              <span className="text-xs text-muted-foreground">
+                Tracking de visitas no activo (aplicá la migración 0026)
+              </span>
+            )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border p-3">
+              <p className="text-xs text-muted-foreground">Visitas</p>
+              <p className="text-lg font-bold">
+                {loading || !kpis ? "—" : (kpis.visits ?? "—")}
+              </p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <p className="text-xs text-muted-foreground">Pagos aprobados</p>
+              <p className="text-lg font-bold">
+                {loading || !kpis ? "—" : kpis.approvedPayments}
+              </p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <p className="text-xs text-muted-foreground">
+                Conversión visitas → pago
+              </p>
+              <p className="text-lg font-bold">
+                {loading || !kpis || kpis.visitConversion === null
+                  ? "—"
+                  : pct(kpis.visitConversion)}
+              </p>
+            </div>
+          </div>
+
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-all"
+              style={{
+                width: `${Math.min(100, (kpis?.visitConversion ?? 0) * 100)}%`,
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Gráfico de tendencia */}
       <Card>

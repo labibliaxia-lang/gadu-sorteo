@@ -65,6 +65,44 @@ function buildDays(range: Range): string[] {
   return days;
 }
 
+/** Ventana equivalente anterior para la comparativa (mes a mes, etc.). */
+function previousWindow(
+  range: Range,
+  from: Date | null,
+): { from: Date; to: Date; label: string } | null {
+  if (!from) return null;
+
+  const to = new Date(from);
+
+  if (range === "today") {
+    return {
+      from: new Date(from.getTime() - 24 * 60 * 60 * 1000),
+      to,
+      label: "día anterior",
+    };
+  }
+
+  if (range === "7d") {
+    return {
+      from: new Date(from.getTime() - 7 * 24 * 60 * 60 * 1000),
+      to,
+      label: "7 días previos",
+    };
+  }
+
+  if (range === "month") {
+    const today = baToday();
+    const prevStart = new Date(
+      today.getFullYear(),
+      today.getMonth() - 1,
+      1,
+    );
+    return { from: baMidnightUtc(prevStart), to, label: "mes anterior" };
+  }
+
+  return null;
+}
+
 function emptyPayload(range: Range) {
   return {
     range,
@@ -77,9 +115,19 @@ function emptyPayload(range: Range) {
       conversion: 0,
       sold: 0,
       reserved: 0,
+      visits: null as number | null,
+      visitConversion: null as number | null,
       activeRaffles: 0,
       totalRaffles: 0,
     },
+    comparison: null as {
+      label: string;
+      revenue: number;
+      approvedPayments: number;
+      totalPayments: number;
+      avgTicket: number;
+      conversion: number;
+    } | null,
     daily: buildDays(range).map((date) => ({ date, revenue: 0, payments: 0 })),
     byRaffle: [] as {
       id: string;
@@ -209,6 +257,18 @@ export async function GET(request: NextRequest) {
       .eq("status", "reserved"),
   ]);
 
+  // 4) Visitas (requiere la migración 0026; si no está, queda null).
+  let visits: number | null = null;
+  const visitsRes = await supabase
+    .from("raffle_visits")
+    .select("id", { count: "exact", head: true })
+    .in("raffle_id", ids)
+    .gte("created_at", (from ?? new Date(0)).toISOString());
+
+  if (!visitsRes.error) {
+    visits = visitsRes.count ?? 0;
+  }
+
   const revenue = approved.reduce((sum, p) => sum + Number(p.amount), 0);
   const approvedPayments = approved.length;
   const totalPayments = rows.length;
@@ -255,6 +315,50 @@ export async function GET(request: NextRequest) {
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 12);
 
+  // 6) Comparativa con el período anterior equivalente (mes a mes, etc.).
+  let comparison: {
+    label: string;
+    revenue: number;
+    approvedPayments: number;
+    totalPayments: number;
+    avgTicket: number;
+    conversion: number;
+  } | null = null;
+
+  const prevWindow = previousWindow(range, from);
+
+  if (prevWindow) {
+    const { data: prevPayments, error: prevError } = await supabase
+      .from("payments")
+      .select("amount, status, created_at")
+      .in("raffle_id", ids)
+      .gte("created_at", prevWindow.from.toISOString())
+      .lt("created_at", prevWindow.to.toISOString());
+
+    if (!prevError) {
+      const prevRows = (prevPayments ?? []) as {
+        amount: number | string;
+        status: string;
+      }[];
+      const prevApproved = prevRows.filter((p) => p.status === "approved");
+      const prevRevenue = prevApproved.reduce(
+        (sum, p) => sum + Number(p.amount),
+        0,
+      );
+
+      comparison = {
+        label: prevWindow.label,
+        revenue: prevRevenue,
+        approvedPayments: prevApproved.length,
+        totalPayments: prevRows.length,
+        avgTicket:
+          prevApproved.length > 0 ? prevRevenue / prevApproved.length : 0,
+        conversion:
+          prevRows.length > 0 ? prevApproved.length / prevRows.length : 0,
+      };
+    }
+  }
+
   return NextResponse.json({
     range,
     generatedAt: new Date().toISOString(),
@@ -266,9 +370,13 @@ export async function GET(request: NextRequest) {
       conversion: totalPayments > 0 ? approvedPayments / totalPayments : 0,
       sold: soldRes.count ?? 0,
       reserved: reservedRes.count ?? 0,
+      visits,
+      visitConversion:
+        visits !== null && visits > 0 ? approvedPayments / visits : null,
       activeRaffles: list.filter((r) => r.status === "active").length,
       totalRaffles: list.length,
     },
+    comparison,
     daily,
     byRaffle,
   });
