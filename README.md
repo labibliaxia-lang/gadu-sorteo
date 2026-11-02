@@ -254,6 +254,42 @@ Archivos involucrados: `instrumentation.ts`, `sentry.client.config.ts`,
 `sentry.server.config.ts`, `sentry.edge.config.ts`, `app/global-error.tsx` y
 `next.config.js`.
 
+### Vercel
+
+Las variables `NEXT_PUBLIC_*` se **inlinean en el build**: hay que cargarlas en
+Vercel y **volver a desplegar**.
+
+1. Vercel → Project → **Settings → Environment Variables**. Agregá el DSN en
+   **Production**, **Preview** y **Development**:
+
+   | Variable | Valor |
+   |---|---|
+   | `NEXT_PUBLIC_SENTRY_DSN` | `https://<key>@o<orgId>.ingest.<region>.sentry.io/<projectId>` |
+
+2. Opcional, para **source maps** en producción (stack traces legibles). Cargá
+   las **tres**; si falta alguna, el build las saltea sin fallar:
+
+   | Variable | Valor |
+   |---|---|
+   | `SENTRY_AUTH_TOKEN` | Auth token con scope `project:releases` |
+   | `SENTRY_ORG` | `gadu-sorteos` |
+   | `SENTRY_PROJECT` | slug del proyecto (Sentry → Settings → Projects) |
+
+3. **Redeploy** (las `NEXT_PUBLIC_*` no se aplican solas): *Deployments → ⋯ →
+   Redeploy*, o `npx vercel --prod`.
+
+Con CLI (proyecto linkeado con `npx vercel link`):
+
+```bash
+npx vercel env add NEXT_PUBLIC_SENTRY_DSN production
+npx vercel env add NEXT_PUBLIC_SENTRY_DSN preview
+npx vercel env add NEXT_PUBLIC_SENTRY_DSN development
+npx vercel --prod
+```
+
+> `SENTRY_AUTH_TOKEN` es **secreto**: va solo en Vercel (o en `.env.local`),
+> nunca en el repositorio.
+
 ---
 
 ## 6. Probar el webhook en local con ngrok

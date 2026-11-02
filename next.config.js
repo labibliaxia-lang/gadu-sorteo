@@ -17,14 +17,21 @@ const nextConfig = {
   },
 };
 
-// Sentry: instrumenta el build y sube source maps si hay SENTRY_AUTH_TOKEN.
-// Sin token (o sin DSN) todo queda inerte y el build sigue funcionando.
+// Sentry: instrumenta el build y sube source maps SOLO si están las tres
+// variables (token + org + proyecto). Sin ellas el build sigue funcionando
+// igual y el SDK queda inerte.
+const sentryOrg = process.env.SENTRY_ORG;
+const sentryProject = process.env.SENTRY_PROJECT;
+const canUploadSourcemaps = Boolean(
+  process.env.SENTRY_AUTH_TOKEN && sentryOrg && sentryProject,
+);
+
 module.exports = withSentryConfig(nextConfig, {
-  org: process.env.SENTRY_ORG || "gadu-sorteos",
-  project: process.env.SENTRY_PROJECT || "gadu-sorteos",
+  org: sentryOrg || "gadu-sorteos",
+  project: sentryProject || "gadu-sorteos",
   silent: true,
   widenClientFileUpload: false,
   sourcemaps: {
-    disable: !process.env.SENTRY_AUTH_TOKEN,
+    disable: !canUploadSourcemaps,
   },
 });
