@@ -47,7 +47,7 @@ const BENEFITS = [
   {
     icon: Truck,
     title: "Entrega a todo el país",
-    desc: "Enviamos las herramientas ganadas a cualquier punto de Argentina.",
+    desc: "Coordinamos la entrega de tu premio en cualquier punto de Argentina.",
   },
 ];
 

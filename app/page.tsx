@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Trophy, Wrench } from "lucide-react";
+import { Gift, ShieldCheck, Trophy } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -24,7 +24,7 @@ export default async function HomePage() {
     <div className="space-y-16">
       {/* ============ HERO ============ */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-900 via-zinc-800 to-amber-950 px-6 py-16 text-white shadow-xl sm:px-12 sm:py-20">
-        <Wrench className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 text-white/5" />
+        <Gift className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 text-white/5" />
         <Trophy className="pointer-events-none absolute bottom-6 right-8 hidden h-24 w-24 text-white/10 sm:block" />
 
         <div className="relative max-w-2xl space-y-5">
@@ -34,12 +34,14 @@ export default async function HomePage() {
           </span>
 
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-            ¡Ganá las mejores herramientas para tu taller!
+            ¡Participá y ganá los mejores premios!
           </h1>
 
           <p className="text-lg text-zinc-300">
-            Elegí tus números, pagá con Mercado Pago y participá por
-            herramientas de primera. Simple, seguro y sin vueltas.
+            Elegí tus números, pagá de forma segura con Mercado Pago y participá
+            por autos, tecnología, experiencias, herramientas y mucho más.
+            Transparente de punta a punta: números, premios y ganadores a la
+            vista.
           </p>
 
           <div className="flex flex-wrap gap-3">
