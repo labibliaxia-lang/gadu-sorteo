@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, Copy, Gift, Ticket, Trophy } from "lucide-react";
+import {
+  CalendarDays,
+  Copy,
+  Gift,
+  Share2,
+  Ticket,
+  Trophy,
+} from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -98,6 +105,43 @@ export default function MisNumerosPage() {
     } catch {
       // clipboard no disponible
     }
+  }
+
+  /**
+   * Comparte el boleto: usa Web Share API si el navegador la soporta y, si no,
+   * cae a WhatsApp. El texto no incluye datos de la cuenta, solo el sorteo y
+   * los números del propio usuario.
+   */
+  async function shareTicket(group: {
+    raffle: RaffleRef;
+    numbers: number[];
+  }) {
+    const url = `${window.location.origin}/sorteos/${group.raffle.id}`;
+    const numbers = group.numbers.map(formatNumber).join(", ");
+    const text = `¡Estoy participando en el sorteo de ${group.raffle.title} en Gadu Sorteos! Mis números son ${numbers}. ¡Entra y participa! ${url}`;
+
+    const nav = navigator as Navigator & {
+      share?: (data: {
+        title?: string;
+        text?: string;
+        url?: string;
+      }) => Promise<void>;
+    };
+
+    if (nav.share) {
+      try {
+        await nav.share({ title: group.raffle.title, text, url });
+        return;
+      } catch {
+        // El usuario canceló o el share falló: se intenta por WhatsApp.
+      }
+    }
+
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(text)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
   }
 
   return (
@@ -226,16 +270,27 @@ export default function MisNumerosPage() {
                       ))}
                     </div>
                   </div>
-                  <Link
-                    href={`/sorteos/${g.raffle.id}`}
-                    className={buttonVariants({
-                      variant: "outline",
-                      size: "sm",
-                      className: "w-full",
-                    })}
-                  >
-                    Ver sorteo
-                  </Link>
+                  <div className="flex flex-col gap-2">
+                    <Link
+                      href={`/sorteos/${g.raffle.id}`}
+                      className={buttonVariants({
+                        variant: "outline",
+                        size: "sm",
+                        className: "w-full",
+                      })}
+                    >
+                      Ver sorteo
+                    </Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => shareTicket(g)}
+                    >
+                      <Share2 className="mr-1.5 h-4 w-4" />
+                      Compartir mis números
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>

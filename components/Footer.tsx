@@ -59,6 +59,14 @@ export function Footer() {
               </Link>
             </li>
             <li>
+              <Link
+                href="/ganadores"
+                className="transition hover:text-amber-400"
+              >
+                Muro de Ganadores
+              </Link>
+            </li>
+            <li>
               <Link href="/terminos" className="transition hover:text-amber-400">
                 Términos y Condiciones
               </Link>

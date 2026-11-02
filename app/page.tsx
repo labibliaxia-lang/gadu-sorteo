@@ -3,6 +3,7 @@ import { Gift, ShieldCheck, Trophy } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { HowItWorks } from "@/components/HowItWorks";
+import { LiveFomo } from "@/components/LiveFomo";
 import { RafflesList } from "@/components/RafflesList";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -90,6 +91,9 @@ export default async function HomePage() {
 
       {/* ============ SORTEOS (filtros + búsqueda) ============ */}
       <RafflesList raffles={(raffles ?? []) as Raffle[]} />
+
+      {/* Avisos de compras recientes (solo título del sorteo y cantidad). */}
+      <LiveFomo />
     </div>
   );
 }
