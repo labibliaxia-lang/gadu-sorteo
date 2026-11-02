@@ -223,6 +223,39 @@ ADMIN_SESSION_SECRET=<cadena_larga_y_aleatoria>
 
 ---
 
+## 5.2. Sentry (monitoreo de errores)
+
+La app está instrumentada con `@sentry/nextjs` (cliente, servidor y edge).
+
+1. Creá el proyecto en Sentry y copiá el **DSN** (Settings → Projects → *Client Keys*).
+2. Pegalo en `.env.local`:
+
+```env
+NEXT_PUBLIC_SENTRY_DSN=https://<key>@o<orgId>.ingest.sentry.io/<projectId>
+# Opcional: fracción de trazas (0 a 1). Por defecto 0.1
+NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE=0.1
+```
+
+3. Para **source maps** en el build (stack traces legibles), creá un Auth Token
+   con scope `project:releases` y sumalo **solo** al entorno de build:
+
+```env
+SENTRY_AUTH_TOKEN=<token>
+SENTRY_ORG=gadu-sorteos
+SENTRY_PROJECT=gadu-sorteos
+```
+
+> Sin DSN el SDK queda inerte y la app funciona igual. Sin `SENTRY_AUTH_TOKEN`
+> se saltea la subida de source maps (el build no falla).
+> En Next 14 la instrumentación se carga con `experimental.instrumentationHook`
+> (ya configurado en `next.config.js`).
+
+Archivos involucrados: `instrumentation.ts`, `sentry.client.config.ts`,
+`sentry.server.config.ts`, `sentry.edge.config.ts`, `app/global-error.tsx` y
+`next.config.js`.
+
+---
+
 ## 6. Probar el webhook en local con ngrok
 
 Mercado Pago necesita una URL pública para notificar. Usá [ngrok](https://ngrok.com):
