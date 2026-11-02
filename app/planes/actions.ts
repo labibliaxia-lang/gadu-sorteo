@@ -51,9 +51,21 @@ export async function redeemLicenseCode(formData: FormData): Promise<RedeemResul
   revalidatePath("/admin");
   revalidatePath("/", "layout");
 
-  return {
-    ok: Boolean(row.ok),
-    plan: row.plan ?? null,
-    message: row.message ?? "Código procesado.",
-  };
+  const ok = Boolean(row.ok);
+  const plan = (row.plan ?? null) as string | null;
+  let message = String(row.message ?? "Código procesado.");
+
+  // Mensaje personalizado según el plan canjeado.
+  if (ok) {
+    if (plan === "premium" && !message.toLowerCase().includes("premium")) {
+      message = "Código canjeado correctamente. Plan premium activado.";
+    } else if (
+      plan === "organizador" &&
+      !message.toLowerCase().includes("organizador")
+    ) {
+      message = "Código canjeado correctamente. Ahora sos organizador.";
+    }
+  }
+
+  return { ok, plan, message };
 }

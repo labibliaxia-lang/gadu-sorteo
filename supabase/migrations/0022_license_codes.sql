@@ -47,6 +47,28 @@ grant select on public.license_codes to authenticated;
 grant all on public.license_codes to service_role;
 
 -- ---------------------------------------------------------------------
+-- Plan del usuario (marca de suscripción). El canje de un código
+-- 'premium' activa esta marca sin alterar el rol.
+-- ---------------------------------------------------------------------
+alter table public.profiles
+  add column if not exists plan text not null default 'free';
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'profiles_plan_check'
+      and conrelid = 'public.profiles'::regclass
+  ) then
+    alter table public.profiles
+      add constraint profiles_plan_check
+      check (plan in ('free', 'premium'));
+  end if;
+end
+$$;
+
+-- ---------------------------------------------------------------------
 -- Generador de códigos de 25 caracteres (alta entropía).
 -- ---------------------------------------------------------------------
 create or replace function public.generate_license_code()
@@ -183,6 +205,7 @@ declare
   v_code     text := trim(coalesce(p_code, ''));
   v_row      public.license_codes%rowtype;
   v_promoted boolean := false;
+  v_premium  boolean := false;
 begin
   if v_uid is null then
     return query select false, null::text, 'Debés iniciar sesión para canjear un código';
@@ -226,12 +249,12 @@ begin
       redeemed_at = now()
   where id = v_row.id;
 
-  -- Plan "organizador": asciende al usuario a organizador.
-  -- Nunca degrada a un admin/superadmin existente (filtro role = 'user').
-  -- El trigger prevent_role_self_update bloquea cambios de rol cuando
-  -- auth.uid() no es nulo y el usuario no es admin; para esta promoción
-  -- controlada limpiamos los claims SOLO dentro de esta transacción.
+  -- Beneficios según el plan del código.
   if lower(coalesce(v_row.plan, '')) = 'organizador' then
+    -- Asciende a organizador. Nunca degrada a admin/superadmin.
+    -- El trigger prevent_role_self_update bloquea cambios de rol cuando
+    -- auth.uid() no es nulo y el usuario no es admin; para esta promoción
+    -- controlada limpiamos los claims SOLO dentro de esta transacción.
     perform set_config('request.jwt.claim.sub', '', true);
     perform set_config('request.jwt.claims', '', true);
 
@@ -243,6 +266,16 @@ begin
     if found then
       v_promoted := true;
     end if;
+
+  elsif lower(coalesce(v_row.plan, '')) = 'premium' then
+    -- Activa el plan premium sin tocar el rol del usuario.
+    update public.profiles
+    set plan = 'premium'
+    where id = v_uid;
+
+    if found then
+      v_premium := true;
+    end if;
   end if;
 
   return query select
@@ -250,6 +283,7 @@ begin
     v_row.plan,
     case
       when v_promoted then 'Código canjeado correctamente. Ahora sos organizador.'
+      when v_premium then 'Código canjeado correctamente. Plan premium activado.'
       else 'Código canjeado correctamente'
     end;
 end;

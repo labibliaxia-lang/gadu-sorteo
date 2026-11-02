@@ -574,3 +574,47 @@ export async function generateLicenseCode(plan: string = "organizador") {
   revalidatePath("/admin/super");
   return { ok: true, code: data as string };
 }
+
+// Revoca un código de licencia activo (solo superadmin).
+// `codeId` acepta el UUID del código o el propio código alfanumérico.
+export async function revokeLicenseCode(codeId: string) {
+  const adminUser = await getAdmin();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  const term = codeId.trim();
+  if (!term) return { ok: false, error: "Código inválido" };
+
+  const admin = createAdminClient();
+  const byId = UUID_RE.test(term);
+
+  const base = admin
+    .from("license_codes")
+    .update({ status: "revoked" })
+    .eq("status", "active");
+
+  const { data, error } = byId
+    ? await base.eq("id", term).select("code")
+    : await base.eq("code", term).select("code");
+
+  if (error) return { ok: false, error: error.message };
+
+  const affected = Array.isArray(data) ? data.length : 0;
+  if (affected === 0) {
+    return {
+      ok: false,
+      error: "No se encontró un código activo para revocar",
+    };
+  }
+
+  await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "REVOKE_LICENSE",
+    targetUserId: null,
+    targetEmail: null,
+    details: JSON.stringify({ codeId: term, affected }),
+  });
+
+  revalidatePath("/admin/super");
+  return { ok: true, count: affected };
+}

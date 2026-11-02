@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { KeyRound, Ticket } from "lucide-react";
+import { Crown, KeyRound, Ticket } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,14 @@ export default async function PlanesPage() {
 
   if (!user) redirect("/login");
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("plan")
+    .eq("id", user.id)
+    .single();
+
+  const currentPlan = (profile?.plan as string | null) ?? "free";
+
   const { data: redeemed } = await supabase
     .from("license_codes")
     .select("code, plan, redeemed_at")
@@ -39,6 +47,17 @@ export default async function PlanesPage() {
         <p className="text-muted-foreground">
           Canjeá tu código de activación para habilitar tu plan.
         </p>
+
+        <div className="flex justify-center pt-1">
+          {currentPlan === "premium" ? (
+            <Badge className="border-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white">
+              <Crown className="mr-1 h-3.5 w-3.5" />
+              Plan Premium activo
+            </Badge>
+          ) : (
+            <Badge variant="secondary">Plan Free</Badge>
+          )}
+        </div>
       </header>
 
       <Card>
