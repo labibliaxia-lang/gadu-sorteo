@@ -13,10 +13,21 @@ const checkoutSchema = z.object({
     .max(100, "Máximo 100 números por compra"),
 });
 
-// Mercado Pago no está configurado: se usa el modo de pago simulado (mock).
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+/** Credenciales reales de Mercado Pago. `TEST` y `mock` son marcadores de prueba. */
+function hasMpCredentials(): boolean {
+  const token = process.env.MP_ACCESS_TOKEN?.trim();
+  return Boolean(token) && token !== "TEST" && token !== "mock";
+}
+
+/**
+ * Pago simulado: SOLO fuera de producción y solo cuando no hay credenciales.
+ * En producción, sin credenciales se falla cerrado (503): este endpoint nunca
+ * marca números como vendidos sin un cobro real (constitución, principio 16).
+ */
 function isMockMode(): boolean {
-  const token = process.env.MP_ACCESS_TOKEN;
-  return !token || token.trim() === "" || token === "TEST" || token === "mock";
+  return !IS_PRODUCTION && !hasMpCredentials();
 }
 
 export async function POST(request: NextRequest) {
@@ -47,6 +58,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Debes iniciar sesión para participar" },
       { status: 401 },
+    );
+  }
+
+  // Sin credenciales fuera de desarrollo no hay cobro posible: fallar cerrado
+  // antes de reservar, para no dejar reservas huérfanas.
+  const mockMode = isMockMode();
+  if (!mockMode && !hasMpCredentials()) {
+    console.error(
+      "Checkout: MP_ACCESS_TOKEN no configurado en producción. Cobro deshabilitado.",
+    );
+    return NextResponse.json(
+      { error: "El cobro no está disponible en este momento." },
+      { status: 503 },
     );
   }
 
@@ -127,8 +151,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 4b) Modo mock: sin Mercado Pago configurado, aprueba localmente.
-  if (isMockMode()) {
+  // 4b) Modo mock: solo en desarrollo y sin credenciales, aprueba localmente.
+  if (mockMode) {
     const admin = createAdminClient();
     const { error: sellError } = await admin.rpc("sell_numbers", {
       p_raffle_id: raffleId,

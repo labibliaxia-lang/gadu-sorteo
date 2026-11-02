@@ -13,6 +13,8 @@ import { verifyAdmin } from "@/app/admin/verify/actions";
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: "Código de administrador incorrecto. Intentá de nuevo.",
   forbidden: "Tu cuenta no tiene permisos de superadministrador.",
+  unconfigured:
+    "El código maestro no está configurado en el servidor. Definí ADMIN_ACCESS_CODE_HASH y volvé a intentar.",
 };
 
 const CODE_LENGTH = 25;

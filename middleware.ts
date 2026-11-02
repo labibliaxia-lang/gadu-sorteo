@@ -8,7 +8,12 @@ const ADMIN_VERIFY = "/admin/verify";
 // Debe coincidir con la lógica de `app/admin/verify/actions.ts` para que la
 // cookie firmada por la Server Action sea validada correctamente.
 // Solo se manejan hashes SHA-256 (nunca la clave maestra en texto plano).
-const DEFAULT_ACCESS_CODE_HASH =
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+// Clave de respaldo SOLO para desarrollo local. En producción el panel falla
+// cerrado si no hay ADMIN_ACCESS_CODE_HASH / ADMIN_ACCESS_CODE (constitución,
+// principio 19): una clave presente en el repositorio no abre nada.
+const DEV_FALLBACK_ACCESS_CODE_HASH =
   "5c0291ed411451dee115a19613f36034e94971bdec689228be2a7e65f52532e8";
 
 const HASH_RE = /^[0-9a-f]{64}$/;
@@ -26,17 +31,19 @@ async function sha256Hex(value: string): Promise<string> {
   return hex;
 }
 
-async function accessCodeHash(): Promise<string> {
+async function accessCodeHash(): Promise<string | null> {
   const fromEnv = process.env.ADMIN_ACCESS_CODE_HASH?.trim().toLowerCase();
   if (fromEnv && HASH_RE.test(fromEnv)) return fromEnv;
 
   const legacy = process.env.ADMIN_ACCESS_CODE?.trim();
   if (legacy) return await sha256Hex(legacy);
 
-  return DEFAULT_ACCESS_CODE_HASH;
+  // Producción: sin configuración no hay clave, y el panel no se abre.
+  if (IS_PRODUCTION) return null;
+  return DEV_FALLBACK_ACCESS_CODE_HASH;
 }
 
-async function sessionSecret(): Promise<string> {
+async function sessionSecret(): Promise<string | null> {
   const value = process.env.ADMIN_SESSION_SECRET?.trim();
   if (value) return value;
   return await accessCodeHash();

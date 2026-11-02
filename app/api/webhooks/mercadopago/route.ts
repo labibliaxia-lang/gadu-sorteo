@@ -17,17 +17,30 @@ const TERMINAL_STATUSES = new Set([
 
 /**
  * Webhook de Mercado Pago.
- * - Verifica firma HMAC (x-signature).
+ * - Verifica la firma HMAC del manifest de MP (x-signature + x-request-id + data.id).
  * - Consulta el pago a la API de MP (fuente de verdad, nunca confía en el body).
  * - Es idempotente: si el pago ya se procesó, no repite acciones.
  * - Solo el service role marca números como "sold" (RPC sell_numbers).
  */
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
-  const signature = request.headers.get("x-signature") ?? "";
+  // MP firma el manifest `id:[data.id];request-id:[x-request-id];ts:[ts];`.
+  // `data.id` viaja en el query string de la URL de notificación, no en el body.
+  const dataIdFromQuery = request.nextUrl.searchParams.get("data.id");
+  const requestId = request.headers.get("x-request-id");
 
-  if (!verifyWebhookSignature(rawBody, signature)) {
-    console.error("Webhook MP: firma inválida");
+  const verification = verifyWebhookSignature({
+    xSignature: request.headers.get("x-signature"),
+    xRequestId: requestId,
+    dataId: dataIdFromQuery,
+  });
+
+  if (!verification.ok) {
+    console.error(
+      `Webhook MP: firma inválida (${verification.reason}) request-id=${
+        requestId ?? "sin header"
+      }`,
+    );
     return NextResponse.json({ error: "Firma inválida" }, { status: 401 });
   }
 
@@ -47,7 +60,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   }
 
-  const rawId = payload.data?.id;
+  // `data.id` puede venir en el body o solo en el query de la notificación.
+  const rawId = payload.data?.id ?? dataIdFromQuery;
   const paymentId = typeof rawId === "number" ? rawId : Number(rawId);
   if (!rawId || Number.isNaN(paymentId)) {
     return NextResponse.json({ error: "Sin payment id" }, { status: 400 });

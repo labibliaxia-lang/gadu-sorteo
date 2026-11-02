@@ -197,8 +197,10 @@ ADMIN_ACCESS_CODE_HASH=<hash_sha256_de_tu_clave>
 ADMIN_SESSION_SECRET=<cadena_larga_y_aleatoria>
 ```
 
-> Si no definís `ADMIN_ACCESS_CODE_HASH` se usa un hash de respaldo interno
-> (útil en desarrollo, pero **configurá tu propia clave en producción**).
+> En **desarrollo**, si no definís `ADMIN_ACCESS_CODE_HASH` se usa un hash de
+> respaldo interno (con un aviso en consola). En **producción no hay respaldo**:
+> sin `ADMIN_ACCESS_CODE_HASH` el panel queda bloqueado y muestra «El código
+> maestro no está configurado en el servidor».
 > La cookie `admin_verified` dura 30 minutos, es `HttpOnly` y solo contiene
 > una firma HMAC ligada a tu usuario.
 

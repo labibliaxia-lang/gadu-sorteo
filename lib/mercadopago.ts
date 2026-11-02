@@ -1,5 +1,10 @@
-import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
-import crypto from "node:crypto";
+import {
+  InvalidWebhookSignatureError,
+  MercadoPagoConfig,
+  Payment,
+  Preference,
+  WebhookSignatureValidator,
+} from "mercadopago";
 
 export interface PreferenceItem {
   id: string;
@@ -73,38 +78,55 @@ export async function getMercadoPagoPayment(
   return result as unknown as MercadoPagoPaymentResult;
 }
 
+/** Datos de la notificación que Mercado Pago firma, tal como llegan. */
+export interface WebhookSignatureInput {
+  /** Header `x-signature` (`ts=...,v1=...`). */
+  xSignature: string | null;
+  /** Header `x-request-id`. */
+  xRequestId: string | null;
+  /** Query param `data.id` de la URL de notificación. */
+  dataId: string | null;
+}
+
+export type WebhookVerification =
+  | { ok: true }
+  | { ok: false; reason: string };
+
 /**
- * Verifica la firma HMAC del webhook de Mercado Pago.
+ * Verifica la firma HMAC del webhook de Mercado Pago con el validador oficial
+ * del SDK (`WebhookSignatureValidator`, `mercadopago >= 2.13.0`).
  *
- * MP envía el header `x-signature` con el formato:
- *   `ts=<timestamp>,v1=<hmac_sha256_hex>`
- * donde la firma se calcula sobre la cadena `${ts}.${rawBody}` usando
- * `MP_WEBHOOK_SECRET` como clave.
+ * El manifest que MP firma es:
+ *   `id:[data.id];request-id:[x-request-id];ts:[ts_header];`
+ * — `data.id` llega en el query string (en minúsculas si es alfanumérico),
+ * `x-request-id` en su header y `ts` en el header `x-signature`. Los valores
+ * ausentes se omiten. No es el cuerpo de la petición: firmar `${ts}.${body}`
+ * rechazaba las notificaciones reales.
+ *
+ * Sin ventana de tolerancia a propósito: MP reintenta la misma notificación
+ * cada 15 minutos y la idempotencia de `payments` ya impide el doble cobro.
  */
-export function verifyWebhookSignature(rawBody: string, signature: string): boolean {
+export function verifyWebhookSignature(
+  input: WebhookSignatureInput,
+): WebhookVerification {
   const secret = process.env.MP_WEBHOOK_SECRET;
   if (!secret) {
     console.error("MP_WEBHOOK_SECRET no está configurado");
-    return false;
+    return { ok: false, reason: "MissingSecret" };
   }
 
-  const parts = signature.split(",").map((p) => p.trim());
-  const tsPart = parts.find((p) => p.startsWith("ts="));
-  const v1Part = parts.find((p) => p.startsWith("v1="));
-
-  if (!tsPart || !v1Part) return false;
-
-  const ts = tsPart.slice(3);
-  const v1 = v1Part.slice(3);
-
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(`${ts}.${rawBody}`)
-    .digest("hex");
-
-  // Comparación en tiempo constante para evitar timing attacks.
-  const a = Buffer.from(expected);
-  const b = Buffer.from(v1);
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
+  try {
+    WebhookSignatureValidator.validate({
+      xSignature: input.xSignature,
+      xRequestId: input.xRequestId,
+      dataId: input.dataId,
+      secret,
+    });
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof InvalidWebhookSignatureError) {
+      return { ok: false, reason: error.reason };
+    }
+    throw error;
+  }
 }
