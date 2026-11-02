@@ -151,7 +151,14 @@ export default async function RafflePage({
           )}
 
           {organizer && (
-            <OrganizerCard organizer={organizer as PublicOrganizer} />
+            <OrganizerCard
+              organizer={organizer as PublicOrganizer}
+              href={
+                raffle.created_by
+                  ? `/organizador/${raffle.created_by}`
+                  : null
+              }
+            />
           )}
         </div>
       </section>

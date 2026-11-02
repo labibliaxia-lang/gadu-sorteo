@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { RaffleActions } from "@/components/RaffleActions";
+import { OrganizerOnboarding } from "@/components/OrganizerOnboarding";
 import { AdvancedAnalytics } from "@/components/admin/AdvancedAnalytics";
 import { PremiumGate } from "@/components/admin/PremiumGate";
 import { getPlanContext } from "@/lib/plans";
@@ -115,6 +116,12 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Tutorial de bienvenida: solo organizadores sin sorteos, una vez. */}
+      <OrganizerOnboarding
+        userId={user.id}
+        show={profile?.role === "admin" && list.length === 0}
+      />
+
       {/* Tarjetas de resumen */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (

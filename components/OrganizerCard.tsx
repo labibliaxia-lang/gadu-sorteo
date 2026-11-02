@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { BadgeCheck } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -10,12 +11,19 @@ import type { PublicOrganizer } from "@/lib/types";
  * la información de contacto vive en OrganizerContact, al final de la página.
  *
  * Recibe la fila de la vista pública `public_organizers`: no tiene email,
- * teléfono, ubicación ni datos del KYC.
+ * teléfono, ubicación ni datos del KYC. Si recibe `href`, toda la tarjeta
+ * enlaza al perfil público del organizador.
  */
-export function OrganizerCard({ organizer }: { organizer: PublicOrganizer }) {
+export function OrganizerCard({
+  organizer,
+  href,
+}: {
+  organizer: PublicOrganizer;
+  href?: string | null;
+}) {
   const initial = (organizer.full_name || "O").charAt(0).toUpperCase();
 
-  return (
+  const card = (
     <Card>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
@@ -43,9 +51,26 @@ export function OrganizerCard({ organizer }: { organizer: PublicOrganizer }) {
             {organizer.is_verified && (
               <Badge variant="success">✓ Identidad Verificada</Badge>
             )}
+            {href && (
+              <p className="text-xs text-muted-foreground">
+                Ver perfil y sorteos →
+              </p>
+            )}
           </div>
         </div>
       </CardContent>
     </Card>
+  );
+
+  if (!href) return card;
+
+  return (
+    <Link
+      href={href}
+      className="block rounded-xl transition hover:opacity-90"
+      aria-label={`Ver perfil de ${organizer.full_name || "el organizador"}`}
+    >
+      {card}
+    </Link>
   );
 }
