@@ -1,35 +1,74 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-// Verifica que el sorteo pertenezca al admin autenticado actual. Es una
-// segunda capa: las políticas RLS de 0030 ya acotan la escritura al dueño.
-async function ownsRaffle(raffleId: string, userId: string): Promise<boolean> {
-  const supabase = createClient();
-  const { data } = await supabase
-    .from("raffles")
-    .select("created_by")
-    .eq("id", raffleId)
-    .single();
+const uuidSchema = z.string().uuid("Identificador inválido");
 
-  return data?.created_by === userId;
+/**
+ * Pertenencia del sorteo, resuelta en la base con `owns_raffle()` (0030).
+ * Incluye al superadmin y es la misma regla que usan las políticas RLS.
+ */
+async function ownsRaffle(raffleId: string): Promise<boolean> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("owns_raffle", {
+    p_raffle_id: raffleId,
+  });
+
+  return !error && data === true;
 }
 
-export async function deleteRaffle(raffleId: string) {
+function firstIssue(error: z.ZodError): string {
+  return error.issues[0]?.message ?? "Datos inválidos";
+}
+
+/** Resultado común de las acciones del panel. */
+export type ActionResult = { ok: true } | { ok: false; error: string };
+
+const raffleUpdateSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(3, "El título debe tener al menos 3 caracteres")
+    .max(140, "El título no puede superar los 140 caracteres"),
+  description: z
+    .string()
+    .max(2000, "La descripción es demasiado larga")
+    .nullish(),
+  price_per_number: z.coerce
+    .number({ invalid_type_error: "Ingresá un precio válido" })
+    .positive("El precio debe ser mayor a 0")
+    .max(10_000_000, "Precio fuera de rango"),
+  draw_date: z.coerce.date({ invalid_type_error: "Fecha inválida" }),
+  cover_image_url: z
+    .union([z.string().url("La portada no es una URL válida"), z.null()])
+    .optional(),
+  payment_type: z.enum(["mercadopago", "transferencia"]).optional(),
+  transfer_alias: z.string().max(120).nullish(),
+  transfer_cbu: z.string().max(40).nullish(),
+  transfer_bank: z.string().max(120).nullish(),
+  whatsapp_contact: z.string().max(40).nullish(),
+});
+
+export async function deleteRaffle(raffleId: string): Promise<ActionResult> {
   const ctx = await requireAdminSession();
   if (!ctx) return { ok: false, error: "No autorizado" };
-  if (!ctx.isSuper && !(await ownsRaffle(raffleId, ctx.id))) {
+
+  const id = uuidSchema.safeParse(raffleId);
+  if (!id.success) return { ok: false, error: firstIssue(id.error) };
+
+  if (!(await ownsRaffle(id.data))) {
     return { ok: false, error: "No autorizado" };
   }
 
   const supabase = createClient();
-  let query = supabase.from("raffles").delete().eq("id", raffleId);
-  if (!ctx.isSuper) query = query.eq("created_by", ctx.id);
-
-  const { error } = await query;
+  const { error } = await supabase
+    .from("raffles")
+    .delete()
+    .eq("id", id.data);
 
   if (error) return { ok: false, error: error.message };
 
@@ -52,37 +91,196 @@ export async function updateRaffle(
     transfer_bank?: string | null;
     whatsapp_contact?: string | null;
   },
-) {
+): Promise<ActionResult> {
   const ctx = await requireAdminSession();
   if (!ctx) return { ok: false, error: "No autorizado" };
-  if (!ctx.isSuper && !(await ownsRaffle(raffleId, ctx.id))) {
+
+  const id = uuidSchema.safeParse(raffleId);
+  if (!id.success) return { ok: false, error: firstIssue(id.error) };
+
+  const parsed = raffleUpdateSchema.safeParse(data);
+  if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
+
+  if (!(await ownsRaffle(id.data))) {
     return { ok: false, error: "No autorizado" };
   }
 
+  const values = parsed.data;
   const supabase = createClient();
-  let query = supabase
+  const { error } = await supabase
     .from("raffles")
     .update({
-      title: data.title,
-      description: data.description ?? null,
-      price_per_number: data.price_per_number,
-      draw_date: new Date(data.draw_date).toISOString(),
-      cover_image_url: data.cover_image_url ?? null,
-      payment_type: data.payment_type ?? "mercadopago",
-      transfer_alias: data.transfer_alias ?? null,
-      transfer_cbu: data.transfer_cbu ?? null,
-      transfer_bank: data.transfer_bank ?? null,
-      whatsapp_contact: data.whatsapp_contact ?? null,
+      title: values.title,
+      description: values.description ?? null,
+      price_per_number: values.price_per_number,
+      draw_date: values.draw_date.toISOString(),
+      cover_image_url: values.cover_image_url ?? null,
+      payment_type: values.payment_type ?? "mercadopago",
+      transfer_alias: values.transfer_alias ?? null,
+      transfer_cbu: values.transfer_cbu ?? null,
+      transfer_bank: values.transfer_bank ?? null,
+      whatsapp_contact: values.whatsapp_contact ?? null,
     })
-    .eq("id", raffleId);
-  if (!ctx.isSuper) query = query.eq("created_by", ctx.id);
-
-  const { error } = await query;
+    .eq("id", id.data);
 
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin");
-  revalidatePath(`/admin/sorteos/${raffleId}`);
+  revalidatePath(`/admin/sorteos/${id.data}`);
+  revalidatePath(`/sorteos/${id.data}`);
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------
+// Premios: creación y edición desde el servidor
+// ---------------------------------------------------------------------
+
+const prizeInputSchema = z.object({
+  id: uuidSchema.optional(),
+  position: z.coerce
+    .number({ invalid_type_error: "Posición inválida" })
+    .int("La posición debe ser un número entero")
+    .min(1, "La posición debe estar entre 1 y 10")
+    .max(10, "La posición debe estar entre 1 y 10"),
+  title: z
+    .string()
+    .trim()
+    .min(2, "El título del premio es obligatorio")
+    .max(140, "El título no puede superar los 140 caracteres"),
+  description: z
+    .string()
+    .max(2000, "La descripción es demasiado larga")
+    .nullish(),
+  tool_number: z.coerce
+    .number({ invalid_type_error: "Número de herramienta inválido" })
+    .int("El número de herramienta debe ser entero")
+    .min(1)
+    .max(10000)
+    .nullish(),
+  image_url: z
+    .union([z.string().url("La foto 1 no es una URL válida"), z.null()])
+    .optional(),
+  image_url_2: z
+    .union([z.string().url("La foto 2 no es una URL válida"), z.null()])
+    .optional(),
+});
+
+export type UpsertPrizeResult =
+  | { ok: true; id: string }
+  | { ok: false; error: string };
+
+/**
+ * Crea o actualiza un premio del sorteo. El sorteo tiene que ser del
+ * organizador (o del superadmin): lo valida `owns_raffle()` en la base.
+ */
+export async function upsertPrize(
+  raffleId: string,
+  input: unknown,
+): Promise<UpsertPrizeResult> {
+  const ctx = await requireAdminSession();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  const id = uuidSchema.safeParse(raffleId);
+  if (!id.success) return { ok: false, error: firstIssue(id.error) };
+
+  const parsed = prizeInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
+
+  if (!(await ownsRaffle(id.data))) {
+    return { ok: false, error: "No autorizado" };
+  }
+
+  const values = parsed.data;
+  const supabase = createClient();
+
+  const base = {
+    position: values.position,
+    title: values.title,
+    description: values.description ?? null,
+    tool_number: values.tool_number ?? null,
+    image_url: values.image_url ?? null,
+    image_url_2: values.image_url_2 ?? null,
+  };
+
+  if (values.id) {
+    const { data: updated, error } = await supabase
+      .from("prizes")
+      .update(base)
+      .eq("id", values.id)
+      .eq("raffle_id", id.data)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      return {
+        ok: false,
+        error:
+          error.code === "23505"
+            ? "Ya existe un premio en esa posición."
+            : error.message,
+      };
+    }
+    if (!updated) {
+      return { ok: false, error: "El premio no existe en este sorteo." };
+    }
+
+    revalidatePath(`/admin/sorteos/${id.data}/premios`);
+    revalidatePath(`/sorteos/${id.data}`);
+    return { ok: true, id: updated.id };
+  }
+
+  const { data: created, error } = await supabase
+    .from("prizes")
+    .insert({ raffle_id: id.data, ...base })
+    .select("id")
+    .single();
+
+  if (error || !created) {
+    return {
+      ok: false,
+      error:
+        error?.code === "23505"
+          ? "Ya existe un premio en esa posición."
+          : (error?.message ?? "No se pudo guardar el premio."),
+    };
+  }
+
+  revalidatePath(`/admin/sorteos/${id.data}/premios`);
+  revalidatePath(`/sorteos/${id.data}`);
+  return { ok: true, id: created.id };
+}
+
+export async function deletePrize(
+  raffleId: string,
+  prizeId: string,
+): Promise<ActionResult> {
+  const ctx = await requireAdminSession();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  const raffle = uuidSchema.safeParse(raffleId);
+  if (!raffle.success) return { ok: false, error: firstIssue(raffle.error) };
+
+  const prize = uuidSchema.safeParse(prizeId);
+  if (!prize.success) return { ok: false, error: firstIssue(prize.error) };
+
+  if (!(await ownsRaffle(raffle.data))) {
+    return { ok: false, error: "No autorizado" };
+  }
+
+  const supabase = createClient();
+  const { data: removed, error } = await supabase
+    .from("prizes")
+    .delete()
+    .eq("id", prize.data)
+    .eq("raffle_id", raffle.data)
+    .select("id")
+    .maybeSingle();
+
+  if (error) return { ok: false, error: error.message };
+  if (!removed) return { ok: false, error: "El premio no existe en este sorteo." };
+
+  revalidatePath(`/admin/sorteos/${raffle.data}/premios`);
+  revalidatePath(`/sorteos/${raffle.data}`);
   return { ok: true };
 }
 
@@ -134,7 +332,7 @@ export async function markReservationPaid(
 export async function cloneRaffle(raffleId: string) {
   const ctx = await requireAdminSession();
   if (!ctx) return { ok: false, error: "No autorizado" };
-  if (!ctx.isSuper && !(await ownsRaffle(raffleId, ctx.id))) {
+  if (!(await ownsRaffle(raffleId))) {
     return { ok: false, error: "No autorizado" };
   }
 
