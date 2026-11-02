@@ -103,9 +103,14 @@ export function canUseNumbers(
   );
 }
 
-/** ¿Tiene habilitadas las analíticas avanzadas? */
+/** ¿Tiene habilitadas las analíticas avanzadas? (superadmin siempre). */
 export function hasAnalytics(context: PlanContext): boolean {
-  return context.limits.analytics;
+  return context.isSuperadmin || context.limits.analytics;
+}
+
+/** Guard explícito para el módulo de Analíticas Avanzadas. */
+export function canViewAnalytics(context: PlanContext): boolean {
+  return hasAnalytics(context);
 }
 
 /** Métodos de pago disponibles para el plan. */

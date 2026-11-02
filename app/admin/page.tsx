@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { RaffleActions } from "@/components/RaffleActions";
+import { AdvancedAnalytics } from "@/components/admin/AdvancedAnalytics";
 import { PremiumGate } from "@/components/admin/PremiumGate";
 import { getPlanContext } from "@/lib/plans";
 import { formatDateTime, formatPrice } from "@/lib/utils";
@@ -144,35 +145,10 @@ export default async function AdminDashboardPage() {
 
         <PremiumGate
           plan={planContext.plan}
-          feature="Analíticas avanzadas"
-          description="Ticket promedio, sorteos cerrados y sorteados, y evolución de ventas. Disponible con el plan Premium."
+          feature="Analíticas Avanzadas"
+          description="Gráficos de tendencia, ticket promedio, tasa de aprobación y exportación a CSV. Disponible con el plan Premium."
         >
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Card>
-              <CardContent className="space-y-1 p-4">
-                <p className="text-sm text-muted-foreground">Ticket promedio</p>
-                <p className="text-xl font-bold">
-                  {formatPrice(soldCount > 0 ? revenue / soldCount : 0)}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="space-y-1 p-4">
-                <p className="text-sm text-muted-foreground">Sorteos cerrados</p>
-                <p className="text-xl font-bold">
-                  {list.filter((r) => r.status === "closed").length}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="space-y-1 p-4">
-                <p className="text-sm text-muted-foreground">Sorteos sorteados</p>
-                <p className="text-xl font-bold">
-                  {list.filter((r) => r.status === "drawn").length}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <AdvancedAnalytics planLabel={`Plan ${planContext.limits.label}`} />
         </PremiumGate>
       </section>
 
