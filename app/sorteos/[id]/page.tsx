@@ -140,6 +140,81 @@ export default async function RafflePage({
         </div>
       </section>
 
+      {raffle.status === "drawn" &&
+        raffle.numbers_hash &&
+        raffle.result_hash && (
+          <section className="space-y-4 rounded-xl border bg-card p-5 shadow-sm">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold">
+                Huellas del sorteo (verificable)
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Estas huellas SHA-256 se calcularon en el momento del sorteo y
+                quedaron congeladas. Con el listado de números vendidos que se
+                muestra en esta página, cualquiera puede recalcularlas y
+                comprobar que el resultado no se modificó.
+              </p>
+              {raffle.hashes_at && (
+                <p className="text-xs text-muted-foreground">
+                  Calculadas: {formatDateTime(raffle.hashes_at)} · Sorteo:{" "}
+                  <span className="font-mono">{raffle.id}</span>
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="space-y-1">
+                <p className="font-medium">
+                  Huella del listado vendido (<code>numbers_hash</code>)
+                </p>
+                <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                  {raffle.numbers_hash}
+                </code>
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium">
+                  Huella del resultado (<code>result_hash</code>)
+                </p>
+                <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                  {raffle.result_hash}
+                </code>
+              </div>
+            </div>
+
+            <details className="rounded-md border p-3 text-sm">
+              <summary className="cursor-pointer font-medium">
+                Cómo verificarlo
+              </summary>
+              <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
+                <li>
+                  Tomá los números vendidos de este sorteo y ordenalos de menor a
+                  mayor, separados por coma y sin espacios:{" "}
+                  <code className="font-mono">n1,n2,...,nN</code>.
+                </li>
+                <li>
+                  Calculá el SHA-256 (hexadecimal) del texto{" "}
+                  <code className="break-all font-mono">
+                    gadu:v1|raffle:{raffle.id}|numbers:n1,n2,...,nN
+                  </code>
+                  . Tiene que coincidir con <code>numbers_hash</code>.
+                </li>
+                <li>
+                  Calculá el SHA-256 de{" "}
+                  <code className="break-all font-mono">
+                    gadu:v1|raffle:{raffle.id}|winner:{raffle.winner_number}
+                    |numbers:n1,n2,...,nN
+                  </code>
+                  . Tiene que coincidir con <code>result_hash</code>.
+                </li>
+                <li>
+                  Cualquier diferencia significa que el listado o el resultado se
+                  modificaron después del sorteo.
+                </li>
+              </ol>
+            </details>
+          </section>
+        )}
+
       {raffle.status === "active" && (
         <section className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">

@@ -64,6 +64,10 @@ export interface Raffle {
   winner_user_id: string | null;
   winner_name: string | null;
   drawn_at: string | null;
+  /** Huellas SHA-256 publicadas al sortear (migración 0033). */
+  numbers_hash: string | null;
+  result_hash: string | null;
+  hashes_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

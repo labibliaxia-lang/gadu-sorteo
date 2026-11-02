@@ -7,10 +7,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * Texto provisto por el titular (2 de noviembre de 2026), con una corrección de
- * exactitud en el punto 5: el motor actual no genera hash público, así que no
- * se puede afirmar que el resultado sea verificable por hash. El resto se
- * mantiene. Identificación del titular: jacinto.cards.
+ * Texto provisto por el titular (2 de noviembre de 2026). El punto 5 describe
+ * el sorteo real: azar entre números vendidos, resultado congelado y huellas
+ * SHA-256 publicadas (migración 0033). Identificación: jacinto.cards.
  */
 export default function TerminosPage() {
   return (
@@ -99,9 +98,10 @@ export default function TerminosPage() {
           acepta que el resultado del sorteo es definitivo, vinculante e
           inapelable. Una vez ejecutado el sorteo, el resultado queda registrado
           en la Plataforma y no puede alterarse: ni Gadu Sorteos ni el
-          Organizador tienen la capacidad de modificarlo. La verificación
-          pública del resultado mediante hash está en desarrollo y se informará
-          en la Plataforma cuando esté disponible.
+          Organizador tienen la capacidad de modificarlo. Al ejecutarse el
+          sorteo, la Plataforma publica una huella digital SHA-256 del listado de
+          números vendidos y otra del resultado, de modo que cualquier persona
+          pueda recalcularlas y comprobar que no se modificaron.
         </p>
       </section>
 
