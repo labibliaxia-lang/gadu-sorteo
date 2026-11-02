@@ -162,6 +162,23 @@ npm run dev
 
 Abrí `http://localhost:3000`.
 
+### Comprobaciones antes de dar algo por terminado
+
+```bash
+npm run typecheck   # tsc --noEmit
+npm run lint        # ESLint (next/core-web-vitals)
+npm test            # Vitest: lib/payments.ts y lib/mercadopago.ts
+npm run build       # lo mismo que corre el despliegue
+```
+
+Los cuatro tienen que pasar. `npm run build` corre además ESLint, así que un warning de lint también
+rompe el build. Los tests cubren la matemática de importes y la verificación de firma del webhook; si
+tocás `lib/payments.ts` o `lib/mercadopago.ts`, actualizá su test en el mismo commit.
+
+> Si un `npm run build` falla con `ENOENT` sobre `.next`, casi siempre hay dos builds escribiendo en el
+> mismo directorio: revisá que no quede un proceso `node` de un build anterior y que no haya otra
+> sesión construyendo el proyecto al mismo tiempo. Borrá `.next` y volvé a correrlo en un árbol quieto.
+
 ---
 
 ## 5.1. Clave maestra del panel `/admin` (recomendado)
