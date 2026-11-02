@@ -187,6 +187,22 @@ aplicada» hasta que alguien consulta el catálogo. Propuesta: `supabase link` +
   `applied`, incluido el caso «ya no tenía el beneficio». **No ejecutado contra la base**: la regla está
   testeada, el efecto sobre datos no.
 - **Evidence.** `02-DOCS/wiki/ftd/license-void-vs-revoke-benefit.md`.
+
+## 2026-11-02 — Los gates corren en CI, no cuando alguien se acuerda (FTD)
+
+- **Context.** Typecheck, lint, tests y build pasaban, pero sólo si una persona los corría. El hallazgo #2
+  fue exactamente eso un nivel más abajo: una garantía que dependía de la memoria.
+- **Options considered.**
+  1. Dejarlo documentado en el README. Rejected — es lo que ya había y no ejecuta nada.
+  2. `npm run verify` + workflow de GitHub Actions con los cuatro gates. **Chosen.**
+  3. Incluir también `verificar_esquema.sql` en CI. Rejected — necesita acceso a la base; darle secretos de
+     producción a un runner es peor que correrlo a mano.
+- **Why.** Una regla sin mecanismo que la ejecute es una intención. El CI no juzga: corre `npm test`, que
+  ya incluye el contrato entre código y migraciones.
+- **Consequences.** Todo push a `main` y todo PR pasan por los cuatro gates. El build usa variables de
+  mentira, así que no depende de secretos. Lo que sigue siendo manual y por eso más frágil: el verificador
+  de esquema y el ledger de migraciones.
+- **Evidence.** `02-DOCS/wiki/ftd/gates-enforced-ci.md`. El workflow no se ejecutó en Actions todavía.
 - **Operational note recorded, because it cost two failed builds:** `.next` is one shared directory and
   two `next build` runs in the same folder corrupt it. It happened twice: once from a build of this
   session that stayed alive after its pipeline returned an error, and once with **another session

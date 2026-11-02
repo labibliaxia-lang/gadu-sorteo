@@ -1,0 +1,51 @@
+name: gates
+
+# Los cuatro gates del proyecto, en cada push a main y en cada pull request.
+# Antes existían y pasaban, pero sólo cuando alguien se acordaba de correrlos.
+# El mismo patrón que dejó pasar el hallazgo #2: una migración «aplicada» que
+# nadie había comprobado.
+#
+# Qué corre: typecheck · lint · tests · build.
+# `npm test` incluye el contrato entre código y migraciones (toda RPC que llama
+# el código debe estar declarada, todo trigger debe apuntar a una función que
+# exista). Eso no prueba que la migración esté aplicada en la base: para eso
+# está supabase/tests/verificar_esquema.sql, que se corre a mano.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      # El build no necesita Supabase real: las rutas son dinámicas y las
+      # variables se leen en tiempo de petición. Se pasan valores de mentira
+      # para que el build no dependa de secretos.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+          NEXT_PUBLIC_URL: http://localhost:3000
