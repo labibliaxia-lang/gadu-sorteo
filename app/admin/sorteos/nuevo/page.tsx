@@ -52,6 +52,13 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+/**
+ * KYC desactivado temporalmente mientras se opera con prepago manual.
+ * El código del bloqueo no se borra: con NEXT_PUBLIC_REQUIRE_KYC=true vuelve
+ * a exigir la verificación de identidad antes de publicar.
+ */
+const REQUIRE_KYC = process.env.NEXT_PUBLIC_REQUIRE_KYC === "true";
+
 export default function NuevoSorteoPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -277,7 +284,7 @@ export default function NuevoSorteoPage() {
     return <p className="text-muted-foreground">Verificando identidad…</p>;
   }
 
-  if (verificationStatus !== "approved") {
+  if (REQUIRE_KYC && verificationStatus !== "approved") {
     return (
       <div className="mx-auto max-w-lg space-y-4 rounded-xl border bg-muted/40 p-8 text-center">
         <h1 className="text-xl font-bold">Debés verificar tu identidad</h1>

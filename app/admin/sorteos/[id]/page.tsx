@@ -14,6 +14,7 @@ import {
 import { RaffleActions } from "@/components/RaffleActions";
 import { RaffleDeleteButton } from "@/components/RaffleDeleteButton";
 import { RaffleCloneButton } from "@/components/RaffleCloneButton";
+import { ReservedNumbersPanel } from "@/components/ReservedNumbersPanel";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { Raffle } from "@/lib/types";
 
@@ -51,6 +52,69 @@ export default async function AdminRaffleDetailPage({
     .select("*", { count: "exact", head: true })
     .eq("raffle_id", params.id)
     .eq("status", "reserved");
+
+  // Reservas vivas para el prepago manual (WhatsApp). Se agrupan por comprador
+  // porque un mismo comprobante cubre todos los números de esa persona.
+  const { data: reservedRows } = await supabase
+    .from("raffle_numbers")
+    .select("number, reserved_by, reserved_until")
+    .eq("raffle_id", params.id)
+    .eq("status", "reserved")
+    .not("reserved_by", "is", null)
+    .order("number", { ascending: true })
+    .limit(1000);
+
+  const reservedBuyerIds = Array.from(
+    new Set(
+      (reservedRows ?? [])
+        .map((row) => row.reserved_by as string | null)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+
+  const buyersResult = reservedBuyerIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, full_name, phone")
+        .in("id", reservedBuyerIds)
+    : {
+        data: [] as {
+          id: string;
+          full_name: string | null;
+          phone: string | null;
+        }[],
+      };
+
+  const buyers = (buyersResult.data ?? []) as {
+    id: string;
+    full_name: string | null;
+    phone: string | null;
+  }[];
+  const buyerById = new Map(buyers.map((buyer) => [buyer.id, buyer]));
+
+  const reservedGroups = reservedBuyerIds
+    .map((userId) => {
+      const rows = (reservedRows ?? []).filter(
+        (row) => row.reserved_by === userId,
+      );
+      const buyer = buyerById.get(userId);
+
+      return {
+        userId,
+        name: buyer?.full_name?.trim() || "Comprador sin nombre",
+        phone: buyer?.phone ?? null,
+        numbers: rows
+          .map((row) => row.number as number)
+          .sort((a: number, b: number) => a - b),
+        expiresAt: rows.reduce<string | null>((min, row) => {
+          const value = row.reserved_until as string | null;
+          if (!value) return min;
+          if (!min) return value;
+          return value < min ? value : min;
+        }, null),
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, "es"));
 
   return (
     <div className="space-y-6">
@@ -133,6 +197,23 @@ export default async function AdminRaffleDetailPage({
             <RaffleCloneButton raffleId={raffle.id} />
             <RaffleDeleteButton raffleId={raffle.id} />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Reservas esperando pago</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Prepago manual: el comprador reserva sus números, manda el
+            comprobante por WhatsApp y desde acá confirmás el pago.
+          </p>
+          <ReservedNumbersPanel
+            raffleId={raffle.id}
+            pricePerNumber={Number(raffle.price_per_number)}
+            groups={reservedGroups}
+          />
         </CardContent>
       </Card>
     </div>

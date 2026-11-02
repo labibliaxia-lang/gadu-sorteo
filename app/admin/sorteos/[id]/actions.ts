@@ -104,6 +104,51 @@ export async function updateRaffle(
   return { ok: true };
 }
 
+export type MarkPaidResult =
+  | { ok: true; count: number }
+  | { ok: false; error: string };
+
+/**
+ * Marca como pagados números que el comprador dejó reservados en el flujo de
+ * prepago manual (WhatsApp). El RPC exige ser dueño del sorteo o superadmin y
+ * solo toca números reservados: si alguno ya no lo está, no marca ninguno.
+ */
+export async function markReservationPaid(
+  raffleId: string,
+  numbers: number[],
+): Promise<MarkPaidResult> {
+  const ctx = await getAdminUser();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  const clean = Array.from(
+    new Set(
+      (Array.isArray(numbers) ? numbers : []).filter(
+        (n) => Number.isInteger(n) && n >= 1 && n <= 10000,
+      ),
+    ),
+  );
+
+  if (clean.length === 0) {
+    return { ok: false, error: "Elegí al menos un número reservado." };
+  }
+
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("organizer_mark_reserved_sold", {
+    p_raffle_id: raffleId,
+    p_numbers: clean,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/sorteos");
+  revalidatePath(`/admin/sorteos/${raffleId}`);
+  revalidatePath(`/admin/sorteos/${raffleId}/numeros`);
+  revalidatePath(`/sorteos/${raffleId}`);
+
+  return { ok: true, count: Number(data ?? 0) };
+}
+
 export async function cloneRaffle(raffleId: string) {
   const ctx = await getAdminUser();
   if (!ctx) return { ok: false, error: "No autorizado" };

@@ -11,6 +11,16 @@ import type { RaffleNumber } from "@/lib/types";
 
 const RESERVATION_SECONDS = 10 * 60;
 
+/**
+ * Mercado Pago queda oculto por defecto mientras se opera con prepago manual.
+ * El código del checkout y del simulador se conserva: con
+ * NEXT_PUBLIC_ENABLE_MP=true vuelven a mostrarse los botones de pago real.
+ */
+const MP_ENABLED = process.env.NEXT_PUBLIC_ENABLE_MP === "true";
+
+/** Hold de la reserva prepaga: mismo default que `reserve_numbers_prepaid`. */
+const PREPAID_HOLD_HOURS = 48;
+
 function formatCountdown(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
@@ -72,6 +82,12 @@ export function NumbersGrid({
   const [selectionExpired, setSelectionExpired] = useState(false);
   const [loginRequired, setLoginRequired] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [reserving, setReserving] = useState(false);
+  const [summary, setSummary] = useState<{
+    numbers: number[];
+    total: number;
+    notice?: string;
+  } | null>(null);
 
   const rowCount = Math.ceil(totalCount / cols);
 
@@ -222,21 +238,116 @@ export function NumbersGrid({
 
   const totalPrice = selected.size * pricePerNumber;
 
-  // Enlace de WhatsApp para sorteos por transferencia manual.
+  // Enlace de WhatsApp para el prepago manual: lo arma el comprador con los
+  // números ya reservados y el organizador recibe el comprobante.
   const isTransfer = paymentType === "transferencia";
-  const whatsappHref = (() => {
-    const raw = transferInfo?.whatsapp;
+  const whatsappContact = transferInfo?.whatsapp ?? null;
+
+  function buildWhatsAppHref(nums: number[], total: number): string | null {
+    const raw = whatsappContact;
     if (!raw) return null;
     const digits = raw.replace(/\D/g, "");
     if (!digits) return null;
     const phone = digits.startsWith("54") ? digits : `54${digits}`;
-    const sorted = Array.from(selected).sort((a, b) => a - b);
+    const sorted = [...nums].sort((a, b) => a - b);
     const numbersText = sorted.length > 0 ? sorted.join(", ") : "a confirmar";
     const msg = `Hola! Quiero participar en "${
       raffleTitle ?? "el sorteo"
-    }" con los números: ${numbersText}. Total: ${formatPrice(totalPrice)}`;
+    }" con los números: ${numbersText}. Total: ${formatPrice(total)}`;
     return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-  })();
+  }
+
+  /**
+   * Reserva los números elegidos y abre el resumen con el comprobante.
+   * La reserva la hace el RPC con hold largo; el pago lo confirma el
+   * organizador a mano desde el panel.
+   */
+  async function handleReservePrepaid() {
+    if (!userId) {
+      window.location.href = "/login";
+      return;
+    }
+    if (selected.size === 0) return;
+
+    const picked = Array.from(selected).sort((a, b) => a - b);
+
+    if (!buildWhatsAppHref(picked, totalPrice)) {
+      setError(
+        "El organizador todavía no cargó un WhatsApp de contacto. Probá más tarde.",
+      );
+      return;
+    }
+
+    setReserving(true);
+    setError(null);
+
+    try {
+      const { data, error: reserveError } = await supabase.rpc(
+        "reserve_numbers_prepaid",
+        {
+          p_raffle_id: raffleId,
+          p_numbers: picked,
+          p_hold_hours: PREPAID_HOLD_HOURS,
+        },
+      );
+
+      if (reserveError) {
+        setError(reserveError.message);
+        return;
+      }
+
+      const reserved = ((data as number[] | null) ?? [])
+        .slice()
+        .sort((a, b) => a - b);
+
+      if (reserved.length === 0) {
+        setSelected(new Set());
+        setError(
+          `Estos números ya no están disponibles: ${picked.join(
+            ", ",
+          )}. Elegí otros.`,
+        );
+        return;
+      }
+
+      const got = new Set(reserved);
+      const missing = picked.filter((n) => !got.has(n));
+
+      // Refleja la reserva en la grilla sin esperar al realtime.
+      setNumbers((prev) => {
+        const next = new Map(prev);
+        reserved.forEach((num) => {
+          const row = next.get(num);
+          if (row) {
+            next.set(num, {
+              ...row,
+              status: "reserved",
+              reserved_by: userId,
+              reserved_until: new Date(
+                Date.now() + PREPAID_HOLD_HOURS * 60 * 60 * 1000,
+              ).toISOString(),
+            });
+          }
+        });
+        return next;
+      });
+
+      setSummary({
+        numbers: reserved,
+        total: reserved.length * pricePerNumber,
+        notice:
+          missing.length > 0
+            ? `Estos números ya no estaban disponibles: ${missing.join(", ")}.`
+            : undefined,
+      });
+      setSelected(new Set());
+      setDeadline(null);
+    } catch {
+      setError("Error de red al reservar los números.");
+    } finally {
+      setReserving(false);
+    }
+  }
 
   async function handleCheckout() {
     if (!userId) {
@@ -350,21 +461,20 @@ export function NumbersGrid({
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          {isTransfer ? (
-            <a
-              href={whatsappHref ?? "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-disabled={!whatsappHref}
-              className={cn(
-                buttonVariants(),
-                !whatsappHref && "pointer-events-none opacity-50",
-              )}
-            >
-              <MessageCircle className="mr-1.5 h-4 w-4" />
-              Enviar comprobante por WhatsApp
-            </a>
-          ) : (
+          <Button
+            onClick={handleReservePrepaid}
+            disabled={selected.size === 0 || reserving || !isActive}
+            className="bg-emerald-600 text-white hover:bg-emerald-700"
+          >
+            <MessageCircle className="mr-1.5 h-4 w-4" />
+            {reserving
+              ? "Reservando…"
+              : userId
+                ? "Reservar y enviar comprobante"
+                : "Inicia sesión para participar"}
+          </Button>
+
+          {MP_ENABLED && !isTransfer && (
             <>
               {isDev && (
                 <Button
@@ -528,6 +638,78 @@ export function NumbersGrid({
                 Ir a iniciar sesión
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {summary && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setSummary(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border bg-card p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold">Reserva confirmada</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {summary.numbers.length} número
+              {summary.numbers.length === 1 ? "" : "s"} reservado
+              {summary.numbers.length === 1 ? "" : "s"} en{" "}
+              {raffleTitle ?? "el sorteo"}.
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {summary.numbers.map((n) => (
+                <span
+                  key={n}
+                  className="rounded-md bg-secondary px-2 py-1 font-mono text-sm font-semibold"
+                >
+                  {fmtNum(n)}
+                </span>
+              ))}
+            </div>
+
+            {summary.notice && (
+              <p className="mt-3 rounded-md bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
+                ⚠️ {summary.notice} El resumen incluye solo los que sí quedaron
+                reservados.
+              </p>
+            )}
+
+            <p className="mt-4 text-sm">
+              Total a pagar:{" "}
+              <span className="text-lg font-bold">
+                {formatPrice(summary.total)}
+              </span>
+            </p>
+
+            <a
+              href={buildWhatsAppHref(summary.numbers, summary.total) ?? "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                buttonVariants(),
+                "mt-4 w-full bg-emerald-600 text-white hover:bg-emerald-700",
+              )}
+            >
+              <MessageCircle className="mr-1.5 h-4 w-4" />
+              Enviar comprobante por WhatsApp
+            </a>
+
+            <p className="mt-3 text-xs text-muted-foreground">
+              Guardamos tus números {PREPAID_HOLD_HOURS} h. Cuando el
+              organizador reciba el comprobante, los marca como pagados. Podés
+              seguir tus números desde «Mis números».
+            </p>
+
+            <Button
+              variant="outline"
+              className="mt-4 w-full"
+              onClick={() => setSummary(null)}
+            >
+              Cerrar
+            </Button>
           </div>
         </div>
       )}
