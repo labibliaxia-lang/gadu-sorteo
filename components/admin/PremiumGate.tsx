@@ -20,6 +20,8 @@ export interface PremiumGateProps {
   feature?: string;
   title?: string;
   description?: string;
+  /** Versión compacta (banner inline) para formularios o listas. */
+  compact?: boolean;
   children: React.ReactNode;
 }
 
@@ -34,11 +36,40 @@ export function PremiumGate({
   feature,
   title,
   description,
+  compact,
   children,
 }: PremiumGateProps) {
   const premium = isPremium ?? plan === "premium";
 
   if (premium) return <>{children}</>;
+
+  if (compact) {
+    return (
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white">
+          <Crown className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">
+            {title ?? `${feature ?? "Esta función"} es Premium`}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {description ??
+              "Canjeá un código premium para desbloquear esta función."}
+          </p>
+        </div>
+        <Link
+          href="/planes"
+          className={cn(
+            buttonVariants({ size: "sm" }),
+            "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700",
+          )}
+        >
+          Canjear código
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <Card className="relative overflow-hidden border-violet-500/30">

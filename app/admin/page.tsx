@@ -22,6 +22,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { RaffleActions } from "@/components/RaffleActions";
+import { PremiumGate } from "@/components/admin/PremiumGate";
+import { getPlanContext } from "@/lib/plans";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { Raffle } from "@/lib/types";
 
@@ -52,10 +54,11 @@ export default async function AdminDashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, plan")
     .eq("id", user.id)
     .single();
   const isSuper = profile?.role === "superadmin";
+  const planContext = getPlanContext(profile);
 
   let rafflesQuery = supabase
     .from("raffles")
@@ -129,6 +132,49 @@ export default async function AdminDashboardPage() {
           </Card>
         ))}
       </div>
+
+      {/* Analíticas avanzadas (exclusivo del plan Premium) */}
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-xl font-semibold">Analíticas avanzadas</h2>
+          <Badge variant={planContext.isPremium ? "success" : "secondary"}>
+            Plan {planContext.limits.label}
+          </Badge>
+        </div>
+
+        <PremiumGate
+          plan={planContext.plan}
+          feature="Analíticas avanzadas"
+          description="Ticket promedio, sorteos cerrados y sorteados, y evolución de ventas. Disponible con el plan Premium."
+        >
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Card>
+              <CardContent className="space-y-1 p-4">
+                <p className="text-sm text-muted-foreground">Ticket promedio</p>
+                <p className="text-xl font-bold">
+                  {formatPrice(soldCount > 0 ? revenue / soldCount : 0)}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="space-y-1 p-4">
+                <p className="text-sm text-muted-foreground">Sorteos cerrados</p>
+                <p className="text-xl font-bold">
+                  {list.filter((r) => r.status === "closed").length}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="space-y-1 p-4">
+                <p className="text-sm text-muted-foreground">Sorteos sorteados</p>
+                <p className="text-xl font-bold">
+                  {list.filter((r) => r.status === "drawn").length}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </PremiumGate>
+      </section>
 
       {/* Lista de sorteos */}
       <div className="space-y-4">

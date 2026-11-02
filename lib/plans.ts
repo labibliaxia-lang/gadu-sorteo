@@ -3,7 +3,10 @@ import type { Plan } from "@/lib/types";
 /**
  * Matriz única de entitlements por plan.
  * Fuente de verdad de la UI; la base de datos replica estos límites
- * (migración 0023) para que no se puedan saltar por API.
+ * (migraciones 0023 / 0024) para que no se puedan saltar por API.
+ *
+ *   organizador: 2 sorteos activos · 100 números por sorteo · sin analíticas
+ *   premium    : 20 sorteos activos · 10.000 números por sorteo · analíticas
  */
 export interface PlanLimits {
   id: Plan;
@@ -27,7 +30,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     label: "Organizador",
     description: "Plan base para publicar tus primeros sorteos.",
     maxActiveRaffles: 2,
-    maxNumbersPerRaffle: 1_000,
+    maxNumbersPerRaffle: 100,
     analytics: false,
     exclusiveFeatures: false,
     paymentMethods: ["transferencia"],

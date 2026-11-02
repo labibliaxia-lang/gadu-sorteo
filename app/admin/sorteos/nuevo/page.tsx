@@ -29,6 +29,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PremiumGate } from "@/components/admin/PremiumGate";
+import { getPlanContext } from "@/lib/plans";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 
 const schema = z.object({
@@ -66,15 +68,21 @@ export default function NuevoSorteoPage() {
     null,
   );
   const [checkingVerification, setCheckingVerification] = useState(true);
+  const [plan, setPlan] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+  const [activeRafflesCount, setActiveRafflesCount] = useState<number | null>(
+    null,
+  );
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { max_numbers: 1000, payment_type: "mercadopago" },
+    defaultValues: { max_numbers: 100, payment_type: "transferencia" },
   });
 
   const title = watch("title");
@@ -95,11 +103,35 @@ export default function NuevoSorteoPage() {
       }
       const { data } = await supabase
         .from("profiles")
-        .select("verification_status")
+        .select("verification_status, plan, role")
         .eq("id", user.id)
         .single();
+
+      const { count } = await supabase
+        .from("raffles")
+        .select("id", { count: "exact", head: true })
+        .eq("created_by", user.id)
+        .eq("status", "active");
+
       if (active) {
+        const userPlan = (data?.plan as string | null) ?? "organizador";
+        const userRole = (data?.role as string | null) ?? null;
+        const ctx = getPlanContext({ plan: userPlan, role: userRole });
+
         setVerificationStatus(data?.verification_status ?? "pending");
+        setPlan(userPlan);
+        setRole(userRole);
+        setActiveRafflesCount(count ?? 0);
+
+        // Ajusta los valores por defecto al plan real del organizador.
+        setValue(
+          "max_numbers",
+          Math.min(1000, ctx.limits.maxNumbersPerRaffle),
+        );
+        if (!ctx.limits.paymentMethods.includes("mercadopago")) {
+          setValue("payment_type", "transferencia");
+        }
+
         setCheckingVerification(false);
       }
     }
@@ -108,6 +140,18 @@ export default function NuevoSorteoPage() {
       active = false;
     };
   }, [supabase]);
+
+  const planContext = getPlanContext({ plan, role });
+  const numbersLimit = planContext.isSuperadmin
+    ? 10000
+    : planContext.limits.maxNumbersPerRaffle;
+  const canUseMercadoPago = planContext.limits.paymentMethods.includes(
+    "mercadopago",
+  );
+  const reachedActiveLimit =
+    activeRafflesCount !== null &&
+    !planContext.isSuperadmin &&
+    activeRafflesCount >= planContext.limits.maxActiveRaffles;
 
   async function uploadFile(file: File | undefined) {
     if (!file) return;
@@ -153,6 +197,31 @@ export default function NuevoSorteoPage() {
     setLoading(true);
     setError(null);
 
+    // Validación dinámica por plan (la base de datos también lo enforce).
+    if (!planContext.isSuperadmin) {
+      if (reachedActiveLimit) {
+        setError(
+          `Tu plan ${planContext.limits.label} permite hasta ${planContext.limits.maxActiveRaffles} sorteos activos. Finalizá uno o mejorá a Premium.`,
+        );
+        setLoading(false);
+        return;
+      }
+      if (values.max_numbers > numbersLimit) {
+        setError(
+          `Tu plan ${planContext.limits.label} permite hasta ${numbersLimit} números por sorteo.`,
+        );
+        setLoading(false);
+        return;
+      }
+      if (values.payment_type === "mercadopago" && !canUseMercadoPago) {
+        setError(
+          "Mercado Pago es una función del plan Premium. Elegí transferencia o canjeá un código premium.",
+        );
+        setLoading(false);
+        return;
+      }
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -193,6 +262,8 @@ export default function NuevoSorteoPage() {
     );
 
     if (numbersError) {
+      // Limpieza: evita dejar un sorteo huérfano sin números.
+      await supabase.from("raffles").delete().eq("id", raffle.id);
       setError(numbersError.message);
       setLoading(false);
       return;
@@ -230,6 +301,14 @@ export default function NuevoSorteoPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            {reachedActiveLimit && (
+              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+                Ya tenés {activeRafflesCount} sorteo(s) activo(s). Tu plan{" "}
+                <strong>{planContext.limits.label}</strong> permite hasta{" "}
+                {planContext.limits.maxActiveRaffles}. Finalizá uno o mejorá a
+                Premium.
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="title">Título</Label>
               <div className="relative">
@@ -310,29 +389,39 @@ export default function NuevoSorteoPage() {
                   id="max_numbers"
                   type="number"
                   min={10}
-                  max={10000}
+                  max={numbersLimit}
                   step={1}
                   list="number-options"
                   className="pl-9"
-                  placeholder="1000"
+                  placeholder={String(Math.min(100, numbersLimit))}
                   {...register("max_numbers")}
                 />
               </div>
               <datalist id="number-options">
-                <option value="100" />
-                <option value="500" />
-                <option value="1000" />
-                <option value="2000" />
-                <option value="5000" />
-                <option value="10000" />
+                {[100, 500, 1000, 2000, 5000, 10000]
+                  .filter((option) => option <= numbersLimit)
+                  .map((option) => (
+                    <option key={option} value={option} />
+                  ))}
               </datalist>
               <p className="text-xs text-muted-foreground">
-                Sugeridos: 100, 500, 1000, 2000, 5000 o 10000.
+                Tu plan <strong>{planContext.limits.label}</strong> permite entre
+                10 y {numbersLimit.toLocaleString("es-AR")} números por sorteo.
               </p>
               {errors.max_numbers && (
                 <p className="text-sm text-destructive">
                   {errors.max_numbers.message}
                 </p>
+              )}
+              {!planContext.isPremium && !planContext.isSuperadmin && (
+                <PremiumGate
+                  compact
+                  plan={plan}
+                  feature="más números por sorteo"
+                  description="Con Premium podés generar hasta 10.000 números por sorteo."
+                >
+                  <span />
+                </PremiumGate>
               )}
             </div>
 
@@ -343,7 +432,8 @@ export default function NuevoSorteoPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <label
                   className={cn(
-                    "cursor-pointer rounded-xl border-2 p-4 transition",
+                    "rounded-xl border-2 p-4 transition",
+                    canUseMercadoPago ? "cursor-pointer" : "cursor-not-allowed opacity-60",
                     paymentType === "mercadopago"
                       ? "border-amber-500 bg-amber-500/5"
                       : "border-slate-300 hover:border-slate-400 dark:border-slate-700",
@@ -353,6 +443,7 @@ export default function NuevoSorteoPage() {
                     type="radio"
                     value="mercadopago"
                     className="sr-only"
+                    disabled={!canUseMercadoPago}
                     {...register("payment_type")}
                   />
                   <div className="flex items-start gap-3">
@@ -391,6 +482,17 @@ export default function NuevoSorteoPage() {
                   </div>
                 </label>
               </div>
+
+              {!canUseMercadoPago && (
+                <PremiumGate
+                  compact
+                  plan={plan}
+                  feature="Mercado Pago"
+                  description="Cobrá automáticamente con Mercado Pago y accedé a los métodos de pago avanzados."
+                >
+                  <span />
+                </PremiumGate>
+              )}
 
               {paymentType === "mercadopago" ? (
                 <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
