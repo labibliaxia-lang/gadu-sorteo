@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   CreditCard,
   Facebook,
@@ -11,7 +12,7 @@ import {
 export function Footer() {
   return (
     <footer className="mt-16 border-t bg-zinc-950 text-zinc-300">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         {/* Marca */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-white">
@@ -41,6 +42,41 @@ export function Footer() {
             <CreditCard className="h-4 w-4" />
             <span>Visa · Mastercard · Mercado Pago</span>
           </div>
+        </div>
+
+        {/* Información */}
+        <div>
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white">
+            Información
+          </h3>
+          <ul className="space-y-2 text-sm text-zinc-400">
+            <li>
+              <Link
+                href="/como-funciona"
+                className="transition hover:text-amber-400"
+              >
+                Cómo funciona
+              </Link>
+            </li>
+            <li>
+              <Link href="/terminos" className="transition hover:text-amber-400">
+                Términos y Condiciones
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/privacidad"
+                className="transition hover:text-amber-400"
+              >
+                Política de Privacidad
+              </Link>
+            </li>
+            <li>
+              <Link href="/planes" className="transition hover:text-amber-400">
+                Planes y precios
+              </Link>
+            </li>
+          </ul>
         </div>
 
         {/* Redes sociales */}
