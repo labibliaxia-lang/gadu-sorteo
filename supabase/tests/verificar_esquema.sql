@@ -176,12 +176,23 @@ from (
   )
 
   -- ------------------------------------------------------------------
-  -- 10) Ledger de migraciones
+  -- 10) Ledger de migraciones (0028)
+  --     Se mira `public._applied_migrations`, la del proyecto. La del CLI
+  --     (`supabase_migrations.schema_migrations`) no existe aquí.
   -- ------------------------------------------------------------------
   union all
-  select 16, case when to_regclass('supabase_migrations.schema_migrations') is null
-      then 'AVISO   sin ledger de migraciones: "está en el repo" no prueba que esté en la base'
-    else 'OK      ledger de migraciones presente' end
+  select 16, case
+    when to_regclass('public._applied_migrations') is null
+      then 'AVISO   sin ledger de migraciones (0028): "está en el repo" no prueba que esté en la base'
+    when not (select c.relrowsecurity from pg_class c
+              where c.oid = to_regclass('public._applied_migrations'))
+      then 'AVISO   ledger sin RLS: cualquiera con grants puede leerlo'
+    when exists (
+      select 1 from pg_policies
+      where schemaname = 'public' and tablename = '_applied_migrations'
+    ) then 'AVISO   ledger con políticas: revisá quién puede leerlo'
+    else 'OK      ledger de migraciones presente (public._applied_migrations)'
+  end
 
   -- ------------------------------------------------------------------
   -- 11) Visitas: que no se puedan inflar desde fuera (0027)
