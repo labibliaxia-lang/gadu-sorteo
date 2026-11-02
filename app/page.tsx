@@ -79,7 +79,7 @@ export default async function HomePage() {
               href="/planes"
               className={buttonVariants({ variant: "outline", size: "lg" })}
             >
-              Canjear código
+              Ver planes
             </Link>
           </div>
         </div>

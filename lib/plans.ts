@@ -48,6 +48,28 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   },
 };
 
+/**
+ * Beneficios que se muestran en /planes.
+ * Solo se listan cosas que existen: lo que todavía no está disponible se
+ * rotula como «próximamente» para no vender humo.
+ */
+export const PLAN_BENEFITS: Record<Plan, string[]> = {
+  organizador: [
+    `Hasta ${PLAN_LIMITS.organizador.maxActiveRaffles} sorteos activos a la vez`,
+    `${PLAN_LIMITS.organizador.maxNumbersPerRaffle} números por sorteo`,
+    "Cobro por transferencia con comprobante por WhatsApp",
+    "Panel con analíticas básicas",
+    "Perfil público de organizador",
+  ],
+  premium: [
+    `Hasta ${PLAN_LIMITS.premium.maxActiveRaffles} sorteos activos a la vez`,
+    `${PLAN_LIMITS.premium.maxNumbersPerRaffle.toLocaleString("es-AR")} números por sorteo`,
+    "Analíticas avanzadas y exportación a CSV",
+    "Cobro automático con Mercado Pago (próximamente)",
+    "Todo lo del plan Organizador",
+  ],
+};
+
 export interface PlanProfileLike {
   plan?: string | null;
   role?: string | null;

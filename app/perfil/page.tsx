@@ -8,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RequestAdminButton } from "@/components/RequestAdminButton";
 
 interface ProfileData {
   full_name: string | null;
@@ -112,15 +111,20 @@ export default function PerfilPage() {
             <div className="min-w-0 flex-1 space-y-2">
               <p className="font-semibold">¿Querés organizar sorteos?</p>
               <p className="text-sm text-muted-foreground">
-                Solicitá permisos de Organizador y el superadmin revisará tu
-                pedido.
+                Mirá los planes mensuales y elegí el que te sirva. El pago es
+                por transferencia y te enviamos tu código de activación.
               </p>
               {isAdmin ? (
                 <p className="text-sm text-emerald-600 dark:text-emerald-400">
                   ✓ Ya sos organizador.
                 </p>
               ) : (
-                <RequestAdminButton />
+                <Link
+                  href="/planes"
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  Ver planes y precios
+                </Link>
               )}
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { requireSuperadminSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -1064,4 +1065,69 @@ export async function revokeLicenseBenefit(
         ? "Plan premium retirado: vuelve a organizador."
         : "Rol de organizador retirado: vuelve a usuario.",
   };
+}
+
+// =====================================================================
+// Precios mensuales de /planes (migración 0032)
+// =====================================================================
+
+const priceSchema = z.coerce
+  .number({ invalid_type_error: "Ingresá un precio válido" })
+  .min(0, "El precio no puede ser negativo")
+  .max(10_000_000, "Precio fuera de rango");
+
+export type PlanPriceResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+/**
+ * Actualiza el precio mensual publicado en /planes. Solo superadmin.
+ * El precio vive en `plan_prices`; la comisión se acuerda por WhatsApp y no
+ * se publica acá.
+ */
+export async function updatePlanPrice(
+  plan: string,
+  priceArs: unknown,
+): Promise<PlanPriceResult> {
+  const adminUser = await requireSuperadminSession();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  if (plan !== "organizador" && plan !== "premium") {
+    return { ok: false, error: "Plan inválido" };
+  }
+
+  const parsed = priceSchema.safeParse(priceArs);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Precio inválido",
+    };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("plan_prices").upsert(
+    {
+      plan,
+      price_ars: parsed.data,
+      updated_by: adminUser.id,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "plan" },
+  );
+
+  if (error) return { ok: false, error: error.message };
+
+  await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "UPDATE_PLAN_PRICE",
+    targetUserId: null,
+    targetEmail: null,
+    details: { plan, price_ars: parsed.data },
+  });
+
+  revalidatePath("/planes");
+  revalidatePath("/admin/super");
+
+  return { ok: true };
 }

@@ -29,7 +29,21 @@ async function handle(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ released: released ?? 0 });
+  // Mantenimiento de planes: aplica la baja por vencimiento (0032) con los
+  // 3 días de gracia ya incluidos en la función.
+  const { data: expiredPlans, error: expiryError } = await admin.rpc(
+    "expire_plans",
+  );
+
+  if (expiryError) {
+    console.error("Cron: error aplicando vencimientos de plan", expiryError);
+  }
+
+  return NextResponse.json({
+    released: released ?? 0,
+    plans: expiredPlans ?? null,
+    plansOk: !expiryError,
+  });
 }
 
 export async function GET(request: NextRequest) {

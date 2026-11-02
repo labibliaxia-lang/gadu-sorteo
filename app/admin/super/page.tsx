@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { RoleRequestActions } from "@/components/RoleRequestActions";
 import { SuperAdminDashboard } from "@/components/SuperAdminDashboard";
 import { LicenseCodesPanel } from "@/components/LicenseCodesPanel";
+import { PlanPricesPanel } from "@/components/PlanPricesPanel";
 import { VerificationActions } from "@/components/VerificationActions";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 import {
@@ -59,6 +60,7 @@ const ACTION_LABELS: Record<string, string> = {
   GENERATE_LICENSE: "Generó código de licencia",
   REVOKE_LICENSE: "Anuló código de licencia",
   REVOKE_LICENSE_BENEFIT: "Quitó el beneficio de una licencia",
+  UPDATE_PLAN_PRICE: "Actualizó precio de plan",
 };
 
 const WA_MESSAGE =
@@ -368,6 +370,13 @@ export default async function SuperAdminPage({
     .order("created_at", { ascending: false })
     .limit(12);
   if (licenseError) issues.push(`licencias: ${licenseError.message}`);
+
+  // --- Precios de los planes (los edita el superadmin) ---
+  const { data: planPrices, error: planPricesError } = await admin
+    .from("plan_prices")
+    .select("plan, price_ars")
+    .order("plan", { ascending: true });
+  if (planPricesError) issues.push(`precios: ${planPricesError.message}`);
 
   // --- Registro de auditoría ---
   const { data: logs, error: logsError } = await admin
@@ -757,6 +766,17 @@ export default async function SuperAdminPage({
             ))}
           </div>
         )}
+      </div>
+
+      {/* Precios de los planes */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Precios de los planes</h2>
+          <span className="text-sm text-muted-foreground">
+            /planes · mensual
+          </span>
+        </div>
+        <PlanPricesPanel prices={planPrices ?? []} />
       </div>
 
       {/* Códigos de licencia */}

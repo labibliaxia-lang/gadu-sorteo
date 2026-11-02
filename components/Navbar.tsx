@@ -26,6 +26,7 @@ import { RequestAdminButton } from "@/components/RequestAdminButton";
 const NAV_LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/#sorteos", label: "Sorteos" },
+  { href: "/planes", label: "Planes" },
   { href: "/mis-pagos", label: "Mis Pagos" },
 ];
 
