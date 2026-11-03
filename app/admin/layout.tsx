@@ -6,6 +6,7 @@ import {
   Lock,
   Plus,
   ShieldCheck,
+  Star,
   Ticket,
   User,
 } from "lucide-react";
@@ -72,6 +73,13 @@ export default async function AdminLayout({
           >
             <Ticket className="h-4 w-4" />
             Sorteos
+          </Link>
+          <Link
+            href="/admin/resenas"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+          >
+            <Star className="h-4 w-4" />
+            Reseñas
           </Link>
           {profile?.role === "admin" && (
             <Link

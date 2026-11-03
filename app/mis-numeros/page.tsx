@@ -8,11 +8,13 @@ import {
   Gift,
   MessageCircle,
   Share2,
+  Star,
   Ticket,
   Trophy,
 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
+import { ReviewFormDialog } from "@/components/ReviewSection";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
@@ -27,6 +29,7 @@ interface RaffleRef {
   winner_number: number | null;
   winner_name: string | null;
   whatsapp_contact: string | null;
+  created_by: string | null;
 }
 
 interface NumberRow {
@@ -65,6 +68,10 @@ export default function MisNumerosPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [reviewedRaffles, setReviewedRaffles] = useState<Set<string>>(
+    new Set(),
+  );
+  const [reviewTarget, setReviewTarget] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -83,13 +90,25 @@ export default function MisNumerosPage() {
       const { data } = await supabase
         .from("raffle_numbers")
         .select(
-          "raffle_id, number, status, reserved_until, raffles(id, title, cover_image_url, draw_date, status, winner_number, winner_name, whatsapp_contact)",
+          "raffle_id, number, status, reserved_until, raffles(id, title, cover_image_url, draw_date, status, winner_number, winner_name, whatsapp_contact, created_by)",
         )
         .or(`sold_to.eq.${user.id},reserved_by.eq.${user.id}`)
         .in("status", ["sold", "reserved"])
         .order("number", { ascending: true });
 
       setRows((data as unknown as NumberRow[]) ?? []);
+
+      const { data: myReviews } = await supabase
+        .from("reviews")
+        .select("raffle_id")
+        .eq("user_id", user.id);
+
+      setReviewedRaffles(
+        new Set(
+          (myReviews ?? []).map((review) => review.raffle_id as string),
+        ),
+      );
+
       setLoading(false);
     }
     load();
@@ -382,6 +401,23 @@ export default function MisNumerosPage() {
                       <Share2 className="mr-1.5 h-4 w-4" />
                       Compartir mis números
                     </Button>
+
+                    {g.raffle.status === "drawn" && g.sold.length > 0 && (
+                      reviewedRaffles.has(g.raffle.id) ? (
+                        <p className="text-center text-xs text-emerald-700 dark:text-emerald-400">
+                          ✓ Reseña enviada
+                        </p>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="w-full bg-amber-700 text-white hover:bg-amber-800"
+                          onClick={() => setReviewTarget(g.raffle.id)}
+                        >
+                          <Star className="mr-1.5 h-4 w-4" />
+                          Calificar organizador
+                        </Button>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -389,6 +425,23 @@ export default function MisNumerosPage() {
           ))}
         </div>
       )}
+
+      <ReviewFormDialog
+        open={reviewTarget !== null}
+        raffleId={reviewTarget ?? ""}
+        organizerName="este organizador"
+        onClose={() => setReviewTarget(null)}
+        onSaved={() => {
+          if (reviewTarget) {
+            setReviewedRaffles((prev) => {
+              const next = new Set(prev);
+              next.add(reviewTarget);
+              return next;
+            });
+          }
+          setReviewTarget(null);
+        }}
+      />
     </div>
   );
 }

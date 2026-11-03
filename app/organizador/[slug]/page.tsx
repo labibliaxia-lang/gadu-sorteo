@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BadgeCheck, CalendarDays, Trophy, Ticket } from "lucide-react";
+import { BadgeCheck, CalendarDays, Star, Trophy, Ticket } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ReviewSection } from "@/components/ReviewSection";
+import {
+  averageRating,
+  formatRating,
+  type PublicReview,
+} from "@/lib/reviews";
 import { formatDateTime, formatNumber, formatPrice } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -103,6 +109,18 @@ export default async function OrganizerProfilePage({
 
   const initial = (organizer.full_name || "O").charAt(0).toUpperCase();
 
+  const { data: reviewRows } = await supabase
+    .from("reviews")
+    .select(
+      "id, organizer_id, raffle_id, user_name, rating, comment, reply, created_at",
+    )
+    .eq("organizer_id", organizer.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const reviews = (reviewRows ?? []) as PublicReview[];
+  const average = averageRating(reviews);
+
   return (
     <div className="space-y-12">
       <header className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
@@ -136,6 +154,15 @@ export default async function OrganizerProfilePage({
               ? ` · ${finished.length} finalizado${finished.length === 1 ? "" : "s"}`
               : ""}
           </p>
+          {reviews.length > 0 && (
+            <p className="flex items-center justify-center gap-1.5 text-sm sm:justify-start">
+              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              <span className="font-semibold">{formatRating(average)}</span>
+              <span className="text-muted-foreground">
+                ({reviews.length} reseña{reviews.length === 1 ? "" : "s"})
+              </span>
+            </p>
+          )}
         </div>
       </header>
 
@@ -242,6 +269,11 @@ export default async function OrganizerProfilePage({
           </div>
         </section>
       )}
+
+      <ReviewSection
+        reviews={reviews}
+        organizerName={organizer.full_name ?? undefined}
+      />
     </div>
   );
 }

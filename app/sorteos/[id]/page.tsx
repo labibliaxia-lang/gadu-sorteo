@@ -3,9 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { Star } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { parseLandingContent } from "@/lib/landing";
+import { averageRating, formatRating } from "@/lib/reviews";
 import { Badge } from "@/components/ui/badge";
 import { DrawVerifier } from "@/components/DrawVerifier";
 import { NumbersGrid } from "@/components/NumbersGrid";
@@ -140,6 +142,19 @@ export default async function RafflePage({
         .single()
     : { data: null };
 
+  const { data: organizerRatings } = raffle.created_by
+    ? await supabase
+        .from("reviews")
+        .select("rating")
+        .eq("organizer_id", raffle.created_by)
+        .limit(1000)
+    : { data: [] as { rating: number }[] };
+
+  const ratingCount = organizerRatings?.length ?? 0;
+  const ratingAverage = averageRating(
+    (organizerRatings ?? []) as { rating: number }[],
+  );
+
   // Listado vendido para el verificador: es público por RLS (solo números).
   const { data: soldNumbersData } =
     raffle.status === "drawn" && raffle.draw_seed
@@ -226,16 +241,34 @@ export default async function RafflePage({
           </div>
 
           {organizer && (
-            <OrganizerCard
-              organizer={organizer as PublicOrganizer}
-              href={
-                organizer.slug
-                  ? `/organizador/${organizer.slug}`
-                  : raffle.created_by
-                    ? `/organizador/${raffle.created_by}`
-                    : null
-              }
-            />
+            <>
+              <OrganizerCard
+                organizer={organizer as PublicOrganizer}
+                href={
+                  organizer.slug
+                    ? `/organizador/${organizer.slug}`
+                    : raffle.created_by
+                      ? `/organizador/${raffle.created_by}`
+                      : null
+                }
+              />
+              {ratingCount > 0 && (
+                <Link
+                  href={`/organizador/${
+                    organizer.slug ?? raffle.created_by
+                  }#resenas`}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+                >
+                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <span className="font-semibold">
+                    {formatRating(ratingAverage)}
+                  </span>
+                  <span>
+                    · {ratingCount} reseña{ratingCount === 1 ? "" : "s"}
+                  </span>
+                </Link>
+              )}
+            </>
           )}
         </div>
       </section>
