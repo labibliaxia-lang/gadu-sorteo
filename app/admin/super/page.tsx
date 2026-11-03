@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Coins,
   Crown,
+  FlaskConical,
   MessageCircle,
   Ticket,
   TrendingUp,
@@ -519,6 +520,13 @@ export default async function SuperAdminPage({
         <p className="text-sm text-muted-foreground">
           Consola de control: métricas globales, solicitudes de rol y usuarios.
         </p>
+        <Link
+          href="/admin/super/sandbox"
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          <FlaskConical className="mr-1.5 h-4 w-4" />
+          Simulador de sorteo
+        </Link>
       </header>
 
       {issues.length > 0 && (
