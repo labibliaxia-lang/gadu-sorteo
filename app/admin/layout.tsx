@@ -61,14 +61,14 @@ export default async function AdminLayout({
         <nav className="-mx-4 flex gap-2 overflow-x-auto border-b px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0">
           <Link
             href="/admin"
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
           >
             <LayoutDashboard className="h-4 w-4" />
             Dashboard
           </Link>
           <Link
             href="/admin/sorteos"
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
           >
             <Ticket className="h-4 w-4" />
             Sorteos
@@ -76,7 +76,7 @@ export default async function AdminLayout({
           {profile?.role === "admin" && (
             <Link
               href="/admin/verificacion"
-              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
             >
               <ShieldCheck className="h-4 w-4" />
               Verificación
@@ -85,7 +85,7 @@ export default async function AdminLayout({
           {profile?.role === "superadmin" && (
             <Link
               href="/admin/super"
-              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
             >
               <Crown className="h-4 w-4" />
               Super
@@ -93,7 +93,7 @@ export default async function AdminLayout({
           )}
           <Link
             href="/admin/perfil"
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
           >
             <User className="h-4 w-4" />
             Perfil

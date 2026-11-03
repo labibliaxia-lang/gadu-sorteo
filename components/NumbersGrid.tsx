@@ -64,7 +64,8 @@ function useColumnCount() {
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      if (w < 640) setCols(5);
+      if (w < 480) setCols(4);
+      else if (w < 640) setCols(5);
       else if (w < 1024) setCols(10);
       else setCols(20);
     };
@@ -121,12 +122,26 @@ export function NumbersGrid({
     notice?: string;
   } | null>(null);
 
+  useEffect(() => {
+    if (!loginRequired && !summary) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setLoginRequired(false);
+        setSummary(null);
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [loginRequired, summary]);
+
   const rowCount = Math.ceil(totalCount / cols);
 
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 48,
+    estimateSize: () => 52,
     overscan: 6,
   });
 
@@ -483,7 +498,7 @@ export function NumbersGrid({
   const fmtNum = (n: number) => String(n).padStart(digits, "0");
 
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", selected.size > 0 && "pb-28 lg:pb-0")}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <span>
@@ -494,8 +509,11 @@ export function NumbersGrid({
             </span>
           </span>
           {selected.size > 0 && deadline !== null && (
-            <span className="rounded-full bg-secondary px-2 py-0.5 font-mono text-xs font-semibold text-foreground">
-              ⏱ {formatCountdown(remaining)}
+            <span
+              className="rounded-full bg-secondary px-2 py-0.5 font-mono text-xs font-semibold text-foreground"
+              title="Tiempo para terminar de elegir. La reserva después dura 48 horas."
+            >
+              ⏱ Elegí en {formatCountdown(remaining)}
             </span>
           )}
         </div>
@@ -622,7 +640,7 @@ export function NumbersGrid({
                         disabled={disabled}
                         aria-label={`Número ${fmtNum(num)} - ${status}`}
                         className={cn(
-                          "relative flex h-9 items-center justify-center overflow-hidden rounded-lg border border-slate-300 bg-card text-xs font-semibold leading-none text-foreground transition-all duration-150 hover:border-slate-400 hover:shadow-sm active:scale-95 dark:border-slate-700 sm:h-10 sm:text-sm",
+                          "relative flex h-11 items-center justify-center overflow-hidden rounded-lg border border-slate-300 bg-card text-xs font-semibold leading-none text-foreground transition-all duration-150 hover:border-slate-400 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 dark:border-slate-700 sm:h-10 sm:text-sm",
                           status === "sold" &&
                             "cursor-not-allowed bg-muted/40 text-muted-foreground opacity-70",
                           status === "reserved" &&
@@ -654,16 +672,45 @@ export function NumbersGrid({
         </div>
       )}
 
+      {selected.size > 0 && isActive && !summary && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-lg backdrop-blur lg:hidden">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold">
+                {selected.size} número{selected.size === 1 ? "" : "s"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {formatPrice(totalPrice)}
+                {deadline !== null && remaining > 0
+                  ? ` · elegí en ${formatCountdown(remaining)}`
+                  : ""}
+              </p>
+            </div>
+            <Button
+              className="shrink-0 bg-emerald-600 text-white hover:bg-emerald-700"
+              disabled={reserving || !isActive}
+              onClick={handleReservePrepaid}
+            >
+              <MessageCircle className="mr-1.5 h-4 w-4" />
+              {reserving ? "Reservando…" : "Reservar"}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {loginRequired && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="login-required-title"
           onClick={() => setLoginRequired(false)}
         >
           <div
             className="w-full max-w-sm rounded-2xl border bg-card p-6 text-center shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold">
+            <h3 id="login-required-title" className="text-lg font-semibold">
               Debes iniciar sesión para participar
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -684,13 +731,18 @@ export function NumbersGrid({
       {summary && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="summary-title"
           onClick={() => setSummary(null)}
         >
           <div
-            className="w-full max-w-md rounded-2xl border bg-card p-6 shadow-xl"
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border bg-card p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold">Reserva confirmada</h3>
+            <h3 id="summary-title" className="text-lg font-semibold">
+              Reserva confirmada
+            </h3>
             <p className="mt-1 text-sm text-muted-foreground">
               {summary.numbers.length} número
               {summary.numbers.length === 1 ? "" : "s"} reservado
@@ -721,6 +773,11 @@ export function NumbersGrid({
               <span className="text-lg font-bold">
                 {formatPrice(summary.total)}
               </span>
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              El contador de arriba es solo para elegir. La reserva queda
+              guardada {PREPAID_HOLD_HOURS} h hasta que el organizador confirme
+              el pago.
             </p>
 
             {isTransfer &&

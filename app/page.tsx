@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Gift, ShieldCheck, Trophy } from "lucide-react";
+import { Coins, Gift, ShieldCheck, Trophy, Users } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { HowItWorks } from "@/components/HowItWorks";
@@ -20,6 +20,40 @@ export default async function HomePage() {
     .from("raffles")
     .select("*")
     .order("created_at", { ascending: false });
+
+  const raffleList = (raffles ?? []) as Raffle[];
+  const drawnCount = raffleList.filter((r) => r.status === "drawn").length;
+
+  const [{ count: soldCount }, { count: organizerCount }] = await Promise.all([
+    supabase
+      .from("raffle_numbers")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "sold"),
+    supabase
+      .from("public_organizers")
+      .select("*", { count: "exact", head: true }),
+  ]);
+
+  const trustStats = [
+    {
+      icon: Coins,
+      value: soldCount ?? 0,
+      label: "números vendidos",
+      href: "/#sorteos",
+    },
+    {
+      icon: Trophy,
+      value: drawnCount,
+      label: "sorteos sorteados",
+      href: "/ganadores",
+    },
+    {
+      icon: Users,
+      value: organizerCount ?? 0,
+      label: "organizadores",
+      href: "/planes",
+    },
+  ];
 
   return (
     <div className="space-y-16">
@@ -84,6 +118,27 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* Prueba social: números reales, no inventados. */}
+      <section className="grid gap-3 sm:grid-cols-3">
+        {trustStats.map((stat) => (
+          <Link
+            key={stat.label}
+            href={stat.href}
+            className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm transition hover:border-amber-500/50 hover:shadow-md"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400">
+              <stat.icon className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-xl font-bold tabular-nums">
+                {stat.value.toLocaleString("es-AR")}
+              </p>
+              <p className="text-sm text-muted-foreground">{stat.label}</p>
+            </div>
+          </Link>
+        ))}
       </section>
 
       {/* ============ CÓMO FUNCIONA (colapsable) ============ */}

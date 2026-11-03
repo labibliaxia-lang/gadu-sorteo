@@ -215,6 +215,67 @@ export default async function AdminRaffleDetailPage({
 
       <Card>
         <CardHeader>
+          <CardTitle>Pasos para publicar y sortear</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          {[
+            {
+              label: "1. Datos del sorteo",
+              detail: "Título, precio, fecha y datos de pago.",
+              done: true,
+            },
+            {
+              label: "2. Números y premios",
+              detail: "Generá los números y cargá los premios.",
+              done: true,
+            },
+            {
+              label: "3. Compromiso publicado",
+              detail:
+                "Publicá el hash de la semilla antes de sortear: sin esto no se puede ejecutar el sorteo.",
+              done: Boolean(raffle.draw_commitment),
+            },
+            {
+              label: "4. Sorteo",
+              detail:
+                (soldCount ?? 0) > 0
+                  ? "Ya hay números vendidos: podés sortear."
+                  : "Necesitás al menos un número vendido para sortear.",
+              done: raffle.status === "drawn",
+            },
+          ].map((step) => (
+            <div
+              key={step.label}
+              className="flex flex-wrap items-start justify-between gap-2 rounded-lg border p-3"
+            >
+              <div className="min-w-0">
+                <p className="font-medium">{step.label}</p>
+                <p className="text-xs text-muted-foreground">{step.detail}</p>
+              </div>
+              <Badge variant={step.done ? "success" : "warning"}>
+                {step.done ? "Listo" : "Pendiente"}
+              </Badge>
+            </div>
+          ))}
+          <div className="flex flex-wrap gap-2 pt-2 text-xs">
+            <Link
+              href={`/admin/sorteos/${raffle.id}/numeros`}
+              className="text-amber-700 underline-offset-4 hover:underline dark:text-amber-400"
+            >
+              Gestionar números
+            </Link>
+            <Link
+              href={`/admin/sorteos/${raffle.id}/premios`}
+              className="text-amber-700 underline-offset-4 hover:underline dark:text-amber-400"
+            >
+              Gestionar premios
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Reservas esperando pago</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">

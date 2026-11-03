@@ -273,7 +273,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                 key={l.href}
                 href={l.href}
                 onClick={() => setMobileOpen(false)}
-                className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
               >
                 {l.label}
               </Link>
@@ -312,7 +312,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                   <Link
                     href="/admin"
                     onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                    className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
                   >
                     <LayoutDashboard className="h-4 w-4" /> Organizador
                   </Link>
@@ -320,21 +320,21 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                 <Link
                   href="/mis-pagos"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
                 >
                   <Receipt className="h-4 w-4" /> Mis pagos
                 </Link>
                 <Link
                   href="/mis-numeros"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
                 >
                   <Ticket className="h-4 w-4" /> Mis números
                 </Link>
                 <Link
                   href="/perfil"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
                 >
                   <User className="h-4 w-4" /> Perfil
                 </Link>
@@ -355,14 +355,14 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                 <Link
                   href="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                  className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
                 >
                   Ingresar
                 </Link>
                 <Link
                   href="/register"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                  className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
                 >
                   Registrarse
                 </Link>

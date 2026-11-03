@@ -78,7 +78,7 @@ export function RafflesList({ raffles }: { raffles: Raffle[] }) {
               className={cn(
                 "rounded-full px-4 py-1.5 text-sm font-medium transition",
                 filter === f.key
-                  ? "bg-amber-500 text-white"
+                  ? "bg-amber-700 text-white"
                   : "border border-slate-300 text-muted-foreground hover:bg-accent hover:text-foreground dark:border-slate-700",
               )}
             >
