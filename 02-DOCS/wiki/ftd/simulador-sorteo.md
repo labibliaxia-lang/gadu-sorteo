@@ -70,10 +70,16 @@ valida con `requireSuperadminSession()` y la política RLS solo deja leer al sup
 `executed_at`. La UI no permite ejecutar sin compromiso y el resultado incluye `DrawVerifier` con la
 lista de números simulados. Las corridas viejas de `run_sandbox_draw` siguen visibles.
 
+**9 — corregido.** La primera versión de `execute_sandbox_draw` fallaba con
+`column reference "v_row.winning_number" is ambiguous` porque el `RETURNS TABLE` declara columnas con
+el mismo nombre que el record usado en el `RETURN QUERY`. La 0052 devuelve variables escalares sin
+`FROM`; no cambia hashes ni lógica.
+
 **Pendiente.** Aplicar `0043` y esperar el deploy; después entrar a `/admin/super/sandbox`, simular y
 comparar el hash a mano si se quiere.
 
 ## Next
 
-Aplicar `0051`, entrar a `/admin/super/sandbox` y correr las dos fases. Después, comparar el hash con
-el verificador en pantalla y, si se quiere, usar el mismo escenario como demo para organizadores.
+Aplicar `0052`, entrar a `/admin/super/sandbox` y correr las dos fases. Si quedó una fila comprometida
+sin ejecutar, se puede ejecutar igual o descartar con «Otra simulación». Después, comparar el hash con
+el verificador en pantalla.
