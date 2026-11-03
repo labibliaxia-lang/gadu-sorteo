@@ -4,11 +4,18 @@ import { useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { TERMS_COOKIE } from "@/lib/terms";
 
 /** Cookie corta para volver al sorteo después del login con Google. */
 const NEXT_COOKIE = "gadu_next";
 
-export function GoogleAuthButton({ next }: { next?: string | null }) {
+export function GoogleAuthButton({
+  next,
+  termsAccepted = true,
+}: {
+  next?: string | null;
+  termsAccepted?: boolean;
+}) {
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
 
@@ -18,6 +25,7 @@ export function GoogleAuthButton({ next }: { next?: string | null }) {
   }
 
   async function handleSignIn() {
+    if (!termsAccepted) return;
     setLoading(true);
 
     const target = safeNext();
@@ -28,6 +36,9 @@ export function GoogleAuthButton({ next }: { next?: string | null }) {
     } else {
       document.cookie = `${NEXT_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
     }
+
+    // Evidencia de que tildó el checkbox; el callback la guarda en el perfil.
+    document.cookie = `${TERMS_COOKIE}=1; Path=/; Max-Age=600; SameSite=Lax`;
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -49,7 +60,7 @@ export function GoogleAuthButton({ next }: { next?: string | null }) {
       variant="outline"
       className="w-full shadow-sm"
       onClick={handleSignIn}
-      disabled={loading}
+      disabled={loading || !termsAccepted}
     >
       <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
         <path

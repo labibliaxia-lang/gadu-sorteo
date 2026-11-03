@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { GoogleAuthButton } from "@/components/GoogleAuthButton";
+import { LoginForm } from "@/components/LoginForm";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +45,7 @@ export default function LoginPage({
         )}
 
         <div className="mt-6">
-          <GoogleAuthButton next={searchParams.next ?? null} />
+          <LoginForm next={searchParams.next ?? null} />
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">

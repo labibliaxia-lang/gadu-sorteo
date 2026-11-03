@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ReferralCapture } from "@/components/ReferralCapture";
+import { TermsGate } from "@/components/TermsGate";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
@@ -52,12 +53,15 @@ export default async function RootLayout({
 
   // Auto-reparación: si el usuario autenticado aún no tiene perfil en
   // public.profiles, lo creamos al vuelo (RLS: auth.uid() = id).
+  let termsAccepted = false;
   if (user) {
     const { data: existingProfile } = await supabase
       .from("profiles")
-      .select("id")
+      .select("id, terms_accepted_at")
       .eq("id", user.id)
       .maybeSingle();
+
+    termsAccepted = Boolean(existingProfile?.terms_accepted_at);
 
     if (!existingProfile) {
       const meta = user.user_metadata as {
@@ -95,6 +99,7 @@ export default async function RootLayout({
       <body className="flex min-h-screen flex-col overflow-x-hidden">
         <ThemeProvider>
           <ReferralCapture />
+          {user && <TermsGate accepted={termsAccepted} />}
           <Navbar initialUser={initialUser} />
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">
             {children}
