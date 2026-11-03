@@ -58,7 +58,7 @@ export default async function AdminLayout({
           </Link>
         </div>
 
-        <nav className="flex gap-2 border-b pb-1">
+        <nav className="-mx-4 flex gap-2 overflow-x-auto border-b px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0">
           <Link
             href="/admin"
             className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"

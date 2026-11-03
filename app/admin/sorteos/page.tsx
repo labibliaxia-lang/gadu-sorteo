@@ -76,7 +76,7 @@ export default async function AdminSorteosPage() {
                   {formatPrice(Number(raffle.price_per_number))} por número ·{" "}
                   {formatDateTime(raffle.draw_date)}
                 </span>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button asChild variant="outline" size="sm">
                     <Link href={`/admin/sorteos/${raffle.id}`}>
                       Gestionar

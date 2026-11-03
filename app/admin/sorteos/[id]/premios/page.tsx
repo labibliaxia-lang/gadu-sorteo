@@ -148,7 +148,7 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
           {prizes.map((prize) => (
             <div key={prize.id} className="space-y-2">
               <PrizeCard prize={prize} />
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"

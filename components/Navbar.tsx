@@ -27,8 +27,8 @@ const NAV_LINKS = [
   { href: "/", label: "Inicio" },
   { href: "/#sorteos", label: "Sorteos" },
   { href: "/ganadores", label: "Ganadores" },
+  { href: "/como-funciona", label: "Cómo funciona" },
   { href: "/planes", label: "Planes" },
-  { href: "/mis-pagos", label: "Mis Pagos" },
 ];
 
 type InitialUser = {
@@ -125,11 +125,11 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4">
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2"
+          className="flex shrink-0 items-center gap-2"
           aria-label="Gadu Sorteos — inicio"
         >
           <span className="rounded-lg bg-white px-2 py-1.5 shadow-sm ring-1 ring-black/5">
@@ -145,7 +145,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
         </Link>
 
         {/* Navegación desktop */}
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 lg:flex">
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
@@ -158,38 +158,42 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
         </nav>
 
         {/* Área de usuario desktop */}
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           {userId ? (
             <>
               {isAdmin && (
                 <Link
                   href="/admin"
+                  title="Panel del organizador"
                   className={buttonVariants({ variant: "ghost", size: "sm" })}
                 >
-                  <LayoutDashboard className="mr-1.5 h-4 w-4" />
-                  Organizador
+                  <LayoutDashboard className="h-4 w-4 xl:mr-1.5" />
+                  <span className="hidden xl:inline">Organizador</span>
                 </Link>
               )}
               <Link
                 href="/mis-pagos"
+                title="Mis pagos"
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
-                <Receipt className="mr-1.5 h-4 w-4" />
-                Mis pagos
+                <Receipt className="h-4 w-4 xl:mr-1.5" />
+                <span className="hidden xl:inline">Mis pagos</span>
               </Link>
               <Link
                 href="/mis-numeros"
+                title="Mis números"
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
-                <Ticket className="mr-1.5 h-4 w-4" />
-                Mis números
+                <Ticket className="h-4 w-4 xl:mr-1.5" />
+                <span className="hidden xl:inline">Mis números</span>
               </Link>
               <Link
                 href="/perfil"
+                title="Mi perfil"
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
-                <User className="mr-1.5 h-4 w-4" />
-                Perfil
+                <User className="h-4 w-4 xl:mr-1.5" />
+                <span className="hidden xl:inline">Perfil</span>
               </Link>
               {!isAdmin && !roleRequested && <RequestAdminButton />}
               <span className="flex items-center gap-2 rounded-full border px-2 py-1 text-sm">
@@ -206,13 +210,18 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                     {initial}
                   </span>
                 )}
-                <span className="hidden max-w-[140px] truncate lg:inline">
+                <span className="hidden max-w-[140px] truncate xl:inline">
                   {displayName || email}
                 </span>
               </span>
-              <Button variant="outline" size="sm" onClick={signOut}>
-                <LogOut className="mr-1.5 h-4 w-4" />
-                Salir
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={signOut}
+                title="Cerrar sesión"
+              >
+                <LogOut className="h-4 w-4 xl:mr-1.5" />
+                <span className="hidden xl:inline">Salir</span>
               </Button>
             </>
           ) : (
@@ -243,20 +252,21 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
           )}
         </button>
 
-        {/* Toggle móvil */}
+        {/* Toggle móvil / tablet */}
         <button
           type="button"
-          className="md:hidden"
+          className="lg:hidden"
           onClick={() => setMobileOpen((v) => !v)}
           aria-label="Abrir menú"
+          aria-expanded={mobileOpen}
         >
           {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
-      {/* Menú móvil */}
+      {/* Menú móvil / tablet */}
       {mobileOpen && (
-        <div className="border-t md:hidden">
+        <div className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t lg:hidden">
           <nav className="flex flex-col gap-1 p-4">
             {NAV_LINKS.map((l) => (
               <Link

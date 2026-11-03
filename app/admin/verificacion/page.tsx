@@ -251,7 +251,7 @@ export default function VerificacionPage() {
                   muted
                   className="aspect-[16/10] w-full rounded-lg border bg-black object-cover"
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button type="button" size="sm" onClick={captureSelfie}>
                     Capturar
                   </Button>

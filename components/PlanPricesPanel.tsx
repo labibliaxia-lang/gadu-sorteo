@@ -70,7 +70,7 @@ export function PlanPricesPanel({ prices }: PlanPricesPanelProps) {
         {PLANS.map(({ plan, label }) => (
           <div key={plan} className="space-y-2">
             <Label htmlFor={`price-${plan}`}>{label}</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Input
                 id={`price-${plan}`}
                 type="number"

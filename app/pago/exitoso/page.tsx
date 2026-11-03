@@ -26,7 +26,7 @@ export default function PagoExitosoPage() {
           <p className="text-sm text-muted-foreground">
             Podés revisar el estado en “Mis pagos”.
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button asChild className="flex-1">
               <Link href="/">Volver al inicio</Link>
             </Button>
