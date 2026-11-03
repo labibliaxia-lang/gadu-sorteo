@@ -24,6 +24,20 @@
 
 begin;
 
+-- Diagnóstico: si RLS está deshabilitado en raffles, la prueba no tiene sentido.
+do $$
+declare
+  v_rls boolean;
+begin
+  select relrowsecurity into v_rls
+  from pg_class
+  where oid = 'public.raffles'::regclass;
+
+  if v_rls is not true then
+    raise exception 'PRUEBA INVÁLIDA: RLS está deshabilitado en public.raffles. Aplicá la migración 0041 y reintentá.';
+  end if;
+end $$;
+
 -- A: dueño del primer sorteo.
 select set_config(
   'test.a',
@@ -103,6 +117,16 @@ declare
   v_raffle_a uuid := current_setting('test.raffle_a')::uuid;
   v int;
 begin
+  -- Control de simulación: si no somos `authenticated` o auth.uid() no es B,
+  -- un "pase" o un "FALLA" no significan nada.
+  if current_user <> 'authenticated' then
+    raise exception 'PRUEBA INVÁLIDA: current_user=%, se esperaba authenticated. Ejecutá el script completo en el SQL Editor.', current_user;
+  end if;
+
+  if auth.uid() is null or auth.uid() <> v_b then
+    raise exception 'PRUEBA INVÁLIDA: auth.uid()=% y se esperaba B=%. El JWT simulado no se aplicó.', auth.uid(), v_b;
+  end if;
+
   -- Control: B se ve a sí mismo.
   select count(*) into v from public.profiles where id = v_b;
   if v <> 1 then
