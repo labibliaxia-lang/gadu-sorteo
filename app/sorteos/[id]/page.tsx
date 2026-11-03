@@ -8,6 +8,7 @@ import { Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { parseLandingContent } from "@/lib/landing";
 import { averageRating, formatRating } from "@/lib/reviews";
+import type { PublicQuestion } from "@/lib/questions";
 import { Badge } from "@/components/ui/badge";
 import { DrawVerifier } from "@/components/DrawVerifier";
 import { NumbersGrid } from "@/components/NumbersGrid";
@@ -15,6 +16,7 @@ import { OrganizerCard } from "@/components/OrganizerCard";
 import { OrganizerContact } from "@/components/OrganizerContact";
 import { PrizeCard } from "@/components/PrizeCard";
 import { RaffleLanding } from "@/components/RaffleLanding";
+import { RaffleQnA } from "@/components/RaffleQnA";
 import { RaffleVisitTracker } from "@/components/RaffleVisitTracker";
 import { ShareButton } from "@/components/ShareButton";
 import { formatDateTime, formatPrice } from "@/lib/utils";
@@ -171,6 +173,41 @@ export default async function RafflePage({
   );
 
   const landingBlocks = parseLandingContent(raffle.landing_content);
+
+  const {
+    data: { user: viewer },
+  } = await supabase.auth.getUser();
+
+  let viewerRole: string | null = null;
+  if (viewer) {
+    const { data: viewerProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", viewer.id)
+      .maybeSingle();
+    viewerRole = (viewerProfile?.role as string | null) ?? null;
+  }
+
+  const { data: questionRows } = await supabase
+    .from("raffle_questions")
+    .select("id, user_id, question, answer, created_at, answered_at")
+    .eq("raffle_id", raffle.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const questions: PublicQuestion[] = (questionRows ?? []).map((row) => ({
+    id: row.id as string,
+    question: row.question as string,
+    answer: (row.answer as string | null) ?? null,
+    createdAt: row.created_at as string,
+    answeredAt: (row.answered_at as string | null) ?? null,
+    isMine: Boolean(viewer && row.user_id === viewer.id),
+  }));
+
+  const canModerateQna = Boolean(
+    viewer &&
+      (viewerRole === "superadmin" || raffle.created_by === viewer.id),
+  );
 
   return (
     <div className="space-y-8">
@@ -510,6 +547,13 @@ export default async function RafflePage({
           </p>
         )}
       </section>
+
+      <RaffleQnA
+        raffleId={raffle.id}
+        questions={questions}
+        isLoggedIn={Boolean(viewer)}
+        canModerate={canModerateQna}
+      />
 
       {organizer && (
         <OrganizerContact
