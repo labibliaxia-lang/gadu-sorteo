@@ -114,6 +114,11 @@ export function Footer() {
           </h3>
           <ul className="space-y-2 text-sm text-zinc-400">
             <li>
+              <Link href="/ayuda" className="transition hover:text-amber-400">
+                Centro de ayuda
+              </Link>
+            </li>
+            <li>
               <a
                 href={whatsappHref()}
                 target={whatsappHref().startsWith("http") ? "_blank" : undefined}
