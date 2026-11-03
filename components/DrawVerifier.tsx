@@ -5,6 +5,10 @@ import { CheckCircle2, XCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  computeDrawVerification,
+  parseNumberList,
+} from "@/lib/draw-verify";
 
 interface DrawVerifierProps {
   raffleId: string;
@@ -19,25 +23,6 @@ interface DrawVerifierProps {
 interface Check {
   label: string;
   ok: boolean;
-}
-
-async function sha256Hex(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(value),
-  );
-
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function parseNumbers(text: string): number[] {
-  return text
-    .split(/[^0-9]+/)
-    .filter(Boolean)
-    .map(Number)
-    .filter((n) => Number.isInteger(n) && n >= 1 && n <= 10000);
 }
 
 /**
@@ -72,59 +57,42 @@ export function DrawVerifier({
     setComputed(null);
 
     try {
-      const numbers = parseNumbers(listText);
+      const numbers = parseNumberList(listText);
       if (numbers.length === 0) {
         setError("Pegá el listado de números vendidos (separados por coma).");
         return;
       }
 
-      const sorted = [...numbers].sort((a, b) => a - b);
-      const list = sorted.join(",");
-
-      const commitmentComputed = await sha256Hex(
-        `gadu:v1|raffle:${raffleId}|seed:${seed}`,
-      );
-      const numbersHashComputed = await sha256Hex(
-        `gadu:v1|raffle:${raffleId}|numbers:${list}`,
-      );
-      const resultHashComputed = await sha256Hex(
-        `gadu:v1|raffle:${raffleId}|winner:${winnerNumber}|numbers:${list}`,
-      );
-      const pick = await sha256Hex(
-        `gadu:v1|raffle:${raffleId}|seed:${seed}|numbers:${list}`,
-      );
-
-      // La base usa 60 bits y el resto de la división: BigInt evita perder
-      // precisión con números por encima de 2^53.
-      const index = Number(
-        BigInt(`0x${pick.slice(0, 15)}`) % BigInt(sorted.length),
-      );
-      const winner = sorted[index];
+      const computedDraw = await computeDrawVerification({
+        raffleId,
+        seed,
+        numbers,
+      });
 
       setComputed({
-        commitment: commitmentComputed,
-        numbersHash: numbersHashComputed,
-        resultHash: resultHashComputed,
-        winner,
+        commitment: computedDraw.commitment,
+        numbersHash: computedDraw.numbersHash,
+        resultHash: computedDraw.resultHash,
+        winner: computedDraw.winner ?? 0,
       });
 
       setChecks([
         {
           label:
             "La semilla coincide con el compromiso publicado (existía antes del sorteo)",
-          ok: commitmentComputed === commitment,
+          ok: computedDraw.commitment === commitment,
         },
         {
           label: "El listado coincide con la huella del listado vendido",
-          ok: numbersHashComputed === numbersHash,
+          ok: computedDraw.numbersHash === numbersHash,
         },
         {
           label: "El resultado coincide con la huella del resultado",
-          ok: resultHashComputed === resultHash,
+          ok: computedDraw.resultHash === resultHash,
         },
         {
           label: "El ganador calculado coincide con el ganador publicado",
-          ok: winner === winnerNumber,
+          ok: computedDraw.winner === winnerNumber,
         },
       ]);
     } catch {
