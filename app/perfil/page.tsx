@@ -175,9 +175,8 @@ export default function PerfilPage() {
             <div className="min-w-0">
               <p className="font-semibold">Verificación de identidad (KYC)</p>
               <p className="text-xs text-muted-foreground">
-                El flujo está disponible. Con prepago manual no es obligatorio;
-                se puede volver a exigir con la variable
-                NEXT_PUBLIC_REQUIRE_KYC=true.
+                Es obligatoria para publicar sorteos. Cargá nombre, teléfono,
+                ubicación y DNI, y esperá la aprobación de identidad.
               </p>
             </div>
             <div className="flex items-center gap-2">

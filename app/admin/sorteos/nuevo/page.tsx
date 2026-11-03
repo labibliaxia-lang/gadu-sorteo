@@ -75,11 +75,11 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 /**
- * KYC desactivado temporalmente mientras se opera con prepago manual.
- * El código del bloqueo no se borra: con NEXT_PUBLIC_REQUIRE_KYC=true vuelve
- * a exigir la verificación de identidad antes de publicar.
+ * KYC obligatorio para publicar sorteos. El mismo requisito se refuerza en la
+ * base con el trigger `enforce_organizer_kyc` (0054), así que no se puede
+ * saltear llamando directo a PostgREST. El superadmin queda exceptuado.
  */
-const REQUIRE_KYC = process.env.NEXT_PUBLIC_REQUIRE_KYC === "true";
+const REQUIRE_KYC = true;
 
 export default function NuevoSorteoPage() {
   const router = useRouter();
@@ -96,6 +96,7 @@ export default function NuevoSorteoPage() {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(
     null,
   );
+  const [kycDataComplete, setKycDataComplete] = useState(false);
   const [checkingVerification, setCheckingVerification] = useState(true);
   const [plan, setPlan] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
@@ -135,7 +136,9 @@ export default function NuevoSorteoPage() {
       }
       const { data } = await supabase
         .from("profiles")
-        .select("verification_status, plan, role")
+        .select(
+          "verification_status, plan, role, full_name, phone, location, dni_number",
+        )
         .eq("id", user.id)
         .single();
 
@@ -151,6 +154,14 @@ export default function NuevoSorteoPage() {
         const ctx = getPlanContext({ plan: userPlan, role: userRole });
 
         setVerificationStatus(data?.verification_status ?? "pending");
+        setKycDataComplete(
+          Boolean(
+            data?.full_name?.trim() &&
+              data?.phone?.trim() &&
+              data?.location?.trim() &&
+              data?.dni_number?.trim(),
+          ),
+        );
         setPlan(userPlan);
         setRole(userRole);
         setActiveRafflesCount(count ?? 0);
@@ -329,17 +340,32 @@ export default function NuevoSorteoPage() {
     return <p className="text-muted-foreground">Verificando identidad…</p>;
   }
 
-  if (REQUIRE_KYC && verificationStatus !== "approved") {
+  if (
+    REQUIRE_KYC &&
+    role !== "superadmin" &&
+    (verificationStatus !== "approved" || !kycDataComplete)
+  ) {
     return (
       <div className="mx-auto max-w-lg space-y-4 rounded-xl border bg-muted/40 p-8 text-center">
-        <h1 className="text-xl font-bold">Debés verificar tu identidad</h1>
+        <h1 className="text-xl font-bold">
+          KYC obligatorio para publicar sorteos
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Para crear y publicar sorteos, primero tenés que validar tu identidad
-          (DNI + selfie). Es un requisito de seguridad.
+          Para crear y publicar sorteos necesitás cargar tus datos personales
+          (nombre, teléfono, ubicación y DNI) y tener la identidad aprobada con
+          DNI + selfie.
         </p>
-        <Button onClick={() => router.push("/admin/verificacion")}>
-          Ir a verificación de identidad
-        </Button>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button onClick={() => router.push("/admin/verificacion")}>
+            Completar verificación
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/perfil")}
+          >
+            Editar mis datos
+          </Button>
+        </div>
       </div>
     );
   }

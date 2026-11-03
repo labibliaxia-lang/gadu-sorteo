@@ -11,13 +11,18 @@ import {
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { submitDni, submitSelfie } from "@/app/admin/verificacion/actions";
+import {
+  saveKycData,
+  submitDni,
+  submitSelfie,
+} from "@/app/admin/verificacion/actions";
 
 type VerificationStatus = "pending" | "approved" | "rejected";
 
@@ -26,6 +31,12 @@ export default function VerificacionPage() {
 
   const [status, setStatus] = useState<VerificationStatus>("pending");
   const [loading, setLoading] = useState(true);
+
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState("");
+  const [dniNumber, setDniNumber] = useState("");
+  const [dataBusy, setDataBusy] = useState(false);
 
   const [dniFile, setDniFile] = useState<File | null>(null);
   const [dniPreview, setDniPreview] = useState<string | null>(null);
@@ -54,11 +65,17 @@ export default function VerificacionPage() {
       }
       const { data } = await supabase
         .from("profiles")
-        .select("verification_status")
+        .select(
+          "verification_status, full_name, phone, location, dni_number",
+        )
         .eq("id", user.id)
         .single();
       if (active) {
         setStatus(data?.verification_status ?? "pending");
+        setFullName(data?.full_name ?? "");
+        setPhone(data?.phone ?? "");
+        setLocation(data?.location ?? "");
+        setDniNumber(data?.dni_number ?? "");
         setLoading(false);
       }
     }
@@ -77,6 +94,12 @@ export default function VerificacionPage() {
 
   async function handleDni() {
     if (!dniFile) return;
+    if (!dataComplete) {
+      setError(
+        "Completá y guardá tus datos personales antes de subir el DNI.",
+      );
+      return;
+    }
     setDniBusy(true);
     setError(null);
     setSuccess(null);
@@ -132,6 +155,12 @@ export default function VerificacionPage() {
 
   async function handleSelfie() {
     if (!selfieFile) return;
+    if (!dataComplete) {
+      setError(
+        "Completá y guardá tus datos personales antes del selfie.",
+      );
+      return;
+    }
     setSelfieBusy(true);
     setError(null);
     setSuccess(null);
@@ -145,6 +174,34 @@ export default function VerificacionPage() {
       setSelfieFile(null);
     }
     setSelfieBusy(false);
+  }
+
+  const dataComplete =
+    fullName.trim().length >= 3 &&
+    phone.replace(/\D/g, "").length >= 6 &&
+    location.trim().length >= 2 &&
+    /^\d{7,9}$/.test(dniNumber.replace(/\./g, "").replace(/\s/g, ""));
+
+  async function saveData() {
+    setDataBusy(true);
+    setError(null);
+    setSuccess(null);
+
+    const result = await saveKycData({
+      full_name: fullName,
+      phone,
+      location,
+      dni_number: dniNumber,
+    });
+
+    setDataBusy(false);
+
+    if (!result.ok) {
+      setError(result.error ?? "No se pudieron guardar los datos");
+      return;
+    }
+
+    setSuccess("Datos personales guardados.");
   }
 
   const banner =
@@ -177,7 +234,8 @@ export default function VerificacionPage() {
           Verificación de identidad
         </h1>
         <p className="text-sm text-muted-foreground">
-          Subí el frente de tu DNI y una selfie para poder publicar sorteos.
+          Es obligatoria para publicar sorteos. Completá tus datos y subí el
+          frente del DNI y una selfie.
         </p>
       </header>
 
@@ -187,6 +245,82 @@ export default function VerificacionPage() {
         <banner.icon className="h-5 w-5 shrink-0" />
         {banner.text}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">0. Datos personales</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Estos datos los revisa el superadmin junto con tu DNI. Se guardan
+            en tu perfil y no se muestran públicamente.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label htmlFor="kyc-name" className="text-sm font-medium">
+                Nombre completo
+              </label>
+              <Input
+                id="kyc-name"
+                value={fullName}
+                maxLength={80}
+                onChange={(event) => setFullName(event.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="kyc-dni" className="text-sm font-medium">
+                Número de DNI
+              </label>
+              <Input
+                id="kyc-dni"
+                value={dniNumber}
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="Sin puntos"
+                onChange={(event) => setDniNumber(event.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="kyc-phone" className="text-sm font-medium">
+                Teléfono
+              </label>
+              <Input
+                id="kyc-phone"
+                value={phone}
+                maxLength={30}
+                placeholder="Ej: 11 2345 6789"
+                onChange={(event) => setPhone(event.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="kyc-location" className="text-sm font-medium">
+                Ciudad / zona
+              </label>
+              <Input
+                id="kyc-location"
+                value={location}
+                maxLength={80}
+                onChange={(event) => setLocation(event.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => void saveData()}
+              disabled={!dataComplete || dataBusy}
+            >
+              {dataBusy ? "Guardando…" : "Guardar datos"}
+            </Button>
+            {!dataComplete && (
+              <p className="text-xs text-amber-800 dark:text-amber-300">
+                Completá nombre, DNI, teléfono y ubicación para continuar.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* DNI */}
@@ -228,7 +362,7 @@ export default function VerificacionPage() {
                 type="button"
                 size="sm"
                 onClick={handleDni}
-                disabled={!dniFile || dniBusy}
+                disabled={!dniFile || dniBusy || !dataComplete}
               >
                 {dniBusy ? "Enviando…" : "Enviar DNI"}
               </Button>
@@ -293,7 +427,7 @@ export default function VerificacionPage() {
                     type="button"
                     size="sm"
                     onClick={handleSelfie}
-                    disabled={!selfieFile || selfieBusy}
+                    disabled={!selfieFile || selfieBusy || !dataComplete}
                   >
                     {selfieBusy ? "Enviando…" : "Enviar selfie"}
                   </Button>
