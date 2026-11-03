@@ -86,10 +86,12 @@ export default async function LiveDrawPage({
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+          <p className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-widest text-brand-700 dark:text-brand-300">
             <Radio className="h-4 w-4" /> Sala en vivo
           </p>
-          <h1 className="text-2xl font-bold tracking-tight">{raffle.title}</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">
+            {raffle.title}
+          </h1>
           <p className="text-sm text-muted-foreground">
             {raffle.status === "drawn"
               ? "Sorteo finalizado"
@@ -114,13 +116,13 @@ export default async function LiveDrawPage({
       <div className="flex flex-wrap gap-2 text-sm">
         <Link
           href={`/sorteos/${params.id}`}
-          className="text-amber-700 underline-offset-4 hover:underline dark:text-amber-400"
+          className="text-brand-700 underline-offset-4 hover:underline dark:text-brand-300"
         >
           Ver el sorteo
         </Link>
         <Link
           href={`/sorteos/${params.id}/verificar`}
-          className="text-amber-700 underline-offset-4 hover:underline dark:text-amber-400"
+          className="text-brand-700 underline-offset-4 hover:underline dark:text-brand-300"
         >
           Página de verificación
         </Link>

@@ -140,7 +140,7 @@ export default async function OrganizerProfilePage({
 
         <div className="space-y-1">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="font-display text-3xl font-bold tracking-tight">
               {organizer.full_name || "Organizador"}
             </h1>
             {organizer.is_verified && (

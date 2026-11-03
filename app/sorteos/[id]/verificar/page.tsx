@@ -73,10 +73,12 @@ export default async function VerifyPage({
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+          <p className="font-mono text-xs font-semibold uppercase tracking-widest text-brand-700 dark:text-brand-300">
             Verificación pública
           </p>
-          <h1 className="text-2xl font-bold tracking-tight">{raffle.title}</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">
+            {raffle.title}
+          </h1>
           <p className="text-sm text-muted-foreground">
             {drawn && raffle.drawn_at
               ? `Sorteado: ${formatDateTime(raffle.drawn_at)}`
@@ -111,18 +113,18 @@ export default async function VerifyPage({
           )}
           <Link
             href={`/sorteos/${params.id}/en-vivo`}
-            className="text-sm text-amber-700 underline-offset-4 hover:underline dark:text-amber-400"
+            className="text-sm text-brand-700 underline-offset-4 hover:underline dark:text-brand-300"
           >
             Ir a la sala en vivo
           </Link>
         </section>
       ) : (
         <>
-          <section className="rounded-xl border bg-gradient-to-br from-amber-50 to-orange-50 p-6 dark:from-amber-950/30 dark:to-orange-950/20">
-            <p className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
+          <section className="rounded-xl border border-brand-500/40 bg-brand-500/5 p-6">
+            <p className="flex items-center gap-2 text-sm font-semibold text-brand-800 dark:text-brand-300">
               <Trophy className="h-5 w-5" /> Resultado certificado
             </p>
-            <p className="mt-2 font-mono text-5xl font-black text-amber-800 dark:text-amber-200">
+            <p className="mt-2 font-mono text-5xl font-black text-brand-800 dark:text-brand-200">
               {String(raffle.winner_number).padStart(4, "0")}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
