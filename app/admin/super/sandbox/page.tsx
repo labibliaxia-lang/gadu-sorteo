@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
 interface SandboxRunRow {
   id: string;
   numbers_count: number;
-  winning_number: number;
+  winning_number: number | null;
   commitment: string;
-  result_hash: string;
+  result_hash: string | null;
   created_at: string;
 }
 
@@ -49,9 +49,10 @@ export default async function SandboxPage() {
           Simulador de sorteo
         </h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Escenario de prueba aislado: {100} números “vendidos” simulados, la
-          misma fórmula SHA-256 del motor real y el certificado del ganador.
-          Nada de esto aparece en la web pública ni modifica sorteos reales.
+          Mismo flujo que un sorteo real: primero se publica el compromiso
+          (hash de la semilla) y después se ejecuta el sorteo con la semilla
+          revelada y las huellas. Escenario aislado de 100 números simulados;
+          nada de esto aparece en la web pública ni modifica sorteos reales.
         </p>
       </header>
 
@@ -82,10 +83,10 @@ export default async function SandboxPage() {
                     </td>
                     <td className="p-3">{run.numbers_count}</td>
                     <td className="p-3 font-mono font-semibold">
-                      {run.winning_number}
+                      {run.winning_number ?? "Pendiente"}
                     </td>
                     <td className="max-w-[20rem] truncate p-3 font-mono text-xs text-muted-foreground">
-                      {run.result_hash}
+                      {run.result_hash ?? "Sin ejecutar"}
                     </td>
                   </tr>
                 ))}

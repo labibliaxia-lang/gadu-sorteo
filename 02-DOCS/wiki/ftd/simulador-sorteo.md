@@ -24,6 +24,15 @@ certificado, accesible solo desde el panel superadmin.
 - `app/admin/super/sandbox/page.tsx`: acceso desde el panel superadmin, simulador y últimas 10
   corridas.
 - Enlace «Simulador de sorteo» en la cabecera de `/admin/super`.
+- `supabase/migrations/0051_sandbox_two_phase.sql`: el simulador pasa a dos fases, igual al flujo real:
+  - `create_sandbox_commitment(p_count)`: genera la semilla y publica el **compromiso**, sin revelar
+    la semilla.
+  - `execute_sandbox_draw(run_id)`: usa la semilla comprometida y los números, calcula ganador y
+    huellas, revela la semilla. Idempotente por `executed_at`.
+  - `draw_sandbox_runs` acepta filas sin ejecutar (`winning_number`, hashes y `executed_at` nulos).
+- `components/SandboxDraw.tsx`: botones «1. Publicar compromiso» y «2. Ejecutar sorteo simulado»;
+  antes de ejecutar solo se ve el compromiso. Al ejecutar muestra semilla, `numbers_hash`,
+  `result_hash` y reutiliza `DrawVerifier` para recomputar todo en el navegador.
 
 **Out:** `raffles`, `raffle_numbers`, `payments`, el motor `draw_winner` y cualquier página pública.
 
@@ -37,6 +46,8 @@ certificado, accesible solo desde el panel superadmin.
 | 4 | Animación y certificado reutilizados | `SandboxDraw` + `WinnerCertificate` |
 | 5 | No toca datos reales | Solo escribe `draw_sandbox_runs` |
 | 6 | Tipos, lint, tests y build limpios | Los cuatro gates |
+| 7 | Flujo en dos fases igual al real | 0051 + botones 1/2 |
+| 8 | Verificación con hashes en el navegador | `DrawVerifier` reutilizado |
 
 ## Evidence
 
@@ -54,10 +65,15 @@ valida con `requireSuperadminSession()` y la política RLS solo deja leer al sup
 **6 — observado.** `npm run typecheck` → 0. `npm run lint` → `✔ No ESLint warnings or errors`.
 `npm test` → 38/38. `npm run build` → 0.
 
+**7, 8 — observado.** `create_sandbox_commitment` inserta la semilla y devuelve solo el compromiso;
+`execute_sandbox_draw` bloquea la fila, calcula con la semilla guardada y actualiza ganador/hashes/
+`executed_at`. La UI no permite ejecutar sin compromiso y el resultado incluye `DrawVerifier` con la
+lista de números simulados. Las corridas viejas de `run_sandbox_draw` siguen visibles.
+
 **Pendiente.** Aplicar `0043` y esperar el deploy; después entrar a `/admin/super/sandbox`, simular y
 comparar el hash a mano si se quiere.
 
 ## Next
 
-Aplicar 0043, correr la simulación desde el panel y verificar el certificado. Si gusta, el mismo
-escenario se puede usar como demo para mostrarle el motor a un organizador.
+Aplicar `0051`, entrar a `/admin/super/sandbox` y correr las dos fases. Después, comparar el hash con
+el verificador en pantalla y, si se quiere, usar el mismo escenario como demo para organizadores.
