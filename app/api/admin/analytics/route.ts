@@ -65,7 +65,6 @@ function buildDays(range: Range): string[] {
   return days;
 }
 
-/** Ventana equivalente anterior para la comparativa (mes a mes, etc.). */
 function previousWindow(
   range: Range,
   from: Date | null,
@@ -92,15 +91,19 @@ function previousWindow(
 
   if (range === "month") {
     const today = baToday();
-    const prevStart = new Date(
-      today.getFullYear(),
-      today.getMonth() - 1,
-      1,
-    );
+    const prevStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
     return { from: baMidnightUtc(prevStart), to, label: "mes anterior" };
   }
 
   return null;
+}
+
+interface RaffleRow {
+  id: string;
+  title: string;
+  status: string;
+  price_per_number: number | string;
+  created_at: string;
 }
 
 function emptyPayload(range: Range) {
@@ -134,15 +137,21 @@ function emptyPayload(range: Range) {
       title: string;
       status: string;
       revenue: number;
-      payments: number;
+      sold: number;
+      reserved: number;
+      visits: number | null;
+      conversion: number;
+      visitConversion: number | null;
     }[],
   };
 }
 
 /**
  * Analíticas avanzadas (solo plan Premium / superadmin).
- * Usa el cliente de sesión (RLS) y acota explícitamente por los sorteos
- * del organizador: nunca usa service_role ni expone datos de terceros.
+ *
+ * La fuente de ventas son los números en estado `sold` (prepago manual y MP),
+ * no la tabla `payments`: el prepago por transferencia no crea filas ahí.
+ * RLS + scope explícito por `created_by`; nunca service_role.
  */
 export async function GET(request: NextRequest) {
   const supabase = createClient();
@@ -186,7 +195,9 @@ export async function GET(request: NextRequest) {
   // 1) Sorteos visibles para el usuario (RLS + scope explícito).
   let rafflesQuery = supabase
     .from("raffles")
-    .select("id, title, status, created_at");
+    .select("id, title, status, created_at, price_per_number")
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   if (!context.isSuperadmin) {
     rafflesQuery = rafflesQuery.eq("created_by", user.id);
@@ -201,93 +212,95 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const list = (raffles ?? []) as {
-    id: string;
-    title: string;
-    status: string;
-    created_at: string;
-  }[];
-
+  const list = (raffles ?? []) as RaffleRow[];
   const ids = list.map((r) => r.id);
 
   if (ids.length === 0) {
     return NextResponse.json(emptyPayload(range));
   }
 
-  // 2) Pagos del organizador acotados a SUS sorteos (no confiar solo en RLS).
-  let paymentsQuery = supabase
-    .from("payments")
-    .select("id, raffle_id, amount, status, created_at")
-    .in("raffle_id", ids);
+  const priceById = new Map(
+    list.map((r) => [r.id, Number(r.price_per_number) || 0]),
+  );
 
-  if (from) {
-    paymentsQuery = paymentsQuery.gte("created_at", from.toISOString());
-  }
+  // 2) Conteos por sorteo: vendidos, reservados y visitas del período.
+  const perRaffle = await Promise.all(
+    ids.map(async (id) => {
+      const [soldRes, reservedRes, visitsRes] = await Promise.all([
+        supabase
+          .from("raffle_numbers")
+          .select("id", { count: "exact", head: true })
+          .eq("raffle_id", id)
+          .eq("status", "sold"),
+        supabase
+          .from("raffle_numbers")
+          .select("id", { count: "exact", head: true })
+          .eq("raffle_id", id)
+          .eq("status", "reserved"),
+        supabase
+          .from("raffle_visits")
+          .select("id", { count: "exact", head: true })
+          .eq("raffle_id", id)
+          .gte("created_at", (from ?? new Date(0)).toISOString()),
+      ]);
 
-  const { data: payments, error: paymentsError } = await paymentsQuery;
+      return {
+        id,
+        sold: soldRes.count ?? 0,
+        reserved: reservedRes.count ?? 0,
+        visits: visitsRes.error ? null : (visitsRes.count ?? 0),
+      };
+    }),
+  );
 
-  if (paymentsError) {
+  const soldById = new Map(perRaffle.map((r) => [r.id, r.sold]));
+  const reservedById = new Map(perRaffle.map((r) => [r.id, r.reserved]));
+  const visitsById = new Map(perRaffle.map((r) => [r.id, r.visits]));
+  const visitsOk = perRaffle.every((r) => r.visits !== null);
+
+  const sold = perRaffle.reduce((sum, r) => sum + r.sold, 0);
+  const reserved = perRaffle.reduce((sum, r) => sum + r.reserved, 0);
+  const visits = visitsOk
+    ? perRaffle.reduce((sum, r) => sum + (r.visits ?? 0), 0)
+    : null;
+
+  const revenue = list.reduce(
+    (sum, r) => sum + (soldById.get(r.id) ?? 0) * (priceById.get(r.id) ?? 0),
+    0,
+  );
+
+  // 3) Ventas por día (para la serie y comparativa).
+  const soldQuery = supabase
+    .from("raffle_numbers")
+    .select("raffle_id, sold_at")
+    .in("raffle_id", ids)
+    .eq("status", "sold")
+    .gte("sold_at", (from ?? new Date(0)).toISOString())
+    .limit(10000);
+
+  const { data: soldRows, error: soldError } = await soldQuery;
+
+  if (soldError) {
     return NextResponse.json(
-      { error: "No se pudieron leer los pagos" },
+      { error: "No se pudieron leer las ventas" },
       { status: 500 },
     );
   }
 
-  const rows = (payments ?? []) as {
-    id: string;
-    raffle_id: string;
-    amount: number | string;
-    status: string;
-    created_at: string;
-  }[];
-
-  const approved = rows.filter((p) => p.status === "approved");
-
-  // 3) Inventario actual (conteos eficientes).
-  const [soldRes, reservedRes] = await Promise.all([
-    supabase
-      .from("raffle_numbers")
-      .select("id", { count: "exact", head: true })
-      .in("raffle_id", ids)
-      .eq("status", "sold"),
-    supabase
-      .from("raffle_numbers")
-      .select("id", { count: "exact", head: true })
-      .in("raffle_id", ids)
-      .eq("status", "reserved"),
-  ]);
-
-  // 4) Visitas (requiere la migración 0026; si no está, queda null).
-  let visits: number | null = null;
-  const visitsRes = await supabase
-    .from("raffle_visits")
-    .select("id", { count: "exact", head: true })
-    .in("raffle_id", ids)
-    .gte("created_at", (from ?? new Date(0)).toISOString());
-
-  if (!visitsRes.error) {
-    visits = visitsRes.count ?? 0;
-  }
-
-  const revenue = approved.reduce((sum, p) => sum + Number(p.amount), 0);
-  const approvedPayments = approved.length;
-  const totalPayments = rows.length;
-
-  // 4) Serie diaria (recaudación y pagos aprobados por día).
   const days = buildDays(range);
   const dailyMap = new Map<string, { revenue: number; payments: number }>();
   days.forEach((date) => dailyMap.set(date, { revenue: 0, payments: 0 }));
 
-  approved.forEach((p) => {
-    const key = new Date(p.created_at).toLocaleDateString("en-CA", {
+  for (const row of (soldRows ?? []) as { raffle_id: string; sold_at: string }[]) {
+    if (!row.sold_at) continue;
+    const key = new Date(row.sold_at).toLocaleDateString("en-CA", {
       timeZone: TZ,
     });
     const bucket = dailyMap.get(key);
-    if (bucket) {
-      bucket.revenue += Number(p.amount);
-      bucket.payments += 1;
-    }
-  });
+    if (!bucket) continue;
+    bucket.revenue += priceById.get(row.raffle_id) ?? 0;
+    bucket.payments += 1;
+  }
 
   const daily = days.map((date) => ({
     date,
@@ -295,27 +308,33 @@ export async function GET(request: NextRequest) {
     payments: dailyMap.get(date)?.payments ?? 0,
   }));
 
-  // 5) Detalle por sorteo.
-  const perRaffle = new Map<string, { revenue: number; payments: number }>();
-  approved.forEach((p) => {
-    const current = perRaffle.get(p.raffle_id) ?? { revenue: 0, payments: 0 };
-    current.revenue += Number(p.amount);
-    current.payments += 1;
-    perRaffle.set(p.raffle_id, current);
-  });
-
+  // 4) Detalle por sorteo con conversión.
   const byRaffle = list
-    .map((r) => ({
-      id: r.id,
-      title: r.title,
-      status: r.status,
-      revenue: perRaffle.get(r.id)?.revenue ?? 0,
-      payments: perRaffle.get(r.id)?.payments ?? 0,
-    }))
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 12);
+    .map((r) => {
+      const soldCount = soldById.get(r.id) ?? 0;
+      const reservedCount = reservedById.get(r.id) ?? 0;
+      const raffleVisits = visitsById.get(r.id) ?? null;
+      const participations = soldCount + reservedCount;
 
-  // 6) Comparativa con el período anterior equivalente (mes a mes, etc.).
+      return {
+        id: r.id,
+        title: r.title,
+        status: r.status,
+        revenue: soldCount * (priceById.get(r.id) ?? 0),
+        sold: soldCount,
+        reserved: reservedCount,
+        visits: raffleVisits,
+        conversion: participations > 0 ? soldCount / participations : 0,
+        visitConversion:
+          raffleVisits !== null && raffleVisits > 0
+            ? soldCount / raffleVisits
+            : null,
+      };
+    })
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 20);
+
+  // 5) Comparativa con la ventana anterior (misma definición de ventas).
   let comparison: {
     label: string;
     revenue: number;
@@ -328,51 +347,61 @@ export async function GET(request: NextRequest) {
   const prevWindow = previousWindow(range, from);
 
   if (prevWindow) {
-    const { data: prevPayments, error: prevError } = await supabase
-      .from("payments")
-      .select("amount, status, created_at")
-      .in("raffle_id", ids)
-      .gte("created_at", prevWindow.from.toISOString())
-      .lt("created_at", prevWindow.to.toISOString());
+    const [prevSoldRes, prevVisitsRes] = await Promise.all([
+      supabase
+        .from("raffle_numbers")
+        .select("raffle_id")
+        .in("raffle_id", ids)
+        .eq("status", "sold")
+        .gte("sold_at", prevWindow.from.toISOString())
+        .lt("sold_at", prevWindow.to.toISOString())
+        .limit(10000),
+      supabase
+        .from("raffle_visits")
+        .select("id", { count: "exact", head: true })
+        .in("raffle_id", ids)
+        .gte("created_at", prevWindow.from.toISOString())
+        .lt("created_at", prevWindow.to.toISOString()),
+    ]);
 
-    if (!prevError) {
-      const prevRows = (prevPayments ?? []) as {
-        amount: number | string;
-        status: string;
-      }[];
-      const prevApproved = prevRows.filter((p) => p.status === "approved");
-      const prevRevenue = prevApproved.reduce(
-        (sum, p) => sum + Number(p.amount),
+    if (!prevSoldRes.error && !prevVisitsRes.error) {
+      const prevRows = (prevSoldRes.data ?? []) as { raffle_id: string }[];
+      const prevRevenue = prevRows.reduce(
+        (sum, row) => sum + (priceById.get(row.raffle_id) ?? 0),
         0,
       );
+      const prevSold = prevRows.length;
+      const prevVisits = prevVisitsRes.count ?? 0;
 
       comparison = {
         label: prevWindow.label,
         revenue: prevRevenue,
-        approvedPayments: prevApproved.length,
-        totalPayments: prevRows.length,
-        avgTicket:
-          prevApproved.length > 0 ? prevRevenue / prevApproved.length : 0,
-        conversion:
-          prevRows.length > 0 ? prevApproved.length / prevRows.length : 0,
+        approvedPayments: prevSold,
+        totalPayments: prevSold,
+        avgTicket: prevSold > 0 ? prevRevenue / prevSold : 0,
+        conversion: prevVisits > 0 ? prevSold / prevVisits : 0,
       };
     }
   }
+
+  const participations = sold + reserved;
+  const visitConversion =
+    visits !== null && visits > 0 ? sold / visits : null;
+  const conversion = visitConversion ?? 0;
 
   return NextResponse.json({
     range,
     generatedAt: new Date().toISOString(),
     kpis: {
       revenue,
-      approvedPayments,
-      totalPayments,
-      avgTicket: approvedPayments > 0 ? revenue / approvedPayments : 0,
-      conversion: totalPayments > 0 ? approvedPayments / totalPayments : 0,
-      sold: soldRes.count ?? 0,
-      reserved: reservedRes.count ?? 0,
+      approvedPayments: sold,
+      totalPayments: participations,
+      avgTicket: sold > 0 ? revenue / sold : 0,
+      conversion,
+      sold,
+      reserved,
       visits,
-      visitConversion:
-        visits !== null && visits > 0 ? approvedPayments / visits : null,
+      visitConversion,
       activeRaffles: list.filter((r) => r.status === "active").length,
       totalRaffles: list.length,
     },

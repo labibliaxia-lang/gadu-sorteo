@@ -29,7 +29,11 @@ interface RaffleRow {
   title: string;
   status: string;
   revenue: number;
-  payments: number;
+  sold: number;
+  reserved: number;
+  visits: number | null;
+  conversion: number;
+  visitConversion: number | null;
 }
 
 interface AnalyticsKpis {
@@ -175,15 +179,17 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
     lines.push("");
     lines.push("KPI;Valor");
     lines.push(`Recaudacion;${data.kpis.revenue}`);
-    lines.push(`Pagos aprobados;${data.kpis.approvedPayments}`);
-    lines.push(`Pagos totales;${data.kpis.totalPayments}`);
+    lines.push(`Ventas confirmadas;${data.kpis.approvedPayments}`);
+    lines.push(`Participaciones (ventas + reservas);${data.kpis.totalPayments}`);
     lines.push(`Ticket promedio;${data.kpis.avgTicket.toFixed(2)}`);
-    lines.push(`Conversion;${(data.kpis.conversion * 100).toFixed(2)}%`);
+    lines.push(
+      `Conversion visitas a venta;${(data.kpis.conversion * 100).toFixed(2)}%`,
+    );
     lines.push(`Numeros vendidos;${data.kpis.sold}`);
     lines.push(`Numeros reservados;${data.kpis.reserved}`);
     lines.push(`Visitas por render;${data.kpis.visits ?? ""}`);
     lines.push(
-      `Pagos por visita (por render);${
+      `Ventas por visita (por render);${
         data.kpis.visitConversion === null
           ? ""
           : (data.kpis.visitConversion * 100).toFixed(2)
@@ -195,24 +201,30 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
       lines.push("");
       lines.push(`Comparativa vs ${data.comparison.label};Valor`);
       lines.push(`Recaudacion previa;${data.comparison.revenue}`);
-      lines.push(`Pagos aprobados previos;${data.comparison.approvedPayments}`);
+      lines.push(`Ventas previas;${data.comparison.approvedPayments}`);
       lines.push(`Ticket promedio previo;${data.comparison.avgTicket.toFixed(2)}`);
       lines.push(
-        `Tasa de aprobacion previa;${(
+        `Conversion visitas a venta previa;${(
           data.comparison.conversion * 100
         ).toFixed(2)}%`,
       );
     }
     lines.push("");
-    lines.push("Fecha;Recaudacion;Pagos aprobados");
+    lines.push("Fecha;Recaudacion;Ventas confirmadas");
     data.daily.forEach((d) => {
       lines.push(`${d.date};${d.revenue};${d.payments}`);
     });
     lines.push("");
-    lines.push("Sorteo;Estado;Recaudacion;Pagos aprobados");
+    lines.push(
+      "Sorteo;Estado;Visitas;Participaciones;Ventas;Conversion reserva a venta;Recaudacion",
+    );
     data.byRaffle.forEach((r) => {
       const title = `"${r.title.replace(/"/g, '""')}"`;
-      lines.push(`${title};${r.status};${r.revenue};${r.payments}`);
+      lines.push(
+        `${title};${r.status};${r.visits ?? ""};${r.sold + r.reserved};${r.sold};${(
+          r.conversion * 100
+        ).toFixed(2)}%;${r.revenue}`,
+      );
     });
 
     const csv = `\uFEFF${lines.join("\r\n")}`;
@@ -319,7 +331,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm text-muted-foreground">
-                Pagos aprobados
+                Ventas confirmadas
               </p>
               <p className="truncate text-xl font-bold">
                 {loading || !kpis ? "—" : kpis.approvedPayments}
@@ -365,7 +377,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm text-muted-foreground">
-                Tasa de aprobación
+                Conversión visitas→venta
               </p>
               <p className="truncate text-xl font-bold">
                 {loading || !kpis ? "—" : pct(kpis.conversion)}
@@ -386,7 +398,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
       <Card>
         <CardContent className="space-y-3 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold">Embudo: renders → pago</p>
+            <p className="text-sm font-semibold">Embudo: visitas → venta</p>
             <span className="text-xs text-muted-foreground">
               Una visita = una navegación; el mismo visitante cuenta varias veces
             </span>
@@ -405,14 +417,14 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
               </p>
             </div>
             <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Pagos aprobados</p>
+              <p className="text-xs text-muted-foreground">Ventas confirmadas</p>
               <p className="text-lg font-bold">
                 {loading || !kpis ? "—" : kpis.approvedPayments}
               </p>
             </div>
             <div className="rounded-lg border p-3">
               <p className="text-xs text-muted-foreground">
-                Pagos por visita (por render)
+                Ventas por visita (por render)
               </p>
               <p className="text-lg font-bold">
                 {loading || !kpis || kpis.visitConversion === null
@@ -479,7 +491,9 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
       <Card>
         <CardContent className="p-0">
           <div className="flex items-center justify-between p-4">
-            <p className="text-sm font-semibold">Recaudación por sorteo</p>
+            <p className="text-sm font-semibold">
+              Comparativa de conversión por sorteo
+            </p>
             <span className="text-xs text-muted-foreground">
               Top {data?.byRaffle.length ?? 0}
             </span>
@@ -491,15 +505,18 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
                 <tr>
                   <th className="p-3">Sorteo</th>
                   <th className="p-3">Estado</th>
+                  <th className="p-3 text-right">Visitas</th>
+                  <th className="p-3 text-right">Particip.</th>
+                  <th className="p-3 text-right">Ventas</th>
+                  <th className="p-3 text-right">Conv.</th>
                   <th className="p-3 text-right">Recaudación</th>
-                  <th className="p-3 text-right">Pagos</th>
                 </tr>
               </thead>
               <tbody>
                 {(data?.byRaffle ?? []).length === 0 ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={7}
                       className="p-6 text-center text-muted-foreground"
                     >
                       Sin movimientos en el período.
@@ -517,9 +534,18 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
                         </Badge>
                       </td>
                       <td className="p-3 text-right">
+                        {r.visits !== null ? r.visits : "—"}
+                      </td>
+                      <td className="p-3 text-right">
+                        {r.sold + r.reserved}
+                      </td>
+                      <td className="p-3 text-right">{r.sold}</td>
+                      <td className="p-3 text-right">
+                        {pct(r.conversion)}
+                      </td>
+                      <td className="p-3 text-right">
                         {formatPrice(r.revenue)}
                       </td>
-                      <td className="p-3 text-right">{r.payments}</td>
                     </tr>
                   ))
                 )}
