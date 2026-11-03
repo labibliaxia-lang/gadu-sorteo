@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPreference } from "@/lib/mercadopago";
 import { computeAmount } from "@/lib/payments";
+import { limitCheckout, retryAfterSeconds } from "@/lib/ratelimit";
 
 const checkoutSchema = z.object({
   raffleId: z.string().uuid("Sorteo inválido"),
@@ -84,6 +85,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Debes iniciar sesión para participar" },
       { status: 401 },
+    );
+  }
+
+  const rateLimit = await limitCheckout(user.id);
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Esperá un minuto e intentá de nuevo." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(retryAfterSeconds(rateLimit)) },
+      },
     );
   }
 

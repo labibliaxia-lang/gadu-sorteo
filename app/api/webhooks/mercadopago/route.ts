@@ -9,6 +9,11 @@ import {
   isTerminalPaymentStatus,
   mapMpFailureStatus,
 } from "@/lib/payments";
+import {
+  getClientIp,
+  limitWebhook,
+  retryAfterSeconds,
+} from "@/lib/ratelimit";
 
 /**
  * Webhook de Mercado Pago.
@@ -60,6 +65,22 @@ export async function POST(request: NextRequest) {
       }`,
     );
     return NextResponse.json({ error: "Firma inválida" }, { status: 401 });
+  }
+
+  // Se limita después de validar la firma: así el tráfico no autenticado no
+  // consume la cuota de Mercado Pago y no se bloquean notificaciones legítimas.
+  const rateLimit = await limitWebhook(getClientIp(request.headers));
+  if (!rateLimit.success) {
+    console.warn("Webhook MP: rate limit alcanzado", {
+      requestId,
+    });
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes" },
+      {
+        status: 429,
+        headers: { "Retry-After": String(retryAfterSeconds(rateLimit)) },
+      },
+    );
   }
 
   let payload: {

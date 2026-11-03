@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { computeAmount } from "@/lib/payments";
+import { limitMockPayment, retryAfterSeconds } from "@/lib/ratelimit";
 
 const mockSchema = z.object({
   raffleId: z.string().uuid("Sorteo inválido"),
@@ -71,6 +72,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Debes iniciar sesión" },
       { status: 401 },
+    );
+  }
+
+  const rateLimit = await limitMockPayment(user.id);
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Esperá un minuto e intentá de nuevo." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(retryAfterSeconds(rateLimit)) },
+      },
     );
   }
 
