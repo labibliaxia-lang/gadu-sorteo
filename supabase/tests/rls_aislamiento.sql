@@ -202,3 +202,7 @@ end $$;
 
 reset role;
 rollback;
+
+-- Resultado visible: si llegaste acá, todos los chequeos pasaron.
+-- Si algo hubiera fallado, el script habría cortado con FALLA antes.
+select 'OK: aislamiento correcto (B no edita A; A sí edita su propio sorteo)' as resultado;
