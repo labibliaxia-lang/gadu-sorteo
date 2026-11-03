@@ -24,6 +24,11 @@ export interface PublicOrganizer {
   full_name: string;
   avatar_url: string | null;
   is_verified: boolean;
+  /** Campos de presentación (migración 0053). */
+  bio: string | null;
+  website_url: string | null;
+  location: string | null;
+  instagram_url: string | null;
 }
 
 export interface Profile {

@@ -47,6 +47,10 @@ interface PublicOrganizerRow {
   full_name: string;
   avatar_url: string | null;
   is_verified: boolean;
+  bio: string | null;
+  website_url: string | null;
+  location: string | null;
+  instagram_url: string | null;
 }
 
 /**
@@ -108,6 +112,16 @@ export default async function OrganizerProfilePage({
     .slice(0, 9);
 
   const initial = (organizer.full_name || "O").charAt(0).toUpperCase();
+  const instagramHref = organizer.instagram_url
+    ? organizer.instagram_url.startsWith("http")
+      ? organizer.instagram_url
+      : `https://instagram.com/${organizer.instagram_url.replace(/^@/, "")}`
+    : null;
+  const websiteHref = organizer.website_url
+    ? organizer.website_url.startsWith("http")
+      ? organizer.website_url
+      : `https://${organizer.website_url}`
+    : null;
 
   const { data: reviewRows } = await supabase
     .from("reviews")
@@ -165,6 +179,44 @@ export default async function OrganizerProfilePage({
           )}
         </div>
       </header>
+
+      {(organizer.bio ||
+        organizer.location ||
+        websiteHref ||
+        instagramHref) && (
+        <section className="space-y-3 rounded-xl border bg-card p-5 shadow-soft">
+          {organizer.bio && (
+            <p className="whitespace-pre-line text-sm text-muted-foreground">
+              {organizer.bio}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            {organizer.location && (
+              <span className="text-muted-foreground">{organizer.location}</span>
+            )}
+            {websiteHref && (
+              <a
+                href={websiteHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-700 underline-offset-4 hover:underline dark:text-brand-300"
+              >
+                Sitio web
+              </a>
+            )}
+            {instagramHref && (
+              <a
+                href={instagramHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-700 underline-offset-4 hover:underline dark:text-brand-300"
+              >
+                Instagram
+              </a>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Sorteos activos</h2>

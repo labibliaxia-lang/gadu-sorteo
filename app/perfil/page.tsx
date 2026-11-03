@@ -10,6 +10,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { setEmailPreference } from "@/app/perfil/actions";
 import { acceptTerms } from "@/app/actions/terms";
+import { ProfileEditor } from "@/components/ProfileEditor";
 import { TERMS_VERSION } from "@/lib/terms";
 import { formatDateTime } from "@/lib/utils";
 
@@ -22,6 +23,11 @@ interface ProfileData {
   phone: string | null;
   location: string | null;
   instagram_url: string | null;
+  bio: string | null;
+  website_url: string | null;
+  plan: string;
+  slug: string | null;
+  verification_status: string;
   email_opt_in: boolean;
   terms_accepted_at: string | null;
   terms_version: string | null;
@@ -29,7 +35,10 @@ interface ProfileData {
 
 export default function PerfilPage() {
   const supabase = createClient();
-  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [user, setUser] = useState<{
+    id: string;
+    email?: string;
+  } | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingEmail, setSavingEmail] = useState(false);
@@ -48,7 +57,7 @@ export default function PerfilPage() {
         const { data } = await supabase
           .from("profiles")
           .select(
-            "full_name, role, role_requested, avatar_url, email, phone, location, instagram_url, email_opt_in, terms_accepted_at, terms_version",
+            "full_name, role, role_requested, avatar_url, email, phone, location, instagram_url, bio, website_url, plan, slug, verification_status, email_opt_in, terms_accepted_at, terms_version",
           )
           .eq("id", user.id)
           .maybeSingle();
@@ -127,17 +136,8 @@ export default function PerfilPage() {
     );
   }
 
-  const initial = (profile?.full_name || user.email || "U")
-    .charAt(0)
-    .toUpperCase();
   const isAdmin =
     profile?.role === "admin" || profile?.role === "superadmin";
-  const roleLabel =
-    profile?.role === "admin"
-      ? "Organizador"
-      : profile?.role === "superadmin"
-        ? "Superadmin"
-        : "Usuario";
 
   return (
     <div className="space-y-6">
@@ -146,27 +146,66 @@ export default function PerfilPage() {
         <p className="text-muted-foreground">Tu información de cuenta.</p>
       </header>
 
-      <Card>
-        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-2xl font-bold text-white">
-            {initial}
-          </div>
-          <div className="min-w-0 space-y-1">
-            <p className="flex flex-wrap items-center gap-2 font-semibold">
-              {profile?.full_name || "Usuario"}
-              <Badge variant={isAdmin ? "success" : "secondary"}>
-                {roleLabel}
-              </Badge>
-            </p>
-            {user.email && (
-              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Mail className="h-4 w-4" />
-                {user.email}
+      <ProfileEditor
+        profile={{
+          id: user.id,
+          full_name: profile?.full_name ?? null,
+          phone: profile?.phone ?? null,
+          location: profile?.location ?? null,
+          instagram_url: profile?.instagram_url ?? null,
+          bio: profile?.bio ?? null,
+          website_url: profile?.website_url ?? null,
+          avatar_url: profile?.avatar_url ?? null,
+          role: profile?.role ?? "user",
+          plan: profile?.plan ?? "organizador",
+          slug: profile?.slug ?? null,
+          verification_status: profile?.verification_status ?? "pending",
+        }}
+        email={user?.email ?? null}
+        onSaved={(patch) =>
+          setProfile((current) =>
+            current ? { ...current, ...patch } : current,
+          )
+        }
+      />
+
+      {isAdmin && (
+        <Card>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
+            <div className="min-w-0">
+              <p className="font-semibold">Verificación de identidad (KYC)</p>
+              <p className="text-xs text-muted-foreground">
+                El flujo está disponible. Con prepago manual no es obligatorio;
+                se puede volver a exigir con la variable
+                NEXT_PUBLIC_REQUIRE_KYC=true.
               </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={
+                  profile?.verification_status === "approved"
+                    ? "success"
+                    : profile?.verification_status === "rejected"
+                      ? "destructive"
+                      : "warning"
+                }
+              >
+                {profile?.verification_status === "approved"
+                  ? "Aprobada"
+                  : profile?.verification_status === "rejected"
+                    ? "Rechazada"
+                    : "Pendiente"}
+              </Badge>
+              <Link
+                href="/admin/verificacion"
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Gestionar
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="space-y-4 p-6">

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
 import { TERMS_VERSION } from "@/lib/terms";
@@ -8,6 +9,109 @@ import { TERMS_VERSION } from "@/lib/terms";
 export type EmailPreferenceResult =
   | { ok: true; optIn: boolean }
   | { ok: false; error: string };
+
+export type UpdateProfileResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+const optionalText = (max: number) =>
+  z.string().trim().max(max).optional().default("");
+
+const profileSchema = z.object({
+  full_name: z
+    .string()
+    .trim()
+    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .max(80, "El nombre no puede superar los 80 caracteres"),
+  phone: optionalText(30),
+  location: optionalText(80),
+  instagram_url: optionalText(120),
+  bio: optionalText(400),
+  website_url: optionalText(200),
+  avatar_url: optionalText(500),
+});
+
+function avatarIsAllowed(url: string): boolean {
+  const base = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "")
+    .trim()
+    .replace(/\/+$/, "");
+  return (
+    !!base &&
+    url.startsWith(`${base}/storage/v1/object/public/avatars/`)
+  );
+}
+
+/**
+ * Actualiza solo los campos de presentación del perfil propio.
+ * Rol, plan, verificación y estado de cuenta no se pueden tocar desde acá.
+ */
+export async function updateProfile(
+  input: unknown,
+): Promise<UpdateProfileResult> {
+  const parsed = profileSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Datos inválidos.",
+    };
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { ok: false, error: "No autenticado" };
+
+  const { data: current } = await supabase
+    .from("profiles")
+    .select("avatar_url, slug")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const values = parsed.data;
+
+  if (values.avatar_url) {
+    const unchanged = values.avatar_url === current?.avatar_url;
+    if (!unchanged && !avatarIsAllowed(values.avatar_url)) {
+      return {
+        ok: false,
+        error: "La foto tiene que subirse desde este perfil.",
+      };
+    }
+  }
+
+  let website = values.website_url;
+  if (website && !/^https?:\/\//i.test(website)) {
+    website = `https://${website}`;
+  }
+
+  let instagram = values.instagram_url;
+  if (instagram.startsWith("@")) {
+    instagram = `https://instagram.com/${instagram.slice(1)}`;
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      full_name: values.full_name,
+      phone: values.phone || null,
+      location: values.location || null,
+      instagram_url: instagram || null,
+      bio: values.bio || null,
+      website_url: website || null,
+      avatar_url: values.avatar_url || null,
+    })
+    .eq("id", user.id);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/perfil");
+  revalidatePath("/organizador/[slug]", "page");
+  if (current?.slug) revalidatePath(`/organizador/${current.slug}`);
+
+  return { ok: true };
+}
 
 /**
  * Guarda la preferencia de avisos por email del usuario actual.
