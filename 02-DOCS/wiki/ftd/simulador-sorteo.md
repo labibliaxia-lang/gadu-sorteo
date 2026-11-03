@@ -37,6 +37,8 @@ certificado, accesible solo desde el panel superadmin.
 - `supabase/migrations/0055_sandbox_multi_prize.sql`: columnas `prizes_count`, `winners` (JSONB) y
   `results_hash`; RPC `create_sandbox_commitment_v2(p_count, p_prizes)` y
   `execute_sandbox_draw_v2(run_id)`.
+- `supabase/migrations/0056_sandbox_numbers_limit.sql`: sube el CHECK de `numbers_count` de 1000 a
+  10000 (la UI ya permitía 10.000 pero el constraint seguía en 1000).
 - `components/MultiPrizeVerifier.tsx`: recalcula todos los premios en el navegador y muestra un check
   por puesto, más el `results_hash` combinado.
 - `components/WinnerCertificate.tsx`: acepta `prizeLabel`; el título del PNG y el nombre del archivo
