@@ -30,6 +30,8 @@ aceptación, y bloquear a las cuentas que entran por Google hasta que acepten.
   aceptación; permite ver Términos/Privacidad antes de aceptar.
 - `app/actions/terms.ts` (`acceptTerms`): validación de versión con Zod y actualización de la
   evidencia.
+- `app/perfil/page.tsx`: muestra la versión aceptada, la fecha y la versión vigente, con enlaces a
+  Términos y Privacidad.
 
 **Out:** pagos, reservas, sorteos, motor y lógica de Google OAuth.
 
@@ -65,6 +67,9 @@ perfil y el modal desaparece.
 
 **6 — observado.** `npm run typecheck` → 0. `npm run lint` → `✔ No ESLint warnings or errors`.
 `npm test` → 38/38. `npm run build` → 0.
+
+**7 — observado.** `/perfil` lee `terms_version` y muestra «Términos aceptados · Versión 1.0 ·
+fecha», junto a la versión vigente; si falta la aceptación lo indica en ámbar.
 
 **Nota de producto.** El registro actual es solo con Google (`/register` redirige a `/login`), por eso
 el checkbox vive en el login, que es la puerta real de alta. El trigger de email queda listo para

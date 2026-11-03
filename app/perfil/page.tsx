@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { setEmailPreference } from "@/app/perfil/actions";
+import { TERMS_VERSION } from "@/lib/terms";
+import { formatDateTime } from "@/lib/utils";
 
 interface ProfileData {
   full_name: string | null;
@@ -21,6 +23,7 @@ interface ProfileData {
   instagram_url: string | null;
   email_opt_in: boolean;
   terms_accepted_at: string | null;
+  terms_version: string | null;
 }
 
 export default function PerfilPage() {
@@ -42,7 +45,7 @@ export default function PerfilPage() {
         const { data } = await supabase
           .from("profiles")
           .select(
-            "full_name, role, role_requested, avatar_url, email, phone, location, instagram_url, email_opt_in, terms_accepted_at",
+            "full_name, role, role_requested, avatar_url, email, phone, location, instagram_url, email_opt_in, terms_accepted_at, terms_version",
           )
           .eq("id", user.id)
           .maybeSingle();
@@ -72,6 +75,8 @@ export default function PerfilPage() {
               email_opt_in: next,
               terms_accepted_at:
                 current.terms_accepted_at ?? new Date().toISOString(),
+              terms_version:
+                current.terms_version ?? TERMS_VERSION,
             }
           : current,
       );
@@ -194,6 +199,42 @@ export default function PerfilPage() {
               >
                 {profile?.email_opt_in ? "Activados" : "Desactivados"}
               </p>
+
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <p className="flex items-center gap-1.5 text-xs font-semibold">
+                  <ShieldCheck className="h-4 w-4 text-amber-700 dark:text-amber-300" />
+                  Términos aceptados
+                </p>
+                {profile?.terms_accepted_at ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Versión{" "}
+                    <strong className="text-foreground">
+                      {profile.terms_version ?? "1.0"}
+                    </strong>{" "}
+                    · {formatDateTime(profile.terms_accepted_at)}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-amber-800 dark:text-amber-300">
+                    Todavía no registramos tu aceptación.
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Versión vigente: {TERMS_VERSION}.{" "}
+                  <Link
+                    href="/terminos"
+                    className="underline underline-offset-4"
+                  >
+                    Ver Términos
+                  </Link>{" "}
+                  ·{" "}
+                  <Link
+                    href="/privacidad"
+                    className="underline underline-offset-4"
+                  >
+                    Privacidad
+                  </Link>
+                </p>
+              </div>
               {emailError && (
                 <p className="text-xs text-destructive">{emailError}</p>
               )}

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+import { TERMS_VERSION } from "@/lib/terms";
 
 export type EmailPreferenceResult =
   | { ok: true; optIn: boolean }
@@ -28,6 +29,7 @@ export async function setEmailPreference(
   const update: Record<string, unknown> = { email_opt_in: Boolean(optIn) };
   if (optIn) {
     update.terms_accepted_at = new Date().toISOString();
+    update.terms_version = TERMS_VERSION;
   }
 
   const { error } = await supabase
