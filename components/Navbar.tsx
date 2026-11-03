@@ -145,7 +145,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
         </Link>
 
         {/* Navegación desktop */}
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav className="hidden min-w-0 items-center gap-1 xl:flex">
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
@@ -158,7 +158,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
         </nav>
 
         {/* Área de usuario desktop */}
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className="hidden shrink-0 items-center gap-2 xl:flex">
           {userId ? (
             <>
               {isAdmin && (
@@ -239,34 +239,40 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label="Cambiar tema"
-          className="rounded-md p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground"
-        >
-          {mounted && resolvedTheme === "dark" ? (
-            <Sun className="h-5 w-5" />
-          ) : (
-            <Moon className="h-5 w-5" />
-          )}
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Cambiar tema"
+            className="rounded-md p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground"
+          >
+            {mounted && resolvedTheme === "dark" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </button>
 
-        {/* Toggle móvil / tablet */}
-        <button
-          type="button"
-          className="lg:hidden"
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-label="Abrir menú"
-          aria-expanded={mobileOpen}
-        >
-          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+          {/* Toggle móvil / tablet */}
+          <button
+            type="button"
+            className="xl:hidden"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Menú móvil / tablet */}
       {mobileOpen && (
-        <div className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t lg:hidden">
+        <div className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t xl:hidden">
           <nav className="flex flex-col gap-1 p-4">
             {NAV_LINKS.map((l) => (
               <Link
