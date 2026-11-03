@@ -1,6 +1,7 @@
 "use server";
 
 import { sendReservationEmail, sendOrganizerReservationEmail } from "@/lib/email";
+import { allowRateLimitedAction } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -61,6 +62,17 @@ export async function notifyReservation(
       .maybeSingle();
 
     if (!profile?.email_opt_in || !profile.terms_accepted_at) return;
+
+    // Anti-spam: como máximo 5 avisos de reserva cada 10 minutos por cuenta.
+    if (
+      !(await allowRateLimitedAction(
+        `email:reservation:${user.id}`,
+        5,
+        600,
+      ))
+    ) {
+      return;
+    }
 
     await sendReservationEmail({
       to: user.email,

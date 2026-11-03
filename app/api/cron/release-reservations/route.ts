@@ -48,11 +48,25 @@ async function handle(request: NextRequest) {
     console.error("Cron: error enviando recordatorios de plan", error);
   }
 
+  // Limpieza de ventanas viejas de rate limiting (0040).
+  const { error: cleanupError } = await admin
+    .from("rate_limits")
+    .delete()
+    .lt(
+      "window_start",
+      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    );
+
+  if (cleanupError) {
+    console.error("Cron: error limpiando rate limits", cleanupError);
+  }
+
   return NextResponse.json({
     released: released ?? 0,
     plans: expiredPlans ?? null,
     plansOk: !expiryError,
     reminders,
+    rateLimitCleanup: !cleanupError,
   });
 }
 
