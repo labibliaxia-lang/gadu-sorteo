@@ -17,6 +17,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
   ASSIGNABLE_ROLES,
@@ -302,7 +303,7 @@ export function SuperAdminDashboard({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border">
+      <div className="hidden overflow-x-auto rounded-lg border md:block">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
             <tr>
@@ -439,6 +440,114 @@ export function SuperAdminDashboard({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Móvil: una tarjeta por usuario, sin scroll horizontal */}
+      <div className="space-y-2 md:hidden">
+        {users.length === 0 ? (
+          <EmptyState
+            title={loading ? "Buscando…" : "Sin resultados"}
+            description="Probá con otra búsqueda o filtro de rol."
+          />
+        ) : (
+          users.map((u) => {
+            const isSuper = u.role === "superadmin";
+            return (
+              <div
+                key={u.id}
+                className="rounded-xl border bg-card p-4 shadow-soft"
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    aria-label={`Seleccionar ${u.email ?? u.id}`}
+                    className="mt-1 h-4 w-4 cursor-pointer accent-brand-500 disabled:cursor-not-allowed"
+                    checked={selected.has(u.id)}
+                    onChange={() => toggle(u.id)}
+                    disabled={isSuper}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">
+                      {u.full_name || "—"}
+                    </p>
+                    <p className="break-all text-xs text-muted-foreground">
+                      {u.email || "—"}
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      <Badge
+                        variant={
+                          isSuper
+                            ? "default"
+                            : u.role === "admin"
+                              ? "success"
+                              : "secondary"
+                        }
+                      >
+                        {roleLabel(u.role)}
+                      </Badge>
+                      {u.admin_request_status === "pending" && (
+                        <Badge variant="warning">Solicitud pendiente</Badge>
+                      )}
+                      {u.is_banned && (
+                        <Badge variant="destructive">Suspendido</Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+                  {isSuper ? (
+                    <select
+                      aria-label={`Degradar el rol de ${u.email ?? u.id}`}
+                      className="rounded-md border bg-background px-2 py-1 text-xs disabled:opacity-60"
+                      value="superadmin"
+                      disabled={rowBusy === u.id || busy}
+                      onChange={(e) => {
+                        const next = e.target.value as AssignableRole;
+                        if (next !== "superadmin") void changeRole(u, next);
+                      }}
+                    >
+                      <option value="superadmin">Superadmin (actual)</option>
+                      {ROLE_OPTIONS.filter(
+                        (option) => option.value !== "superadmin",
+                      ).map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <select
+                      aria-label={`Rol de ${u.email ?? u.id}`}
+                      className="rounded-md border bg-background px-2 py-1 text-xs disabled:opacity-60"
+                      value={
+                        ASSIGNABLE_ROLES.includes(u.role as AssignableRole)
+                          ? u.role
+                          : "user"
+                      }
+                      disabled={rowBusy === u.id || busy}
+                      onChange={(e) =>
+                        void changeRole(u, e.target.value as AssignableRole)
+                      }
+                    >
+                      {ROLE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <Link
+                    href={`/admin/super/usuarios/${u.id}`}
+                    className="text-xs font-medium text-brand-700 hover:underline dark:text-brand-300"
+                  >
+                    Ver ficha
+                  </Link>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
       {/* Paginación */}

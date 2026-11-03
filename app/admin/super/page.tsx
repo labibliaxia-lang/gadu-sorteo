@@ -17,6 +17,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ResponsiveTable } from "@/components/ui/responsive-table";
 import { RoleRequestActions } from "@/components/RoleRequestActions";
 import { SuperAdminDashboard } from "@/components/SuperAdminDashboard";
 import { LicenseCodesPanel } from "@/components/LicenseCodesPanel";
@@ -833,36 +834,44 @@ export default async function SuperAdminPage({
             </CardContent>
           </Card>
         ) : (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-                <tr>
-                  <th className="p-3">Fecha</th>
-                  <th className="p-3">Superadmin</th>
-                  <th className="p-3">Acción</th>
-                  <th className="p-3">Usuario afectado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((l: any) => (
-                  <tr key={l.id} className="border-t">
-                    <td className="whitespace-nowrap p-3 text-muted-foreground">
-                      {formatDateTime(l.created_at)}
-                    </td>
-                    <td className="p-3">{l.admin_email || l.admin_id}</td>
-                    <td className="p-3">
-                      <Badge variant="secondary">
-                        {ACTION_LABELS[l.action] ?? l.action}
-                      </Badge>
-                    </td>
-                    <td className="p-3 text-muted-foreground">
-                      {l.target_email || l.target_user_id || "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ResponsiveTable
+            rows={logs ?? []}
+            getRowKey={(log) => log.id}
+            columns={[
+              {
+                key: "date",
+                header: "Fecha",
+                render: (log) => (
+                  <span className="whitespace-nowrap text-muted-foreground">
+                    {formatDateTime(log.created_at)}
+                  </span>
+                ),
+              },
+              {
+                key: "admin",
+                header: "Superadmin",
+                render: (log) => log.admin_email || log.admin_id,
+              },
+              {
+                key: "action",
+                header: "Acción",
+                render: (log) => (
+                  <Badge variant="secondary">
+                    {ACTION_LABELS[log.action] ?? log.action}
+                  </Badge>
+                ),
+              },
+              {
+                key: "target",
+                header: "Usuario afectado",
+                render: (log) => (
+                  <span className="break-all text-muted-foreground">
+                    {log.target_email || log.target_user_id || "—"}
+                  </span>
+                ),
+              },
+            ]}
+          />
         )}
       </div>
     </div>
