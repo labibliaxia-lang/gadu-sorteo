@@ -244,3 +244,67 @@ export async function sendWinnerEmail(params: {
     html,
   );
 }
+
+/** Aviso al organizador: entró una reserva nueva en uno de sus sorteos. */
+export async function sendOrganizerReservationEmail(params: {
+  to: string | null | undefined;
+  organizerName: string | null;
+  raffleTitle: string;
+  raffleId: string;
+  numbers: number[];
+}): Promise<boolean> {
+  const title = escapeHtml(params.raffleTitle);
+  const list = params.numbers.join(", ");
+  const base = siteUrl();
+  const panel = base ? `${base}/admin/sorteos/${params.raffleId}` : "";
+
+  const html = layout({
+    title: "Nueva reserva en tu sorteo",
+    body:
+      paragraph(
+        `Hola${params.organizerName ? ` ${escapeHtml(params.organizerName.split(" ")[0])}` : ""}: alguien reservó <strong>${params.numbers.length}</strong> número${params.numbers.length === 1 ? "" : "s"} en <strong>${title}</strong>.`,
+      ) +
+      numbersList(params.numbers) +
+      paragraph(
+        `Números: <strong>${escapeHtml(list)}</strong>. Cuando el comprador envíe el comprobante, marcalo como pagado desde el panel.`,
+      ) +
+      button(panel, "Ir al panel del sorteo"),
+  });
+
+  return sendEmail(
+    params.to,
+    `Nueva reserva en ${params.raffleTitle} · Gadu Sorteos`,
+    html,
+  );
+}
+
+/** Recordatorio al organizador: su plan vence en N días. */
+export async function sendPlanExpiryWarningEmail(params: {
+  to: string | null | undefined;
+  name: string | null;
+  plan: string;
+  daysLeft: number;
+  expiresAt: string;
+}): Promise<boolean> {
+  const planLabel = params.plan === "premium" ? "Premium" : "Organizador";
+  const base = siteUrl();
+  const planesUrl = base ? `${base}/planes` : "";
+
+  const html = layout({
+    title: `Tu plan ${planLabel} vence en ${params.daysLeft} día${params.daysLeft === 1 ? "" : "s"}`,
+    body:
+      paragraph(
+        `Hola${params.name ? ` ${escapeHtml(params.name.split(" ")[0])}` : ""}: tu plan <strong>${planLabel}</strong> de Gadu Sorteos vence el <strong>${escapeHtml(params.expiresAt)}</strong>.`,
+      ) +
+      paragraph(
+        "Para seguir creando sorteos y validando pagos, renovalo por transferencia. Si tenés dudas, respondé este correo.",
+      ) +
+      button(planesUrl, "Ver planes y renovar"),
+  });
+
+  return sendEmail(
+    params.to,
+    `Tu plan ${planLabel} vence en ${params.daysLeft} día${params.daysLeft === 1 ? "" : "s"} · Gadu Sorteos`,
+    html,
+  );
+}

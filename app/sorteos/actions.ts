@@ -1,6 +1,7 @@
 "use server";
 
-import { sendReservationEmail } from "@/lib/email";
+import { sendReservationEmail, sendOrganizerReservationEmail } from "@/lib/email";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -45,7 +46,7 @@ export async function notifyReservation(
 
     const { data: raffle } = await supabase
       .from("raffles")
-      .select("title")
+      .select("title, created_by")
       .eq("id", raffleId)
       .maybeSingle();
 
@@ -67,6 +68,32 @@ export async function notifyReservation(
       raffleId,
       numbers: clean,
     });
+
+    // Aviso al organizador (solo si dio consentimiento y no está suspendido).
+    const organizerId = raffle.created_by as string | null;
+    if (organizerId && organizerId !== user.id) {
+      const admin = createAdminClient();
+      const { data: organizer } = await admin
+        .from("profiles")
+        .select("email, full_name, email_opt_in, terms_accepted_at, is_banned")
+        .eq("id", organizerId)
+        .maybeSingle();
+
+      if (
+        organizer?.email &&
+        organizer.email_opt_in &&
+        organizer.terms_accepted_at &&
+        !organizer.is_banned
+      ) {
+        await sendOrganizerReservationEmail({
+          to: organizer.email as string,
+          organizerName: organizer.full_name as string | null,
+          raffleTitle: raffle.title as string,
+          raffleId,
+          numbers: clean,
+        });
+      }
+    }
   } catch (error) {
     console.error("[email] reserva:", error);
   }

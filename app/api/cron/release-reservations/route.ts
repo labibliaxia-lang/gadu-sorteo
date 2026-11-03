@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { sendPlanReminderEmails } from "@/lib/plan-reminders";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -39,10 +40,19 @@ async function handle(request: NextRequest) {
     console.error("Cron: error aplicando vencimientos de plan", expiryError);
   }
 
+  // Recordatorios 7/3/1 días antes del vencimiento (0039).
+  let reminders: { sent: number; skipped: number; failed: number } | null = null;
+  try {
+    reminders = await sendPlanReminderEmails();
+  } catch (error) {
+    console.error("Cron: error enviando recordatorios de plan", error);
+  }
+
   return NextResponse.json({
     released: released ?? 0,
     plans: expiredPlans ?? null,
     plansOk: !expiryError,
+    reminders,
   });
 }
 
