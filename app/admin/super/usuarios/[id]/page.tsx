@@ -14,6 +14,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ResponsiveTable } from "@/components/ui/responsive-table";
 import { SupportUserActions } from "@/components/SupportUserActions";
 import { PlanSupportActions } from "@/components/PlanSupportActions";
 import { formatDateTime, formatPrice } from "@/lib/utils";
@@ -285,44 +286,71 @@ export default async function SuperUserSupportPage({
         </Card>
 
         {planOrders.length > 0 && (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-                <tr>
-                  <th className="p-3">Fecha</th>
-                  <th className="p-3">Plan</th>
-                  <th className="p-3">Días</th>
-                  <th className="p-3">Monto</th>
-                  <th className="p-3">Medio</th>
-                  <th className="p-3">Nota</th>
-                  <th className="p-3">Vence</th>
-                </tr>
-              </thead>
-              <tbody>
-                {planOrders.map((order) => (
-                  <tr key={order.id} className="border-t">
-                    <td className="whitespace-nowrap p-3 text-muted-foreground">
-                      {formatDateTime(order.created_at)}
-                    </td>
-                    <td className="p-3 capitalize">{order.plan}</td>
-                    <td className="p-3">{order.days}</td>
-                    <td className="p-3">
-                      {formatPrice(Number(order.amount_ars))}
-                    </td>
-                    <td className="p-3 capitalize">{order.method}</td>
-                    <td className="max-w-[14rem] truncate p-3 text-muted-foreground">
-                      {order.note || "—"}
-                    </td>
-                    <td className="whitespace-nowrap p-3 text-muted-foreground">
-                      {order.expires_at
-                        ? formatDateTime(order.expires_at)
-                        : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ResponsiveTable
+            rows={planOrders}
+            getRowKey={(order) => order.id}
+            columns={[
+              {
+                key: "date",
+                header: "Fecha",
+                render: (order) => (
+                  <span className="whitespace-nowrap text-muted-foreground">
+                    {formatDateTime(order.created_at)}
+                  </span>
+                ),
+              },
+              {
+                key: "plan",
+                header: "Plan",
+                render: (order) => (
+                  <span className="capitalize">{order.plan}</span>
+                ),
+              },
+              {
+                key: "days",
+                header: "Días",
+                align: "right",
+                render: (order) => order.days,
+              },
+              {
+                key: "amount",
+                header: "Monto",
+                align: "right",
+                render: (order) => (
+                  <span className="font-mono">
+                    {formatPrice(Number(order.amount_ars))}
+                  </span>
+                ),
+              },
+              {
+                key: "method",
+                header: "Medio",
+                render: (order) => (
+                  <span className="capitalize">{order.method}</span>
+                ),
+              },
+              {
+                key: "note",
+                header: "Nota",
+                render: (order) => (
+                  <span className="text-muted-foreground">
+                    {order.note || "—"}
+                  </span>
+                ),
+              },
+              {
+                key: "expires",
+                header: "Vence",
+                render: (order) => (
+                  <span className="whitespace-nowrap text-muted-foreground">
+                    {order.expires_at
+                      ? formatDateTime(order.expires_at)
+                      : "—"}
+                  </span>
+                ),
+              },
+            ]}
+          />
         )}
       </section>
 
@@ -343,56 +371,72 @@ export default async function SuperUserSupportPage({
               </CardContent>
             </Card>
           ) : (
-            <div className="overflow-x-auto rounded-lg border">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-                  <tr>
-                    <th className="p-3">Sorteo</th>
-                    <th className="p-3">Estado</th>
-                    <th className="p-3">Vendidos</th>
-                    <th className="p-3">Reservados</th>
-                    <th className="p-3">Recaudación</th>
-                    <th className="p-3">Links</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {raffles.map((raffle) => {
-                    const row = byId.get(raffle.id);
-                    return (
-                      <tr key={raffle.id} className="border-t">
-                        <td className="max-w-[16rem] truncate p-3 font-medium">
-                          {raffle.title}
-                        </td>
-                        <td className="p-3 text-muted-foreground">
-                          {raffle.status}
-                        </td>
-                        <td className="p-3">{row?.sold ?? 0}</td>
-                        <td className="p-3">{row?.reserved ?? 0}</td>
-                        <td className="p-3">
-                          {formatPrice(
-                            Number(raffle.price_per_number) * (row?.sold ?? 0),
-                          )}
-                        </td>
-                        <td className="space-x-3 p-3 text-xs">
-                          <Link
-                            href={`/sorteos/${raffle.id}`}
-                            className="text-amber-800 dark:text-amber-300 hover:underline"
-                          >
-                            Público
-                          </Link>
-                          <Link
-                            href={`/admin/super/usuarios/${profile.id}/panel`}
-                            className="text-muted-foreground hover:underline"
-                          >
-                            Panel
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              rows={raffles}
+              getRowKey={(raffle) => raffle.id}
+              columns={[
+                {
+                  key: "raffle",
+                  header: "Sorteo",
+                  render: (raffle) => (
+                    <span className="font-medium">{raffle.title}</span>
+                  ),
+                },
+                {
+                  key: "status",
+                  header: "Estado",
+                  render: (raffle) => (
+                    <Badge variant="secondary">{raffle.status}</Badge>
+                  ),
+                },
+                {
+                  key: "sold",
+                  header: "Vendidos",
+                  align: "right",
+                  render: (raffle) => byId.get(raffle.id)?.sold ?? 0,
+                },
+                {
+                  key: "reserved",
+                  header: "Reservados",
+                  align: "right",
+                  render: (raffle) => byId.get(raffle.id)?.reserved ?? 0,
+                },
+                {
+                  key: "revenue",
+                  header: "Recaudación",
+                  align: "right",
+                  render: (raffle) => (
+                    <span className="font-mono">
+                      {formatPrice(
+                        Number(raffle.price_per_number) *
+                          (byId.get(raffle.id)?.sold ?? 0),
+                      )}
+                    </span>
+                  ),
+                },
+                {
+                  key: "links",
+                  header: "Links",
+                  align: "right",
+                  render: (raffle) => (
+                    <span className="space-x-3 text-xs">
+                      <Link
+                        href={`/sorteos/${raffle.id}`}
+                        className="text-brand-700 hover:underline dark:text-brand-300"
+                      >
+                        Público
+                      </Link>
+                      <Link
+                        href={`/admin/super/usuarios/${profile.id}/panel`}
+                        className="text-muted-foreground hover:underline"
+                      >
+                        Panel
+                      </Link>
+                    </span>
+                  ),
+                },
+              ]}
+            />
           )}
         </section>
       )}
@@ -406,36 +450,50 @@ export default async function SuperUserSupportPage({
             </CardContent>
           </Card>
         ) : (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-                <tr>
-                  <th className="p-3">Sorteo</th>
-                  <th className="p-3">Número</th>
-                  <th className="p-3">Estado</th>
-                  <th className="p-3">Fecha</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bought.slice(0, 100).map((row, index) => (
-                  <tr key={`${row.raffle_id}-${row.number}-${index}`} className="border-t">
-                    <td className="max-w-[16rem] truncate p-3">
-                      {titleById.get(row.raffle_id as string) ?? "—"}
-                    </td>
-                    <td className="p-3 font-mono">{row.number}</td>
-                    <td className="p-3 text-muted-foreground">{row.status}</td>
-                    <td className="p-3 text-muted-foreground">
-                      {row.sold_at
-                        ? formatDateTime(row.sold_at)
-                        : row.reserved_until
-                          ? `Reserva hasta ${formatDateTime(row.reserved_until)}`
-                          : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ResponsiveTable
+            rows={bought.slice(0, 100)}
+            getRowKey={(row) => `${row.raffle_id}-${row.number}`}
+            columns={[
+              {
+                key: "raffle",
+                header: "Sorteo",
+                render: (row) => (
+                  <span className="font-medium">
+                    {titleById.get(row.raffle_id as string) ?? "—"}
+                  </span>
+                ),
+              },
+              {
+                key: "number",
+                header: "Número",
+                align: "right",
+                render: (row) => (
+                  <span className="font-mono">{row.number}</span>
+                ),
+              },
+              {
+                key: "status",
+                header: "Estado",
+                render: (row) => (
+                  <Badge variant="secondary">{row.status}</Badge>
+                ),
+              },
+              {
+                key: "date",
+                header: "Fecha",
+                align: "right",
+                render: (row) => (
+                  <span className="text-muted-foreground">
+                    {row.sold_at
+                      ? formatDateTime(row.sold_at)
+                      : row.reserved_until
+                        ? `Reserva hasta ${formatDateTime(row.reserved_until)}`
+                        : "—"}
+                  </span>
+                ),
+              },
+            ]}
+          />
         )}
       </section>
     </div>

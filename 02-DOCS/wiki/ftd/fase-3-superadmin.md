@@ -23,6 +23,8 @@ tarjetas en móvil y auditoría con el patrón tabla→tarjetas, manteniendo las
   - Auditoría migrada a `ResponsiveTable`: tabla en desktop, tarjetas con fecha, superadmin, acción y
     usuario afectado en móvil.
   - Badge de acción y fechas con el estilo del sistema.
+- `app/admin/super/usuarios/[id]/page.tsx`: las tres tablas de la ficha (historial de planes,
+  actividad como organizador y actividad como comprador) pasan a `ResponsiveTable`.
 
 **Out:** Server Actions, RLS, permisos, reglas de negocio y datos.
 
@@ -46,13 +48,13 @@ ruta. La barra de acciones masivas sigue operando sobre `selected`.
 cada registro es una tarjeta con etiqueta y valor.
 
 **4 — observado.** La tabla de usuarios queda `hidden md:block`; la auditoría oculta su tabla en móvil
-vía `ResponsiveTable`, sin `overflow-x` en pantallas chicas.
+vía `ResponsiveTable`, sin `overflow-x` en pantallas chicas. Las tres tablas de la ficha de usuario
+también usan el patrón, así que no queda scroll horizontal en el panel.
 
 **5 — observado.** `npm run typecheck` → 0. `npm run lint` → `✔ No ESLint warnings or errors`.
 `npm test` → 38/38. `npm run build` → 0.
 
-**Pendiente.** Las tablas de la ficha de usuario (`/admin/super/usuarios/[id]`) siguen con scroll
-horizontal; se pueden migrar en una próxima pasada si se usa seguido desde el celular.
+**Pendiente.** Ver la ficha y la auditoría con datos reales en 375 px después del deploy.
 
 ## Next
 
