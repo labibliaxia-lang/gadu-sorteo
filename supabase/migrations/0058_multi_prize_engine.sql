@@ -87,6 +87,12 @@ where status = 'drawn' and results_hash is null;
 -- ---------------------------------------------------------------------
 -- Núcleo multi-premio
 -- ---------------------------------------------------------------------
+-- Si quedó una firma vieja por un intento anterior, se elimina antes de
+-- recrear; CREATE OR REPLACE no puede cambiar el tipo de retorno.
+drop function if exists public.draw_winner_multi_system(uuid);
+drop function if exists public.draw_winner_multi(uuid);
+drop function if exists public.draw_winner_multi_core(uuid);
+
 create or replace function public.draw_winner_multi_core(p_raffle_id uuid)
 returns table (
   "position" integer,
