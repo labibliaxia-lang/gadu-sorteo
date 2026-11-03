@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
-import { processAutoDraws } from "@/lib/auto-draw";
+import { processAutoDraws, processManualDrawReminders } from "@/lib/auto-draw";
 
 export const dynamic = "force-dynamic";
 
@@ -32,14 +32,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const summary = await processAutoDraws({ source: "cron" });
+    const [summary, reminders] = await Promise.all([
+      processAutoDraws({ source: "cron" }),
+      processManualDrawReminders(),
+    ]);
 
     if (summary.drawn > 0) {
       revalidatePath("/ganadores");
       revalidatePath("/admin");
     }
 
-    return NextResponse.json({ ok: true, ...summary });
+    return NextResponse.json({ ok: true, ...summary, reminders });
   } catch (error) {
     console.error("Cron auto-draw:", error);
     return NextResponse.json(

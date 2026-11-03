@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { processAutoDraws } from "@/lib/auto-draw";
+import { processAutoDraws, processManualDrawReminders } from "@/lib/auto-draw";
 import { sendPlanReminderEmails } from "@/lib/plan-reminders";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -66,8 +66,12 @@ async function handle(request: NextRequest) {
   // El endpoint /api/cron/auto-draw (o el fallback al abrir el sorteo) es el
   // que corre con granularidad de minutos.
   let autoDraw: Awaited<ReturnType<typeof processAutoDraws>> | null = null;
+  let manualDrawReminders: Awaited<
+    ReturnType<typeof processManualDrawReminders>
+  > | null = null;
   try {
     autoDraw = await processAutoDraws({ source: "cron" });
+    manualDrawReminders = await processManualDrawReminders();
   } catch (error) {
     console.error("Cron: error ejecutando sorteos automáticos", error);
   }
@@ -79,6 +83,7 @@ async function handle(request: NextRequest) {
     reminders,
     rateLimitCleanup: !cleanupError,
     autoDraw,
+    manualDrawReminders,
   });
 }
 

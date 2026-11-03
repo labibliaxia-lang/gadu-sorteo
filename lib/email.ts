@@ -340,3 +340,34 @@ export async function sendAutoDrawFailedEmail(params: {
     html,
   );
 }
+
+/** Aviso al organizador: su sorteo manual ya llegó a la hora y está listo. */
+export async function sendManualDrawReadyEmail(params: {
+  to: string | null | undefined;
+  organizerName: string | null;
+  raffleTitle: string;
+  raffleId: string;
+  drawDate: string;
+}): Promise<boolean> {
+  const title = escapeHtml(params.raffleTitle);
+  const base = siteUrl();
+  const panel = base ? `${base}/admin/sorteos/${params.raffleId}` : "";
+
+  const html = layout({
+    title: "Tu sorteo ya está listo para ejecutar",
+    body:
+      paragraph(
+        `Hola${params.organizerName ? ` ${escapeHtml(params.organizerName.split(" ")[0])}` : ""}: el sorteo <strong>${title}</strong> llegó a su fecha y hora programadas (<strong>${escapeHtml(params.drawDate)}</strong>).`,
+      ) +
+      paragraph(
+        "Está en modo manual: nadie lo ejecuta automáticamente. Entrá al panel y tocá «Sortear ganador» cuando estés listo.",
+      ) +
+      button(panel, "Ejecutar el sorteo"),
+  });
+
+  return sendEmail(
+    params.to,
+    `Tu sorteo ${params.raffleTitle} está listo para ejecutar · Gadu Sorteos`,
+    html,
+  );
+}

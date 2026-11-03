@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { parseLandingContent } from "@/lib/landing";
 import { averageRating, formatRating } from "@/lib/reviews";
 import type { PublicQuestion } from "@/lib/questions";
-import { maybeAutoDrawRaffle } from "@/lib/auto-draw";
+import { maybeAutoDrawRaffle, maybeNotifyManualDraw } from "@/lib/auto-draw";
 import { Badge } from "@/components/ui/badge";
 import { DrawVerifier } from "@/components/DrawVerifier";
 import { NumbersGrid } from "@/components/NumbersGrid";
@@ -99,7 +99,11 @@ export default async function RafflePage({
 
   // Fallback perezoso del sorteo automático: si la hora ya pasó y nadie lo
   // ejecutó (cron caído, deploy, etc.), se resuelve al abrir la página.
-  if (raffle.auto_draw && raffle.status !== "drawn") {
+  if (
+    raffle.auto_draw &&
+    raffle.status !== "drawn" &&
+    new Date(raffle.draw_date).getTime() <= Date.now()
+  ) {
     try {
       const drawnNow = await maybeAutoDrawRaffle(raffle.id as string);
       if (drawnNow) {
@@ -112,6 +116,20 @@ export default async function RafflePage({
       }
     } catch (error) {
       console.error("[auto-draw] fallback en página pública:", error);
+    }
+  }
+
+  // En modo manual, el aviso al organizador también se puede disparar al abrir
+  // el sorteo (una sola vez; el cron hace lo mismo con más frecuencia).
+  if (
+    !raffle.auto_draw &&
+    raffle.status !== "drawn" &&
+    new Date(raffle.draw_date).getTime() <= Date.now()
+  ) {
+    try {
+      await maybeNotifyManualDraw(raffle.id as string);
+    } catch (error) {
+      console.error("[manual-draw] aviso en página pública:", error);
     }
   }
 
@@ -262,6 +280,13 @@ export default async function RafflePage({
           <p className="text-sm text-muted-foreground">
             Fecha del sorteo: {formatDateTime(raffle.draw_date)}
           </p>
+          {raffle.status !== "drawn" && (
+            <p className="max-w-md text-xs text-muted-foreground">
+              {raffle.auto_draw
+                ? "Sorteo automático: se ejecuta solo a la fecha y hora programadas; el resultado se publica al confirmarse."
+                : "Sorteo manual: el organizador lo ejecuta a la fecha y hora programadas; el resultado se publica al confirmarse."}
+            </p>
+          )}
           <p className="text-lg font-semibold">
             {formatPrice(Number(raffle.price_per_number))}{" "}
             <span className="text-sm font-normal text-muted-foreground">

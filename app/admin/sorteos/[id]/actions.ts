@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth";
 import { sendPaymentApprovedEmail, sendWinnerEmail } from "@/lib/email";
+import { getPlanContext } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -575,6 +576,24 @@ export async function setAutoDraw(
   }
 
   const supabase = createClient();
+
+  if (enabled) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan, role")
+      .eq("id", ctx.id)
+      .maybeSingle();
+
+    const planContext = getPlanContext(profile);
+    if (!planContext.isPremium && !planContext.isSuperadmin) {
+      return {
+        ok: false,
+        error:
+          "El sorteo automático es una función Premium. El modo manual con aviso sigue incluido en tu plan.",
+      };
+    }
+  }
+
   const { data: raffle } = await supabase
     .from("raffles")
     .select("status")

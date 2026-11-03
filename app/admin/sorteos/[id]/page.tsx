@@ -10,6 +10,7 @@ import {
 
 import { createClient } from "@/lib/supabase/server";
 import { requireAdminSession } from "@/lib/auth";
+import { getPlanContext } from "@/lib/plans";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { AutoDrawToggle } from "@/components/AutoDrawToggle";
@@ -46,6 +47,15 @@ export default async function AdminRaffleDetailPage({
   // pertenencia se valida acá, en el servidor.
   const actor = await requireAdminSession();
   if (!actor) redirect("/login");
+
+  const { data: actorProfile } = await supabase
+    .from("profiles")
+    .select("plan, role")
+    .eq("id", actor.id)
+    .maybeSingle();
+
+  const planContext = getPlanContext(actorProfile);
+  const canAutoDraw = planContext.isPremium || planContext.isSuperadmin;
 
   const { data: raffle } = await supabase
     .from("raffles")
@@ -244,6 +254,7 @@ export default async function AdminRaffleDetailPage({
           <AutoDrawToggle
             raffleId={raffle.id}
             enabled={Boolean(raffle.auto_draw)}
+            canAutoDraw={canAutoDraw}
             drawDate={raffle.draw_date}
             hasCommitment={Boolean(raffle.draw_commitment)}
             soldCount={soldCount ?? 0}

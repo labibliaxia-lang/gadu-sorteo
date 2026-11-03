@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   sendAutoDrawFailedEmail,
+  sendManualDrawReadyEmail,
   sendWinnerEmail,
 } from "@/lib/email";
 
@@ -310,6 +311,130 @@ export async function maybeAutoDrawRaffle(raffleId: string): Promise<boolean> {
     return summary.drawn > 0;
   } catch (error) {
     console.error("[auto-draw] fallback perezoso:", error);
+    return false;
+  }
+}
+
+/**
+ * Avisa una sola vez al organizador que un sorteo en modo manual ya llegó a
+ * su fecha/hora. Se llama desde el cron y desde el fallback público.
+ */
+export async function processManualDrawReminders(options?: {
+  raffleId?: string;
+}): Promise<{ checked: number; notified: number }> {
+  const summary = { checked: 0, notified: 0 };
+  const admin = createAdminClient();
+
+  let query = admin
+    .from("raffles")
+    .select("id, title, created_by, draw_date")
+    .eq("auto_draw", false)
+    .in("status", ["active", "closed"])
+    .lte("draw_date", new Date().toISOString())
+    .is("manual_draw_notified_at", null)
+    .not("draw_commitment", "is", null)
+    .order("draw_date", { ascending: true })
+    .limit(50);
+
+  if (options?.raffleId) {
+    query = query.eq("id", options.raffleId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+
+  for (const raffle of (data ?? []) as {
+    id: string;
+    title: string;
+    created_by: string | null;
+    draw_date: string;
+  }[]) {
+    summary.checked += 1;
+
+    try {
+      const { count } = await admin
+        .from("raffle_numbers")
+        .select("id", { count: "exact", head: true })
+        .eq("raffle_id", raffle.id)
+        .eq("status", "sold");
+
+      if (!count || !raffle.created_by) continue;
+
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", raffle.created_by)
+        .maybeSingle();
+
+      if (profile?.email) {
+        await sendManualDrawReadyEmail({
+          to: profile.email as string,
+          organizerName: (profile.full_name as string | null) ?? null,
+          raffleTitle: raffle.title,
+          raffleId: raffle.id,
+          drawDate: new Date(raffle.draw_date).toLocaleString("es-AR", {
+            timeZone: "America/Argentina/Buenos_Aires",
+            dateStyle: "short",
+            timeStyle: "short",
+          }),
+        });
+      }
+
+      await admin
+        .from("raffles")
+        .update({ manual_draw_notified_at: new Date().toISOString() })
+        .eq("id", raffle.id)
+        .is("manual_draw_notified_at", null);
+
+      await admin.from("auto_draw_runs").insert({
+        raffle_id: raffle.id,
+        source: "manual",
+        status: "skipped",
+        message: "Aviso enviado: el sorteo manual está listo para ejecutar.",
+      });
+
+      summary.notified += 1;
+    } catch (error) {
+      console.error("[manual-draw] aviso al organizador:", raffle.id, error);
+    }
+  }
+
+  return summary;
+}
+
+/** Fallback del aviso manual: se llama al abrir el sorteo después de la hora. */
+export async function maybeNotifyManualDraw(
+  raffleId: string,
+): Promise<boolean> {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return false;
+
+  try {
+    const admin = createAdminClient();
+    const { data: raffle } = await admin
+      .from("raffles")
+      .select(
+        "id, auto_draw, status, draw_date, draw_commitment, manual_draw_notified_at",
+      )
+      .eq("id", raffleId)
+      .maybeSingle();
+
+    if (
+      !raffle ||
+      raffle.auto_draw ||
+      raffle.status === "drawn" ||
+      !["active", "closed"].includes(raffle.status as string) ||
+      !raffle.draw_commitment ||
+      raffle.manual_draw_notified_at ||
+      new Date(raffle.draw_date as string).getTime() > Date.now()
+    ) {
+      return false;
+    }
+
+    const summary = await processManualDrawReminders({ raffleId });
+    return summary.notified > 0;
+  } catch (error) {
+    console.error("[manual-draw] fallback del aviso:", error);
     return false;
   }
 }
