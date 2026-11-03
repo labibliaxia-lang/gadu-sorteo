@@ -30,9 +30,13 @@ certificado, accesible solo desde el panel superadmin.
   - `execute_sandbox_draw(run_id)`: usa la semilla comprometida y los números, calcula ganador y
     huellas, revela la semilla. Idempotente por `executed_at`.
   - `draw_sandbox_runs` acepta filas sin ejecutar (`winning_number`, hashes y `executed_at` nulos).
-- `components/SandboxDraw.tsx`: botones «1. Publicar compromiso» y «2. Ejecutar sorteo simulado»;
-  antes de ejecutar solo se ve el compromiso. Al ejecutar muestra semilla, `numbers_hash`,
-  `result_hash` y reutiliza `DrawVerifier` para recomputar todo en el navegador.
+- `components/SandboxDraw.tsx`: permite elegir **cantidad de números (1..10.000)** y **cantidad de premios
+  (1..50, sin repetir ganador)**. El premio 1 usa la selección del motor real; los siguientes se
+  calculan con SHA-256 sobre los números restantes. Muestra el hash de cada premio y un
+  `results_hash` combinado.
+- `supabase/migrations/0055_sandbox_multi_prize.sql`: columnas `prizes_count`, `winners` (JSONB) y
+  `results_hash`; RPC `create_sandbox_commitment_v2(p_count, p_prizes)` y
+  `execute_sandbox_draw_v2(run_id)`.
 
 **Out:** `raffles`, `raffle_numbers`, `payments`, el motor `draw_winner` y cualquier página pública.
 
@@ -48,6 +52,7 @@ certificado, accesible solo desde el panel superadmin.
 | 6 | Tipos, lint, tests y build limpios | Los cuatro gates |
 | 7 | Flujo en dos fases igual al real | 0051 + botones 1/2 |
 | 8 | Verificación con hashes en el navegador | `DrawVerifier` reutilizado |
+| 9 | Multi-premio con hashes por premio | 0055 + selector de premios |
 
 ## Evidence
 
@@ -68,9 +73,14 @@ valida con `requireSuperadminSession()` y la política RLS solo deja leer al sup
 **7, 8 — observado.** `create_sandbox_commitment` inserta la semilla y devuelve solo el compromiso;
 `execute_sandbox_draw` bloquea la fila, calcula con la semilla guardada y actualiza ganador/hashes/
 `executed_at`. La UI no permite ejecutar sin compromiso y el resultado incluye `DrawVerifier` con la
-lista de números simulados. Las corridas viejas de `run_sandbox_draw` siguen visibles.
+lista de números simulados.
 
-**9 — corregido.** La primera versión de `execute_sandbox_draw` fallaba con
+**9 — observado.** El simulador acepta hasta 10.000 números y 50 premios. El premio 1 conserva la
+fórmula del motor real; los siguientes usan `|prize:i|numbers:<restantes>` y excluyen ganadores
+previos. Cada premio guarda `{position, number, hash}` en `winners` y el conjunto queda cubierto por
+`results_hash`. `result_hash` sigue siendo el del primer premio para el verificador y el certificado.
+
+**10 — corregido.** La primera versión de `execute_sandbox_draw` fallaba con
 `column reference "v_row.winning_number" is ambiguous` porque el `RETURNS TABLE` declara columnas con
 el mismo nombre que el record usado en el `RETURN QUERY`. La 0052 devuelve variables escalares sin
 `FROM`; no cambia hashes ni lógica.

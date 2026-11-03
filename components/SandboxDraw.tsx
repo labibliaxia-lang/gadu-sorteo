@@ -13,6 +13,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { DrawVerifier } from "@/components/DrawVerifier";
+import { Input } from "@/components/ui/input";
 import { WinnerCertificate } from "@/components/WinnerCertificate";
 
 interface SandboxCommitment {
@@ -20,7 +21,14 @@ interface SandboxCommitment {
   commitment: string;
   numbers: string;
   numbers_count: number;
+  prizes_count: number;
   created_at: string;
+}
+
+interface SandboxWinner {
+  position: number;
+  number: number;
+  hash: string;
 }
 
 interface SandboxResult {
@@ -31,16 +39,23 @@ interface SandboxResult {
   result_hash: string;
   numbers_count: number;
   numbers: string;
+  prizes_count: number;
+  winners: SandboxWinner[];
+  results_hash: string;
 }
 
-const SIM_COUNT = 100;
+const MAX_NUMBERS = 10000;
+const MAX_PRIZES = 50;
+const VISIBLE_NUMBERS = 500;
 
 /**
  * Simulador en dos fases, igual al flujo real:
  *   1) publicar el compromiso (hash de la semilla, sin revelarla)
  *   2) ejecutar el sorteo y revelar la semilla + huellas
  *
- * Aislado: usa `draw_sandbox_runs`, no toca raffles, números ni pagos.
+ * Multi-premio: el premio 1 usa la fórmula del motor real; los siguientes se
+ * calculan sobre los números restantes, sin repetir ganadores. Cada premio
+ * tiene su hash y se guarda un results_hash combinado.
  */
 export function SandboxDraw() {
   const supabase = useRef(createClient()).current;
@@ -49,6 +64,8 @@ export function SandboxDraw() {
   const [phase, setPhase] = useState<
     "idle" | "committed" | "spinning" | "done"
   >("idle");
+  const [numberCount, setNumberCount] = useState(100);
+  const [prizeCount, setPrizeCount] = useState(1);
   const [display, setDisplay] = useState<number | null>(null);
   const [commitment, setCommitment] = useState<SandboxCommitment | null>(null);
   const [result, setResult] = useState<SandboxResult | null>(null);
@@ -63,6 +80,12 @@ export function SandboxDraw() {
     [],
   );
 
+  const safeNumbers = Math.max(1, Math.min(MAX_NUMBERS, numberCount || 1));
+  const safePrizes = Math.max(
+    1,
+    Math.min(MAX_PRIZES, safeNumbers, prizeCount || 1),
+  );
+
   function animateTo(target: number) {
     setPhase("spinning");
     let tick = 0;
@@ -72,7 +95,7 @@ export function SandboxDraw() {
       tick += 1;
 
       if (tick < total) {
-        setDisplay(1 + Math.floor(Math.random() * SIM_COUNT));
+        setDisplay(1 + Math.floor(Math.random() * safeNumbers));
         const delay = 45 + Math.pow(tick / total, 3) * 130;
         timers.current.push(setTimeout(step, delay));
         return;
@@ -93,8 +116,8 @@ export function SandboxDraw() {
     setPhase("idle");
 
     const { data, error: rpcError } = await supabase.rpc(
-      "create_sandbox_commitment",
-      { p_count: SIM_COUNT },
+      "create_sandbox_commitment_v2",
+      { p_count: safeNumbers, p_prizes: safePrizes },
     );
 
     setBusy(false);
@@ -124,7 +147,7 @@ export function SandboxDraw() {
     setError(null);
 
     const { data, error: rpcError } = await supabase.rpc(
-      "execute_sandbox_draw",
+      "execute_sandbox_draw_v2",
       { p_run_id: commitment.run_id },
     );
 
@@ -158,42 +181,96 @@ export function SandboxDraw() {
     setError(null);
   }
 
-  const numbersCount = result?.numbers_count ?? commitment?.numbers_count ?? SIM_COUNT;
+  const activeNumbers = result?.numbers_count ?? commitment?.numbers_count ?? safeNumbers;
+  const activePrizes = result?.prizes_count ?? commitment?.prizes_count ?? safePrizes;
   const soldNumbers = result?.numbers
     ? result.numbers.split(",").map(Number)
-    : Array.from({ length: SIM_COUNT }, (_, index) => index + 1);
+    : Array.from({ length: activeNumbers }, (_, index) => index + 1);
+  const visibleNumbers = Math.min(activeNumbers, VISIBLE_NUMBERS);
+
+  function prizeLabel(position: number): string {
+    return position === 1 ? "1.er premio" : `${position}º premio`;
+  }
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border bg-muted/20 p-4">
-        <p className="text-sm font-semibold">
-          Escenario: {numbersCount} números vendidos simulados (1 a{" "}
-          {numbersCount})
+      <div className="space-y-3 rounded-xl border bg-muted/20 p-4">
+        <p className="text-sm font-semibold">Escenario de la simulación</p>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <label htmlFor="sandbox-numbers" className="text-xs text-muted-foreground">
+              Cantidad de números (1 a 10.000)
+            </label>
+            <Input
+              id="sandbox-numbers"
+              type="number"
+              min={1}
+              max={MAX_NUMBERS}
+              value={numberCount}
+              disabled={phase !== "idle"}
+              onChange={(event) =>
+                setNumberCount(Number(event.target.value) || 1)
+              }
+            />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="sandbox-prizes" className="text-xs text-muted-foreground">
+              Cantidad de premios (1 a 50, sin repetir ganador)
+            </label>
+            <Input
+              id="sandbox-prizes"
+              type="number"
+              min={1}
+              max={Math.min(MAX_PRIZES, safeNumbers)}
+              value={prizeCount}
+              disabled={phase !== "idle"}
+              onChange={(event) =>
+                setPrizeCount(Number(event.target.value) || 1)
+              }
+            />
+          </div>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Escenario aislado: {activeNumbers.toLocaleString("es-AR")} números y{" "}
+          {activePrizes} premio{activePrizes === 1 ? "" : "s"}. No aparece en la
+          web pública ni toca sorteos reales.
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Mismo flujo que un sorteo real: compromiso → ejecución → semilla
-          revelada. Todo queda en una tabla aparte y no aparece en la web.
-        </p>
-        <div className="mt-3 flex max-h-40 flex-wrap gap-1 overflow-y-auto">
-          {Array.from({ length: numbersCount }, (_, index) => index + 1).map(
-            (number) => (
-              <span
-                key={number}
-                className={
-                  phase === "done" && result?.winning_number === number
-                    ? "rounded bg-brand-500 px-1.5 py-0.5 font-mono text-[10px] font-bold text-ink"
-                    : "rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
-                }
-              >
-                {number}
-              </span>
-            ),
+
+        {visibleNumbers < activeNumbers && (
+          <p className="text-xs text-muted-foreground">
+            Se muestran los primeros {VISIBLE_NUMBERS} números de{" "}
+            {activeNumbers.toLocaleString("es-AR")}.
+          </p>
+        )}
+
+        <div className="flex max-h-40 flex-wrap gap-1 overflow-y-auto">
+          {Array.from({ length: visibleNumbers }, (_, index) => index + 1).map(
+            (number) => {
+              const winner = result?.winners.find(
+                (item) => item.number === number,
+              );
+              return (
+                <span
+                  key={number}
+                  title={winner ? prizeLabel(winner.position) : undefined}
+                  className={
+                    winner
+                      ? "rounded bg-brand-500 px-1.5 py-0.5 font-mono text-[10px] font-bold text-ink"
+                      : "rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
+                  }
+                >
+                  {number}
+                </span>
+              );
+            },
           )}
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-ink p-6 text-center text-white">
-        <div className="pointer-events-none blueprint-grid absolute inset-0 opacity-20" />
+      <div className="relative rounded-2xl border border-white/10 bg-ink p-6 text-center text-white">
+        <div className="pointer-events-none absolute inset-0 blueprint-grid opacity-20" />
         <p className="relative text-xs uppercase tracking-[0.3em] text-brand-300">
           Simulador de sorteo
         </p>
@@ -217,7 +294,8 @@ export function SandboxDraw() {
             <>
               <p className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-1.5 text-sm">
                 <Trophy className="h-4 w-4 text-brand-300" />
-                Ganador simulado: {result?.winning_number}
+                {activePrizes} premio{activePrizes === 1 ? "" : "s"} sorteado
+                {activePrizes === 1 ? "" : "s"}
               </p>
               <Button variant="secondary" onClick={reset}>
                 <RotateCcw className="mr-2 h-4 w-4" />
@@ -241,8 +319,8 @@ export function SandboxDraw() {
           </p>
           <p className="text-xs text-muted-foreground">
             La semilla está guardada y nadie la ve todavía. El hash ya quedó
-            fijo: cuando se ejecute el sorteo, cualquier cambio en la semilla o
-            en los números haría que el hash no coincida.
+            fijo para todos los premios: cuando se ejecute, cualquier cambio en
+            la semilla o en los números haría que los hashes no coincidan.
           </p>
           <div>
             <p className="text-xs font-medium">Compromiso (hash de la semilla)</p>
@@ -265,11 +343,30 @@ export function SandboxDraw() {
             </span>
           </div>
 
+          <div className="space-y-2">
+            {result.winners.map((winner) => (
+              <div
+                key={winner.position}
+                className="rounded-lg border border-brand-500/30 bg-brand-500/5 p-3"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-semibold">
+                    {prizeLabel(winner.position)}
+                  </p>
+                  <p className="font-mono text-2xl font-bold text-brand-800 dark:text-brand-200">
+                    {String(winner.number).padStart(4, "0")}
+                  </p>
+                </div>
+                <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">
+                  hash: {winner.hash}
+                </p>
+              </div>
+            ))}
+          </div>
+
           <dl className="grid gap-3 text-xs sm:grid-cols-2">
             <div>
-              <dt className="text-muted-foreground">
-                Compromiso (hash de semilla)
-              </dt>
+              <dt className="text-muted-foreground">Compromiso</dt>
               <dd className="break-all font-mono">{result.commitment}</dd>
             </div>
             <div>
@@ -281,15 +378,24 @@ export function SandboxDraw() {
               <dd className="break-all font-mono">{result.numbers_hash}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">result_hash</dt>
+              <dt className="text-muted-foreground">
+                result_hash (1.er premio)
+              </dt>
               <dd className="break-all font-mono">{result.result_hash}</dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-muted-foreground">
+                results_hash (todos los premios)
+              </dt>
+              <dd className="break-all font-mono">{result.results_hash}</dd>
             </div>
           </dl>
 
           <p className="text-xs text-muted-foreground">
-            Fórmula: compromiso = SHA-256(&quot;gadu:v1|raffle:&lt;id&gt;|seed:&lt;semilla&gt;&quot;) ·
-            sorteo = SHA-256(&quot;...|seed:&lt;semilla&gt;|numbers:1,2,...,N&quot;) ·
-            el índice sale de los primeros 60 bits del hash.
+            Fórmula: premio 1 con la misma selección del motor real; premios
+            siguientes con SHA-256 sobre los números restantes (sin repetir
+            ganador). Cada premio guarda su hash y el conjunto tiene un
+            results_hash.
           </p>
 
           <DrawVerifier
@@ -301,13 +407,19 @@ export function SandboxDraw() {
             resultHash={result.result_hash}
             soldNumbers={soldNumbers}
           />
+          {result.prizes_count > 1 && (
+            <p className="text-xs text-muted-foreground">
+              El verificador automático comprueba el 1.er premio. Los premios
+              siguientes se validan con su hash individual y el results_hash.
+            </p>
+          )}
 
           <WinnerCertificate
-            raffleTitle={`Simulación de ${result.numbers_count} números`}
+            raffleTitle={`1.er premio · Simulación de ${result.numbers_count} números`}
             winnerName="Participante simulado"
             winnerNumber={result.winning_number}
             drawnAt={new Date().toLocaleString("es-AR")}
-            verificationHash={result.result_hash}
+            verificationHash={result.results_hash}
             verifyUrl="/admin/super/sandbox"
           />
         </div>

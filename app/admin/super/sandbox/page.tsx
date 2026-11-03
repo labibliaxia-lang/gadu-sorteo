@@ -12,9 +12,11 @@ export const dynamic = "force-dynamic";
 interface SandboxRunRow {
   id: string;
   numbers_count: number;
+  prizes_count: number;
   winning_number: number | null;
   commitment: string;
   result_hash: string | null;
+  results_hash: string | null;
   created_at: string;
 }
 
@@ -26,7 +28,7 @@ export default async function SandboxPage() {
   const { data } = await admin
     .from("draw_sandbox_runs")
     .select(
-      "id, numbers_count, winning_number, commitment, result_hash, created_at",
+      "id, numbers_count, prizes_count, winning_number, commitment, result_hash, results_hash, created_at",
     )
     .order("created_at", { ascending: false })
     .limit(10);
@@ -50,9 +52,10 @@ export default async function SandboxPage() {
         </h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
           Mismo flujo que un sorteo real: primero se publica el compromiso
-          (hash de la semilla) y después se ejecuta el sorteo con la semilla
-          revelada y las huellas. Escenario aislado de 100 números simulados;
-          nada de esto aparece en la web pública ni modifica sorteos reales.
+          (hash de la semilla) y después se ejecutan los premios con la semilla
+          revelada y las huellas. Podés elegir hasta 10.000 números y 50
+          premios; cada premio tiene su hash y hay un results_hash combinado.
+          Nada de esto aparece en la web pública ni modifica sorteos reales.
         </p>
       </header>
 
@@ -71,8 +74,9 @@ export default async function SandboxPage() {
                 <tr>
                   <th className="p-3">Fecha</th>
                   <th className="p-3">Números</th>
-                  <th className="p-3">Ganador</th>
-                  <th className="p-3">result_hash</th>
+                  <th className="p-3">Premios</th>
+                  <th className="p-3">Ganador 1</th>
+                  <th className="p-3">results_hash</th>
                 </tr>
               </thead>
               <tbody>
@@ -82,11 +86,12 @@ export default async function SandboxPage() {
                       {formatDateTime(run.created_at)}
                     </td>
                     <td className="p-3">{run.numbers_count}</td>
+                    <td className="p-3">{run.prizes_count}</td>
                     <td className="p-3 font-mono font-semibold">
                       {run.winning_number ?? "Pendiente"}
                     </td>
                     <td className="max-w-[20rem] truncate p-3 font-mono text-xs text-muted-foreground">
-                      {run.result_hash ?? "Sin ejecutar"}
+                      {run.results_hash ?? run.result_hash ?? "Sin ejecutar"}
                     </td>
                   </tr>
                 ))}
