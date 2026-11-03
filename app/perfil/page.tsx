@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { setEmailPreference } from "@/app/perfil/actions";
+import { acceptTerms } from "@/app/actions/terms";
 import { TERMS_VERSION } from "@/lib/terms";
 import { formatDateTime } from "@/lib/utils";
 
@@ -33,6 +34,8 @@ export default function PerfilPage() {
   const [loading, setLoading] = useState(true);
   const [savingEmail, setSavingEmail] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [savingTerms, setSavingTerms] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -83,6 +86,30 @@ export default function PerfilPage() {
     }
 
     setSavingEmail(false);
+  }
+
+  async function acceptCurrentTerms() {
+    if (!profile || savingTerms) return;
+
+    setSavingTerms(true);
+    setTermsError(null);
+
+    const result = await acceptTerms(TERMS_VERSION);
+    if (!result.ok) {
+      setTermsError(result.error);
+    } else {
+      setProfile((current) =>
+        current
+          ? {
+              ...current,
+              terms_accepted_at: new Date().toISOString(),
+              terms_version: TERMS_VERSION,
+            }
+          : current,
+      );
+    }
+
+    setSavingTerms(false);
   }
 
   if (loading) {
@@ -201,9 +228,15 @@ export default function PerfilPage() {
               </p>
 
               <div className="rounded-lg border bg-muted/30 p-3">
-                <p className="flex items-center gap-1.5 text-xs font-semibold">
+                <p className="flex flex-wrap items-center gap-1.5 text-xs font-semibold">
                   <ShieldCheck className="h-4 w-4 text-amber-700 dark:text-amber-300" />
                   Términos aceptados
+                  {profile?.terms_accepted_at &&
+                    profile.terms_version === TERMS_VERSION && (
+                      <span className="font-medium text-emerald-700 dark:text-emerald-400">
+                        · Al día
+                      </span>
+                    )}
                 </p>
                 {profile?.terms_accepted_at ? (
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -218,6 +251,33 @@ export default function PerfilPage() {
                     Todavía no registramos tu aceptación.
                   </p>
                 )}
+
+                {(!profile?.terms_accepted_at ||
+                  profile.terms_version !== TERMS_VERSION) && (
+                  <div className="mt-2 rounded-md border border-amber-500/50 bg-amber-500/10 p-2">
+                    <p className="text-xs text-amber-900 dark:text-amber-200">
+                      {profile?.terms_accepted_at
+                        ? `Actualizamos los Términos a la versión ${TERMS_VERSION}. Volvé a aceptarlos para seguir al día.`
+                        : "Falta registrar tu aceptación para continuar al día."}
+                    </p>
+                    <Button
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => void acceptCurrentTerms()}
+                      disabled={savingTerms}
+                    >
+                      {savingTerms
+                        ? "Guardando…"
+                        : `Aceptar versión ${TERMS_VERSION}`}
+                    </Button>
+                    {termsError && (
+                      <p className="mt-1 text-xs text-destructive">
+                        {termsError}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <p className="mt-1 text-xs text-muted-foreground">
                   Versión vigente: {TERMS_VERSION}.{" "}
                   <Link

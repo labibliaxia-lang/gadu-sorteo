@@ -71,6 +71,10 @@ perfil y el modal desaparece.
 **7 — observado.** `/perfil` lee `terms_version` y muestra «Términos aceptados · Versión 1.0 ·
 fecha», junto a la versión vigente; si falta la aceptación lo indica en ámbar.
 
+**8 — observado.** Si `terms_version` no coincide con `TERMS_VERSION`, el perfil muestra un aviso
+ámbar con el botón «Aceptar versión X»; al aceptar se actualiza la fecha y la versión en el estado y
+en la base.
+
 **Nota de producto.** El registro actual es solo con Google (`/register` redirige a `/login`), por eso
 el checkbox vive en el login, que es la puerta real de alta. El trigger de email queda listo para
 cualquier alta por email/contraseña que se agregue después.
