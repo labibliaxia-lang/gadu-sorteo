@@ -5,12 +5,14 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { parseLandingContent } from "@/lib/landing";
 import { Badge } from "@/components/ui/badge";
 import { DrawVerifier } from "@/components/DrawVerifier";
 import { NumbersGrid } from "@/components/NumbersGrid";
 import { OrganizerCard } from "@/components/OrganizerCard";
 import { OrganizerContact } from "@/components/OrganizerContact";
 import { PrizeCard } from "@/components/PrizeCard";
+import { RaffleLanding } from "@/components/RaffleLanding";
 import { RaffleVisitTracker } from "@/components/RaffleVisitTracker";
 import { ShareButton } from "@/components/ShareButton";
 import { formatDateTime, formatPrice } from "@/lib/utils";
@@ -152,6 +154,8 @@ export default async function RafflePage({
   const soldNumbers = ((soldNumbersData ?? []) as { number: number }[]).map(
     (row) => row.number,
   );
+
+  const landingBlocks = parseLandingContent(raffle.landing_content);
 
   return (
     <div className="space-y-8">
@@ -394,8 +398,15 @@ export default async function RafflePage({
           </section>
         )}
 
+      {landingBlocks.length > 0 && (
+        <RaffleLanding
+          blocks={landingBlocks}
+          showCta={raffle.status === "active"}
+        />
+      )}
+
       {raffle.status === "active" && (
-        <section className="space-y-2">
+        <section id="elegir-numeros" className="scroll-mt-24 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-xl font-semibold">Elegí tus números</h2>
             {isDev && (
