@@ -12,7 +12,7 @@ import {
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { DrawVerifier } from "@/components/DrawVerifier";
+import { MultiPrizeVerifier } from "@/components/MultiPrizeVerifier";
 import { Input } from "@/components/ui/input";
 import { WinnerCertificate } from "@/components/WinnerCertificate";
 
@@ -183,7 +183,7 @@ export function SandboxDraw() {
 
   const activeNumbers = result?.numbers_count ?? commitment?.numbers_count ?? safeNumbers;
   const activePrizes = result?.prizes_count ?? commitment?.prizes_count ?? safePrizes;
-  const soldNumbers = result?.numbers
+  const allNumbers = result?.numbers
     ? result.numbers.split(",").map(Number)
     : Array.from({ length: activeNumbers }, (_, index) => index + 1);
   const visibleNumbers = Math.min(activeNumbers, VISIBLE_NUMBERS);
@@ -398,30 +398,31 @@ export function SandboxDraw() {
             results_hash.
           </p>
 
-          <DrawVerifier
+          <MultiPrizeVerifier
             raffleId={commitment?.run_id ?? ""}
             seed={result.seed}
             commitment={result.commitment}
-            winnerNumber={result.winning_number}
+            numbers={allNumbers}
             numbersHash={result.numbers_hash}
-            resultHash={result.result_hash}
-            soldNumbers={soldNumbers}
+            winners={result.winners}
+            resultsHash={result.results_hash}
           />
-          {result.prizes_count > 1 && (
-            <p className="text-xs text-muted-foreground">
-              El verificador automático comprueba el 1.er premio. Los premios
-              siguientes se validan con su hash individual y el results_hash.
-            </p>
-          )}
 
-          <WinnerCertificate
-            raffleTitle={`1.er premio · Simulación de ${result.numbers_count} números`}
-            winnerName="Participante simulado"
-            winnerNumber={result.winning_number}
-            drawnAt={new Date().toLocaleString("es-AR")}
-            verificationHash={result.results_hash}
-            verifyUrl="/admin/super/sandbox"
-          />
+          <div className="space-y-3">
+            <p className="text-sm font-semibold">Certificados por premio</p>
+            {result.winners.map((winner) => (
+              <WinnerCertificate
+                key={winner.position}
+                raffleTitle={`Simulación de ${result.numbers_count} números`}
+                prizeLabel={prizeLabel(winner.position)}
+                winnerName="Participante simulado"
+                winnerNumber={winner.number}
+                drawnAt={new Date().toLocaleString("es-AR")}
+                verificationHash={winner.hash}
+                verifyUrl="/admin/super/sandbox"
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

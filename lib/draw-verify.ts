@@ -58,6 +58,87 @@ export async function sha256Hex(value: string): Promise<string> {
     .join("");
 }
 
+export interface MultiPrizeWinner {
+  position: number;
+  number: number;
+  hash: string;
+}
+
+export interface MultiPrizeVerificationResult {
+  commitment: string;
+  numbersHash: string;
+  winners: MultiPrizeWinner[];
+  resultsHash: string;
+  list: string;
+}
+
+/**
+ * Verificación de varios premios sobre el mismo listado y semilla.
+ * Debe coincidir con `execute_sandbox_draw_v2`:
+ *   premio 1: fórmula del motor real sobre el listado completo;
+ *   premio i: hash con |prize:i| sobre los números restantes.
+ */
+export async function computeMultiPrizeVerification({
+  raffleId,
+  seed,
+  numbers,
+  prizesCount,
+}: {
+  raffleId: string;
+  seed: string;
+  numbers: number[];
+  prizesCount: number;
+}): Promise<MultiPrizeVerificationResult> {
+  const sortedNumbers = canonicalNumbers(numbers);
+  const list = sortedNumbers.join(",");
+
+  const commitment = await sha256Hex(
+    `${DRAW_DOMAIN}|raffle:${raffleId}|seed:${seed}`,
+  );
+  const numbersHash = await sha256Hex(
+    `${DRAW_DOMAIN}|raffle:${raffleId}|numbers:${list}`,
+  );
+
+  const totalPrizes = Math.max(
+    1,
+    Math.min(prizesCount, sortedNumbers.length),
+  );
+  const remaining = [...sortedNumbers];
+  const winners: MultiPrizeWinner[] = [];
+  const winnersCsv: number[] = [];
+
+  for (let position = 1; position <= totalPrizes; position += 1) {
+    const remainingList = remaining.join(",");
+    const pick = await sha256Hex(
+      position === 1
+        ? `${DRAW_DOMAIN}|raffle:${raffleId}|seed:${seed}|numbers:${list}`
+        : `${DRAW_DOMAIN}|raffle:${raffleId}|seed:${seed}|prize:${position}|numbers:${remainingList}`,
+    );
+
+    const index = Number(
+      BigInt(`0x${pick.slice(0, 15)}`) % BigInt(remaining.length),
+    );
+    const winner = remaining[index];
+    if (winner === undefined) break;
+
+    const hash = await sha256Hex(
+      position === 1
+        ? `${DRAW_DOMAIN}|raffle:${raffleId}|winner:${winner}|numbers:${list}`
+        : `${DRAW_DOMAIN}|raffle:${raffleId}|prize:${position}|winner:${winner}|numbers:${remainingList}`,
+    );
+
+    winners.push({ position, number: winner, hash });
+    winnersCsv.push(winner);
+    remaining.splice(index, 1);
+  }
+
+  const resultsHash = await sha256Hex(
+    `${DRAW_DOMAIN}|raffle:${raffleId}|seed:${seed}|winners:${winnersCsv.join(",")}|numbers:${list}`,
+  );
+
+  return { commitment, numbersHash, winners, resultsHash, list };
+}
+
 export async function computeDrawVerification({
   raffleId,
   seed,

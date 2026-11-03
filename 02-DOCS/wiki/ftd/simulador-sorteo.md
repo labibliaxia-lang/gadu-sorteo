@@ -37,6 +37,10 @@ certificado, accesible solo desde el panel superadmin.
 - `supabase/migrations/0055_sandbox_multi_prize.sql`: columnas `prizes_count`, `winners` (JSONB) y
   `results_hash`; RPC `create_sandbox_commitment_v2(p_count, p_prizes)` y
   `execute_sandbox_draw_v2(run_id)`.
+- `components/MultiPrizeVerifier.tsx`: recalcula todos los premios en el navegador y muestra un check
+  por puesto, más el `results_hash` combinado.
+- `components/WinnerCertificate.tsx`: acepta `prizeLabel`; el título del PNG y el nombre del archivo
+  indican el puesto. Se renderiza **un certificado por premio**.
 
 **Out:** `raffles`, `raffle_numbers`, `payments`, el motor `draw_winner` y cualquier página pública.
 
@@ -53,6 +57,8 @@ certificado, accesible solo desde el panel superadmin.
 | 7 | Flujo en dos fases igual al real | 0051 + botones 1/2 |
 | 8 | Verificación con hashes en el navegador | `DrawVerifier` reutilizado |
 | 9 | Multi-premio con hashes por premio | 0055 + selector de premios |
+| 10 | Verificador por premio | `MultiPrizeVerifier` |
+| 11 | Certificado PNG por premio | `prizeLabel` + map de certificados |
 
 ## Evidence
 
@@ -78,7 +84,12 @@ lista de números simulados.
 **9 — observado.** El simulador acepta hasta 10.000 números y 50 premios. El premio 1 conserva la
 fórmula del motor real; los siguientes usan `|prize:i|numbers:<restantes>` y excluyen ganadores
 previos. Cada premio guarda `{position, number, hash}` en `winners` y el conjunto queda cubierto por
-`results_hash`. `result_hash` sigue siendo el del primer premio para el verificador y el certificado.
+`results_hash`. `result_hash` sigue siendo el del primer premio para compatibilidad.
+
+**10, 11 — observado.** `MultiPrizeVerifier` recalcula compromiso, listado, cada ganador/hash,
+`results_hash` y ausencia de repetidos; muestra un check por puesto. Cada premio renderiza su propio
+`WinnerCertificate` con `prizeLabel`, hash individual y archivo
+`certificado-gadu-<puesto>-<numero>.png`.
 
 **10 — corregido.** La primera versión de `execute_sandbox_draw` fallaba con
 `column reference "v_row.winning_number" is ambiguous` porque el `RETURNS TABLE` declara columnas con

@@ -12,6 +12,8 @@ interface WinnerCertificateProps {
   drawnAt: string | null;
   verificationHash: string;
   verifyUrl: string;
+  /** Ej. "1.er premio", "2.º premio". Si falta, certificado genérico. */
+  prizeLabel?: string;
 }
 
 function wrapText(
@@ -56,6 +58,7 @@ export function WinnerCertificate({
   drawnAt,
   verificationHash,
   verifyUrl,
+  prizeLabel,
 }: WinnerCertificateProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,8 +92,12 @@ export function WinnerCertificate({
       ctx.fillText("GADU SORTEOS", 120, 140);
 
       ctx.fillStyle = "#111827";
-      ctx.font = "bold 44px Arial";
-      ctx.fillText("Certificado de ganador", 120, 210);
+      ctx.font = "bold 40px Arial";
+      ctx.fillText(
+        prizeLabel ? `Certificado · ${prizeLabel}` : "Certificado de ganador",
+        120,
+        210,
+      );
 
       ctx.fillStyle = "#6b7280";
       ctx.font = "20px Arial";
@@ -128,8 +135,15 @@ export function WinnerCertificate({
       ctx.font = "14px Arial";
       wrapText(ctx, `Verificable en: ${verifyUrl}`, 120, 705, 960, 20);
 
+      const prizeSlug = (prizeLabel ?? "ganador")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase();
+
       const link = document.createElement("a");
-      link.download = `certificado-gadu-${winnerNumber}.png`;
+      link.download = `certificado-gadu-${prizeSlug}-${winnerNumber}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch {
@@ -147,7 +161,7 @@ export function WinnerCertificate({
         ) : (
           <Download className="mr-1.5 h-4 w-4" />
         )}
-        Descargar certificado (PNG)
+        Descargar certificado{prizeLabel ? ` · ${prizeLabel}` : " (PNG)"}
       </Button>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
