@@ -89,7 +89,7 @@ where status = 'drawn' and results_hash is null;
 -- ---------------------------------------------------------------------
 create or replace function public.draw_winner_multi_core(p_raffle_id uuid)
 returns table (
-  position integer,
+  "position" integer,
   winning_number integer,
   winner_user uuid,
   winner_name text,
@@ -296,7 +296,7 @@ revoke all on function public.draw_winner_multi_core(uuid)
 
 create or replace function public.draw_winner_multi(p_raffle_id uuid)
 returns table (
-  position integer,
+  "position" integer,
   winning_number integer,
   winner_user uuid,
   winner_name text,
@@ -327,7 +327,7 @@ grant execute on function public.draw_winner_multi(uuid) to authenticated;
 
 create or replace function public.draw_winner_multi_system(p_raffle_id uuid)
 returns table (
-  position integer,
+  "position" integer,
   winning_number integer,
   winner_user uuid,
   winner_name text,
