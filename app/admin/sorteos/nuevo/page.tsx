@@ -108,6 +108,7 @@ export default function NuevoSorteoPage() {
     handleSubmit,
     watch,
     setValue,
+    trigger,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -119,6 +120,8 @@ export default function NuevoSorteoPage() {
   const drawDate = watch("draw_date");
   const maxNumbers = watch("max_numbers");
   const paymentType = watch("payment_type");
+  const transferAlias = watch("transfer_alias");
+  const whatsappContact = watch("whatsapp_contact");
 
   useEffect(() => {
     let active = true;
@@ -181,6 +184,26 @@ export default function NuevoSorteoPage() {
     activeRafflesCount !== null &&
     !planContext.isSuperadmin &&
     activeRafflesCount >= planContext.limits.maxActiveRaffles;
+
+  const [step, setStep] = useState(1);
+
+  const STEP_FIELDS: Record<number, (keyof FormValues)[]> = {
+    1: ["title", "description", "price_per_number", "draw_date", "max_numbers"],
+    2: [
+      "payment_type",
+      "transfer_alias",
+      "transfer_cbu",
+      "transfer_bank",
+      "whatsapp_contact",
+    ],
+  };
+
+  async function nextStep() {
+    const fields = STEP_FIELDS[step];
+    if (!fields) return;
+    const valid = await trigger(fields);
+    if (valid) setStep((current) => Math.min(3, current + 1));
+  }
 
   async function uploadFile(file: File | undefined) {
     if (!file) return;
@@ -326,7 +349,13 @@ export default function NuevoSorteoPage() {
       {/* ===== Formulario ===== */}
       <Card>
         <CardHeader>
-          <CardTitle>Nuevo sorteo</CardTitle>
+          <CardTitle>
+            {step === 1
+              ? "Nuevo sorteo · Datos básicos"
+              : step === 2
+                ? "Nuevo sorteo · Cobro"
+                : "Nuevo sorteo · Portada y revisión"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -338,6 +367,34 @@ export default function NuevoSorteoPage() {
                 Premium.
               </div>
             )}
+
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              {[
+                { n: 1, label: "Básicos" },
+                { n: 2, label: "Cobro" },
+                { n: 3, label: "Portada" },
+              ].map((item) => (
+                <div
+                  key={item.n}
+                  className={cn(
+                    "rounded-lg border p-2 text-center",
+                    step === item.n
+                      ? "border-amber-500 bg-amber-500/10 font-semibold"
+                      : step > item.n
+                        ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
+                        : "text-muted-foreground",
+                  )}
+                >
+                  <span className="block text-[10px] uppercase tracking-wide">
+                    Paso {item.n}
+                  </span>
+                  {item.label}
+                </div>
+              ))}
+            </div>
+
+            {step === 1 && (
+              <>
             <div className="space-y-2">
               <Label htmlFor="title">Título</Label>
               <div className="relative">
@@ -453,7 +510,11 @@ export default function NuevoSorteoPage() {
                 </PremiumGate>
               )}
             </div>
+              </>
+            )}
 
+            {step === 2 && (
+              <>
             {/* Método de pago */}
             <div className="space-y-3">
               <Label>Método de pago</Label>
@@ -605,7 +666,48 @@ export default function NuevoSorteoPage() {
                 </div>
               </div>
             )}
+              </>
+            )}
 
+            {step === 3 && (
+              <>
+            <div className="space-y-1 rounded-xl border bg-muted/30 p-4 text-sm">
+              <p className="font-semibold">Revisión final</p>
+              <p className="text-muted-foreground">
+                Título: <span className="text-foreground">{title || "—"}</span>
+              </p>
+              <p className="text-muted-foreground">
+                Fecha:{" "}
+                <span className="text-foreground">
+                  {drawDate ? formatDateTime(drawDate) : "—"}
+                </span>
+              </p>
+              <p className="text-muted-foreground">
+                Precio:{" "}
+                <span className="text-foreground">
+                  {price ? formatPrice(Number(price)) : "$ 0"} por número ·{" "}
+                  {maxNumbers || 0} números
+                </span>
+              </p>
+              <p className="text-muted-foreground">
+                Cobro:{" "}
+                <span className="text-foreground">
+                  {paymentType === "transferencia"
+                    ? `Transferencia${transferAlias ? ` · ${transferAlias}` : ""}`
+                    : "Mercado Pago"}
+                </span>
+              </p>
+              {whatsappContact && (
+                <p className="text-muted-foreground">
+                  WhatsApp:{" "}
+                  <span className="text-foreground">{whatsappContact}</span>
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Al crear se generan los números automáticamente. Los premios y
+                el compromiso del sorteo se cargan después.
+              </p>
+            </div>
             {/* Dropzone */}
             <div className="space-y-2">
               <Label>Imagen de portada</Label>
@@ -654,12 +756,41 @@ export default function NuevoSorteoPage() {
                 <p className="text-sm text-destructive">{uploadError}</p>
               )}
             </div>
+              </>
+            )}
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creando sorteo…" : "Crear sorteo"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {step > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStep((current) => Math.max(1, current - 1))}
+                  disabled={loading}
+                >
+                  Atrás
+                </Button>
+              )}
+
+              {step < 3 ? (
+                <Button
+                  type="button"
+                  onClick={() => void nextStep()}
+                  className="flex-1"
+                >
+                  Continuar
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={loading}
+                >
+                  {loading ? "Creando sorteo…" : "Crear sorteo"}
+                </Button>
+              )}
+            </div>
           </form>
         </CardContent>
       </Card>
