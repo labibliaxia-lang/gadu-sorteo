@@ -633,6 +633,30 @@ export default async function RafflePage({
               </span>
             )}
           </div>
+          <div className="grid gap-2 rounded-xl border bg-card p-3 text-sm shadow-soft sm:grid-cols-3">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-500 text-xs font-bold text-ink">
+                1
+              </span>
+              Elegí tus números
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold">
+                2
+              </span>
+              {raffle.payment_type === "transferencia"
+                ? "Transferí el total"
+                : "Pagá online"}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold">
+                3
+              </span>
+              {raffle.payment_type === "transferencia"
+                ? "Enviá el comprobante"
+                : "Confirmá el pago"}
+            </div>
+          </div>
           {raffle.payment_type === "transferencia" && (
             <div className="rounded-xl border bg-muted/40 p-4">
               <p className="text-sm font-semibold">Datos para transferencia</p>

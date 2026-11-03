@@ -7,6 +7,7 @@ import { MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatPrice } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { notifyReservation } from "@/app/sorteos/actions";
 import type { RaffleNumber } from "@/lib/types";
 import { useFocusTrap } from "@/lib/use-focus-trap";
@@ -117,6 +118,7 @@ export function NumbersGrid({
   const [loginRequired, setLoginRequired] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [reserving, setReserving] = useState(false);
+  const [jumpValue, setJumpValue] = useState("");
   const [summary, setSummary] = useState<{
     numbers: number[];
     total: number;
@@ -499,6 +501,27 @@ export function NumbersGrid({
     return count;
   }, [numbers]);
 
+  function jumpToNumber() {
+    const target = Number(jumpValue);
+    if (!Number.isInteger(target) || target < 1 || target > totalCount) {
+      setError(
+        `Elegí un número entre 1 y ${totalCount.toLocaleString("es-AR")}.`,
+      );
+      return;
+    }
+
+    setError(null);
+    const rowIndex = Math.floor((target - 1) / cols);
+    virtualizer.scrollToIndex(rowIndex, { align: "center" });
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+    setDeadline(null);
+    setRemaining(0);
+    setError(null);
+  }
+
   return (
     <div className={cn("space-y-4", selected.size > 0 && "pb-28 lg:pb-0")}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -609,6 +632,45 @@ export function NumbersGrid({
           <span className="flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-full bg-blue-500" /> Tu selección
           </span>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="space-y-1">
+            <label
+              htmlFor="jump-number"
+              className="text-xs text-muted-foreground"
+            >
+              Ir a un número
+            </label>
+            <Input
+              id="jump-number"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={jumpValue}
+              onChange={(event) => setJumpValue(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  jumpToNumber();
+                }
+              }}
+              placeholder="Ej: 1250"
+              className="h-9 w-28"
+            />
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={jumpToNumber}>
+            Ir
+          </Button>
+          {selected.size > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearSelection}
+            >
+              Limpiar selección
+            </Button>
+          )}
         </div>
       </div>
 

@@ -22,6 +22,12 @@ grid más legible y táctil, manteniendo intactas las reservas y el prepago.
   - CTA principal «Elegir mis números» que ancla al grid cuando el sorteo está activo; «Verificar
     resultado» y «Sala en vivo» según estado.
   - Bloque de ganador con trofeo y número en monoespaciada.
+  - Franja de 3 pasos sobre el grid (elegir → transferir/pagar → comprobante/confirmar).
+- `components/PrizeCard.tsx`: tarjetas de premio con overlay, badge de puesto (1.er premio en
+  amarillo), imagen doble y hover suave.
+- `components/NumbersGrid.tsx`:
+  - Salto directo a un número por input (Enter o botón «Ir»), con validación de rango.
+  - Botón «Limpiar selección» que además cancela el contador de 10 minutos.
 - `components/NumbersGrid.tsx`:
   - Encabezado «Tocá un número…» y contador de disponibles sobre el total.
   - Leyenda de estados en una tarjeta con borde, no suelta.
@@ -50,6 +56,10 @@ sección del grid.
 **4, 5 — observado.** El grid muestra disponibles/total, una leyenda con borde y el resumen de
 selección con `aria-live="polite"`. Los botones conservan `aria-label` por número y 44 px de alto en
 móvil.
+
+**7 — observado.** La franja de pasos cambia el texto según transferencia o pago online. Las tarjetas
+de premio destacan el primer puesto. El salto a número usa `scrollToIndex` del virtualizador y avisa
+si el número está fuera del rango; limpiar selección resetea números y contador.
 
 **6 — observado.** `npm run typecheck` → 0. `npm run lint` → `✔ No ESLint warnings or errors`.
 `npm test` → 38/38. `npm run build` → 0.
