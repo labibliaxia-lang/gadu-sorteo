@@ -11,6 +11,7 @@ import { NumbersGrid } from "@/components/NumbersGrid";
 import { OrganizerCard } from "@/components/OrganizerCard";
 import { OrganizerContact } from "@/components/OrganizerContact";
 import { PrizeCard } from "@/components/PrizeCard";
+import { RaffleVisitTracker } from "@/components/RaffleVisitTracker";
 import { ShareButton } from "@/components/ShareButton";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { Prize, PublicOrganizer, Raffle } from "@/lib/types";
@@ -154,6 +155,7 @@ export default async function RafflePage({
 
   return (
     <div className="space-y-8">
+      <RaffleVisitTracker raffleId={raffle.id} />
       <section className="grid gap-6 md:grid-cols-2">
         <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-muted">
           {raffle.cover_image_url ? (

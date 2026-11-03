@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Grid3x3, Pencil } from "lucide-react";
+import { BarChart3, Grid3x3, Pencil } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { requireAdminSession } from "@/lib/auth";
@@ -199,6 +199,13 @@ export default async function AdminRaffleDetailPage({
               className={buttonVariants({ variant: "outline" })}
             >
               Gestionar premios
+            </Link>
+            <Link
+              href={`/admin/sorteos/${raffle.id}/analitica`}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              <BarChart3 className="mr-1.5 h-4 w-4" />
+              Ver analítica
             </Link>
             <Link
               href={`/admin/sorteos/${raffle.id}/editar`}
