@@ -5,17 +5,29 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
-/**
- * Botón de "Continuar con Google".
- * Inicia el flujo OAuth y redirige a /auth/callback para intercambiar el code
- * por la sesión y setear la cookie de forma segura (servidor).
- */
-export function GoogleAuthButton() {
+/** Cookie corta para volver al sorteo después del login con Google. */
+const NEXT_COOKIE = "gadu_next";
+
+export function GoogleAuthButton({ next }: { next?: string | null }) {
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
 
+  function safeNext(): string | null {
+    if (!next) return null;
+    return next.startsWith("/") && !next.startsWith("//") ? next : null;
+  }
+
   async function handleSignIn() {
     setLoading(true);
+
+    const target = safeNext();
+    if (target) {
+      document.cookie = `${NEXT_COOKIE}=${encodeURIComponent(
+        target,
+      )}; Path=/; Max-Age=600; SameSite=Lax`;
+    } else {
+      document.cookie = `${NEXT_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+    }
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -39,11 +51,7 @@ export function GoogleAuthButton() {
       onClick={handleSignIn}
       disabled={loading}
     >
-      <svg
-        className="mr-2 h-4 w-4"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
+      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
         <path
           fill="#4285F4"
           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

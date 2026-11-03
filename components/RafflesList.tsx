@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 import type { Raffle } from "@/lib/types";
 
-type Filter = "all" | "active" | "finished";
+type Filter = "all" | "active" | "closed" | "drawn";
 
 const statusLabel: Record<Raffle["status"], string> = {
   active: "Activo",
@@ -39,7 +39,8 @@ const statusVariant: Record<
 const FILTERS: { key: Filter; label: string }[] = [
   { key: "all", label: "Todos" },
   { key: "active", label: "Activos" },
-  { key: "finished", label: "Finalizados" },
+  { key: "closed", label: "Cerrados" },
+  { key: "drawn", label: "Sorteados" },
 ];
 
 export function RafflesList({ raffles }: { raffles: Raffle[] }) {
@@ -50,7 +51,8 @@ export function RafflesList({ raffles }: { raffles: Raffle[] }) {
     const q = query.trim().toLowerCase();
     return raffles.filter((r) => {
       if (filter === "active" && r.status !== "active") return false;
-      if (filter === "finished" && r.status === "active") return false;
+      if (filter === "closed" && r.status !== "closed") return false;
+      if (filter === "drawn" && r.status !== "drawn") return false;
       if (q && !r.title.toLowerCase().includes(q)) return false;
       return true;
     });
@@ -150,10 +152,18 @@ export function RafflesList({ raffles }: { raffles: Raffle[] }) {
 
               <CardFooter className="gap-2">
                 <Link
-                  href={`/sorteos/${raffle.id}`}
+                  href={
+                    raffle.status === "drawn"
+                      ? `/sorteos/${raffle.id}/verificar`
+                      : `/sorteos/${raffle.id}`
+                  }
                   className={cn(buttonVariants(), "flex-1")}
                 >
-                  Participar
+                  {raffle.status === "drawn"
+                    ? "Ver resultado"
+                    : raffle.status === "closed"
+                      ? "Ver detalles"
+                      : "Participar"}
                 </Link>
                 <ShareButton sorteoId={raffle.id} titulo={raffle.title} />
               </CardFooter>

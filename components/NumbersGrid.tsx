@@ -12,6 +12,37 @@ import type { RaffleNumber } from "@/lib/types";
 
 const RESERVATION_SECONDS = 10 * 60;
 
+/** Fila de dato de transferencia con botón de copiar. */
+function CopyRow({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard bloqueado: el valor queda visible igual
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-md bg-muted/60 px-2 py-1.5 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-right font-mono font-semibold">
+        {value}
+      </span>
+      <button
+        type="button"
+        onClick={copy}
+        className="shrink-0 rounded border px-2 py-0.5 text-xs transition hover:bg-accent"
+      >
+        {copied ? "Copiado" : "Copiar"}
+      </button>
+    </div>
+  );
+}
+
 /**
  * Mercado Pago queda oculto por defecto mientras se opera con prepago manual.
  * El código del checkout y del simulador se conserva: con
@@ -44,8 +75,7 @@ function useColumnCount() {
   return cols;
 }
 
-interface NumbersGridProps {
-  raffleId: string;
+interface NumbersGridProps {  raffleId: string;
   pricePerNumber: number;
   raffleStatus: string;
   isDev?: boolean;
@@ -71,6 +101,7 @@ export function NumbersGrid({
   const supabase = useMemo(() => createClient(), []);
   const cols = useColumnCount();
   const parentRef = useRef<HTMLDivElement>(null);
+  const loginHref = `/login?next=${encodeURIComponent(`/sorteos/${raffleId}`)}`;
 
   const [numbers, setNumbers] = useState<Map<number, RaffleNumber>>(new Map());
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -258,6 +289,10 @@ export function NumbersGrid({
     return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
   }
 
+  const summaryWhatsappHref = summary
+    ? buildWhatsAppHref(summary.numbers, summary.total)
+    : null;
+
   /**
    * Reserva los números elegidos y abre el resumen con el comprobante.
    * La reserva la hace el RPC con hold largo; el pago lo confirma el
@@ -265,7 +300,7 @@ export function NumbersGrid({
    */
   async function handleReservePrepaid() {
     if (!userId) {
-      window.location.href = "/login";
+      window.location.href = loginHref;
       return;
     }
     if (selected.size === 0) return;
@@ -355,7 +390,7 @@ export function NumbersGrid({
 
   async function handleCheckout() {
     if (!userId) {
-      window.location.href = "/login";
+      window.location.href = loginHref;
       return;
     }
     if (selected.size === 0) return;
@@ -402,7 +437,7 @@ export function NumbersGrid({
 
   async function handleMockPayment() {
     if (!userId) {
-      window.location.href = "/login";
+      window.location.href = loginHref;
       return;
     }
     if (selected.size === 0) return;
@@ -638,7 +673,7 @@ export function NumbersGrid({
               <Button variant="outline" onClick={() => setLoginRequired(false)}>
                 Cancelar
               </Button>
-              <Button onClick={() => (window.location.href = "/login")}>
+              <Button onClick={() => (window.location.href = loginHref)}>
                 Ir a iniciar sesión
               </Button>
             </div>
@@ -688,18 +723,47 @@ export function NumbersGrid({
               </span>
             </p>
 
-            <a
-              href={buildWhatsAppHref(summary.numbers, summary.total) ?? "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                buttonVariants(),
-                "mt-4 w-full bg-emerald-600 text-white hover:bg-emerald-700",
+            {isTransfer &&
+              (transferInfo?.alias ||
+                transferInfo?.cbu ||
+                transferInfo?.bank) && (
+                <div className="mt-4 space-y-1.5">
+                  <p className="text-sm font-semibold">Datos para transferir</p>
+                  {transferInfo.alias && (
+                    <CopyRow label="Alias" value={transferInfo.alias} />
+                  )}
+                  {transferInfo.cbu && (
+                    <CopyRow label="CBU" value={transferInfo.cbu} />
+                  )}
+                  {transferInfo.bank && (
+                    <CopyRow label="Banco" value={transferInfo.bank} />
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Transferí el total y después enviá el comprobante por
+                    WhatsApp.
+                  </p>
+                </div>
               )}
-            >
-              <MessageCircle className="mr-1.5 h-4 w-4" />
-              Enviar comprobante por WhatsApp
-            </a>
+
+            {summaryWhatsappHref ? (
+              <a
+                href={summaryWhatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  buttonVariants(),
+                  "mt-4 w-full bg-emerald-600 text-white hover:bg-emerald-700",
+                )}
+              >
+                <MessageCircle className="mr-1.5 h-4 w-4" />
+                Enviar comprobante por WhatsApp
+              </a>
+            ) : (
+              <p className="mt-4 rounded-md bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
+                El organizador no cargó un WhatsApp de contacto. Usá los datos
+                de transferencia y coordiná el pago desde la página del sorteo.
+              </p>
+            )}
 
             <p className="mt-3 text-xs text-muted-foreground">
               Guardamos tus números {PREPAID_HOLD_HOURS} h. Cuando el

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -7,11 +7,24 @@ import { createClient } from "@/lib/supabase/server";
  * Google redirige aquí con ?code=... ; intercambiamos ese code por una sesión
  * (exchangeCodeForSession) para que la cookie se setee en el servidor de forma
  * segura y no quede expuesta en el cliente.
+ *
+ * Para volver al sorteo de origen, el login deja una cookie corta `gadu_next`.
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const rawNext = searchParams.get("next") ?? "/";
+
+  let rawNext = searchParams.get("next") ?? "/";
+  const cookieNext = request.cookies.get("gadu_next")?.value;
+
+  if (!searchParams.get("next") && cookieNext) {
+    try {
+      rawNext = decodeURIComponent(cookieNext);
+    } catch {
+      rawNext = "/";
+    }
+  }
+
   // Evita open redirect: solo se permiten rutas relativas dentro de la app.
   const next =
     rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
@@ -24,13 +37,15 @@ export async function GET(request: Request) {
       const forwardedHost = request.headers.get("x-forwarded-host");
       const isLocalEnv = process.env.NODE_ENV === "development";
 
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`);
+      let destination = `${origin}${next}`;
+      if (!isLocalEnv && forwardedHost) {
+        destination = `https://${forwardedHost}${next}`;
       }
-      if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
-      }
-      return NextResponse.redirect(`${origin}${next}`);
+
+      const response = NextResponse.redirect(destination);
+      // La cookie de retorno es de un solo uso.
+      response.cookies.set("gadu_next", "", { path: "/", maxAge: 0 });
+      return response;
     }
   }
 

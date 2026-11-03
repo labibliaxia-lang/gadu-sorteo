@@ -6,6 +6,7 @@ import {
   CalendarDays,
   Copy,
   Gift,
+  MessageCircle,
   Share2,
   Ticket,
   Trophy,
@@ -25,12 +26,21 @@ interface RaffleRef {
   status: string;
   winner_number: number | null;
   winner_name: string | null;
+  whatsapp_contact: string | null;
 }
 
-interface SoldNumberRow {
+interface NumberRow {
   raffle_id: string;
   number: number;
+  status: string;
+  reserved_until: string | null;
   raffles: RaffleRef | null;
+}
+
+interface RaffleNumbersGroup {
+  raffle: RaffleRef;
+  sold: number[];
+  reserved: { number: number; until: string | null }[];
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -39,9 +49,19 @@ const STATUS_LABEL: Record<string, string> = {
   drawn: "Sorteado",
 };
 
+function whatsappHref(
+  phone: string | null,
+  message: string,
+): string | null {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  if (!digits) return null;
+  const withCountry = digits.startsWith("54") ? digits : `54${digits}`;
+  return `https://wa.me/${withCountry}?text=${encodeURIComponent(message)}`;
+}
+
 export default function MisNumerosPage() {
   const supabase = createClient();
-  const [rows, setRows] = useState<SoldNumberRow[]>([]);
+  const [rows, setRows] = useState<NumberRow[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -59,31 +79,36 @@ export default function MisNumerosPage() {
 
       setUserId(user.id);
 
-      // Números vendidos al usuario (incluye los gratis por referidos).
+      // Números vendidos y reservas pendientes del usuario.
       const { data } = await supabase
         .from("raffle_numbers")
         .select(
-          "raffle_id, number, raffles(id, title, cover_image_url, draw_date, status, winner_number, winner_name)",
+          "raffle_id, number, status, reserved_until, raffles(id, title, cover_image_url, draw_date, status, winner_number, winner_name, whatsapp_contact)",
         )
-        .eq("sold_to", user.id)
-        .eq("status", "sold")
+        .or(`sold_to.eq.${user.id},reserved_by.eq.${user.id}`)
+        .in("status", ["sold", "reserved"])
         .order("number", { ascending: true });
 
-      setRows((data as unknown as SoldNumberRow[]) ?? []);
+      setRows((data as unknown as NumberRow[]) ?? []);
       setLoading(false);
     }
     load();
   }, [supabase]);
 
-  const byRaffle = new Map<string, { raffle: RaffleRef; numbers: number[] }>();
+  const byRaffle = new Map<string, RaffleNumbersGroup>();
 
   for (const r of rows) {
     if (!r.raffles) continue;
-    const current = byRaffle.get(r.raffles.id) ?? {
+    const current: RaffleNumbersGroup = byRaffle.get(r.raffles.id) ?? {
       raffle: r.raffles,
-      numbers: [],
+      sold: [],
+      reserved: [],
     };
-    current.numbers.push(r.number);
+    if (r.status === "reserved") {
+      current.reserved.push({ number: r.number, until: r.reserved_until });
+    } else if (r.status === "sold") {
+      current.sold.push(r.number);
+    }
     byRaffle.set(r.raffles.id, current);
   }
 
@@ -114,10 +139,15 @@ export default function MisNumerosPage() {
    */
   async function shareTicket(group: {
     raffle: RaffleRef;
-    numbers: number[];
+    sold: number[];
+    reserved: { number: number; until: string | null }[];
   }) {
     const url = `${window.location.origin}/sorteos/${group.raffle.id}`;
-    const numbers = group.numbers.map(formatNumber).join(", ");
+    const allNumbers = [
+      ...group.sold,
+      ...group.reserved.map((r) => r.number),
+    ].sort((a, b) => a - b);
+    const numbers = allNumbers.map(formatNumber).join(", ");
     const text = `¡Estoy participando en el sorteo de ${group.raffle.title} en Gadu Sorteos! Mis números son ${numbers}. ¡Entra y participa! ${url}`;
 
     const nav = navigator as Navigator & {
@@ -149,7 +179,7 @@ export default function MisNumerosPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Mis números</h1>
         <p className="text-muted-foreground">
-          Los boletos que tenés en cada sorteo.
+          Tus números confirmados y las reservas que están esperando el pago.
         </p>
       </header>
 
@@ -236,6 +266,9 @@ export default function MisNumerosPage() {
                     <Badge variant="secondary">
                       {STATUS_LABEL[g.raffle.status] ?? g.raffle.status}
                     </Badge>
+                    {g.reserved.length > 0 && (
+                      <Badge variant="warning">Pago pendiente</Badge>
+                    )}
 
                     {g.raffle.status === "drawn" &&
                       g.raffle.winner_number != null && (
@@ -254,21 +287,80 @@ export default function MisNumerosPage() {
                 <div className="relative hidden border-l border-dashed border-border sm:block" />
 
                 {/* Talón con los números */}
-                <div className="flex flex-col justify-between gap-4 border-t border-dashed p-5 sm:w-64 sm:border-l-0 sm:border-t-0">
-                  <div>
-                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      Tus números
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {g.numbers.map((n) => (
-                        <span
-                          key={`${g.raffle.id}-${n}`}
-                          className="rounded-md border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 font-mono text-sm font-bold text-amber-700 dark:text-amber-300"
-                        >
-                          {formatNumber(n)}
-                        </span>
-                      ))}
+                <div className="flex flex-col justify-between gap-4 border-t border-dashed p-5 sm:w-72 sm:border-l-0 sm:border-t-0">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        Tus números
+                      </p>
+                      {g.sold.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          Todavía no hay números confirmados.
+                        </p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {g.sold.map((n) => (
+                            <span
+                              key={`${g.raffle.id}-${n}`}
+                              className="rounded-md border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 font-mono text-sm font-bold text-amber-700 dark:text-amber-300"
+                            >
+                              {formatNumber(n)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
+
+                    {g.reserved.length > 0 && (
+                      <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2.5">
+                        <p className="text-xs font-semibold text-amber-800 dark:text-amber-200">
+                          Reservados · pendiente de pago
+                        </p>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {g.reserved.map((r) => (
+                            <span
+                              key={`${g.raffle.id}-reserved-${r.number}`}
+                              className="rounded-md border border-dashed border-amber-500/60 px-2 py-0.5 font-mono text-xs font-semibold text-amber-800 dark:text-amber-200"
+                            >
+                              {formatNumber(r.number)}
+                            </span>
+                          ))}
+                        </div>
+                        {g.reserved[0]?.until && (
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            La reserva vence{" "}
+                            {formatDateTime(g.reserved[0].until)}.
+                          </p>
+                        )}
+                        {whatsappHref(
+                          g.raffle.whatsapp_contact,
+                          `Hola! Envié el comprobante de la reserva en "${g.raffle.title}" por los números: ${g.reserved
+                            .map((r) => r.number)
+                            .join(", ")}.`,
+                        ) && (
+                          <a
+                            href={
+                              whatsappHref(
+                                g.raffle.whatsapp_contact,
+                                `Hola! Envié el comprobante de la reserva en "${g.raffle.title}" por los números: ${g.reserved
+                                  .map((r) => r.number)
+                                  .join(", ")}.`,
+                              ) ?? "#"
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={buttonVariants({
+                              size: "sm",
+                              className:
+                                "mt-2 w-full bg-emerald-600 text-white hover:bg-emerald-700",
+                            })}
+                          >
+                            <MessageCircle className="mr-1.5 h-4 w-4" />
+                            Enviar comprobante
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col gap-2">
                     <Link

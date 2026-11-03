@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string; confirm?: string };
+  searchParams: { error?: string; confirm?: string; next?: string };
 }) {
   const notice =
     searchParams.error === "auth"
@@ -45,7 +45,7 @@ export default function LoginPage({
         )}
 
         <div className="mt-6">
-          <GoogleAuthButton />
+          <GoogleAuthButton next={searchParams.next ?? null} />
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">

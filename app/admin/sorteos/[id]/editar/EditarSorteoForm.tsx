@@ -41,6 +41,28 @@ const schema = z.object({
   transfer_cbu: z.string().optional(),
   transfer_bank: z.string().optional(),
   whatsapp_contact: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.payment_type !== "transferencia") return;
+
+  const alias = data.transfer_alias?.trim();
+  const cbu = data.transfer_cbu?.trim();
+
+  if (!alias && !cbu) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["transfer_alias"],
+      message: "Cargá un alias o un CBU: sin eso nadie puede transferirte.",
+    });
+  }
+
+  const whatsapp = (data.whatsapp_contact ?? "").replace(/\D/g, "");
+  if (whatsapp.length < 8) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["whatsapp_contact"],
+      message: "El WhatsApp es obligatorio: por ahí recibís el comprobante.",
+    });
+  }
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -271,6 +293,11 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
                       {...register("transfer_alias")}
                     />
                   </div>
+                  {errors.transfer_alias && (
+                    <p className="text-xs text-destructive">
+                      {errors.transfer_alias.message}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="transfer_cbu">CBU</Label>
@@ -309,6 +336,11 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
                       {...register("whatsapp_contact")}
                     />
                   </div>
+                  {errors.whatsapp_contact && (
+                    <p className="text-xs text-destructive">
+                      {errors.whatsapp_contact.message}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
