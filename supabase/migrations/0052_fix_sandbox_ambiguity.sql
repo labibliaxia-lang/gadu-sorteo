@@ -92,13 +92,13 @@ begin
   end if;
 
   select
-    winning_number,
-    seed,
-    commitment,
-    numbers_hash,
-    result_hash,
-    numbers_count,
-    numbers
+    r.winning_number,
+    r.seed,
+    r.commitment,
+    r.numbers_hash,
+    r.result_hash,
+    r.numbers_count,
+    r.numbers
   into
     v_winning,
     v_seed,
@@ -107,8 +107,8 @@ begin
     v_result_hash,
     v_numbers_count,
     v_numbers
-  from public.draw_sandbox_runs
-  where id = p_run_id;
+  from public.draw_sandbox_runs r
+  where r.id = p_run_id;
 
   return query
   select
