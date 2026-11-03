@@ -167,8 +167,8 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                   title="Panel del organizador"
                   className={buttonVariants({ variant: "ghost", size: "sm" })}
                 >
-                  <LayoutDashboard className="h-4 w-4 xl:mr-1.5" />
-                  <span className="hidden xl:inline">Organizador</span>
+                  <LayoutDashboard className="h-4 w-4 2xl:mr-1.5" />
+                  <span className="hidden 2xl:inline">Organizador</span>
                 </Link>
               )}
               <Link
@@ -176,24 +176,24 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                 title="Mis pagos"
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
-                <Receipt className="h-4 w-4 xl:mr-1.5" />
-                <span className="hidden xl:inline">Mis pagos</span>
+                <Receipt className="h-4 w-4 2xl:mr-1.5" />
+                <span className="hidden 2xl:inline">Mis pagos</span>
               </Link>
               <Link
                 href="/mis-numeros"
                 title="Mis números"
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
-                <Ticket className="h-4 w-4 xl:mr-1.5" />
-                <span className="hidden xl:inline">Mis números</span>
+                <Ticket className="h-4 w-4 2xl:mr-1.5" />
+                <span className="hidden 2xl:inline">Mis números</span>
               </Link>
               <Link
                 href="/perfil"
                 title="Mi perfil"
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
-                <User className="h-4 w-4 xl:mr-1.5" />
-                <span className="hidden xl:inline">Perfil</span>
+                <User className="h-4 w-4 2xl:mr-1.5" />
+                <span className="hidden 2xl:inline">Perfil</span>
               </Link>
               {!isAdmin && !roleRequested && <RequestAdminButton />}
               <span className="flex items-center gap-2 rounded-full border px-2 py-1 text-sm">
@@ -210,7 +210,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                     {initial}
                   </span>
                 )}
-                <span className="hidden max-w-[140px] truncate xl:inline">
+                <span className="hidden max-w-[140px] truncate 2xl:inline">
                   {displayName || email}
                 </span>
               </span>
@@ -220,8 +220,8 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                 onClick={signOut}
                 title="Cerrar sesión"
               >
-                <LogOut className="h-4 w-4 xl:mr-1.5" />
-                <span className="hidden xl:inline">Salir</span>
+                <LogOut className="h-4 w-4 2xl:mr-1.5" />
+                <span className="hidden 2xl:inline">Salir</span>
               </Button>
             </>
           ) : (

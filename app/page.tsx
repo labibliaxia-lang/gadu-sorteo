@@ -114,13 +114,13 @@ export default async function HomePage() {
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand-500/20 blur-3xl" />
 
         <div className="relative grid gap-10 px-6 py-12 sm:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-16">
-          <div className="max-w-2xl space-y-6">
+          <div className="min-w-0 max-w-2xl space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-brand-400/40 bg-brand-400/10 px-3 py-1 text-xs font-medium text-brand-200">
               <ShieldCheck className="h-4 w-4" />
               Herramientas · premios · transparencia
             </span>
 
-            <h1 className="text-balance text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="break-words text-balance text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
               Sorteos que se pueden{" "}
               <span className="text-brand-400">verificar.</span>
             </h1>
@@ -131,17 +131,20 @@ export default async function HomePage() {
               comprobar con su hash.
             </p>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
               <Link
                 href="/#sorteos"
-                className={cn(buttonVariants({ size: "lg" }), "group")}
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "group w-full justify-center sm:w-auto",
+                )}
               >
                 Ver sorteos activos
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <Link
                 href="/como-funciona"
-                className="inline-flex h-11 items-center rounded-lg border border-white/20 bg-white/5 px-6 text-base font-semibold text-white transition hover:bg-white/10"
+                className="inline-flex h-11 w-full items-center justify-center rounded-lg border border-white/20 bg-white/5 px-6 text-base font-semibold text-white transition hover:bg-white/10 sm:w-auto"
               >
                 Cómo funciona
               </Link>
@@ -166,7 +169,7 @@ export default async function HomePage() {
             {featured && (
               <Link
                 href={`/sorteos/${featured.id}`}
-                className="group mt-2 block rounded-2xl border border-white/15 bg-white/5 p-3 transition hover:border-brand-400/60 lg:hidden"
+                className="group mt-2 block w-full min-w-0 rounded-2xl border border-white/15 bg-white/5 p-3 transition hover:border-brand-400/60 lg:hidden"
               >
                 <div className="flex items-center gap-3">
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-ink-soft">
