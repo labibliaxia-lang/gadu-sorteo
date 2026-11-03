@@ -17,18 +17,41 @@ import {
  * - Es idempotente: si el pago ya se procesó, no repite acciones.
  * - Solo el service role marca números como "sold" (RPC sell_numbers).
  */
+const MAX_BODY_BYTES = 1024 * 1024; // 1 MB
+
 export async function POST(request: NextRequest) {
+  const contentLength = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+    return NextResponse.json(
+      { error: "Solicitud demasiado grande" },
+      { status: 413 },
+    );
+  }
+
   const rawBody = await request.text();
+  if (rawBody.length > MAX_BODY_BYTES) {
+    return NextResponse.json(
+      { error: "Solicitud demasiado grande" },
+      { status: 413 },
+    );
+  }
   // MP firma el manifest `id:[data.id];request-id:[x-request-id];ts:[ts];`.
   // `data.id` viaja en el query string de la URL de notificación, no en el body.
   const dataIdFromQuery = request.nextUrl.searchParams.get("data.id");
   const requestId = request.headers.get("x-request-id");
 
-  const verification = verifyWebhookSignature({
-    xSignature: request.headers.get("x-signature"),
-    xRequestId: requestId,
-    dataId: dataIdFromQuery,
-  });
+  const verification = (() => {
+    try {
+      return verifyWebhookSignature({
+        xSignature: request.headers.get("x-signature"),
+        xRequestId: requestId,
+        dataId: dataIdFromQuery,
+      });
+    } catch (error) {
+      console.error("Webhook MP: error verificando firma", error);
+      return { ok: false as const, reason: "ValidatorError" };
+    }
+  })();
 
   if (!verification.ok) {
     console.error(
@@ -119,7 +142,10 @@ export async function POST(request: NextRequest) {
 
     if (sellError) {
       console.error("Webhook MP: error al vender números", sellError);
-      return NextResponse.json({ error: sellError.message }, { status: 500 });
+      return NextResponse.json(
+        { error: "Error interno procesando la solicitud" },
+        { status: 500 },
+      );
     }
 
     await admin

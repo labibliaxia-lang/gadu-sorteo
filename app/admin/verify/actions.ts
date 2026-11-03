@@ -12,13 +12,8 @@ const MAX_AGE_SECONDS = 30 * 60; // 30 minutos
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
-// SHA-256 (hex) de la clave maestra de respaldo de 25 caracteres.
-// SOLO se usa en desarrollo: en producción, sin ADMIN_ACCESS_CODE_HASH /
-// ADMIN_ACCESS_CODE el panel falla cerrado (constitución, principio 19).
-// En el código fuente NUNCA se guarda la clave en texto plano: solo su hash.
-const DEV_FALLBACK_ACCESS_CODE_HASH =
-  "5c0291ed411451dee115a19613f36034e94971bdec689228be2a7e65f52532e8";
-
+// SHA-256 (hex) de la clave maestra. Debe venir siempre del entorno: no se
+// acepta un hash hardcodeado en el repositorio, ni siquiera en desarrollo.
 const HASH_RE = /^[0-9a-f]{64}$/;
 
 function sha256Hex(value: string): string {
@@ -29,8 +24,7 @@ function sha256Hex(value: string): string {
  * Hash SHA-256 esperado, por orden de prioridad:
  *   1. ADMIN_ACCESS_CODE_HASH (recomendado).
  *   2. ADMIN_ACCESS_CODE legacy (se hashea en memoria, nunca se compara en claro).
- *   3. Hash de respaldo de desarrollo, solo fuera de producción.
- * Devuelve null cuando no hay clave configurada en producción.
+ * Devuelve null cuando no hay clave configurada, también en desarrollo.
  */
 function accessCodeHash(): string | null {
   const fromEnv = process.env.ADMIN_ACCESS_CODE_HASH?.trim().toLowerCase();
@@ -39,11 +33,10 @@ function accessCodeHash(): string | null {
   const legacy = process.env.ADMIN_ACCESS_CODE?.trim();
   if (legacy) return sha256Hex(legacy);
 
-  if (IS_PRODUCTION) return null;
-  console.warn(
-    "[admin] ADMIN_ACCESS_CODE_HASH no configurado: se usa la clave de desarrollo.",
+  console.error(
+    "[admin] Falta ADMIN_ACCESS_CODE_HASH o ADMIN_ACCESS_CODE en el entorno.",
   );
-  return DEV_FALLBACK_ACCESS_CODE_HASH;
+  return null;
 }
 
 function sessionSecret(): string | null {

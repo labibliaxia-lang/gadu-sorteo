@@ -15,6 +15,7 @@ const checkoutSchema = z.object({
 });
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
+const MAX_BODY_BYTES = 1024 * 1024; // 1 MB
 
 /** Credenciales reales de Mercado Pago. `TEST` y `mock` son marcadores de prueba. */
 function hasMpCredentials(): boolean {
@@ -22,16 +23,40 @@ function hasMpCredentials(): boolean {
   return Boolean(token) && token !== "TEST" && token !== "mock";
 }
 
+function isLocalHost(request: NextRequest): boolean {
+  const host = (request.headers.get("host") ?? "").toLowerCase();
+  const hostname = host.startsWith("[")
+    ? host.slice(0, host.indexOf("]") + 1)
+    : host.split(":")[0];
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]"
+  );
+}
+
 /**
- * Pago simulado: SOLO fuera de producción y solo cuando no hay credenciales.
- * En producción, sin credenciales se falla cerrado (503): este endpoint nunca
- * marca números como vendidos sin un cobro real (constitución, principio 16).
+ * Pago simulado: SOLO desarrollo, con flag explícita, host local y sin
+ * credenciales. En producción, sin credenciales se falla cerrado (503).
  */
-function isMockMode(): boolean {
-  return !IS_PRODUCTION && !hasMpCredentials();
+function isMockMode(request: NextRequest): boolean {
+  return (
+    !IS_PRODUCTION &&
+    !hasMpCredentials() &&
+    process.env.ENABLE_MOCK_PAYMENTS === "true" &&
+    isLocalHost(request)
+  );
 }
 
 export async function POST(request: NextRequest) {
+  const contentLength = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+    return NextResponse.json(
+      { error: "Solicitud demasiado grande" },
+      { status: 413 },
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -64,7 +89,7 @@ export async function POST(request: NextRequest) {
 
   // Sin credenciales fuera de desarrollo no hay cobro posible: fallar cerrado
   // antes de reservar, para no dejar reservas huérfanas.
-  const mockMode = isMockMode();
+  const mockMode = isMockMode(request);
   if (!mockMode && !hasMpCredentials()) {
     console.error(
       "Checkout: MP_ACCESS_TOKEN no configurado en producción. Cobro deshabilitado.",
@@ -107,7 +132,11 @@ export async function POST(request: NextRequest) {
   );
 
   if (reserveError) {
-    return NextResponse.json({ error: reserveError.message }, { status: 400 });
+    console.error("Checkout: error reservando números", reserveError);
+    return NextResponse.json(
+      { error: "Error interno procesando la solicitud" },
+      { status: 400 },
+    );
   }
 
   const reservedNumbers: number[] = (reserved as number[]) ?? [];
@@ -163,13 +192,17 @@ export async function POST(request: NextRequest) {
     });
 
     if (sellError) {
+      console.error("Checkout mock: error vendiendo números", sellError);
       await admin.rpc("release_numbers", {
         p_raffle_id: raffleId,
         p_numbers: reservedNumbers,
         p_user_id: user.id,
       });
       await admin.from("payments").delete().eq("id", payment.id);
-      return NextResponse.json({ error: sellError.message }, { status: 500 });
+      return NextResponse.json(
+        { error: "Error interno procesando la solicitud" },
+        { status: 500 },
+      );
     }
 
     await admin
@@ -184,7 +217,27 @@ export async function POST(request: NextRequest) {
   }
 
   // 5) Preferencia de Checkout Pro
-  const baseUrl = process.env.NEXT_PUBLIC_URL ?? request.nextUrl.origin;
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_URL?.trim();
+  if (IS_PRODUCTION && !configuredBaseUrl) {
+    console.error(
+      "Checkout: NEXT_PUBLIC_URL no configurada; se cancela la creación de la preferencia.",
+    );
+    await createAdminClient().rpc("release_numbers", {
+      p_raffle_id: raffleId,
+      p_numbers: reservedNumbers,
+      p_user_id: user.id,
+    });
+    await createAdminClient()
+      .from("payments")
+      .update({ status: "cancelled" })
+      .eq("id", payment.id);
+    return NextResponse.json(
+      { error: "El cobro no está disponible en este momento." },
+      { status: 503 },
+    );
+  }
+
+  const baseUrl = configuredBaseUrl ?? request.nextUrl.origin;
 
   try {
     const preference = await createPreference({

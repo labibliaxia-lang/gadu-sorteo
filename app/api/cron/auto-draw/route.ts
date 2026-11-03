@@ -20,12 +20,10 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization") ?? "";
-  const querySecret = request.nextUrl.searchParams.get("secret") ?? "";
   const cronSecret = process.env.CRON_SECRET;
 
   const authorized =
-    !!cronSecret &&
-    (authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret);
+    !!cronSecret && authHeader === `Bearer ${cronSecret}`;
 
   if (!authorized) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -46,7 +44,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Cron auto-draw:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Error desconocido" },
+      { error: "Error interno procesando la solicitud" },
       { status: 500 },
     );
   }

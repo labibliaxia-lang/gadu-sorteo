@@ -8,6 +8,9 @@ const nextConfig = {
     instrumentationHook: true,
   },
   images: {
+    // Mitigación de los CVEs del optimizador de Next 14 (SVG/AVIF RCE).
+    // No procesamos imágenes subidas por usuarios con el optimizador.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

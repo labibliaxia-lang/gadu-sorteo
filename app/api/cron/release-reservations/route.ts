@@ -10,12 +10,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
  */
 async function handle(request: NextRequest) {
   const authHeader = request.headers.get("authorization") ?? "";
-  const querySecret = request.nextUrl.searchParams.get("secret") ?? "";
   const cronSecret = process.env.CRON_SECRET;
 
   const authorized =
-    !!cronSecret &&
-    (authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret);
+    !!cronSecret && authHeader === `Bearer ${cronSecret}`;
 
   if (!authorized) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -28,7 +26,10 @@ async function handle(request: NextRequest) {
 
   if (error) {
     console.error("Cron: error liberando reservas", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error interno procesando la solicitud" },
+      { status: 500 },
+    );
   }
 
   // Mantenimiento de planes: aplica la baja por vencimiento (0032) con los

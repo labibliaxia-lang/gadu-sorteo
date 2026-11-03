@@ -346,7 +346,8 @@ console.log('body:', body);
 - Configurá `CRON_SECRET` en Vercel. Vercel envía automáticamente
   `Authorization: Bearer <CRON_SECRET>` en cada ejecución del cron.
 - Para probar manualmente:
-  `curl "https://tu-app.vercel.app/api/cron/release-reservations?secret=TU_CRON_SECRET"`.
+  `curl -H "Authorization: Bearer TU_CRON_SECRET" "https://tu-app.vercel.app/api/cron/release-reservations"`.
+  El secreto ya no se acepta por query string.
 
 ---
 

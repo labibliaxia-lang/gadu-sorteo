@@ -10,12 +10,8 @@ const ADMIN_VERIFY = "/admin/verify";
 // Solo se manejan hashes SHA-256 (nunca la clave maestra en texto plano).
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
-// Clave de respaldo SOLO para desarrollo local. En producción el panel falla
-// cerrado si no hay ADMIN_ACCESS_CODE_HASH / ADMIN_ACCESS_CODE (constitución,
-// principio 19): una clave presente en el repositorio no abre nada.
-const DEV_FALLBACK_ACCESS_CODE_HASH =
-  "5c0291ed411451dee115a19613f36034e94971bdec689228be2a7e65f52532e8";
-
+// Clave de respaldo solo para desarrollo local. En producción el panel falla
+// cerrado si no hay ADMIN_ACCESS_CODE_HASH / ADMIN_ACCESS_CODE.
 const HASH_RE = /^[0-9a-f]{64}$/;
 
 async function sha256Hex(value: string): Promise<string> {
@@ -38,9 +34,14 @@ async function accessCodeHash(): Promise<string | null> {
   const legacy = process.env.ADMIN_ACCESS_CODE?.trim();
   if (legacy) return await sha256Hex(legacy);
 
-  // Producción: sin configuración no hay clave, y el panel no se abre.
-  if (IS_PRODUCTION) return null;
-  return DEV_FALLBACK_ACCESS_CODE_HASH;
+  // Sin configuración no hay clave, ni siquiera en desarrollo: no se acepta
+  // un hash hardcodeado en el repositorio.
+  if (!IS_PRODUCTION) {
+    console.error(
+      "Panel admin: falta ADMIN_ACCESS_CODE_HASH o ADMIN_ACCESS_CODE en el entorno.",
+    );
+  }
+  return null;
 }
 
 async function sessionSecret(): Promise<string | null> {
@@ -49,27 +50,52 @@ async function sessionSecret(): Promise<string | null> {
   return await accessCodeHash();
 }
 
-/** HMAC-SHA256 en base64url usando Web Crypto (compatible con Edge runtime). */
-async function hmacBase64Url(key: string, message: string): Promise<string> {
+/** Decodifica base64url a bytes; null si el formato es inválido. */
+function base64UrlToBytes(value: string): Uint8Array | null {
+  try {
+    const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+    const binary = atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Verifica HMAC-SHA256 con Web Crypto. `crypto.subtle.verify` compara la firma
+ * en tiempo constante y funciona en Edge runtime (donde no hay
+ * `node:crypto.timingSafeEqual`).
+ */
+async function verifyHmacBase64Url(
+  key: string,
+  message: string,
+  signature: string,
+): Promise<boolean> {
+  const signatureBytes = base64UrlToBytes(signature);
+  if (!signatureBytes) return false;
+  const signatureBuffer = new ArrayBuffer(signatureBytes.byteLength);
+  new Uint8Array(signatureBuffer).set(signatureBytes);
+
   const encoder = new TextEncoder();
   const cryptoKey = await crypto.subtle.importKey(
     "raw",
     encoder.encode(key),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"],
+    ["verify"],
   );
-  const signature = await crypto.subtle.sign(
+
+  return crypto.subtle.verify(
     "HMAC",
     cryptoKey,
+    signatureBuffer,
     encoder.encode(message),
   );
-  const bytes = new Uint8Array(signature);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += 1) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 /**
@@ -96,11 +122,12 @@ async function hasValidAdminSession(
   const exp = Number(expRaw);
   if (!Number.isFinite(exp) || exp < Date.now()) return false;
 
-  const expected = await hmacBase64Url(
+  const expected = await verifyHmacBase64Url(
     key,
     `${version}.${cookieUserId}.${expRaw}`,
+    signature,
   );
-  return expected === signature;
+  return expected;
 }
 
 /** Redirige conservando las cookies de Supabase refrescadas en esta petición. */

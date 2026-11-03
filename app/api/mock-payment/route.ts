@@ -18,9 +18,26 @@ const mockSchema = z.object({
  * Simula un pago aprobado: reserva los números, inserta el pago como
  * "approved" y pasa los números de "reserved" a "sold" usando el service role.
  */
+function isLocalHost(request: NextRequest): boolean {
+  const host = (request.headers.get("host") ?? "").toLowerCase();
+  const hostname = host.startsWith("[")
+    ? host.slice(0, host.indexOf("]") + 1)
+    : host.split(":")[0];
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]"
+  );
+}
+
 export async function POST(request: NextRequest) {
-  // 🔒 Bloqueo estricto: nunca disponible en producción.
-  if (process.env.NODE_ENV !== "development") {
+  // 🔒 Triple bloqueo: entorno, flag explícita y host local.
+  const mockEnabled =
+    process.env.NODE_ENV === "development" &&
+    process.env.ENABLE_MOCK_PAYMENTS === "true" &&
+    isLocalHost(request);
+
+  if (!mockEnabled) {
     return NextResponse.json(
       { error: "No disponible fuera de desarrollo" },
       { status: 403 },
@@ -81,7 +98,11 @@ export async function POST(request: NextRequest) {
   );
 
   if (reserveError) {
-    return NextResponse.json({ error: reserveError.message }, { status: 400 });
+    console.error("Mock payment: error reservando números", reserveError);
+    return NextResponse.json(
+      { error: "Error interno procesando la solicitud" },
+      { status: 400 },
+    );
   }
 
   const reservedNumbers: number[] = (reserved as number[]) ?? [];
@@ -117,6 +138,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (paymentError || !payment) {
+    console.error("Mock payment: error insertando pago", paymentError);
     await admin.rpc("release_numbers", {
       p_raffle_id: raffleId,
       p_numbers: reservedNumbers,
@@ -137,6 +159,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (sellError) {
+    console.error("Mock payment: error vendiendo números", sellError);
     // Rollback: liberar reservas y borrar el pago simulado.
     await admin.rpc("release_numbers", {
       p_raffle_id: raffleId,
@@ -144,7 +167,10 @@ export async function POST(request: NextRequest) {
       p_user_id: user.id,
     });
     await admin.from("payments").delete().eq("id", payment.id);
-    return NextResponse.json({ error: sellError.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error interno procesando la solicitud" },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ success: true, paymentId: payment.id });
