@@ -94,7 +94,7 @@ export function RequestAdminButton() {
 
   if (isAdmin || status === "approved") {
     return (
-      <p className="text-sm text-emerald-600 dark:text-emerald-400">
+      <p className="text-sm text-emerald-700 dark:text-emerald-400">
         ✓ Ya sos organizador.
       </p>
     );

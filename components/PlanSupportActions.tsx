@@ -151,7 +151,7 @@ export function PlanSupportActions({
       </Button>
 
       {message && (
-        <p className="text-xs text-emerald-600 dark:text-emerald-400">
+        <p className="text-xs text-emerald-700 dark:text-emerald-400">
           {message}
         </p>
       )}

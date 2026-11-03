@@ -557,7 +557,7 @@ export default async function SuperAdminPage({
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition",
               range === r.key
-                ? "bg-amber-500 text-white"
+                ? "bg-amber-700 text-white"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground",
             )}
           >
@@ -625,7 +625,7 @@ export default async function SuperAdminPage({
                 className={cn(
                   "rounded-full px-1.5 text-xs",
                   tab === t.key
-                    ? "bg-amber-500 text-white"
+                    ? "bg-amber-700 text-white"
                     : "bg-muted text-muted-foreground",
                 )}
               >
@@ -692,7 +692,7 @@ export default async function SuperAdminPage({
                             size: "sm",
                           })}
                         >
-                          <MessageCircle className="mr-1.5 h-4 w-4 text-emerald-600" />
+                          <MessageCircle className="mr-1.5 h-4 w-4 text-emerald-700 dark:text-emerald-400" />
                           WhatsApp
                         </a>
                       )}

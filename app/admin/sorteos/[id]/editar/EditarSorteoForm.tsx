@@ -251,7 +251,7 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
                     {...register("payment_type")}
                   />
                   <div className="flex items-start gap-3">
-                    <Landmark className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                    <Landmark className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700 dark:text-emerald-400" />
                     <div className="space-y-0.5">
                       <p className="font-semibold">Transferencia Bancaria</p>
                       <p className="text-xs text-muted-foreground">

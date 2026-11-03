@@ -189,7 +189,7 @@ export function DrawVerifier({
           <p
             className={
               allOk
-                ? "text-sm font-semibold text-emerald-600 dark:text-emerald-400"
+                ? "text-sm font-semibold text-emerald-700 dark:text-emerald-400"
                 : "text-sm font-semibold text-destructive"
             }
           >

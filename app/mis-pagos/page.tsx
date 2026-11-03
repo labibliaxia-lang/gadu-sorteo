@@ -179,7 +179,7 @@ export default function MisPagosPage() {
         {stats.map((s) => (
           <Card key={s.label}>
             <CardContent className="flex items-center gap-3 p-4">
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-800 dark:text-amber-300">
                 <s.icon className="h-5 w-5" />
               </span>
               <div className="min-w-0">

@@ -152,7 +152,7 @@ export default function VerificacionPage() {
       ? {
           icon: CheckCircle2,
           text: "Identidad verificada.",
-          cls: "text-emerald-600 dark:text-emerald-400",
+          cls: "text-emerald-700 dark:text-emerald-400",
         }
       : status === "rejected"
         ? {
@@ -163,7 +163,7 @@ export default function VerificacionPage() {
         : {
             icon: Clock,
             text: "Pendiente de revisión por el superadmin.",
-            cls: "text-amber-600 dark:text-amber-400",
+            cls: "text-amber-800 dark:text-amber-300",
           };
 
   if (loading) {

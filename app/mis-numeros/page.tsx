@@ -352,7 +352,7 @@ export default function MisNumerosPage() {
                             className={buttonVariants({
                               size: "sm",
                               className:
-                                "mt-2 w-full bg-emerald-600 text-white hover:bg-emerald-700",
+                                "mt-2 w-full bg-emerald-700 text-white hover:bg-emerald-800",
                             })}
                           >
                             <MessageCircle className="mr-1.5 h-4 w-4" />

@@ -98,7 +98,7 @@ export function HowItWorks() {
             <div className="grid gap-6 rounded-3xl border bg-muted/40 p-8 md:grid-cols-3">
               {BENEFITS.map((b) => (
                 <div key={b.title} className="flex gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
                     <b.icon className="h-5 w-5" />
                   </span>
                   <div>

@@ -132,7 +132,7 @@ export default async function GanadoresPage() {
                     </div>
                   )}
                   <span className="absolute left-3 top-3">
-                    <Badge className="border-transparent bg-emerald-600 text-white">
+                    <Badge className="border-transparent bg-emerald-700 text-white">
                       Sorteado
                     </Badge>
                   </span>
@@ -163,7 +163,7 @@ export default async function GanadoresPage() {
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
                         Número
                       </p>
-                      <p className="font-mono text-xl font-bold text-amber-600 dark:text-amber-400">
+                      <p className="font-mono text-xl font-bold text-amber-800 dark:text-amber-300">
                         {raffle.winner_number != null
                           ? formatNumber(raffle.winner_number)
                           : "—"}

@@ -86,7 +86,7 @@ export default async function LiveDrawPage({
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-600">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
             <Radio className="h-4 w-4" /> Sala en vivo
           </p>
           <h1 className="text-2xl font-bold tracking-tight">{raffle.title}</h1>

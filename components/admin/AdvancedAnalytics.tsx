@@ -113,7 +113,7 @@ function Delta({
       className={cn(
         "text-[11px] font-medium",
         positive
-          ? "text-emerald-600 dark:text-emerald-400"
+          ? "text-emerald-700 dark:text-emerald-400"
           : "text-destructive",
       )}
     >
@@ -245,7 +245,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
               className={cn(
                 "rounded-md px-3 py-1.5 text-xs font-medium transition",
                 range === r.value
-                  ? "bg-amber-500 text-white"
+                  ? "bg-amber-700 text-white"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground",
               )}
             >

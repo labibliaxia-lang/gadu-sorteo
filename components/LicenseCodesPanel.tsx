@@ -203,7 +203,7 @@ export function LicenseCodesPanel({ codes }: { codes: LicenseCode[] }) {
 
       {error && <p className="text-sm text-destructive">{error}</p>}
       {notice && (
-        <p className="text-sm text-emerald-600 dark:text-emerald-400">
+        <p className="text-sm text-emerald-700 dark:text-emerald-400">
           {notice}
         </p>
       )}

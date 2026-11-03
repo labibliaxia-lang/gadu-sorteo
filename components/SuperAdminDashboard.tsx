@@ -428,7 +428,7 @@ export function SuperAdminDashboard({
                     <td className="p-3">
                       <Link
                         href={`/admin/super/usuarios/${u.id}`}
-                        className="text-xs font-medium text-amber-600 hover:underline"
+                        className="text-xs font-medium text-amber-800 dark:text-amber-300 hover:underline"
                       >
                         Ver ficha
                       </Link>

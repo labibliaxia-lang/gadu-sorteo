@@ -226,7 +226,7 @@ export default async function SupportPanelPage({
                         <td className="p-3">
                           <Link
                             href={`/sorteos/${raffle.id}`}
-                            className="text-xs text-amber-600 hover:underline"
+                            className="text-xs text-amber-800 dark:text-amber-300 hover:underline"
                           >
                             Ver sorteo
                           </Link>

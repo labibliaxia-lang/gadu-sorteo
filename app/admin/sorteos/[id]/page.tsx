@@ -149,13 +149,13 @@ export default async function AdminRaffleDetailPage({
             </div>
             <div className="rounded-xl border bg-muted/40 p-4">
               <p className="text-sm text-muted-foreground">Números vendidos</p>
-              <p className="text-lg font-bold text-emerald-600">
+              <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
                 {soldCount ?? 0}
               </p>
             </div>
             <div className="rounded-xl border bg-muted/40 p-4">
               <p className="text-sm text-muted-foreground">Reservados</p>
-              <p className="text-lg font-bold text-amber-600">
+              <p className="text-lg font-bold text-amber-800 dark:text-amber-300">
                 {reservedCount ?? 0}
               </p>
             </div>

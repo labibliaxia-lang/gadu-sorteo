@@ -147,7 +147,7 @@ export default function PerfilPage() {
                 por transferencia y te enviamos tu código de activación.
               </p>
               {isAdmin ? (
-                <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                <p className="text-sm text-emerald-700 dark:text-emerald-400">
                   ✓ Ya sos organizador.
                 </p>
               ) : (
@@ -188,7 +188,7 @@ export default function PerfilPage() {
               <p
                 className={
                   profile?.email_opt_in
-                    ? "text-xs font-medium text-emerald-600 dark:text-emerald-400"
+                    ? "text-xs font-medium text-emerald-700 dark:text-emerald-400"
                     : "text-xs font-medium text-muted-foreground"
                 }
               >

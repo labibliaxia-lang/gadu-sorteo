@@ -73,7 +73,7 @@ export default async function VerifyPage({
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
             Verificación pública
           </p>
           <h1 className="text-2xl font-bold tracking-tight">{raffle.title}</h1>

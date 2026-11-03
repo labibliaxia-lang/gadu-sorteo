@@ -9,6 +9,7 @@ import { cn, formatPrice } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { notifyReservation } from "@/app/sorteos/actions";
 import type { RaffleNumber } from "@/lib/types";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 const RESERVATION_SECONDS = 10 * 60;
 
@@ -122,19 +123,12 @@ export function NumbersGrid({
     notice?: string;
   } | null>(null);
 
-  useEffect(() => {
-    if (!loginRequired && !summary) return;
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setLoginRequired(false);
-        setSummary(null);
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [loginRequired, summary]);
+  const loginTrapRef = useFocusTrap<HTMLDivElement>(loginRequired, () =>
+    setLoginRequired(false),
+  );
+  const summaryTrapRef = useFocusTrap<HTMLDivElement>(Boolean(summary), () =>
+    setSummary(null),
+  );
 
   const rowCount = Math.ceil(totalCount / cols);
 
@@ -521,7 +515,7 @@ export function NumbersGrid({
           <Button
             onClick={handleReservePrepaid}
             disabled={selected.size === 0 || reserving || !isActive}
-            className="bg-emerald-600 text-white hover:bg-emerald-700"
+            className="bg-emerald-700 text-white hover:bg-emerald-800"
           >
             <MessageCircle className="mr-1.5 h-4 w-4" />
             {reserving
@@ -687,7 +681,7 @@ export function NumbersGrid({
               </p>
             </div>
             <Button
-              className="shrink-0 bg-emerald-600 text-white hover:bg-emerald-700"
+              className="shrink-0 bg-emerald-700 text-white hover:bg-emerald-800"
               disabled={reserving || !isActive}
               onClick={handleReservePrepaid}
             >
@@ -707,7 +701,9 @@ export function NumbersGrid({
           onClick={() => setLoginRequired(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border bg-card p-6 text-center shadow-xl"
+            ref={loginTrapRef}
+            tabIndex={-1}
+            className="w-full max-w-sm rounded-2xl border bg-card p-6 text-center shadow-xl outline-none"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="login-required-title" className="text-lg font-semibold">
@@ -737,7 +733,9 @@ export function NumbersGrid({
           onClick={() => setSummary(null)}
         >
           <div
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border bg-card p-6 shadow-xl"
+            ref={summaryTrapRef}
+            tabIndex={-1}
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border bg-card p-6 shadow-xl outline-none"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="summary-title" className="text-lg font-semibold">
@@ -809,7 +807,7 @@ export function NumbersGrid({
                 rel="noopener noreferrer"
                 className={cn(
                   buttonVariants(),
-                  "mt-4 w-full bg-emerald-600 text-white hover:bg-emerald-700",
+                  "mt-4 w-full bg-emerald-700 text-white hover:bg-emerald-800",
                 )}
               >
                 <MessageCircle className="mr-1.5 h-4 w-4" />

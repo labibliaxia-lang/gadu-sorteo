@@ -376,7 +376,7 @@ export default async function SuperUserSupportPage({
                         <td className="space-x-3 p-3 text-xs">
                           <Link
                             href={`/sorteos/${raffle.id}`}
-                            className="text-amber-600 hover:underline"
+                            className="text-amber-800 dark:text-amber-300 hover:underline"
                           >
                             Público
                           </Link>

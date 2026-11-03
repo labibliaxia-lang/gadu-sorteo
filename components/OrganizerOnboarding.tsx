@@ -12,6 +12,7 @@ import {
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 interface OrganizerOnboardingProps {
   /** Id del usuario, para que el "entendido" sea por cuenta. */
@@ -70,18 +71,7 @@ export function OrganizerOnboarding({
     setVisible(false);
   }
 
-  useEffect(() => {
-    if (!visible) return;
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") dismiss();
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-    // dismiss es estable por render; el listener solo depende de visible.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible]);
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible, dismiss);
 
   if (!show || !visible) return null;
 
@@ -94,7 +84,9 @@ export function OrganizerOnboarding({
       onClick={dismiss}
     >
       <div
-        className="w-full max-w-lg rounded-2xl border bg-card p-6 shadow-2xl"
+        ref={dialogRef}
+        tabIndex={-1}
+        className="w-full max-w-lg rounded-2xl border bg-card p-6 shadow-2xl outline-none"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">

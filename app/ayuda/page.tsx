@@ -35,7 +35,7 @@ export default function AyudaPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-10">
       <header className="space-y-3">
-        <p className="text-sm font-medium uppercase tracking-wide text-amber-600">
+        <p className="text-sm font-medium uppercase tracking-wide text-amber-800 dark:text-amber-300">
           Centro de ayuda
         </p>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">

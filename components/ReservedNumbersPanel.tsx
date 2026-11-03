@@ -323,7 +323,7 @@ export function ReservedNumbersPanel({
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
-                    className="bg-emerald-600 text-white hover:bg-emerald-700"
+                    className="bg-emerald-700 text-white hover:bg-emerald-800"
                     disabled={busy || !isVerified}
                     onClick={() => void markPaid(group)}
                     title={
