@@ -66,6 +66,8 @@ const ACTION_LABELS: Record<string, string> = {
   UNBAN_USER: "Levantó una suspensión",
   SUPPORT_VIEW: "Abrió una vista de soporte",
   PLAN_PAYMENT: "Registró un pago de plan",
+  MARK_PAID: "Marcó números como pagados",
+  UNDO_MARK_PAID: "Revirtió un pago marcado",
 };
 
 const WA_MESSAGE =

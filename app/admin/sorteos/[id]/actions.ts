@@ -386,6 +386,7 @@ export type MarkPaidResult =
 export async function markReservationPaid(
   raffleId: string,
   numbers: number[],
+  note?: string,
 ): Promise<MarkPaidResult> {
   const ctx = await requireAdminSession();
   if (!ctx) return { ok: false, error: "No autorizado" };
@@ -402,6 +403,8 @@ export async function markReservationPaid(
     return { ok: false, error: "Elegí al menos un número reservado." };
   }
 
+  const cleanNote = String(note ?? "").trim().slice(0, 300) || null;
+
   const supabase = createClient();
   const { data, error } = await supabase.rpc("organizer_mark_reserved_sold", {
     p_raffle_id: raffleId,
@@ -409,6 +412,27 @@ export async function markReservationPaid(
   });
 
   if (error) return { ok: false, error: error.message };
+
+  // Nota interna del organizador (queda en la auditoría, no se muestra al
+  // comprador). Es best-effort: no revierte la venta si falla.
+  try {
+    const admin = createAdminClient();
+    await admin.from("admin_audit_logs").insert({
+      admin_id: ctx.id,
+      admin_email: ctx.email,
+      action: "MARK_PAID",
+      target_user_id: null,
+      target_email: null,
+      details: JSON.stringify({
+        raffle_id: raffleId,
+        numbers: clean,
+        count: Number(data ?? 0),
+        note: cleanNote,
+      }),
+    });
+  } catch (auditError) {
+    console.error("[markReservationPaid] auditoría:", auditError);
+  }
 
   // Aviso por email al comprador. La venta ya está confirmada: el envío se
   // espera para que Vercel no congele la función antes de que salga.
@@ -422,6 +446,113 @@ export async function markReservationPaid(
   revalidatePath(`/sorteos/${raffleId}`);
 
   return { ok: true, count: Number(data ?? 0) };
+}
+
+export type UndoPaidResult =
+  | { ok: true; count: number }
+  | { ok: false; error: string };
+
+/**
+ * Deshace un «Marcar como pagado» reciente (máx. 10 minutos) y devuelve los
+ * números a reserva del mismo comprador. Usa service role porque RLS ya no
+ * permite UPDATE directo de raffle_numbers (0041).
+ */
+export async function undoMarkReservationPaid(
+  raffleId: string,
+  numbers: number[],
+): Promise<UndoPaidResult> {
+  const ctx = await requireAdminSession();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  if (!(await ownsRaffle(raffleId))) {
+    return { ok: false, error: "No autorizado" };
+  }
+
+  const clean = Array.from(
+    new Set(
+      (Array.isArray(numbers) ? numbers : []).filter(
+        (n) => Number.isInteger(n) && n >= 1 && n <= 10000,
+      ),
+    ),
+  );
+
+  if (clean.length === 0) {
+    return { ok: false, error: "No hay números para revertir." };
+  }
+
+  const admin = createAdminClient();
+  const { data: rows, error } = await admin
+    .from("raffle_numbers")
+    .select("number, sold_to, sold_at")
+    .eq("raffle_id", raffleId)
+    .in("number", clean)
+    .eq("status", "sold");
+
+  if (error) return { ok: false, error: error.message };
+
+  const cutoff = Date.now() - 10 * 60 * 1000;
+  const undoable = (rows ?? []).filter(
+    (row) =>
+      row.sold_to &&
+      row.sold_at &&
+      new Date(row.sold_at as string).getTime() >= cutoff,
+  );
+
+  if (undoable.length === 0) {
+    return {
+      ok: false,
+      error:
+        "Solo se puede deshacer dentro de los 10 minutos posteriores a marcar el pago.",
+    };
+  }
+
+  const reservedUntil = new Date(
+    Date.now() + 48 * 60 * 60 * 1000,
+  ).toISOString();
+
+  let count = 0;
+
+  for (const row of undoable) {
+    const { error: updateError } = await admin
+      .from("raffle_numbers")
+      .update({
+        status: "reserved",
+        reserved_by: row.sold_to,
+        reserved_until: reservedUntil,
+        sold_to: null,
+        sold_at: null,
+        payment_id: null,
+      })
+      .eq("raffle_id", raffleId)
+      .eq("number", row.number)
+      .eq("status", "sold");
+
+    if (!updateError) count += 1;
+  }
+
+  try {
+    await admin.from("admin_audit_logs").insert({
+      admin_id: ctx.id,
+      admin_email: ctx.email,
+      action: "UNDO_MARK_PAID",
+      target_user_id: null,
+      target_email: null,
+      details: JSON.stringify({
+        raffle_id: raffleId,
+        numbers: undoable.map((row) => row.number),
+        count,
+      }),
+    });
+  } catch (auditError) {
+    console.error("[undoMarkReservationPaid] auditoría:", auditError);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/sorteos/${raffleId}`);
+  revalidatePath(`/admin/sorteos/${raffleId}/numeros`);
+  revalidatePath(`/sorteos/${raffleId}`);
+
+  return { ok: true, count };
 }
 
 export type DrawResult =
