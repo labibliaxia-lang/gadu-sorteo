@@ -12,12 +12,15 @@ interface RaffleActionsProps {
   status: string;
   /** ¿Ya se publicó el compromiso (semilla) del sorteo? (migración 0034) */
   hasCommitment: boolean;
+  /** Números en estado sold: sin al menos uno no se puede sortear. */
+  soldCount?: number;
 }
 
 export function RaffleActions({
   raffleId,
   status,
   hasCommitment,
+  soldCount,
 }: RaffleActionsProps) {
   const router = useRouter();
   const supabase = createClient();
@@ -94,12 +97,22 @@ export function RaffleActions({
           <Button
             variant="destructive"
             onClick={drawWinner}
-            disabled={busy !== null}
+            disabled={
+              busy !== null ||
+              (soldCount !== undefined && soldCount === 0)
+            }
           >
             {busy === "draw" ? "Sorteando…" : "🎲 Sortear ganador"}
           </Button>
         )}
       </div>
+      {(status === "active" || status === "closed") &&
+        hasCommitment &&
+        soldCount === 0 && (
+          <p className="text-xs text-muted-foreground">
+            Necesitás al menos un número vendido para poder sortear.
+          </p>
+        )}
       {(status === "active" || status === "closed") && !hasCommitment && (
         <p className="text-xs text-muted-foreground">
           Publicá el compromiso antes de sortear: es el hash de una semilla

@@ -185,6 +185,7 @@ export default async function AdminRaffleDetailPage({
               raffleId={raffle.id}
               status={raffle.status}
               hasCommitment={Boolean(raffle.draw_commitment)}
+              soldCount={soldCount ?? 0}
             />
             <Link
               href={`/admin/sorteos/${raffle.id}/numeros`}

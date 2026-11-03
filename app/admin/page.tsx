@@ -76,6 +76,22 @@ export default async function AdminDashboardPage() {
   const activeCount = list.filter((r) => r.status === "active").length;
   const raffleIds = list.map((r) => r.id);
 
+  // Vendidos por sorteo (para habilitar «Sortear» solo si hay al menos uno).
+  const soldByRaffle = new Map<string, number>();
+  if (list.length > 0) {
+    const entries = await Promise.all(
+      list.map(async (raffle) => {
+        const { count } = await supabase
+          .from("raffle_numbers")
+          .select("*", { count: "exact", head: true })
+          .eq("raffle_id", raffle.id)
+          .eq("status", "sold");
+        return [raffle.id, count ?? 0] as const;
+      }),
+    );
+    for (const [id, count] of entries) soldByRaffle.set(id, count);
+  }
+
   // Métricas: globales para superadmin; acotadas al organizador.
   let soldCount = 0;
   let revenue = 0;
@@ -246,6 +262,7 @@ export default async function AdminDashboardPage() {
                       raffleId={raffle.id}
                       status={raffle.status}
                       hasCommitment={Boolean(raffle.draw_commitment)}
+                      soldCount={soldByRaffle.get(raffle.id) ?? 0}
                     />
                   </div>
                 </CardContent>

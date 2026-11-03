@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
@@ -200,6 +201,23 @@ export default async function RafflePage({
               </p>
             </div>
           )}
+
+          <div className="flex flex-wrap gap-2 text-sm">
+            <Link
+              href={`/sorteos/${raffle.id}/en-vivo`}
+              className="rounded-md border px-3 py-1.5 font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            >
+              Sala en vivo
+            </Link>
+            {raffle.status === "drawn" && (
+              <Link
+                href={`/sorteos/${raffle.id}/verificar`}
+                className="rounded-md border px-3 py-1.5 font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+              >
+                Verificar y certificado
+              </Link>
+            )}
+          </div>
 
           {organizer && (
             <OrganizerCard
