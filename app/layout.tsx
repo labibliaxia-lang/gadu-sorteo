@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
 
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { ProfileCompletionGate } from "@/components/ProfileCompletionGate";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { TermsGate } from "@/components/TermsGate";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -77,10 +78,19 @@ export default async function RootLayout({
   let termsAccepted = false;
   let hasAcceptedTerms = false;
   let acceptedTermsVersion: string | null = null;
+  let deliveryMissing = false;
+  let deliveryPhone = "";
+  let deliveryAddress = "";
+  let deliveryCity = "";
+  let deliveryProvince = "";
+  let deliveryPostalCode = "";
+  let deliveryCountry = "AR";
   if (user) {
     const { data: existingProfile } = await supabase
       .from("profiles")
-      .select("id, terms_accepted_at, terms_version")
+      .select(
+        "id, terms_accepted_at, terms_version, phone, address_line, city, province, postal_code, country",
+      )
       .eq("id", user.id)
       .maybeSingle();
 
@@ -89,6 +99,23 @@ export default async function RootLayout({
       (existingProfile?.terms_version as string | null) ?? null;
     termsAccepted =
       hasAcceptedTerms && acceptedTermsVersion === TERMS_VERSION;
+
+    deliveryPhone = (existingProfile?.phone as string | null) ?? "";
+    deliveryAddress =
+      (existingProfile?.address_line as string | null) ?? "";
+    deliveryCity = (existingProfile?.city as string | null) ?? "";
+    deliveryProvince = (existingProfile?.province as string | null) ?? "";
+    deliveryPostalCode =
+      (existingProfile?.postal_code as string | null) ?? "";
+    deliveryCountry =
+      (existingProfile?.country as string | null) ?? "AR";
+
+    deliveryMissing =
+      !deliveryPhone.trim() ||
+      !deliveryAddress.trim() ||
+      !deliveryCity.trim() ||
+      !deliveryProvince.trim() ||
+      !deliveryPostalCode.trim();
 
     if (!existingProfile) {
       const meta = user.user_metadata as {
@@ -130,13 +157,24 @@ export default async function RootLayout({
       <body className="flex min-h-screen flex-col overflow-x-hidden">
         <ThemeProvider>
           <ReferralCapture />
-          {user && (
-            <TermsGate
-              accepted={termsAccepted}
-              hasAcceptedTerms={hasAcceptedTerms}
-              acceptedVersion={acceptedTermsVersion}
-            />
-          )}
+          {user &&
+            (termsAccepted ? (
+              <ProfileCompletionGate
+                missing={deliveryMissing}
+                initialPhone={deliveryPhone}
+                initialAddress={deliveryAddress}
+                initialCity={deliveryCity}
+                initialProvince={deliveryProvince}
+                initialPostalCode={deliveryPostalCode}
+                initialCountry={deliveryCountry}
+              />
+            ) : (
+              <TermsGate
+                accepted={termsAccepted}
+                hasAcceptedTerms={hasAcceptedTerms}
+                acceptedVersion={acceptedTermsVersion}
+              />
+            ))}
           <Navbar initialUser={initialUser} />
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">
             {children}

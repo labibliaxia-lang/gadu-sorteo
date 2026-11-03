@@ -23,6 +23,11 @@ export interface ProfileEditorProfile {
   bio: string | null;
   website_url: string | null;
   avatar_url: string | null;
+  address_line: string | null;
+  city: string | null;
+  province: string | null;
+  postal_code: string | null;
+  country: string | null;
   role: string;
   plan: string;
   slug: string | null;
@@ -55,6 +60,11 @@ export function ProfileEditor({
   const [bio, setBio] = useState(profile.bio ?? "");
   const [website, setWebsite] = useState(profile.website_url ?? "");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
+  const [addressLine, setAddressLine] = useState(profile.address_line ?? "");
+  const [city, setCity] = useState(profile.city ?? "");
+  const [province, setProvince] = useState(profile.province ?? "");
+  const [postalCode, setPostalCode] = useState(profile.postal_code ?? "");
+  const [country, setCountry] = useState(profile.country ?? "AR");
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -112,6 +122,11 @@ export function ProfileEditor({
       bio: isOrganizer ? bio : "",
       website_url: isOrganizer ? website : "",
       avatar_url: avatarUrl,
+      address_line: addressLine,
+      city,
+      province,
+      postal_code: postalCode,
+      country,
     });
 
     setSaving(false);
@@ -130,6 +145,11 @@ export function ProfileEditor({
       bio: isOrganizer ? bio || null : null,
       website_url: isOrganizer ? website || null : null,
       avatar_url: avatarUrl || null,
+      address_line: addressLine || null,
+      city: city || null,
+      province: province || null,
+      postal_code: postalCode || null,
+      country: country || "AR",
     });
     router.refresh();
   }
@@ -228,6 +248,75 @@ export function ProfileEditor({
             <p className="text-xs text-muted-foreground">
               Privado: sólo se usa para coordinar entregas.
             </p>
+          </div>
+        </div>
+
+        <div className="space-y-3 rounded-xl border bg-muted/20 p-4">
+          <div>
+            <p className="text-sm font-semibold">Dirección de recepción</p>
+            <p className="text-xs text-muted-foreground">
+              Obligatoria para todos. Es privada: sólo la ve el organizador si
+              ganás un premio. Si sos organizador, debe coincidir con la
+              dirección de tu DNI.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5 sm:col-span-2">
+              <label htmlFor="profile-address" className="text-sm font-medium">
+                Dirección y número
+              </label>
+              <Input
+                id="profile-address"
+                value={addressLine}
+                maxLength={160}
+                placeholder="Calle, número, piso/depto"
+                onChange={(event) => setAddressLine(event.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="profile-city" className="text-sm font-medium">
+                Ciudad
+              </label>
+              <Input
+                id="profile-city"
+                value={city}
+                maxLength={80}
+                onChange={(event) => setCity(event.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="profile-province" className="text-sm font-medium">
+                Provincia
+              </label>
+              <Input
+                id="profile-province"
+                value={province}
+                maxLength={80}
+                onChange={(event) => setProvince(event.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="profile-postal" className="text-sm font-medium">
+                Código postal
+              </label>
+              <Input
+                id="profile-postal"
+                value={postalCode}
+                maxLength={12}
+                onChange={(event) => setPostalCode(event.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="profile-country" className="text-sm font-medium">
+                País
+              </label>
+              <Input
+                id="profile-country"
+                value={country}
+                maxLength={80}
+                onChange={(event) => setCountry(event.target.value)}
+              />
+            </div>
           </div>
         </div>
 

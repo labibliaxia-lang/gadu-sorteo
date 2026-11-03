@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
+import { addressMatches } from "@/lib/address";
 import { TERMS_VERSION } from "@/lib/terms";
 
 export type EmailPreferenceResult =
@@ -29,6 +30,15 @@ const profileSchema = z.object({
   bio: optionalText(400),
   website_url: optionalText(200),
   avatar_url: optionalText(500),
+  address_line: z
+    .string()
+    .trim()
+    .min(3, "Ingresá la dirección de entrega")
+    .max(160, "La dirección es demasiado larga"),
+  city: z.string().trim().min(2, "Ingresá la ciudad").max(80),
+  province: z.string().trim().min(2, "Ingresá la provincia").max(80),
+  postal_code: z.string().trim().min(3, "Ingresá el código postal").max(12),
+  country: z.string().trim().min(2).max(80).default("AR"),
 });
 
 function avatarIsAllowed(url: string): boolean {
@@ -65,11 +75,23 @@ export async function updateProfile(
 
   const { data: current } = await supabase
     .from("profiles")
-    .select("avatar_url, slug")
+    .select("avatar_url, slug, role, dni_address")
     .eq("id", user.id)
     .maybeSingle();
 
   const values = parsed.data;
+
+  if (
+    current?.dni_address &&
+    (current.role === "admin" || current.role === "superadmin") &&
+    !addressMatches(values, current.dni_address)
+  ) {
+    return {
+      ok: false,
+      error:
+        "La dirección de entrega debe coincidir con la dirección de tu DNI.",
+    };
+  }
 
   if (values.avatar_url) {
     const unchanged = values.avatar_url === current?.avatar_url;
@@ -101,6 +123,11 @@ export async function updateProfile(
       bio: values.bio || null,
       website_url: website || null,
       avatar_url: values.avatar_url || null,
+      address_line: values.address_line,
+      city: values.city,
+      province: values.province,
+      postal_code: values.postal_code,
+      country: values.country || "AR",
     })
     .eq("id", user.id);
 
@@ -110,6 +137,81 @@ export async function updateProfile(
   revalidatePath("/organizador/[slug]", "page");
   if (current?.slug) revalidatePath(`/organizador/${current.slug}`);
 
+  return { ok: true };
+}
+
+const deliverySchema = z.object({
+  phone: z
+    .string()
+    .trim()
+    .max(30, "El teléfono es demasiado largo")
+    .refine(
+      (value) => value.replace(/\D/g, "").length >= 6,
+      "Ingresá un teléfono válido",
+    ),
+  address_line: z
+    .string()
+    .trim()
+    .min(3, "Ingresá la dirección de entrega")
+    .max(160),
+  city: z.string().trim().min(2, "Ingresá la ciudad").max(80),
+  province: z.string().trim().min(2, "Ingresá la provincia").max(80),
+  postal_code: z.string().trim().min(3, "Ingresá el código postal").max(12),
+  country: z.string().trim().min(2).max(80).default("AR"),
+});
+
+/** Dirección de recepción obligatoria; se usa desde el modal global. */
+export async function saveDeliveryAddress(
+  input: unknown,
+): Promise<UpdateProfileResult> {
+  const parsed = deliverySchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Datos inválidos.",
+    };
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { ok: false, error: "No autenticado" };
+
+  const { data: current } = await supabase
+    .from("profiles")
+    .select("role, dni_address")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (
+    current?.dni_address &&
+    (current.role === "admin" || current.role === "superadmin") &&
+    !addressMatches(parsed.data, current.dni_address)
+  ) {
+    return {
+      ok: false,
+      error:
+        "La dirección de entrega debe coincidir con la dirección de tu DNI.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      phone: parsed.data.phone,
+      address_line: parsed.data.address_line,
+      city: parsed.data.city,
+      province: parsed.data.province,
+      postal_code: parsed.data.postal_code,
+      country: parsed.data.country || "AR",
+    })
+    .eq("id", user.id);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 

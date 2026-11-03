@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdminSession } from "@/lib/auth";
 import { getPlanContext } from "@/lib/plans";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +66,64 @@ export default async function AdminRaffleDetailPage({
 
   if (!raffle) notFound();
   if (!actor.isSuper && raffle.created_by !== actor.id) notFound();
+
+  // Dirección de entrega de los ganadores: sólo el organizador dueño (o
+  // superadmin) la ve, y sólo para los ganadores de este sorteo.
+  let winnerContacts: {
+    position: number;
+    number: number;
+    user_name: string | null;
+    user_id: string | null;
+    address_line: string | null;
+    city: string | null;
+    province: string | null;
+    postal_code: string | null;
+    country: string | null;
+  }[] = [];
+
+  if (raffle.status === "drawn") {
+    const { data: winnerRows } = await supabase
+      .from("raffle_winners")
+      .select("position, number, user_name, user_id")
+      .eq("raffle_id", params.id)
+      .order("position", { ascending: true });
+
+    const winners = winnerRows ?? [];
+    const winnerIds = winners
+      .map((winner) => winner.user_id as string | null)
+      .filter((value): value is string => Boolean(value));
+
+    if (winnerIds.length > 0) {
+      const admin = createAdminClient();
+      const { data: profiles } = await admin
+        .from("profiles")
+        .select(
+          "id, address_line, city, province, postal_code, country",
+        )
+        .in("id", winnerIds);
+
+      const byId = new Map(
+        (profiles ?? []).map((profile) => [profile.id as string, profile]),
+      );
+
+      winnerContacts = winners.map((winner) => {
+        const profile = winner.user_id
+          ? byId.get(winner.user_id as string)
+          : undefined;
+        return {
+          position: winner.position as number,
+          number: winner.number as number,
+          user_name: winner.user_name as string | null,
+          user_id: winner.user_id as string | null,
+          address_line: (profile?.address_line as string | null) ?? null,
+          city: (profile?.city as string | null) ?? null,
+          province: (profile?.province as string | null) ?? null,
+          postal_code: (profile?.postal_code as string | null) ?? null,
+          country: (profile?.country as string | null) ?? null,
+        };
+      });
+    }
+  }
 
   const { count: soldCount } = await supabase
     .from("raffle_numbers")
@@ -196,6 +255,45 @@ export default async function AdminRaffleDetailPage({
               </p>
             )}
           </div>
+
+          {winnerContacts.length > 0 && (
+            <div className="space-y-2 rounded-xl border border-emerald-600/30 bg-emerald-500/5 p-4">
+              <p className="text-sm font-semibold">
+                Direcciones de entrega de los ganadores
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Privado: sólo lo ves vos como organizador de este sorteo. No se
+                muestra en la página pública.
+              </p>
+              <div className="space-y-2">
+                {winnerContacts.map((winner) => (
+                  <div
+                    key={winner.position}
+                    className="rounded-lg border bg-background/70 p-3 text-sm"
+                  >
+                    <p className="font-medium">
+                      {winner.position === 1
+                        ? "1.er premio"
+                        : `${winner.position}º premio`}{" "}
+                      · Nº {winner.number} ·{" "}
+                      {winner.user_name ?? "Ganador anónimo"}
+                    </p>
+                    {winner.address_line ? (
+                      <p className="mt-1 text-muted-foreground">
+                        {winner.address_line}, {winner.city},{" "}
+                        {winner.province}, CP {winner.postal_code},{" "}
+                        {winner.country}
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-muted-foreground">
+                        El ganador todavía no cargó una dirección de entrega.
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2">
             <RaffleActions

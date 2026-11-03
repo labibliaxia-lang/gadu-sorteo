@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { addressMatches } from "@/lib/address";
 import {
   Card,
   CardContent,
@@ -36,6 +37,11 @@ export default function VerificacionPage() {
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
   const [dniNumber, setDniNumber] = useState("");
+  const [dniAddress, setDniAddress] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryCity, setDeliveryCity] = useState("");
+  const [deliveryProvince, setDeliveryProvince] = useState("");
+  const [deliveryPostalCode, setDeliveryPostalCode] = useState("");
   const [dataBusy, setDataBusy] = useState(false);
 
   const [dniFile, setDniFile] = useState<File | null>(null);
@@ -66,7 +72,7 @@ export default function VerificacionPage() {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "verification_status, full_name, phone, location, dni_number",
+          "verification_status, full_name, phone, location, dni_number, dni_address, address_line, city, province, postal_code",
         )
         .eq("id", user.id)
         .single();
@@ -76,6 +82,11 @@ export default function VerificacionPage() {
         setPhone(data?.phone ?? "");
         setLocation(data?.location ?? "");
         setDniNumber(data?.dni_number ?? "");
+        setDniAddress(data?.dni_address ?? "");
+        setDeliveryAddress(data?.address_line ?? "");
+        setDeliveryCity(data?.city ?? "");
+        setDeliveryProvince(data?.province ?? "");
+        setDeliveryPostalCode(data?.postal_code ?? "");
         setLoading(false);
       }
     }
@@ -180,7 +191,22 @@ export default function VerificacionPage() {
     fullName.trim().length >= 3 &&
     phone.replace(/\D/g, "").length >= 6 &&
     location.trim().length >= 2 &&
-    /^\d{7,9}$/.test(dniNumber.replace(/\./g, "").replace(/\s/g, ""));
+    /^\d{7,9}$/.test(dniNumber.replace(/\./g, "").replace(/\s/g, "")) &&
+    dniAddress.trim().length >= 10 &&
+    deliveryAddress.trim().length >= 3 &&
+    deliveryCity.trim().length >= 2 &&
+    deliveryProvince.trim().length >= 2 &&
+    deliveryPostalCode.trim().length >= 3 &&
+    addressMatches(
+      {
+        address_line: deliveryAddress,
+        city: deliveryCity,
+        province: deliveryProvince,
+        postal_code: deliveryPostalCode,
+        country: "AR",
+      },
+      dniAddress,
+    );
 
   async function saveData() {
     setDataBusy(true);
@@ -192,6 +218,7 @@ export default function VerificacionPage() {
       phone,
       location,
       dni_number: dniNumber,
+      dni_address: dniAddress,
     });
 
     setDataBusy(false);
@@ -303,6 +330,35 @@ export default function VerificacionPage() {
                 onChange={(event) => setLocation(event.target.value)}
               />
             </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <label htmlFor="kyc-dni-address" className="text-sm font-medium">
+                Dirección que figura en tu DNI
+              </label>
+              <Input
+                id="kyc-dni-address"
+                value={dniAddress}
+                maxLength={240}
+                placeholder="Calle, número, ciudad, provincia, código postal"
+                onChange={(event) => setDniAddress(event.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Tiene que coincidir con tu dirección de entrega:{" "}
+                {deliveryAddress ? (
+                  <strong>
+                    {deliveryAddress}, {deliveryCity}, {deliveryProvince},{" "}
+                    {deliveryPostalCode}
+                  </strong>
+                ) : (
+                  "todavía no cargaste una dirección de entrega en tu perfil."
+                )}
+              </p>
+              {dniAddress.trim().length >= 10 && !dataComplete && (
+                <p className="text-xs text-amber-800 dark:text-amber-300">
+                  La dirección del DNI no coincide todavía con la de entrega.
+                  Revisá calle, número, ciudad, provincia y código postal.
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -315,7 +371,8 @@ export default function VerificacionPage() {
             </Button>
             {!dataComplete && (
               <p className="text-xs text-amber-800 dark:text-amber-300">
-                Completá nombre, DNI, teléfono y ubicación para continuar.
+                Completá nombre, DNI, teléfono, ubicación, dirección de entrega
+                y dirección del DNI para continuar.
               </p>
             )}
           </div>

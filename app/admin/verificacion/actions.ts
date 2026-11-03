@@ -9,6 +9,7 @@ import {
 } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { addressMatches } from "@/lib/address";
 
 const kycDataSchema = z.object({
   full_name: z
@@ -36,6 +37,11 @@ const kycDataSchema = z.object({
       (value) => /^\d{7,9}$/.test(value.replace(/\./g, "").replace(/\s/g, "")),
       "El DNI debe tener 7 u 8 dígitos",
     ),
+  dni_address: z
+    .string()
+    .trim()
+    .min(10, "Escribí la dirección completa que figura en tu DNI")
+    .max(240, "La dirección es demasiado larga"),
 });
 
 type ProfileKycData = {
@@ -44,6 +50,12 @@ type ProfileKycData = {
   phone: string | null;
   location: string | null;
   dni_number: string | null;
+  dni_address: string | null;
+  address_line: string | null;
+  city: string | null;
+  province: string | null;
+  postal_code: string | null;
+  country: string | null;
 };
 
 async function kycDataComplete(userId: string): Promise<{
@@ -53,7 +65,9 @@ async function kycDataComplete(userId: string): Promise<{
   const supabase = createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("verification_status, full_name, phone, location, dni_number")
+    .select(
+      "verification_status, full_name, phone, location, dni_number, dni_address, address_line, city, province, postal_code, country",
+    )
     .eq("id", userId)
     .maybeSingle();
 
@@ -65,7 +79,12 @@ async function kycDataComplete(userId: string): Promise<{
         profile.full_name?.trim() &&
         profile.phone?.trim() &&
         profile.location?.trim() &&
-        profile.dni_number?.trim(),
+        profile.dni_number?.trim() &&
+        profile.dni_address?.trim() &&
+        profile.address_line?.trim() &&
+        profile.city?.trim() &&
+        profile.province?.trim() &&
+        profile.postal_code?.trim(),
     ),
     data: profile,
   };
@@ -92,6 +111,7 @@ export async function saveKycData(input: unknown) {
       phone: parsed.data.phone,
       location: parsed.data.location,
       dni_number: parsed.data.dni_number.replace(/\./g, "").replace(/\s/g, ""),
+      dni_address: parsed.data.dni_address,
     })
     .eq("id", actor.id);
 
@@ -133,11 +153,19 @@ export async function submitDni(formData: FormData) {
   }
 
   const dataCheck = await kycDataComplete(userId);
-  if (!dataCheck.ok) {
+  if (!dataCheck.ok || !dataCheck.data) {
     return {
       ok: false,
       error:
-        "Antes de subir el DNI completá tus datos personales: nombre, teléfono, ubicación y número de DNI.",
+        "Antes de subir el DNI completá tus datos personales: nombre, teléfono, ubicación, DNI, dirección de entrega y dirección del DNI.",
+    };
+  }
+
+  if (!addressMatches(dataCheck.data, dataCheck.data.dni_address)) {
+    return {
+      ok: false,
+      error:
+        "La dirección del DNI no coincide con tu dirección de entrega. Corregila antes de subir el DNI.",
     };
   }
 
@@ -167,11 +195,19 @@ export async function submitSelfie(formData: FormData) {
   }
 
   const dataCheck = await kycDataComplete(userId);
-  if (!dataCheck.ok) {
+  if (!dataCheck.ok || !dataCheck.data) {
     return {
       ok: false,
       error:
-        "Antes del selfie completá tus datos personales: nombre, teléfono, ubicación y número de DNI.",
+        "Antes del selfie completá tus datos personales: nombre, teléfono, ubicación, DNI, dirección de entrega y dirección del DNI.",
+    };
+  }
+
+  if (!addressMatches(dataCheck.data, dataCheck.data.dni_address)) {
+    return {
+      ok: false,
+      error:
+        "La dirección del DNI no coincide con tu dirección de entrega. Corregila antes del selfie.",
     };
   }
 
@@ -195,11 +231,19 @@ export async function approveVerification(userId: string) {
   if (!actor) return { ok: false, error: "No autorizado" };
 
   const dataCheck = await kycDataComplete(userId);
-  if (!dataCheck.ok) {
+  if (!dataCheck.ok || !dataCheck.data) {
     return {
       ok: false,
       error:
-        "No se puede aprobar: el organizador todavía no cargó nombre, teléfono, ubicación y DNI.",
+        "No se puede aprobar: el organizador todavía no cargó nombre, teléfono, ubicación, DNI, dirección de entrega y dirección del DNI.",
+    };
+  }
+
+  if (!addressMatches(dataCheck.data, dataCheck.data.dni_address)) {
+    return {
+      ok: false,
+      error:
+        "No se puede aprobar: la dirección del DNI no coincide con la dirección de entrega del perfil.",
     };
   }
 

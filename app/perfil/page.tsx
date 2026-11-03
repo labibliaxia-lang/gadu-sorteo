@@ -19,6 +19,11 @@ interface ProfileData {
   role: string;
   role_requested: boolean;
   avatar_url: string | null;
+  address_line: string | null;
+  city: string | null;
+  province: string | null;
+  postal_code: string | null;
+  country: string | null;
   email: string | null;
   phone: string | null;
   location: string | null;
@@ -57,7 +62,7 @@ export default function PerfilPage() {
         const { data } = await supabase
           .from("profiles")
           .select(
-            "full_name, role, role_requested, avatar_url, email, phone, location, instagram_url, bio, website_url, plan, slug, verification_status, email_opt_in, terms_accepted_at, terms_version",
+            "full_name, role, role_requested, avatar_url, address_line, city, province, postal_code, country, email, phone, location, instagram_url, bio, website_url, plan, slug, verification_status, email_opt_in, terms_accepted_at, terms_version",
           )
           .eq("id", user.id)
           .maybeSingle();
@@ -156,6 +161,11 @@ export default function PerfilPage() {
           bio: profile?.bio ?? null,
           website_url: profile?.website_url ?? null,
           avatar_url: profile?.avatar_url ?? null,
+          address_line: profile?.address_line ?? null,
+          city: profile?.city ?? null,
+          province: profile?.province ?? null,
+          postal_code: profile?.postal_code ?? null,
+          country: profile?.country ?? null,
           role: profile?.role ?? "user",
           plan: profile?.plan ?? "organizador",
           slug: profile?.slug ?? null,
