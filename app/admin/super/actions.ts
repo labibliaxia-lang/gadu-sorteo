@@ -29,6 +29,7 @@ export interface SuperAdminUserRow {
   role: string;
   created_at: string;
   admin_request_status: string | null;
+  is_banned: boolean;
 }
 
 /** Escapa los comodines de LIKE para que la entrada sea literal. */
@@ -217,7 +218,7 @@ export async function listUsers(params: {
   let request = admin
     .from("profiles")
     .select(
-      "id, full_name, email, role, created_at, admin_request_status",
+      "id, full_name, email, role, created_at, admin_request_status, is_banned",
       { count: "exact" },
     );
 
@@ -791,6 +792,10 @@ export async function blockUsers(userIds: string[]): Promise<ActionResult> {
         role_requested: false,
         role_request_status: "none",
         admin_request_status: "none",
+        is_banned: true,
+        banned_at: new Date().toISOString(),
+        ban_reason: "Bloqueo permanente desde el panel",
+        banned_by: adminUser.id,
       })
       .eq("id", t.id);
 
@@ -1130,4 +1135,138 @@ export async function updatePlanPrice(
   revalidatePath("/admin/super");
 
   return { ok: true };
+}
+
+// =====================================================================
+// Soporte: ban / desban individual con motivo (0037)
+// =====================================================================
+
+export type BanResult =
+  | { ok: true; banned: boolean }
+  | { ok: false; error: string };
+
+/**
+ * Suspende una cuenta: ban de Auth (~100 años) + marca en el perfil, con
+ * motivo y autor. No se puede aplicar a uno mismo ni a otro superadmin.
+ */
+export async function banUser(
+  userId: string,
+  reason: string,
+): Promise<BanResult> {
+  const adminUser = await requireSuperadminSession();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  if (!UUID_RE.test(userId)) return { ok: false, error: "Usuario inválido" };
+  if (userId === adminUser.id) {
+    return { ok: false, error: "No podés suspender tu propia cuenta." };
+  }
+
+  const cleanReason = String(reason ?? "").trim().slice(0, 300);
+  if (cleanReason.length < 3) {
+    return { ok: false, error: "Indicá un motivo (mínimo 3 caracteres)." };
+  }
+
+  const admin = createAdminClient();
+  const { data: target, error: targetError } = await admin
+    .from("profiles")
+    .select("id, email, role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (targetError) return { ok: false, error: targetError.message };
+  if (!target) return { ok: false, error: "Usuario no encontrado." };
+  if (target.role === "superadmin") {
+    return { ok: false, error: "No se puede suspender a otro superadmin." };
+  }
+
+  const { error: authError } = await admin.auth.admin.updateUserById(userId, {
+    ban_duration: "876000h",
+  });
+  if (authError) return { ok: false, error: authError.message };
+
+  const { error: profileError } = await admin
+    .from("profiles")
+    .update({
+      is_banned: true,
+      banned_at: new Date().toISOString(),
+      ban_reason: cleanReason,
+      banned_by: adminUser.id,
+    })
+    .eq("id", userId);
+
+  if (profileError) {
+    return {
+      ok: false,
+      error: `Baneado en Auth, pero no se pudo marcar el perfil: ${profileError.message}`,
+    };
+  }
+
+  await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "BAN_USER",
+    targetUserId: userId,
+    targetEmail: target.email,
+    details: { reason: cleanReason },
+  });
+
+  revalidateAdminViews();
+  revalidatePath(`/admin/super/usuarios/${userId}`);
+
+  return { ok: true, banned: true };
+}
+
+/** Levanta la suspensión: quita el ban de Auth y limpia la marca del perfil. */
+export async function unbanUser(userId: string): Promise<BanResult> {
+  const adminUser = await requireSuperadminSession();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  if (!UUID_RE.test(userId)) return { ok: false, error: "Usuario inválido" };
+  if (userId === adminUser.id) {
+    return { ok: false, error: "No podés modificar tu propia cuenta." };
+  }
+
+  const admin = createAdminClient();
+  const { data: target, error: targetError } = await admin
+    .from("profiles")
+    .select("id, email, role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (targetError) return { ok: false, error: targetError.message };
+  if (!target) return { ok: false, error: "Usuario no encontrado." };
+  if (target.role === "superadmin") {
+    return { ok: false, error: "No se puede modificar a otro superadmin." };
+  }
+
+  const { error: authError } = await admin.auth.admin.updateUserById(userId, {
+    ban_duration: "none",
+  });
+  if (authError) return { ok: false, error: authError.message };
+
+  const { error: profileError } = await admin
+    .from("profiles")
+    .update({
+      is_banned: false,
+      banned_at: null,
+      ban_reason: null,
+      banned_by: null,
+    })
+    .eq("id", userId);
+
+  if (profileError) return { ok: false, error: profileError.message };
+
+  await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "UNBAN_USER",
+    targetUserId: userId,
+    targetEmail: target.email,
+    details: {},
+  });
+
+  revalidateAdminViews();
+  revalidatePath(`/admin/super/usuarios/${userId}`);
+
+  return { ok: true, banned: false };
 }

@@ -61,6 +61,9 @@ const ACTION_LABELS: Record<string, string> = {
   REVOKE_LICENSE: "Anuló código de licencia",
   REVOKE_LICENSE_BENEFIT: "Quitó el beneficio de una licencia",
   UPDATE_PLAN_PRICE: "Actualizó precio de plan",
+  BAN_USER: "Suspendió una cuenta",
+  UNBAN_USER: "Levantó una suspensión",
+  SUPPORT_VIEW: "Abrió una vista de soporte",
 };
 
 const WA_MESSAGE =

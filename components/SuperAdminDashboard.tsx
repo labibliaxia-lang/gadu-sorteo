@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Ban,
@@ -319,13 +320,14 @@ export function SuperAdminDashboard({
               <th className="p-3">Email</th>
               <th className="p-3">Rol actual</th>
               <th className="p-3">Cambiar rol</th>
+              <th className="p-3">Soporte</th>
             </tr>
           </thead>
           <tbody>
             {users.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="p-6 text-center text-muted-foreground"
                 >
                   {loading ? "Buscando…" : "Sin resultados."}
@@ -351,6 +353,11 @@ export function SuperAdminDashboard({
                       {u.admin_request_status === "pending" && (
                         <Badge variant="warning" className="mt-1">
                           Solicitud pendiente
+                        </Badge>
+                      )}
+                      {u.is_banned && (
+                        <Badge variant="destructive" className="mt-1">
+                          Suspendido
                         </Badge>
                       )}
                     </td>
@@ -417,6 +424,14 @@ export function SuperAdminDashboard({
                           ))}
                         </select>
                       )}
+                    </td>
+                    <td className="p-3">
+                      <Link
+                        href={`/admin/super/usuarios/${u.id}`}
+                        className="text-xs font-medium text-amber-600 hover:underline"
+                      >
+                        Ver ficha
+                      </Link>
                     </td>
                   </tr>
                 );
