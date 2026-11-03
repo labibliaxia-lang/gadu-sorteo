@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Trophy } from "lucide-react";
+import { BadgeCheck, Trophy } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatDateTime, formatNumber } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ interface DrawnRaffle {
   winner_number: number | null;
   winner_name: string | null;
   drawn_at: string | null;
+  numbers_hash: string | null;
 }
 
 /**
@@ -52,7 +54,7 @@ export default async function GanadoresPage() {
   const { data: raffles } = await supabase
     .from("raffles")
     .select(
-      "id, title, cover_image_url, winner_number, winner_name, drawn_at",
+      "id, title, cover_image_url, winner_number, winner_name, drawn_at, numbers_hash",
     )
     .eq("status", "drawn")
     .order("drawn_at", { ascending: false })
@@ -83,11 +85,11 @@ export default async function GanadoresPage() {
   return (
     <div className="space-y-10">
       <header className="space-y-3 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+        <span className="inline-flex items-center gap-2 rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1 text-xs font-medium text-brand-700 dark:text-brand-300">
           <Trophy className="h-4 w-4" />
           Hall of Fame
         </span>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
           Muro de Ganadores
         </h1>
         <p className="mx-auto max-w-xl text-muted-foreground">
@@ -97,18 +99,16 @@ export default async function GanadoresPage() {
       </header>
 
       {list.length === 0 ? (
-        <Card className="mx-auto max-w-md border-dashed text-center">
-          <CardContent className="space-y-2 py-12">
-            <Trophy className="mx-auto h-10 w-10 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">Todavía no hay ganadores</h2>
-            <p className="text-sm text-muted-foreground">
-              Cuando se sortee el primer sorteo, el ganador va a aparecer acá.
-            </p>
+        <EmptyState
+          icon={Trophy}
+          title="Todavía no hay ganadores"
+          description="Cuando se sortee el primer sorteo, el ganador va a aparecer acá."
+          action={
             <Link href="/#sorteos" className={buttonVariants()}>
               Ver sorteos activos
             </Link>
-          </CardContent>
-        </Card>
+          }
+        />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((raffle) => {
@@ -136,6 +136,15 @@ export default async function GanadoresPage() {
                       Sorteado
                     </Badge>
                   </span>
+                  {raffle.numbers_hash && (
+                    <span className="absolute right-3 top-3">
+                      <Badge className="border-transparent bg-ink/80 text-white">
+                        <BadgeCheck className="mr-1 h-3.5 w-3.5" />
+                        Verificado
+                      </Badge>
+                    </span>
+                  )}
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink/80 to-transparent" />
                 </div>
 
                 <CardHeader className="space-y-1 pb-2">
@@ -150,7 +159,7 @@ export default async function GanadoresPage() {
                 </CardHeader>
 
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between gap-3 rounded-xl border bg-secondary/40 p-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-brand-500/30 bg-brand-500/5 p-3">
                     <div>
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
                         Ganador
@@ -163,7 +172,7 @@ export default async function GanadoresPage() {
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
                         Número
                       </p>
-                      <p className="font-mono text-xl font-bold text-amber-800 dark:text-amber-300">
+                      <p className="font-mono text-2xl font-bold text-brand-700 dark:text-brand-300">
                         {raffle.winner_number != null
                           ? formatNumber(raffle.winner_number)
                           : "—"}
@@ -171,16 +180,27 @@ export default async function GanadoresPage() {
                     </div>
                   </div>
 
-                  <Link
-                    href={`/sorteos/${raffle.id}`}
-                    className={buttonVariants({
-                      variant: "outline",
-                      size: "sm",
-                      className: "w-full",
-                    })}
-                  >
-                    Ver el sorteo
-                  </Link>
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/sorteos/${raffle.id}`}
+                      className={buttonVariants({
+                        variant: "outline",
+                        size: "sm",
+                        className: "flex-1",
+                      })}
+                    >
+                      Ver el sorteo
+                    </Link>
+                    <Link
+                      href={`/sorteos/${raffle.id}/verificar`}
+                      className={buttonVariants({
+                        size: "sm",
+                        className: "flex-1",
+                      })}
+                    >
+                      Verificar
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
             );

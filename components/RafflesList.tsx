@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, Search } from "lucide-react";
+import { ArrowRight, CalendarDays, Search, Ticket } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ShareButton } from "@/components/ShareButton";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -20,6 +21,11 @@ import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 import type { Raffle } from "@/lib/types";
 
 type Filter = "all" | "active" | "closed" | "drawn";
+
+export interface RaffleStats {
+  sold: number;
+  total: number;
+}
 
 const statusLabel: Record<Raffle["status"], string> = {
   active: "Activo",
@@ -43,7 +49,13 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: "drawn", label: "Sorteados" },
 ];
 
-export function RafflesList({ raffles }: { raffles: Raffle[] }) {
+export function RafflesList({
+  raffles,
+  stats = {},
+}: {
+  raffles: Raffle[];
+  stats?: Record<string, RaffleStats>;
+}) {
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
@@ -60,11 +72,25 @@ export function RafflesList({ raffles }: { raffles: Raffle[] }) {
 
   return (
     <section id="sorteos" className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold tracking-tight">Sorteos</h2>
-        <p className="mt-2 text-muted-foreground">
-          Elegí el que más te guste y asegurá tus números.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-widest text-brand-700 dark:text-brand-300">
+            Cartelera
+          </p>
+          <h2 className="mt-1 font-display text-3xl font-bold tracking-tight">
+            Sorteos
+          </h2>
+          <p className="mt-1 text-muted-foreground">
+            Elegí el que más te guste y asegurá tus números.
+          </p>
+        </div>
+        <Link
+          href="/ganadores"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+        >
+          Ver ganadores
+          <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
 
       {/* Filtros + búsqueda */}
@@ -78,8 +104,8 @@ export function RafflesList({ raffles }: { raffles: Raffle[] }) {
               className={cn(
                 "rounded-full px-4 py-1.5 text-sm font-medium transition",
                 filter === f.key
-                  ? "bg-amber-700 text-white"
-                  : "border border-slate-300 text-muted-foreground hover:bg-accent hover:text-foreground dark:border-slate-700",
+                  ? "bg-brand-500 text-ink shadow-soft"
+                  : "border border-border text-muted-foreground hover:bg-accent hover:text-foreground",
               )}
             >
               {f.label}
@@ -99,76 +125,116 @@ export function RafflesList({ raffles }: { raffles: Raffle[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <Card className="mx-auto max-w-md border-dashed text-center">
-          <CardContent className="py-12 text-muted-foreground">
-            No se encontraron sorteos para tu búsqueda.
-          </CardContent>
-        </Card>
+        <EmptyState
+          title="No encontramos sorteos"
+          description="Probá con otro filtro o buscá por título."
+        />
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((raffle) => (
-            <Card
-              key={raffle.id}
-              className="group overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-amber-500/50 hover:shadow-2xl"
-            >
-              <div className="relative aspect-video w-full bg-muted">
-                {raffle.cover_image_url ? (
-                  <Image
-                    src={raffle.cover_image_url}
-                    alt={raffle.title}
-                    fill
-                    sizes="(max-width: 640px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-5xl">
-                    🛠️
-                  </div>
-                )}
-                <Badge
-                  variant={statusVariant[raffle.status]}
-                  className="absolute right-2 top-2"
-                >
-                  {statusLabel[raffle.status]}
-                </Badge>
-              </div>
+          {filtered.map((raffle) => {
+            const raffleStat = stats[raffle.id];
+            const percent =
+              raffleStat && raffleStat.total > 0
+                ? Math.min(
+                    100,
+                    Math.round((raffleStat.sold / raffleStat.total) * 100),
+                  )
+                : 0;
 
-              <CardHeader>
-                <CardTitle className="text-xl">{raffle.title}</CardTitle>
-              </CardHeader>
-
-              <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <p className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4" />
-                  {formatDateTime(raffle.draw_date)}
-                </p>
-                <p className="text-lg font-semibold text-foreground">
-                  {formatPrice(Number(raffle.price_per_number))}{" "}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    por número
+            return (
+              <Card
+                key={raffle.id}
+                className="group flex flex-col overflow-hidden border-border transition hover:-translate-y-1 hover:border-brand-500/60 hover:shadow-card"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+                  {raffle.cover_image_url ? (
+                    <Image
+                      src={raffle.cover_image_url}
+                      alt={raffle.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-5xl">
+                      🛠️
+                    </div>
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink/80 to-transparent" />
+                  <Badge
+                    variant={statusVariant[raffle.status]}
+                    className="absolute right-3 top-3"
+                  >
+                    {statusLabel[raffle.status]}
+                  </Badge>
+                  <span className="absolute bottom-3 left-3 rounded-full bg-ink/70 px-2.5 py-1 text-xs font-medium text-white/80">
+                    {raffle.auto_draw ? "Automático" : "Manual"}
                   </span>
-                </p>
-              </CardContent>
+                </div>
 
-              <CardFooter className="gap-2">
-                <Link
-                  href={
-                    raffle.status === "drawn"
-                      ? `/sorteos/${raffle.id}/verificar`
-                      : `/sorteos/${raffle.id}`
-                  }
-                  className={cn(buttonVariants(), "flex-1")}
-                >
-                  {raffle.status === "drawn"
-                    ? "Ver resultado"
-                    : raffle.status === "closed"
-                      ? "Ver detalles"
-                      : "Participar"}
-                </Link>
-                <ShareButton sorteoId={raffle.id} titulo={raffle.title} />
-              </CardFooter>
-            </Card>
-          ))}
+                <CardHeader className="pb-2">
+                  <CardTitle className="line-clamp-2 text-lg">
+                    {raffle.title}
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent className="flex-1 space-y-3 text-sm text-muted-foreground">
+                  <p className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 shrink-0" />
+                    {formatDateTime(raffle.draw_date)}
+                  </p>
+                  <p className="font-display text-lg font-semibold text-foreground">
+                    {formatPrice(Number(raffle.price_per_number))}{" "}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      por número
+                    </span>
+                  </p>
+
+                  {raffleStat && raffleStat.total > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span>
+                          {raffleStat.sold} de {raffleStat.total} vendidos
+                        </span>
+                        <span className="font-mono font-semibold text-foreground">
+                          {percent}%
+                        </span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-brand-500"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+
+                <CardFooter className="gap-2">
+                  <Link
+                    href={
+                      raffle.status === "drawn"
+                        ? `/sorteos/${raffle.id}/verificar`
+                        : `/sorteos/${raffle.id}`
+                    }
+                    className={cn(buttonVariants(), "flex-1")}
+                  >
+                    {raffle.status === "drawn" ? (
+                      "Ver resultado"
+                    ) : raffle.status === "closed" ? (
+                      "Ver detalles"
+                    ) : (
+                      <>
+                        <Ticket className="mr-1.5 h-4 w-4" />
+                        Participar
+                      </>
+                    )}
+                  </Link>
+                  <ShareButton sorteoId={raffle.id} titulo={raffle.title} />
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
       )}
     </section>
