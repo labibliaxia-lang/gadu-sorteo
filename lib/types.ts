@@ -86,6 +86,8 @@ export interface Raffle {
   min_tickets_required: number;
   if_not_met: "extend_date" | "cancel_and_refund";
   winners_count: number;
+  /** Hash combinado de todos los premios (migración 0058). */
+  results_hash: string | null;
   /** Bloques de la landing promocional (migración 0044). */
   landing_content: import("@/lib/landing").LandingBlock[] | null;
   created_by: string | null;
@@ -103,6 +105,15 @@ export interface RaffleNumber {
   sold_to: string | null;
   payment_id: string | null;
   sold_at: string | null;
+}
+
+/** Ganador de un premio (migración 0058). */
+export interface RaffleWinner {
+  position: number;
+  number: number;
+  user_name: string | null;
+  prize_title: string | null;
+  winner_hash: string;
 }
 
 export interface Prize {

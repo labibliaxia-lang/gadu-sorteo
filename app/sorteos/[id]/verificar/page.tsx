@@ -5,9 +5,10 @@ import { ArrowLeft, ShieldCheck, Trophy } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
+import { MultiPrizeVerifier } from "@/components/MultiPrizeVerifier";
 import { WinnerCertificate } from "@/components/WinnerCertificate";
 import { formatDateTime } from "@/lib/utils";
-import type { Raffle } from "@/lib/types";
+import type { Raffle, RaffleWinner } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "Verificación del sorteo | Gadu Sorteos",
@@ -53,6 +54,16 @@ export default async function VerifyPage({
   const soldNumbers = ((soldData ?? []) as { number: number }[]).map(
     (row) => row.number,
   );
+
+  const { data: winnerRows } =
+    raffle.status === "drawn"
+      ? await supabase
+          .from("raffle_winners")
+          .select("position, number, user_name, prize_title, winner_hash")
+          .eq("raffle_id", params.id)
+          .order("position", { ascending: true })
+      : { data: null };
+  const winners = (winnerRows ?? []) as RaffleWinner[];
 
   const base = siteUrl();
   const verifyUrl = base
@@ -175,6 +186,7 @@ export default async function VerifyPage({
                 <span
                   key={number}
                   className={
+                    winners.some((winner) => winner.number === number) ||
                     number === raffle.winner_number
                       ? "rounded-md bg-amber-500 px-2 py-0.5 font-mono text-xs font-bold text-white"
                       : "rounded-md bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
@@ -190,20 +202,70 @@ export default async function VerifyPage({
             </p>
           </section>
 
+          {winners.length > 1 && (
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold">Resultados por premio</h2>
+              <MultiPrizeVerifier
+                raffleId={raffle.id}
+                seed={raffle.draw_seed ?? ""}
+                commitment={raffle.draw_commitment ?? ""}
+                numbers={soldNumbers}
+                numbersHash={raffle.numbers_hash ?? ""}
+                winners={winners.map((winner) => ({
+                  position: winner.position,
+                  number: winner.number,
+                  hash: winner.winner_hash,
+                }))}
+                resultsHash={raffle.results_hash ?? ""}
+              />
+            </section>
+          )}
+
           <section className="space-y-3 rounded-xl border p-5">
-            <h2 className="text-lg font-semibold">Certificado de ganador</h2>
+            <h2 className="text-lg font-semibold">
+              {winners.length > 1
+                ? "Certificados por premio"
+                : "Certificado de ganador"}
+            </h2>
             <p className="text-sm text-muted-foreground">
               Descargá el certificado con el número, el ganador y el hash de
               verificación.
             </p>
-            <WinnerCertificate
-              raffleTitle={raffle.title}
-              winnerName={raffle.winner_name ?? "Anónimo"}
-              winnerNumber={raffle.winner_number}
-              drawnAt={raffle.drawn_at ? formatDateTime(raffle.drawn_at) : null}
-              verificationHash={raffle.result_hash ?? raffle.draw_commitment ?? ""}
-              verifyUrl={verifyUrl}
-            />
+            {winners.length > 1 ? (
+              <div className="space-y-3">
+                {winners.map((winner) => (
+                  <WinnerCertificate
+                    key={winner.position}
+                    raffleTitle={raffle.title}
+                    prizeLabel={
+                      winner.position === 1
+                        ? "1.er premio"
+                        : `${winner.position}º premio`
+                    }
+                    winnerName={winner.user_name ?? "Anónimo"}
+                    winnerNumber={winner.number}
+                    drawnAt={
+                      raffle.drawn_at ? formatDateTime(raffle.drawn_at) : null
+                    }
+                    verificationHash={winner.winner_hash}
+                    verifyUrl={verifyUrl}
+                  />
+                ))}
+              </div>
+            ) : (
+              <WinnerCertificate
+                raffleTitle={raffle.title}
+                winnerName={raffle.winner_name ?? "Anónimo"}
+                winnerNumber={raffle.winner_number}
+                drawnAt={
+                  raffle.drawn_at ? formatDateTime(raffle.drawn_at) : null
+                }
+                verificationHash={
+                  raffle.result_hash ?? raffle.draw_commitment ?? ""
+                }
+                verifyUrl={verifyUrl}
+              />
+            )}
           </section>
         </>
       )}

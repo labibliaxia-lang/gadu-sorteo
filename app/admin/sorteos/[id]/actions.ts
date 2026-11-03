@@ -646,7 +646,7 @@ export async function drawWinner(raffleId: string): Promise<DrawResult> {
 
   const { data: raffle } = await supabase
     .from("raffles")
-    .select("draw_date")
+    .select("draw_date, winners_count")
     .eq("id", id.data)
     .maybeSingle();
 
@@ -663,6 +663,47 @@ export async function drawWinner(raffleId: string): Promise<DrawResult> {
       ok: false,
       error: `El sorteo está programado para el ${when}. El botón se habilita a esa hora.`,
     };
+  }
+
+  // Multi-premio: usa el RPC nuevo sólo cuando hay más de un ganador.
+  if (Number(raffle.winners_count ?? 1) > 1) {
+    const { data: multi, error: multiError } = await supabase.rpc(
+      "draw_winner_multi",
+      { p_raffle_id: id.data },
+    );
+
+    if (multiError) return { ok: false, error: multiError.message };
+
+    const rows = (multi ?? []) as {
+      position: number;
+      winning_number: number;
+      winner_user: string | null;
+      winner_hash: string;
+    }[];
+
+    const first = rows[0];
+    if (!first?.winning_number) {
+      return { ok: false, error: "No se pudo determinar el ganador." };
+    }
+
+    const title = await raffleTitle(id.data);
+    await Promise.all(
+      rows.map((row) =>
+        notifyWinner(
+          id.data,
+          row.winner_user,
+          Number(row.winning_number),
+          title,
+        ),
+      ),
+    );
+
+    revalidatePath("/admin");
+    revalidatePath(`/admin/sorteos/${id.data}`);
+    revalidatePath(`/sorteos/${id.data}`);
+    revalidatePath("/ganadores");
+
+    return { ok: true, winningNumber: Number(first.winning_number) };
   }
 
   const { data, error } = await supabase.rpc("draw_winner", {

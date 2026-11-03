@@ -21,6 +21,8 @@ interface AutoDrawRaffle {
   draw_date: string;
   draw_commitment: string | null;
   created_by: string | null;
+  winners_count: number | null;
+  min_tickets_required: number | null;
 }
 
 function drawErrorMessage(error: { message?: string } | null): string {
@@ -163,7 +165,7 @@ export async function processAutoDraws(options?: {
   let query = admin
     .from("raffles")
     .select(
-      "id, title, status, draw_date, draw_commitment, created_by",
+      "id, title, status, draw_date, draw_commitment, created_by, winners_count, min_tickets_required",
     )
     .eq("auto_draw", true)
     .in("status", ["active", "closed"])
@@ -210,6 +212,14 @@ export async function processAutoDraws(options?: {
         continue;
       }
 
+      const minimum = raffle.min_tickets_required ?? 0;
+      if (minimum > 0 && count < minimum) {
+        const reason = `Mínimo de venta no alcanzado: ${count} de ${minimum} números vendidos.`;
+        await handleFailure(admin, raffle, source, reason);
+        summary.skipped += 1;
+        continue;
+      }
+
       // Cierra ventas antes de sortear para que no entre un número en el
       // último segundo. El núcleo vuelve a validar estado y bloquea la fila.
       await admin
@@ -218,8 +228,9 @@ export async function processAutoDraws(options?: {
         .eq("id", raffle.id)
         .eq("status", "active");
 
+      const isMulti = Number(raffle.winners_count ?? 1) > 1;
       const { data: result, error: drawError } = await admin.rpc(
-        "draw_winner_system",
+        isMulti ? "draw_winner_multi_system" : "draw_winner_system",
         { p_raffle_id: raffle.id },
       );
 
@@ -236,11 +247,14 @@ export async function processAutoDraws(options?: {
         continue;
       }
 
-      const row = (Array.isArray(result) ? result[0] : result) as
-        | { winning_number?: number; winner_user?: string | null }
-        | null;
+      const rows = (Array.isArray(result) ? result : [result]) as {
+        position?: number;
+        winning_number?: number;
+        winner_user?: string | null;
+      }[];
 
-      const winningNumber = Number(row?.winning_number ?? 0);
+      const first = rows[0];
+      const winningNumber = Number(first?.winning_number ?? 0);
 
       await logRun(
         admin,
@@ -254,12 +268,18 @@ export async function processAutoDraws(options?: {
       summary.drawn += 1;
 
       if (winningNumber) {
-        await notifyWinner(
-          admin,
-          raffle.id,
-          row?.winner_user ?? null,
-          winningNumber,
-          raffle.title,
+        await Promise.all(
+          rows
+            .filter((row) => Number(row.winning_number ?? 0) > 0)
+            .map((row) =>
+              notifyWinner(
+                admin,
+                raffle.id,
+                row.winner_user ?? null,
+                Number(row.winning_number),
+                raffle.title,
+              ),
+            ),
         );
       }
     } catch (error) {

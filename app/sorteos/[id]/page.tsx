@@ -22,7 +22,7 @@ import { RaffleQnA } from "@/components/RaffleQnA";
 import { RaffleVisitTracker } from "@/components/RaffleVisitTracker";
 import { ShareButton } from "@/components/ShareButton";
 import { formatDateTime, formatPrice } from "@/lib/utils";
-import type { Prize, PublicOrganizer, Raffle } from "@/lib/types";
+import type { Prize, PublicOrganizer, Raffle, RaffleWinner } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -264,6 +264,17 @@ export default async function RafflePage({
       ? Math.min(100, Math.round(((soldTotal ?? 0) / numbersTotal) * 100))
       : 0;
 
+  const { data: winnerRows } =
+    raffle.status === "drawn"
+      ? await supabase
+          .from("raffle_winners")
+          .select("position, number, user_name, prize_title, winner_hash")
+          .eq("raffle_id", raffle.id)
+          .order("position", { ascending: true })
+      : { data: null };
+
+  const raffleWinners = (winnerRows ?? []) as RaffleWinner[];
+
   return (
     <div className="space-y-8">
       <RaffleVisitTracker raffleId={raffle.id} />
@@ -489,6 +500,66 @@ export default async function RafflePage({
           )}
         </div>
       </section>
+
+      {raffleWinners.length > 1 && (
+        <section className="space-y-4 rounded-xl border bg-card p-5 shadow-soft">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="font-display text-xl font-semibold">
+                Ganadores por premio
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Resultado publicado automáticamente y congelado. Cada premio
+                conserva su hash.
+              </p>
+            </div>
+            <Link
+              href={`/sorteos/${raffle.id}/verificar`}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Verificar resultados
+            </Link>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {raffleWinners.map((winner) => (
+              <div
+                key={winner.position}
+                className="rounded-xl border border-brand-500/30 bg-brand-500/5 p-4"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {winner.position === 1
+                        ? "1.er premio"
+                        : `${winner.position}º premio`}
+                    </p>
+                    <p className="truncate font-semibold">
+                      {winner.prize_title ?? "Premio"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {winner.user_name ?? "Ganador anónimo"}
+                    </p>
+                  </div>
+                  <p className="font-mono text-2xl font-bold text-brand-800 dark:text-brand-200">
+                    {String(winner.number).padStart(4, "0")}
+                  </p>
+                </div>
+                <p className="mt-2 break-all font-mono text-[10px] text-muted-foreground">
+                  {winner.winner_hash}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {raffle.results_hash && (
+            <p className="break-all text-xs text-muted-foreground">
+              results_hash:{" "}
+              <code className="font-mono">{raffle.results_hash}</code>
+            </p>
+          )}
+        </section>
+      )}
 
       {raffle.status !== "drawn" && raffle.draw_commitment && (
         <section className="space-y-3 rounded-xl border bg-muted/30 p-5">

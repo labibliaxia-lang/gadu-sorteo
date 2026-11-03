@@ -232,6 +232,7 @@ export default function NuevoSorteoPage() {
       "draw_date",
       "max_numbers",
       "min_tickets_required",
+      "winners_count",
       "if_not_met",
     ],
     2: [
@@ -581,7 +582,7 @@ export default function NuevoSorteoPage() {
                 ejecuta y se aplica la regla elegida. Dejalo en 0 para no exigir
                 mínimo.
               </p>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="min_tickets_required">
                     Mínimo de números vendidos
@@ -597,6 +598,29 @@ export default function NuevoSorteoPage() {
                   {errors.min_tickets_required && (
                     <p className="text-sm text-destructive">
                       {errors.min_tickets_required.message}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="winners_count">Cantidad de premios</Label>
+                  <Input
+                    id="winners_count"
+                    type="number"
+                    min={1}
+                    max={
+                      planContext.isPremium || planContext.isSuperadmin ? 30 : 3
+                    }
+                    step={1}
+                    {...register("winners_count")}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Tu plan permite hasta{" "}
+                    {planContext.isPremium || planContext.isSuperadmin ? 30 : 3}{" "}
+                    premios.
+                  </p>
+                  {errors.winners_count && (
+                    <p className="text-sm text-destructive">
+                      {errors.winners_count.message}
                     </p>
                   )}
                 </div>

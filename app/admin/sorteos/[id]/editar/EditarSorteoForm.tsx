@@ -172,7 +172,7 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
               </div>
             </div>
 
-            <div className="grid gap-4 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2">
+            <div className="grid gap-4 rounded-xl border bg-muted/20 p-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="min_tickets_required">
                   Mínimo de números vendidos
@@ -191,6 +191,21 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
                 )}
               </div>
               <div className="space-y-2">
+                <Label htmlFor="winners_count">Cantidad de premios</Label>
+                <Input
+                  id="winners_count"
+                  type="number"
+                  min={1}
+                  max={30}
+                  {...register("winners_count")}
+                />
+                {errors.winners_count && (
+                  <p className="text-sm text-destructive">
+                    {errors.winners_count.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="if_not_met">Si no se alcanza</Label>
                 <select
                   id="if_not_met"
@@ -203,9 +218,10 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
                   </option>
                 </select>
               </div>
-              <p className="text-xs text-muted-foreground sm:col-span-2">
-                El mínimo se controla al ejecutar el sorteo. Si no se alcanza,
-                el motor lo bloquea y se aplica la regla elegida.
+              <p className="text-xs text-muted-foreground sm:col-span-3">
+                El mínimo se controla al ejecutar el sorteo. La cantidad de
+                premios está limitada por tu plan (3 u 30) y el motor publica un
+                ganador por premio.
               </p>
             </div>
 
