@@ -190,6 +190,7 @@ export default async function AdminRaffleDetailPage({
             <RaffleActions
               raffleId={raffle.id}
               status={raffle.status}
+              drawDate={raffle.draw_date}
               hasCommitment={Boolean(raffle.draw_commitment)}
               soldCount={soldCount ?? 0}
             />

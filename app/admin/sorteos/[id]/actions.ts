@@ -571,6 +571,28 @@ export async function drawWinner(raffleId: string): Promise<DrawResult> {
   if (!id.success) return { ok: false, error: firstIssue(id.error) };
 
   const supabase = createClient();
+
+  const { data: raffle } = await supabase
+    .from("raffles")
+    .select("draw_date")
+    .eq("id", id.data)
+    .maybeSingle();
+
+  if (!raffle) return { ok: false, error: "El sorteo no existe." };
+
+  const drawAt = new Date(raffle.draw_date).getTime();
+  if (Number.isFinite(drawAt) && Date.now() < drawAt) {
+    const when = new Date(drawAt).toLocaleString("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+    return {
+      ok: false,
+      error: `El sorteo está programado para el ${when}. El botón se habilita a esa hora.`,
+    };
+  }
+
   const { data, error } = await supabase.rpc("draw_winner", {
     p_raffle_id: id.data,
   });

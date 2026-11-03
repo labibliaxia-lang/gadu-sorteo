@@ -1,24 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Clock } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { formatDateTime } from "@/lib/utils";
 import { publishDrawCommitment, drawWinner as drawRaffleWinner } from "@/app/admin/sorteos/[id]/actions";
 
 interface RaffleActionsProps {
   raffleId: string;
   status: string;
+  /** Fecha/hora programada del sorteo: el botón se habilita recién ahí. */
+  drawDate: string;
   /** ¿Ya se publicó el compromiso (semilla) del sorteo? (migración 0034) */
   hasCommitment: boolean;
   /** Números en estado sold: sin al menos uno no se puede sortear. */
   soldCount?: number;
 }
 
+function countdownLabel(target: number, now: number): string {
+  const totalSeconds = Math.max(0, Math.floor((target - now) / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const clock = [hours, minutes, seconds]
+    .map((value) => String(value).padStart(2, "0"))
+    .join(":");
+
+  return days > 0 ? `${days}d ${clock}` : clock;
+}
+
 export function RaffleActions({
   raffleId,
   status,
+  drawDate,
   hasCommitment,
   soldCount,
 }: RaffleActionsProps) {
@@ -26,6 +45,17 @@ export function RaffleActions({
   const supabase = createClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    setNow(Date.now());
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const drawAt = new Date(drawDate).getTime();
+  const validDate = Number.isFinite(drawAt);
+  const due = validDate && now !== null && now >= drawAt;
 
   async function commitSeed() {
     setBusy("commit");
@@ -99,13 +129,51 @@ export function RaffleActions({
             onClick={drawWinner}
             disabled={
               busy !== null ||
+              !due ||
               (soldCount !== undefined && soldCount === 0)
             }
+            title={
+              due
+                ? "Ejecutar el sorteo"
+                : "Se habilita en la fecha y hora programadas del sorteo"
+            }
           >
-            {busy === "draw" ? "Sorteando…" : "🎲 Sortear ganador"}
+            {busy === "draw"
+              ? "Sorteando…"
+              : due
+                ? "🎲 Sortear ganador"
+                : "🔒 Sortear (programado)"}
           </Button>
         )}
       </div>
+
+      {(status === "active" || status === "closed") &&
+        hasCommitment &&
+        now !== null &&
+        validDate &&
+        !due && (
+          <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock className="h-3.5 w-3.5" />
+            Se habilita el {formatDateTime(drawDate)} · faltan{" "}
+            <span className="font-mono font-semibold text-foreground">
+              {countdownLabel(drawAt, now)}
+            </span>
+          </p>
+        )}
+
+      {(status === "active" || status === "closed") && hasCommitment && due && (
+        <p className="text-xs text-emerald-700 dark:text-emerald-400">
+          Fecha programada alcanzada: ya podés ejecutar el sorteo.
+        </p>
+      )}
+
+      {(status === "active" || status === "closed") &&
+        hasCommitment &&
+        !validDate && (
+          <p className="text-xs text-destructive">
+            La fecha del sorteo es inválida. Editala antes de sortear.
+          </p>
+        )}
       {(status === "active" || status === "closed") &&
         hasCommitment &&
         soldCount === 0 && (

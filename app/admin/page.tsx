@@ -261,6 +261,7 @@ export default async function AdminDashboardPage() {
                     <RaffleActions
                       raffleId={raffle.id}
                       status={raffle.status}
+                      drawDate={raffle.draw_date}
                       hasCommitment={Boolean(raffle.draw_commitment)}
                       soldCount={soldByRaffle.get(raffle.id) ?? 0}
                     />
