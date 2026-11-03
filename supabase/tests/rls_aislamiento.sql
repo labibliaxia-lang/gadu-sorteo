@@ -144,14 +144,21 @@ begin
   end if;
 
   -- 2) B no puede editar los números del sorteo de A.
-  update public.raffle_numbers
-  set status = status
-  where raffle_id = v_raffle_a;
+  --    Después de 0041 ni siquiera tiene privilegio de UPDATE: el error
+  --    `insufficient_privilege` también cuenta como bloqueo correcto.
+  begin
+    update public.raffle_numbers
+    set status = status
+    where raffle_id = v_raffle_a;
 
-  get diagnostics v = row_count;
-  if v <> 0 then
-    raise exception 'FALLA: B modificó números del sorteo de A (% filas)', v;
-  end if;
+    get diagnostics v = row_count;
+    if v <> 0 then
+      raise exception 'FALLA: B modificó números del sorteo de A (% filas)', v;
+    end if;
+  exception
+    when insufficient_privilege then
+      null; -- sin privilegio: bloqueado, que es lo esperado
+  end;
 
   -- 3) B no ve pagos ajenos del sorteo de A.
   select count(*) into v
