@@ -410,9 +410,10 @@ export async function markReservationPaid(
 
   if (error) return { ok: false, error: error.message };
 
-  // Aviso por email al comprador (segundo plano, no bloquea la respuesta).
+  // Aviso por email al comprador. La venta ya está confirmada: el envío se
+  // espera para que Vercel no congele la función antes de que salga.
   const title = await raffleTitle(raffleId);
-  void notifyPaidBuyers(raffleId, clean, title);
+  await notifyPaidBuyers(raffleId, clean, title);
 
   revalidatePath("/admin");
   revalidatePath("/admin/sorteos");
@@ -458,12 +459,7 @@ export async function drawWinner(raffleId: string): Promise<DrawResult> {
   }
 
   const title = await raffleTitle(id.data);
-  void notifyWinner(
-    id.data,
-    row?.winner_user ?? null,
-    winningNumber,
-    title,
-  );
+  await notifyWinner(id.data, row?.winner_user ?? null, winningNumber, title);
 
   revalidatePath("/admin");
   revalidatePath(`/admin/sorteos/${id.data}`);

@@ -59,9 +59,10 @@ título del sorteo se lee antes de responder (una consulta chica).
 validaciones), lee `winner_user`, obtiene su email con service role y dispara `sendWinnerEmail`. El
 botón del panel usa la acción en lugar del RPC directo.
 
-**5 — observado.** Los tres avisos son `void` (no se espera la respuesta de Resend) y los helpers
-envuelven todo en try/catch; `sendEmail` tiene timeout y nunca lanza. Si Resend falla, la operación ya
-está aplicada y solo queda un log.
+**5 — observado.** Los avisos de pago y premio se esperan dentro de la Server Action (`await`), porque
+en Vercel una promesa suelta puede congelarse cuando termina la respuesta. La operación de negocio ya
+está confirmada antes del envío, así que un fallo de Resend no la revierte. La reserva se notifica con
+una acción propia que también espera el envío. `sendEmail` tiene timeout de 5 s y nunca lanza.
 
 **6 — observado.** Sin `RESEND_API_KEY`/`RESEND_FROM_EMAIL`, `sendEmail` no hace red: devuelve `false`
 y loguea. La app funciona igual.
