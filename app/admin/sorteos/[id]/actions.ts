@@ -559,6 +559,50 @@ export type DrawResult =
   | { ok: true; winningNumber: number }
   | { ok: false; error: string };
 
+/** Activa/desactiva el sorteo automático de un sorteo propio. */
+export async function setAutoDraw(
+  raffleId: string,
+  enabled: boolean,
+): Promise<ActionResult> {
+  const ctx = await requireAdminSession();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  const id = uuidSchema.safeParse(raffleId);
+  if (!id.success) return { ok: false, error: firstIssue(id.error) };
+
+  if (!(await ownsRaffle(id.data))) {
+    return { ok: false, error: "No autorizado" };
+  }
+
+  const supabase = createClient();
+  const { data: raffle } = await supabase
+    .from("raffles")
+    .select("status")
+    .eq("id", id.data)
+    .maybeSingle();
+
+  if (!raffle) return { ok: false, error: "El sorteo no existe." };
+  if (raffle.status === "drawn") {
+    return {
+      ok: false,
+      error: "El sorteo ya terminó: no se puede cambiar el modo automático.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("raffles")
+    .update({ auto_draw: enabled })
+    .eq("id", id.data);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/admin/sorteos/${id.data}`);
+  revalidatePath("/admin");
+  revalidatePath(`/sorteos/${id.data}`);
+
+  return { ok: true };
+}
+
 /**
  * Ejecuta el sorteo desde el servidor (RPC `draw_winner`) y avisa por email al
  * ganador. El RPC sigue validando dueño, compromiso publicado y estado.

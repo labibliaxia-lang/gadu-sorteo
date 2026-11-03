@@ -308,3 +308,35 @@ export async function sendPlanExpiryWarningEmail(params: {
     html,
   );
 }
+
+/** Aviso al organizador: el sorteo automático no pudo ejecutarse. */
+export async function sendAutoDrawFailedEmail(params: {
+  to: string | null | undefined;
+  organizerName: string | null;
+  raffleTitle: string;
+  raffleId: string;
+  reason: string;
+}): Promise<boolean> {
+  const title = escapeHtml(params.raffleTitle);
+  const base = siteUrl();
+  const panel = base ? `${base}/admin/sorteos/${params.raffleId}` : "";
+
+  const html = layout({
+    title: "El sorteo automático no pudo ejecutarse",
+    body:
+      paragraph(
+        `Hola${params.organizerName ? ` ${escapeHtml(params.organizerName.split(" ")[0])}` : ""}: el sorteo <strong>${title}</strong> estaba programado para ejecutarse automáticamente, pero no se pudo realizar.`,
+      ) +
+      paragraph(`Motivo: <strong>${escapeHtml(params.reason)}</strong>`) +
+      paragraph(
+        "Revisá el sorteo desde el panel. Podés corregir el problema y ejecutarlo manualmente cuando esté listo.",
+      ) +
+      button(panel, "Revisar el sorteo"),
+  });
+
+  return sendEmail(
+    params.to,
+    `El sorteo automático de ${params.raffleTitle} no se pudo ejecutar · Gadu Sorteos`,
+    html,
+  );
+}

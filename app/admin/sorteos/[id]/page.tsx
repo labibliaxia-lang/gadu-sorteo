@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdminSession } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { AutoDrawToggle } from "@/components/AutoDrawToggle";
 import {
   Card,
   CardContent,
@@ -191,6 +192,7 @@ export default async function AdminRaffleDetailPage({
               raffleId={raffle.id}
               status={raffle.status}
               drawDate={raffle.draw_date}
+              autoDraw={Boolean(raffle.auto_draw)}
               hasCommitment={Boolean(raffle.draw_commitment)}
               soldCount={soldCount ?? 0}
             />
@@ -238,6 +240,15 @@ export default async function AdminRaffleDetailPage({
             <RaffleCloneButton raffleId={raffle.id} />
             <RaffleDeleteButton raffleId={raffle.id} />
           </div>
+
+          <AutoDrawToggle
+            raffleId={raffle.id}
+            enabled={Boolean(raffle.auto_draw)}
+            drawDate={raffle.draw_date}
+            hasCommitment={Boolean(raffle.draw_commitment)}
+            soldCount={soldCount ?? 0}
+            disabled={raffle.status === "drawn"}
+          />
         </CardContent>
       </Card>
 

@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { parseLandingContent } from "@/lib/landing";
 import { averageRating, formatRating } from "@/lib/reviews";
 import type { PublicQuestion } from "@/lib/questions";
+import { maybeAutoDrawRaffle } from "@/lib/auto-draw";
 import { Badge } from "@/components/ui/badge";
 import { DrawVerifier } from "@/components/DrawVerifier";
 import { NumbersGrid } from "@/components/NumbersGrid";
@@ -88,13 +89,31 @@ export default async function RafflePage({
   const supabase = createClient();
   const isDev = process.env.NODE_ENV === "development";
 
-  const { data: raffle } = await supabase
+  let { data: raffle } = await supabase
     .from("raffles")
     .select("*")
     .eq("id", params.id)
     .single();
 
   if (!raffle) notFound();
+
+  // Fallback perezoso del sorteo automático: si la hora ya pasó y nadie lo
+  // ejecutó (cron caído, deploy, etc.), se resuelve al abrir la página.
+  if (raffle.auto_draw && raffle.status !== "drawn") {
+    try {
+      const drawnNow = await maybeAutoDrawRaffle(raffle.id as string);
+      if (drawnNow) {
+        const { data: refreshed } = await supabase
+          .from("raffles")
+          .select("*")
+          .eq("id", params.id)
+          .single();
+        if (refreshed) raffle = refreshed;
+      }
+    } catch (error) {
+      console.error("[auto-draw] fallback en página pública:", error);
+    }
+  }
 
   // Tracking de visitas para las analíticas del organizador.
   //

@@ -14,6 +14,8 @@ interface RaffleActionsProps {
   status: string;
   /** Fecha/hora programada del sorteo: el botón se habilita recién ahí. */
   drawDate: string;
+  /** Sorteo automático opt-in. */
+  autoDraw?: boolean;
   /** ¿Ya se publicó el compromiso (semilla) del sorteo? (migración 0034) */
   hasCommitment: boolean;
   /** Números en estado sold: sin al menos uno no se puede sortear. */
@@ -38,6 +40,7 @@ export function RaffleActions({
   raffleId,
   status,
   drawDate,
+  autoDraw = false,
   hasCommitment,
   soldCount,
 }: RaffleActionsProps) {
@@ -141,8 +144,12 @@ export function RaffleActions({
             {busy === "draw"
               ? "Sorteando…"
               : due
-                ? "🎲 Sortear ganador"
-                : "🔒 Sortear (programado)"}
+                ? autoDraw
+                  ? "🎲 Sortear ahora"
+                  : "🎲 Sortear ganador"
+                : autoDraw
+                  ? "🤖 Sortear (automático)"
+                  : "🔒 Sortear (programado)"}
           </Button>
         )}
       </div>
@@ -154,7 +161,9 @@ export function RaffleActions({
         !due && (
           <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />
-            Se habilita el {formatDateTime(drawDate)} · faltan{" "}
+            {autoDraw
+              ? `🤖 Se sortea automáticamente el ${formatDateTime(drawDate)} · faltan`
+              : `Se habilita el ${formatDateTime(drawDate)} · faltan`}{" "}
             <span className="font-mono font-semibold text-foreground">
               {countdownLabel(drawAt, now)}
             </span>
@@ -163,7 +172,9 @@ export function RaffleActions({
 
       {(status === "active" || status === "closed") && hasCommitment && due && (
         <p className="text-xs text-emerald-700 dark:text-emerald-400">
-          Fecha programada alcanzada: ya podés ejecutar el sorteo.
+          {autoDraw
+            ? "Modo automático activo: el sorteo se ejecutará solo en la próxima verificación o cron. También podés ejecutarlo ahora."
+            : "Fecha programada alcanzada: ya podés ejecutar el sorteo."}
         </p>
       )}
 

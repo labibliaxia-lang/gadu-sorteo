@@ -262,6 +262,7 @@ export default async function AdminDashboardPage() {
                       raffleId={raffle.id}
                       status={raffle.status}
                       drawDate={raffle.draw_date}
+                      autoDraw={Boolean(raffle.auto_draw)}
                       hasCommitment={Boolean(raffle.draw_commitment)}
                       soldCount={soldByRaffle.get(raffle.id) ?? 0}
                     />
