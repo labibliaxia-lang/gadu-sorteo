@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { Star } from "lucide-react";
+import { CalendarDays, ShieldCheck, Star, Ticket, Trophy } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { parseLandingContent } from "@/lib/landing";
@@ -11,6 +11,7 @@ import { averageRating, formatRating } from "@/lib/reviews";
 import type { PublicQuestion } from "@/lib/questions";
 import { maybeAutoDrawRaffle, maybeNotifyManualDraw } from "@/lib/auto-draw";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { DrawVerifier } from "@/components/DrawVerifier";
 import { NumbersGrid } from "@/components/NumbersGrid";
 import { OrganizerCard } from "@/components/OrganizerCard";
@@ -246,11 +247,28 @@ export default async function RafflePage({
       (viewerRole === "superadmin" || raffle.created_by === viewer.id),
   );
 
+  const [{ count: soldTotal }, { count: numbersTotal }] = await Promise.all([
+    supabase
+      .from("raffle_numbers")
+      .select("*", { count: "exact", head: true })
+      .eq("raffle_id", raffle.id)
+      .eq("status", "sold"),
+    supabase
+      .from("raffle_numbers")
+      .select("*", { count: "exact", head: true })
+      .eq("raffle_id", raffle.id),
+  ]);
+
+  const soldPercent =
+    numbersTotal && numbersTotal > 0
+      ? Math.min(100, Math.round(((soldTotal ?? 0) / numbersTotal) * 100))
+      : 0;
+
   return (
     <div className="space-y-8">
       <RaffleVisitTracker raffleId={raffle.id} />
       <section className="grid gap-6 md:grid-cols-2">
-        <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-muted">
+        <div className="relative aspect-video w-full overflow-hidden rounded-2xl border bg-muted shadow-soft">
           {raffle.cover_image_url ? (
             <Image
               src={raffle.cover_image_url}
@@ -264,62 +282,148 @@ export default async function RafflePage({
               🛠️
             </div>
           )}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink/80 to-transparent" />
+          <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+            <Badge
+              variant={
+                raffle.status === "active"
+                  ? "success"
+                  : raffle.status === "closed"
+                    ? "warning"
+                    : "secondary"
+              }
+            >
+              {statusLabel[raffle.status as Raffle["status"]]}
+            </Badge>
+            <Badge className="border-transparent bg-ink/80 text-white">
+              {raffle.auto_draw ? "Automático" : "Manual"}
+            </Badge>
+          </div>
+          <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-ink/70 px-2.5 py-1 text-xs font-medium text-white/80">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Resultado verificable
+          </span>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold">{raffle.title}</h1>
+        <div className="space-y-4">
+          <p className="font-mono text-xs uppercase tracking-widest text-brand-700 dark:text-brand-300">
+            Sorteo verificable
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+              {raffle.title}
+            </h1>
             <Badge variant="secondary">
               {statusLabel[raffle.status as Raffle["status"]]}
             </Badge>
           </div>
           <ShareButton sorteoId={raffle.id} titulo={raffle.title} />
           {raffle.description && (
-            <p className="text-muted-foreground">{raffle.description}</p>
+            <p className="max-w-xl text-muted-foreground">
+              {raffle.description}
+            </p>
           )}
-          <p className="text-sm text-muted-foreground">
-            Fecha del sorteo: {formatDateTime(raffle.draw_date)}
-          </p>
+
+          <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card p-3 text-sm shadow-soft">
+            <span className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <span>
+                <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Fecha del sorteo
+                </span>
+                {formatDateTime(raffle.draw_date)}
+              </span>
+            </span>
+            <span className="hidden h-8 w-px bg-border sm:block" />
+            <span>
+              <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
+                Precio por número
+              </span>
+              <span className="font-display text-xl font-bold">
+                {formatPrice(Number(raffle.price_per_number))}
+              </span>
+            </span>
+          </div>
+
           {raffle.status !== "drawn" && (
-            <p className="max-w-md text-xs text-muted-foreground">
+            <p className="max-w-xl rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
               {raffle.auto_draw
                 ? "Sorteo automático: se ejecuta solo a la fecha y hora programadas; el resultado se publica al confirmarse."
                 : "Sorteo manual: el organizador lo ejecuta a la fecha y hora programadas; el resultado se publica al confirmarse."}
             </p>
           )}
-          <p className="text-lg font-semibold">
-            {formatPrice(Number(raffle.price_per_number))}{" "}
-            <span className="text-sm font-normal text-muted-foreground">
-              por número
-            </span>
-          </p>
 
-          {raffle.status === "drawn" && raffle.winner_number != null && (
-            <div className="rounded-lg border bg-secondary/50 p-4">
-              <p className="font-semibold">🎉 Sorteo finalizado</p>
-              <p>
-                Ganador: {raffle.winner_name ?? "Anónimo"} — Nº{" "}
-                {raffle.winner_number}
-              </p>
+          {numbersTotal && numbersTotal > 0 && (
+            <div className="max-w-xl space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                  {soldTotal ?? 0} de {numbersTotal} números vendidos
+                </span>
+                <span className="font-mono font-semibold text-foreground">
+                  {soldPercent}%
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-brand-500"
+                  style={{ width: `${soldPercent}%` }}
+                />
+              </div>
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2 text-sm">
-            <Link
-              href={`/sorteos/${raffle.id}/en-vivo`}
-              className="rounded-md border px-3 py-1.5 font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
-            >
-              Sala en vivo
-            </Link>
+          <div className="flex flex-wrap gap-2">
+            {raffle.status === "active" && (
+              <Link
+                href="#elegir-numeros"
+                className={buttonVariants({ size: "lg" })}
+              >
+                <Ticket className="mr-1.5 h-4 w-4" />
+                Elegir mis números
+              </Link>
+            )}
             {raffle.status === "drawn" && (
               <Link
                 href={`/sorteos/${raffle.id}/verificar`}
-                className="rounded-md border px-3 py-1.5 font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+                className={buttonVariants({ size: "lg" })}
               >
-                Verificar y certificado
+                <ShieldCheck className="mr-1.5 h-4 w-4" />
+                Verificar resultado
               </Link>
             )}
+            <Link
+              href={`/sorteos/${raffle.id}/en-vivo`}
+              className="inline-flex h-11 items-center rounded-lg border border-border bg-background px-5 text-sm font-semibold text-foreground transition hover:bg-accent"
+            >
+              Sala en vivo
+            </Link>
           </div>
+
+          {raffle.status === "drawn" && raffle.winner_number != null && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-500/30 bg-brand-500/5 p-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500/15 text-brand-700 dark:text-brand-300">
+                  <Trophy className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Ganador
+                  </p>
+                  <p className="font-semibold">
+                    {raffle.winner_name ?? "Anónimo"}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Número
+                </p>
+                <p className="font-mono text-2xl font-bold text-brand-700 dark:text-brand-300">
+                  {raffle.winner_number}
+                </p>
+              </div>
+            </div>
+          )}
 
           {organizer && (
             <>

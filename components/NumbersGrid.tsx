@@ -491,13 +491,24 @@ export function NumbersGrid({
   const digits = totalCount > 0 ? String(totalCount).length : 4;
   const fmtNum = (n: number) => String(n).padStart(digits, "0");
 
+  const availableCount = useMemo(() => {
+    let count = 0;
+    numbers.forEach((number) => {
+      if (number.status === "available") count += 1;
+    });
+    return count;
+  }, [numbers]);
+
   return (
     <div className={cn("space-y-4", selected.size > 0 && "pb-28 lg:pb-0")}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <span>
-            {selected.size} número{selected.size === 1 ? "" : "s"} seleccionado
-            {selected.size === 1 ? "" : "s"} · Total:{" "}
+            <span aria-live="polite">
+              {selected.size} número{selected.size === 1 ? "" : "s"}{" "}
+              seleccionado{selected.size === 1 ? "" : "s"}
+            </span>{" "}
+            · Total:{" "}
             <span className="font-semibold text-foreground">
               {formatPrice(totalPrice)}
             </span>
@@ -569,19 +580,36 @@ export function NumbersGrid({
         </p>
       )}
 
-      <div className="mb-2 flex flex-wrap gap-3 text-xs">
-        <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded bg-emerald-500" /> Disponible
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-amber-500" /> Reservado
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-rose-500" /> Vendido
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-blue-500" /> Tu selección
-        </span>
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-medium">
+            Tocá un número para elegirlo
+            <span className="ml-1 font-normal text-muted-foreground">
+              · los vendidos y reservados están bloqueados
+            </span>
+          </p>
+          <span className="text-xs text-muted-foreground">
+            {availableCount.toLocaleString("es-AR")} disponibles de{" "}
+            {totalCount.toLocaleString("es-AR")}
+          </span>
+        </div>
+        <div
+          className="flex flex-wrap gap-x-4 gap-y-2 rounded-xl border bg-muted/30 px-3 py-2 text-xs"
+          aria-label="Leyenda de estados"
+        >
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded bg-emerald-500" /> Disponible
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-full bg-amber-500" /> Reservado
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-full bg-rose-500" /> Vendido
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-full bg-blue-500" /> Tu selección
+          </span>
+        </div>
       </div>
 
       {loading ? (
@@ -591,7 +619,7 @@ export function NumbersGrid({
       ) : (
         <div
           ref={parentRef}
-          className="h-[60vh] overflow-auto rounded-xl border bg-card p-3 shadow-sm"
+          className="h-[60vh] overflow-auto rounded-xl border bg-card p-2 shadow-soft sm:p-3"
         >
           <div
             style={{
@@ -634,7 +662,7 @@ export function NumbersGrid({
                         disabled={disabled}
                         aria-label={`Número ${fmtNum(num)} - ${status}`}
                         className={cn(
-                          "relative flex h-11 items-center justify-center overflow-hidden rounded-lg border border-slate-300 bg-card text-xs font-semibold leading-none text-foreground transition-all duration-150 hover:border-slate-400 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 dark:border-slate-700 sm:h-10 sm:text-sm",
+                          "relative flex h-11 items-center justify-center overflow-hidden rounded-lg border border-border bg-card text-xs font-semibold leading-none text-foreground transition-all duration-150 hover:border-brand-400 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 sm:h-10 sm:text-sm",
                           status === "sold" &&
                             "cursor-not-allowed bg-muted/40 text-muted-foreground opacity-70",
                           status === "reserved" &&
