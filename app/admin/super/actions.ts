@@ -1270,3 +1270,166 @@ export async function unbanUser(userId: string): Promise<BanResult> {
 
   return { ok: true, banned: false };
 }
+
+// =====================================================================
+// Soporte: pago manual de plan y extensión de vigencia (0038)
+// =====================================================================
+
+export type PlanId = "organizador" | "premium";
+
+export type PlanExtendResult =
+  | { ok: true; expiresAt: string }
+  | { ok: false; error: string };
+
+const PLAN_IDS: PlanId[] = ["organizador", "premium"];
+const PAYMENT_METHODS = ["transferencia", "efectivo", "otro"];
+
+/**
+ * Registra un pago manual y extiende la vigencia. Misma semántica que el
+ * canje de códigos (0032): premium extiende plan y rol; organizador extiende
+ * el rol y nunca degrada un premium vigente.
+ */
+export async function extendUserPlan(input: {
+  userId: string;
+  plan: string;
+  days: number;
+  amount: number;
+  method: string;
+  note?: string;
+}): Promise<PlanExtendResult> {
+  const adminUser = await requireSuperadminSession();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  if (!UUID_RE.test(input.userId)) {
+    return { ok: false, error: "Usuario inválido" };
+  }
+
+  const plan = PLAN_IDS.includes(input.plan as PlanId)
+    ? (input.plan as PlanId)
+    : null;
+  if (!plan) return { ok: false, error: "Plan inválido" };
+
+  const days = Math.floor(Number(input.days));
+  if (!Number.isFinite(days) || days < 1 || days > 365) {
+    return { ok: false, error: "Los días deben estar entre 1 y 365." };
+  }
+
+  const amount = Number(input.amount);
+  if (!Number.isFinite(amount) || amount < 0 || amount > 100_000_000) {
+    return { ok: false, error: "Monto inválido." };
+  }
+
+  const method = input.method;
+  if (!PAYMENT_METHODS.includes(method)) {
+    return { ok: false, error: "Medio de pago inválido." };
+  }
+
+  const note = String(input.note ?? "").trim().slice(0, 300) || null;
+
+  const admin = createAdminClient();
+  const { data: target, error: targetError } = await admin
+    .from("profiles")
+    .select(
+      "id, email, role, plan, plan_expires_at, role_expires_at",
+    )
+    .eq("id", input.userId)
+    .maybeSingle();
+
+  if (targetError) return { ok: false, error: targetError.message };
+  if (!target) return { ok: false, error: "Usuario no encontrado." };
+  if (target.role === "superadmin") {
+    return { ok: false, error: "No se extiende el plan de un superadmin." };
+  }
+
+  const now = new Date();
+  const baseRole = target.role_expires_at
+    ? new Date(target.role_expires_at)
+    : now;
+  const basePlan = target.plan_expires_at
+    ? new Date(target.plan_expires_at)
+    : now;
+  const fromRole = baseRole > now ? baseRole : now;
+  const fromPlan = basePlan > now ? basePlan : now;
+
+  const nextRoleExpiry = new Date(
+    fromRole.getTime() + days * 24 * 60 * 60 * 1000,
+  );
+
+  const currentPlan = target.plan as string | null;
+  const nextPlan =
+    plan === "premium" || currentPlan === "premium" ? "premium" : "organizador";
+
+  // Organizador nunca degrada un premium vigente (igual que el canje).
+  const nextPlanExpiry =
+    plan === "premium"
+      ? new Date(fromPlan.getTime() + days * 24 * 60 * 60 * 1000)
+      : target.plan_expires_at
+        ? new Date(target.plan_expires_at)
+        : null;
+
+  const expiresAt = plan === "premium" ? nextPlanExpiry : nextRoleExpiry;
+
+  const { error: updateError } = await admin
+    .from("profiles")
+    .update({
+      role: target.role === "user" ? "admin" : target.role,
+      plan: nextPlan,
+      plan_expires_at: nextPlanExpiry ? nextPlanExpiry.toISOString() : null,
+      role_expires_at: nextRoleExpiry.toISOString(),
+    })
+    .eq("id", target.id);
+
+  if (updateError) return { ok: false, error: updateError.message };
+
+  const { error: orderError } = await admin.from("plan_orders").insert({
+    user_id: target.id,
+    plan,
+    amount_ars: amount,
+    days,
+    method,
+    note,
+    status: "paid",
+    created_by: adminUser.id,
+    paid_at: now.toISOString(),
+    expires_at: expiresAt ? expiresAt.toISOString() : null,
+  });
+
+  if (orderError) {
+    return {
+      ok: false,
+      error: `Plan extendido, pero no se pudo guardar el pago: ${orderError.message}`,
+    };
+  }
+
+  await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "PLAN_PAYMENT",
+    targetUserId: target.id,
+    targetEmail: target.email,
+    details: {
+      plan,
+      days,
+      amount,
+      method,
+      note,
+      expires_at: expiresAt ? expiresAt.toISOString() : null,
+    },
+  });
+
+  revalidateAdminViews();
+  revalidatePath(`/admin/super/usuarios/${target.id}`);
+  revalidatePath("/planes");
+  revalidatePath("/perfil");
+
+  return {
+    ok: true,
+    expiresAt: expiresAt
+      ? expiresAt.toLocaleDateString("es-AR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : "sin vencimiento",
+  };
+}

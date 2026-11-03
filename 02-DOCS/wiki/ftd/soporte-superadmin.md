@@ -75,7 +75,22 @@ fallan porque las columnas no existen.
 compradores no pierden acceso a lo ya vendido). El panel de soporte es de lectura: para actuar en
 nombre del usuario se usan las acciones existentes del superadmin, que también están auditadas.
 
+## Ampliación: pagos manuales de plan (0038)
+
+`plan_orders` guarda cada pago manual (`plan`, `monto`, `días`, `medio`, `nota`, `status`, autor y
+vencimiento resultante). Desde la ficha de soporte, `PlanSupportActions` permite elegir plan, días
+(30–365), monto, medio y nota; `extendUserPlan` valida superadmin, actualiza `profiles` con la misma
+semántica que el canje de códigos (premium extiende plan y rol; organizador extiende el rol y no
+degrada un premium vigente) e inserta el pago en el historial. Todo queda auditado como
+`PLAN_PAYMENT`. La propia persona puede ver sus pagos de plan (RLS por `user_id`); el superadmin ve
+todos.
+
+**Verificación observada.** `typecheck` 0, `lint` 0 warnings, `test` 38/38, `build` 0; la ruta
+`/admin/super/usuarios/[id]` sigue compilando.
+
+**Pendiente.** Aplicar `0038` para que exista la tabla; sin ella la acción devuelve error al guardar.
+
 ## Next
 
-Siguiente incremento del panel: extender/ajustar el plan de un usuario desde la ficha, registrar un
-pago manual de plan y ver el historial de pagos del plan.
+Avisos al organizador por email (nueva reserva y pago confirmado) y aviso de vencimiento de plan;
+después, rate limiting y tests de RLS/e2e.

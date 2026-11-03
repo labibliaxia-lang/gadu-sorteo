@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SupportUserActions } from "@/components/SupportUserActions";
+import { PlanSupportActions } from "@/components/PlanSupportActions";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { roleLabel } from "@/lib/superadmin";
 
@@ -52,7 +53,7 @@ export default async function SuperUserSupportPage({
   const { data: profile } = await admin
     .from("profiles")
     .select(
-      "id, full_name, email, role, created_at, role_expires_at, is_banned, banned_at, ban_reason, avatar_url, admin_request_status",
+      "id, full_name, email, role, created_at, role_expires_at, plan, plan_expires_at, is_banned, banned_at, ban_reason, avatar_url, admin_request_status",
     )
     .eq("id", params.id)
     .maybeSingle();
@@ -110,6 +111,23 @@ export default async function SuperUserSupportPage({
       sum + Number(raffle.price_per_number) * (byId.get(raffle.id)?.sold ?? 0),
     0,
   );
+
+  const { data: planOrdersData } = await admin
+    .from("plan_orders")
+    .select(
+      "id, plan, amount_ars, days, method, note, status, created_at, paid_at, expires_at",
+    )
+    .eq("user_id", profile.id)
+    .order("created_at", { ascending: false })
+    .limit(25);
+
+  const planOrders = planOrdersData ?? [];
+  const currentPlan =
+    profile.plan === "premium"
+      ? "premium"
+      : profile.plan === "organizador"
+        ? "organizador"
+        : null;
 
   const { data: boughtData } = await admin
     .from("raffle_numbers")
@@ -235,6 +253,78 @@ export default async function SuperUserSupportPage({
           />
         </CardContent>
       </Card>
+
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Plan y pagos</h2>
+          <span className="text-sm text-muted-foreground">
+            Plan actual:{" "}
+            {currentPlan === "premium"
+              ? "Premium"
+              : currentPlan === "organizador"
+                ? "Organizador"
+                : "Sin plan"}{" "}
+            ·{" "}
+            {profile.plan_expires_at
+              ? `vence ${formatDateTime(profile.plan_expires_at)}`
+              : profile.role_expires_at
+                ? `rol vence ${formatDateTime(profile.role_expires_at)}`
+                : "sin vencimiento"}
+          </span>
+        </div>
+
+        <Card>
+          <CardContent className="space-y-3 p-5">
+            <p className="text-sm text-muted-foreground">
+              Registrá un pago por transferencia o efectivo. La vigencia se
+              extiende desde el vencimiento actual (o desde hoy si ya venció) y
+              el pago queda en el historial.
+            </p>
+            <PlanSupportActions userId={profile.id} currentPlan={currentPlan} />
+          </CardContent>
+        </Card>
+
+        {planOrders.length > 0 && (
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
+                <tr>
+                  <th className="p-3">Fecha</th>
+                  <th className="p-3">Plan</th>
+                  <th className="p-3">Días</th>
+                  <th className="p-3">Monto</th>
+                  <th className="p-3">Medio</th>
+                  <th className="p-3">Nota</th>
+                  <th className="p-3">Vence</th>
+                </tr>
+              </thead>
+              <tbody>
+                {planOrders.map((order) => (
+                  <tr key={order.id} className="border-t">
+                    <td className="whitespace-nowrap p-3 text-muted-foreground">
+                      {formatDateTime(order.created_at)}
+                    </td>
+                    <td className="p-3 capitalize">{order.plan}</td>
+                    <td className="p-3">{order.days}</td>
+                    <td className="p-3">
+                      {formatPrice(Number(order.amount_ars))}
+                    </td>
+                    <td className="p-3 capitalize">{order.method}</td>
+                    <td className="max-w-[14rem] truncate p-3 text-muted-foreground">
+                      {order.note || "—"}
+                    </td>
+                    <td className="whitespace-nowrap p-3 text-muted-foreground">
+                      {order.expires_at
+                        ? formatDateTime(order.expires_at)
+                        : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {isOrganizer && (
         <section className="space-y-3">
