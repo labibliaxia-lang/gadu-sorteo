@@ -1,32 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Loader2, ShieldCheck } from "lucide-react";
 
 import { acceptTerms } from "@/app/actions/terms";
 import { Button } from "@/components/ui/button";
-import { PRIVACY_PATH, TERMS_PATH } from "@/lib/terms";
+import { PRIVACY_PATH, TERMS_PATH, TERMS_VERSION } from "@/lib/terms";
 
 const ALLOWED_PATHS = [TERMS_PATH, PRIVACY_PATH, "/login", "/register", "/auth"];
 
 /**
- * Bloqueo obligatorio para cuentas OAuth que todavía no aceptaron los
- * Términos. No deja navegar hasta registrar la aceptación; las páginas legales
- * y el login quedan accesibles.
+ * Bloqueo global de Términos:
+ * - Cuenta sin aceptación (por ejemplo Google que entró sin el checkbox).
+ * - Cuenta con una versión vieja: al cambiar TERMS_VERSION, debe reaceptar.
+ *
+ * Solo deja pasar las páginas legales y el login para poder leer/aceptar.
  */
-export function TermsGate({ accepted }: { accepted: boolean }) {
+export function TermsGate({
+  accepted,
+  hasAcceptedTerms,
+  acceptedVersion,
+}: {
+  accepted: boolean;
+  hasAcceptedTerms: boolean;
+  acceptedVersion: string | null;
+}) {
   const pathname = usePathname();
   const [alreadyAccepted, setAlreadyAccepted] = useState(accepted);
   const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (alreadyAccepted) return null;
-  if (pathname && ALLOWED_PATHS.some((path) => pathname.startsWith(path))) {
-    return null;
-  }
+  const isAllowedPath = Boolean(
+    pathname && ALLOWED_PATHS.some((path) => pathname.startsWith(path)),
+  );
+  const blocked = !alreadyAccepted && !isAllowedPath;
+
+  useEffect(() => {
+    if (!blocked) return;
+
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [blocked]);
+
+  if (alreadyAccepted || isAllowedPath) return null;
 
   async function onSubmit() {
     setBusy(true);
@@ -49,23 +71,32 @@ export function TermsGate({ accepted }: { accepted: boolean }) {
     >
       <div className="w-full max-w-md rounded-2xl border bg-card p-6 shadow-2xl">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-amber-700 dark:text-amber-300" />
+          <ShieldCheck className="h-5 w-5 text-brand-600" />
           <h2 id="terms-gate-title" className="text-lg font-semibold">
-            Un paso antes de continuar
+            {hasAcceptedTerms
+              ? "Actualizamos los Términos"
+              : "Un paso antes de continuar"}
           </h2>
         </div>
+
         <p className="mt-2 text-sm text-muted-foreground">
-          Para usar Gadu Sorteos necesitás aceptar los Términos y Condiciones y
-          la Política de Privacidad. Las aceptaste antes de entrar con Google,
-          pero todavía no quedó registrada en tu cuenta.
+          {hasAcceptedTerms
+            ? `Los Términos y la Política de Privacidad cambiaron a la versión ${TERMS_VERSION}. Aceptá la nueva versión para seguir usando Gadu Sorteos.`
+            : "Para usar Gadu Sorteos necesitás aceptar los Términos y Condiciones y la Política de Privacidad. Las aceptaste antes de entrar con Google, pero todavía no quedó registrada en tu cuenta."}
         </p>
+
+        {hasAcceptedTerms && acceptedVersion && (
+          <p className="mt-1 font-mono text-xs text-muted-foreground">
+            Versión aceptada: {acceptedVersion} · vigente: {TERMS_VERSION}
+          </p>
+        )}
 
         <label className="mt-4 flex items-start gap-2 text-sm">
           <input
             type="checkbox"
             checked={checked}
             onChange={(event) => setChecked(event.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-amber-600"
+            className="mt-0.5 h-4 w-4 rounded border-border accent-brand-500"
           />
           <span>
             He leído y acepto los{" "}
@@ -73,7 +104,7 @@ export function TermsGate({ accepted }: { accepted: boolean }) {
               href={TERMS_PATH}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-amber-800 underline underline-offset-4 dark:text-amber-300"
+              className="text-brand-700 underline underline-offset-4 dark:text-brand-300"
             >
               Términos y Condiciones
             </Link>{" "}
@@ -82,7 +113,7 @@ export function TermsGate({ accepted }: { accepted: boolean }) {
               href={PRIVACY_PATH}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-amber-800 underline underline-offset-4 dark:text-amber-300"
+              className="text-brand-700 underline underline-offset-4 dark:text-brand-300"
             >
               Política de Privacidad
             </Link>
@@ -101,10 +132,8 @@ export function TermsGate({ accepted }: { accepted: boolean }) {
           onClick={() => void onSubmit()}
           disabled={!checked || busy}
         >
-          {busy ? (
-            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-          ) : null}
-          Aceptar y continuar
+          {busy ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
+          Aceptar versión {TERMS_VERSION} y continuar
         </Button>
       </div>
     </div>

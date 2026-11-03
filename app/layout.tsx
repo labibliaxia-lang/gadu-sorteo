@@ -7,6 +7,7 @@ import { ReferralCapture } from "@/components/ReferralCapture";
 import { TermsGate } from "@/components/TermsGate";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { createClient } from "@/lib/supabase/server";
+import { TERMS_VERSION } from "@/lib/terms";
 import "./globals.css";
 
 const inter = Inter({
@@ -74,14 +75,20 @@ export default async function RootLayout({
   // Auto-reparación: si el usuario autenticado aún no tiene perfil en
   // public.profiles, lo creamos al vuelo (RLS: auth.uid() = id).
   let termsAccepted = false;
+  let hasAcceptedTerms = false;
+  let acceptedTermsVersion: string | null = null;
   if (user) {
     const { data: existingProfile } = await supabase
       .from("profiles")
-      .select("id, terms_accepted_at")
+      .select("id, terms_accepted_at, terms_version")
       .eq("id", user.id)
       .maybeSingle();
 
-    termsAccepted = Boolean(existingProfile?.terms_accepted_at);
+    hasAcceptedTerms = Boolean(existingProfile?.terms_accepted_at);
+    acceptedTermsVersion =
+      (existingProfile?.terms_version as string | null) ?? null;
+    termsAccepted =
+      hasAcceptedTerms && acceptedTermsVersion === TERMS_VERSION;
 
     if (!existingProfile) {
       const meta = user.user_metadata as {
@@ -123,7 +130,13 @@ export default async function RootLayout({
       <body className="flex min-h-screen flex-col overflow-x-hidden">
         <ThemeProvider>
           <ReferralCapture />
-          {user && <TermsGate accepted={termsAccepted} />}
+          {user && (
+            <TermsGate
+              accepted={termsAccepted}
+              hasAcceptedTerms={hasAcceptedTerms}
+              acceptedVersion={acceptedTermsVersion}
+            />
+          )}
           <Navbar initialUser={initialUser} />
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">
             {children}

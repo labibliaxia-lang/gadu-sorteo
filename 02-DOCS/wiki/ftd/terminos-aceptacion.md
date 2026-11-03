@@ -75,6 +75,10 @@ fecha», junto a la versión vigente; si falta la aceptación lo indica en ámba
 ámbar con el botón «Aceptar versión X»; al aceptar se actualiza la fecha y la versión en el estado y
 en la base.
 
+**9 — observado.** `TermsGate` recibe la versión aceptada desde el layout: si falta la aceptación o
+quedó vieja, bloquea cualquier ruta (salvo legales y login) con un modal que no deja scrollear el
+fondo; al aceptar, la app queda desbloqueada sin recargar.
+
 **Nota de producto.** El registro actual es solo con Google (`/register` redirige a `/login`), por eso
 el checkbox vive en el login, que es la puerta real de alta. El trigger de email queda listo para
 cualquier alta por email/contraseña que se agregue después.
