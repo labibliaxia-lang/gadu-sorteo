@@ -51,7 +51,9 @@ inserta en `admin_audit_logs` con `BAN_USER` / `UNBAN_USER`.
 
 **3 — observado.** `reserve_numbers_prepaid` (SECURITY DEFINER) hace
 `if exists (... profiles where id = v_uid and is_banned) then raise exception 'Tu cuenta está suspendida...'`.
-Cubre el access token que sigue vivo hasta una hora después del ban de Auth.
+Cubre el access token que sigue vivo hasta una hora después del ban de Auth. Además,
+`getAdminSession` rechaza perfiles con `is_banned` y el layout de `/admin` redirige a la home, así
+que una cuenta suspendida pierde el panel al instante y no espera a que expire el token.
 
 **4, 5 — observado.** El build lista `/admin/super/usuarios/[id]` y `/admin/super/usuarios/[id]/panel`
 como rutas dinámicas. La vista de panel no renderiza formularios ni botones de acción, solo tablas y

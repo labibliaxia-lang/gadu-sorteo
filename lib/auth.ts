@@ -36,11 +36,15 @@ export async function getAdminSession(): Promise<AdminSession | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, email")
+    .select("role, email, is_banned")
     .eq("id", user.id)
     .single();
 
   if (!isAdminRole(profile?.role)) return null;
+
+  // Una cuenta suspendida no puede operar el panel aunque su access token
+  // siga vivo hasta una hora después del ban de Auth.
+  if (profile?.is_banned) return null;
 
   return {
     id: user.id,

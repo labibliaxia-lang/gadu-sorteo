@@ -30,10 +30,11 @@ export default async function AdminLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, is_banned")
     .eq("id", user.id)
     .single();
 
+  if (profile?.is_banned) redirect("/");
   if (profile?.role !== "admin" && profile?.role !== "superadmin") redirect("/");
 
   return (
