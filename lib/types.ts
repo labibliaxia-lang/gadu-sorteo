@@ -82,6 +82,10 @@ export interface Raffle {
   draw_seed_revealed_at: string | null;
   /** Sorteo automático opt-in (migración 0048). */
   auto_draw: boolean;
+  /** Reglas de venta y premios (migración 0057). */
+  min_tickets_required: number;
+  if_not_met: "extend_date" | "cancel_and_refund";
+  winners_count: number;
   /** Bloques de la landing promocional (migración 0044). */
   landing_content: import("@/lib/landing").LandingBlock[] | null;
   created_by: string | null;

@@ -142,6 +142,9 @@ const raffleUpdateSchema = z.object({
   transfer_cbu: z.string().max(40).nullish(),
   transfer_bank: z.string().max(120).nullish(),
   whatsapp_contact: z.string().max(40).nullish(),
+  min_tickets_required: z.coerce.number().int().min(0).max(10000),
+  if_not_met: z.enum(["extend_date", "cancel_and_refund"]),
+  winners_count: z.coerce.number().int().min(1).max(30),
 });
 
 export async function deleteRaffle(raffleId: string): Promise<ActionResult> {
@@ -181,6 +184,9 @@ export async function updateRaffle(
     transfer_cbu?: string | null;
     transfer_bank?: string | null;
     whatsapp_contact?: string | null;
+    min_tickets_required: number;
+    if_not_met: "extend_date" | "cancel_and_refund";
+    winners_count: number;
   },
 ): Promise<ActionResult> {
   const ctx = await requireAdminSession();
@@ -211,6 +217,9 @@ export async function updateRaffle(
       transfer_cbu: values.transfer_cbu ?? null,
       transfer_bank: values.transfer_bank ?? null,
       whatsapp_contact: values.whatsapp_contact ?? null,
+      min_tickets_required: values.min_tickets_required,
+      if_not_met: values.if_not_met,
+      winners_count: values.winners_count,
     })
     .eq("id", id.data);
 

@@ -37,6 +37,9 @@ const schema = z.object({
   draw_date: z.string().min(1, "La fecha del sorteo es obligatoria"),
   price_per_number: z.coerce.number().positive("El precio debe ser mayor a 0"),
   payment_type: z.enum(["mercadopago", "transferencia"]),
+  min_tickets_required: z.coerce.number().int().min(0).max(10000),
+  if_not_met: z.enum(["extend_date", "cancel_and_refund"]),
+  winners_count: z.coerce.number().int().min(1).max(30),
   transfer_alias: z.string().optional(),
   transfer_cbu: z.string().optional(),
   transfer_bank: z.string().optional(),
@@ -101,6 +104,9 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
       transfer_cbu: raffle.transfer_cbu ?? "",
       transfer_bank: raffle.transfer_bank ?? "",
       whatsapp_contact: raffle.whatsapp_contact ?? "",
+      min_tickets_required: raffle.min_tickets_required ?? 0,
+      if_not_met: raffle.if_not_met ?? "extend_date",
+      winners_count: raffle.winners_count ?? 1,
     },
   });
 
@@ -164,6 +170,43 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
                   {...register("description")}
                 />
               </div>
+            </div>
+
+            <div className="grid gap-4 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="min_tickets_required">
+                  Mínimo de números vendidos
+                </Label>
+                <Input
+                  id="min_tickets_required"
+                  type="number"
+                  min={0}
+                  max={10000}
+                  {...register("min_tickets_required")}
+                />
+                {errors.min_tickets_required && (
+                  <p className="text-sm text-destructive">
+                    {errors.min_tickets_required.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="if_not_met">Si no se alcanza</Label>
+                <select
+                  id="if_not_met"
+                  className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm"
+                  {...register("if_not_met")}
+                >
+                  <option value="extend_date">Reprogramar la fecha</option>
+                  <option value="cancel_and_refund">
+                    Cancelar y devolver el dinero
+                  </option>
+                </select>
+              </div>
+              <p className="text-xs text-muted-foreground sm:col-span-2">
+                El mínimo se controla al ejecutar el sorteo. Si no se alcanza,
+                el motor lo bloquea y se aplica la regla elegida.
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">

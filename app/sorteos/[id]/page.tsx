@@ -372,6 +372,38 @@ export default async function RafflePage({
             </div>
           )}
 
+          {raffle.min_tickets_required > 0 && (
+            <div
+              className={
+                (soldTotal ?? 0) >= raffle.min_tickets_required
+                  ? "max-w-xl rounded-xl border border-emerald-600/30 bg-emerald-500/5 p-3 text-xs"
+                  : "max-w-xl rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs"
+              }
+            >
+              <p className="font-semibold">
+                Mínimo para realizarse:{" "}
+                {raffle.min_tickets_required.toLocaleString("es-AR")} números
+                vendidos
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Vendidos actualmente: {(soldTotal ?? 0).toLocaleString("es-AR")}
+                {". "}
+                {raffle.if_not_met === "extend_date"
+                  ? "Si no se alcanza, se reprograma la fecha."
+                  : "Si no se alcanza, se cancela y se devuelve el dinero."}
+              </p>
+              {(soldTotal ?? 0) < raffle.min_tickets_required && (
+                <p className="mt-1 font-medium text-amber-800 dark:text-amber-300">
+                  Faltan{" "}
+                  {(raffle.min_tickets_required - (soldTotal ?? 0)).toLocaleString(
+                    "es-AR",
+                  )}{" "}
+                  para habilitar el sorteo.
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-2">
             {raffle.status === "active" && (
               <Link
