@@ -35,17 +35,18 @@ export function Footer() {
         {/* Pago seguro */}
         <div>
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white">
-            Pago seguro
+            Pago por transferencia
           </h3>
           <div className="flex items-start gap-2 text-sm text-zinc-400">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
             <span>
-              Pagos procesados con Mercado Pago. Tus datos están protegidos.
+              Transferí y enviá el comprobante por WhatsApp. El organizador
+              valida tu pago.
             </span>
           </div>
           <div className="mt-3 flex items-center gap-2 text-sm text-zinc-400">
             <CreditCard className="h-4 w-4" />
-            <span>Visa · Mastercard · Mercado Pago</span>
+            <span>Transferencia bancaria · Comprobante por WhatsApp</span>
           </div>
         </div>
 

@@ -23,8 +23,8 @@ const STEPS = [
   },
   {
     icon: CreditCard,
-    title: "Pagá con Mercado Pago",
-    desc: "Completá el pago de forma rápida, simple y 100% segura.",
+    title: "Transferí y enviá el comprobante",
+    desc: "Hacé la transferencia, mandá el comprobante por WhatsApp y el organizador valida tu pago.",
   },
   {
     icon: Trophy,
@@ -36,8 +36,8 @@ const STEPS = [
 const BENEFITS = [
   {
     icon: ShieldCheck,
-    title: "Pagos 100% seguros",
-    desc: "Procesados por Mercado Pago con cifrado de extremo a extremo.",
+    title: "Pago simple y seguro",
+    desc: "Transferencia bancaria y comprobante por WhatsApp. El organizador confirma tu pago.",
   },
   {
     icon: Eye,
