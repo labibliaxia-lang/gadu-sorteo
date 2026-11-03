@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
+  Clock,
   MessageCircle,
   Search,
+  Ticket,
   Undo2,
 } from "lucide-react";
 
@@ -14,6 +16,7 @@ import {
   undoMarkReservationPaid,
 } from "@/app/admin/sorteos/[id]/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { waLink } from "@/lib/superadmin";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
@@ -83,6 +86,12 @@ export function ReservedNumbersPanel({
     if ((group.phone ?? "").replace(/\D/g, "").includes(q)) return true;
     return group.numbers.some((n) => String(n).includes(q));
   });
+
+  const totalNumbers = groups.reduce(
+    (sum, group) => sum + group.numbers.length,
+    0,
+  );
+  const totalAmount = totalNumbers * pricePerNumber;
 
   function toggleVerified(userId: string) {
     setVerified((prev) => {
@@ -181,15 +190,39 @@ export function ReservedNumbersPanel({
 
   if (groups.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        No hay números reservados esperando confirmación. Cuando alguien
-        reserve desde la página del sorteo, aparece acá.
-      </p>
+      <EmptyState
+        icon={Ticket}
+        title="Sin reservas pendientes"
+        description="Cuando alguien reserve desde la página del sorteo, va a aparecer acá para que confirmes el comprobante."
+      />
     );
   }
 
   return (
     <div className="space-y-3">
+      <div className="grid gap-2 sm:grid-cols-3">
+        <div className="rounded-xl border bg-card p-3 shadow-soft">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            Reservas
+          </p>
+          <p className="font-display text-2xl font-bold">{groups.length}</p>
+        </div>
+        <div className="rounded-xl border bg-card p-3 shadow-soft">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            Números reservados
+          </p>
+          <p className="font-display text-2xl font-bold">{totalNumbers}</p>
+        </div>
+        <div className="rounded-xl border bg-card p-3 shadow-soft">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            Total estimado
+          </p>
+          <p className="font-display text-2xl font-bold">
+            {formatPrice(totalAmount)}
+          </p>
+        </div>
+      </div>
+
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-0 flex-1 sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -252,23 +285,32 @@ export function ReservedNumbersPanel({
             return (
               <li
                 key={group.userId}
-                className="space-y-3 rounded-xl border p-3"
+                className={cn(
+                  "space-y-3 rounded-xl border bg-card p-4 shadow-soft",
+                  isVerified && "border-emerald-600/50",
+                )}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold">{group.name}</p>
+                    <p className="font-display text-base font-semibold">
+                      {group.name}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {group.numbers.length} número
                       {group.numbers.length === 1 ? "" : "s"} ·{" "}
                       {formatPrice(total)}
-                      {group.expiresAt &&
-                        ` · reserva hasta ${formatDateTime(group.expiresAt)}`}
                     </p>
-                    <div className="mt-1.5 flex flex-wrap gap-1">
+                    {group.expiresAt && (
+                      <p className="mt-1 flex items-center gap-1.5 text-xs text-amber-800 dark:text-amber-300">
+                        <Clock className="h-3.5 w-3.5" />
+                        Reserva hasta {formatDateTime(group.expiresAt)}
+                      </p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-1">
                       {group.numbers.map((n) => (
                         <span
                           key={n}
-                          className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs"
+                          className="rounded-md border border-brand-500/30 bg-brand-500/10 px-1.5 py-0.5 font-mono text-xs font-semibold text-brand-800 dark:text-brand-300"
                         >
                           {n}
                         </span>
@@ -293,7 +335,7 @@ export function ReservedNumbersPanel({
                   )}
                 </div>
 
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
                   <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
@@ -315,7 +357,6 @@ export function ReservedNumbersPanel({
                     }
                     placeholder="Nota interna (opcional)"
                     maxLength={300}
-                    className="sm:max-w-xs"
                     aria-label={`Nota interna para ${group.name}`}
                   />
                 </div>
@@ -323,7 +364,8 @@ export function ReservedNumbersPanel({
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
-                    className="bg-emerald-700 text-white hover:bg-emerald-800"
+                    variant="success"
+                    className="w-full sm:w-auto"
                     disabled={busy || !isVerified}
                     onClick={() => void markPaid(group)}
                     title={
@@ -335,7 +377,7 @@ export function ReservedNumbersPanel({
                     <CheckCircle2 className="mr-1.5 h-4 w-4" />
                     {busyId === group.userId
                       ? "Marcando…"
-                      : "Marcar como Pagado"}
+                      : "Marcar como pagado"}
                   </Button>
                 </div>
               </li>
@@ -345,17 +387,19 @@ export function ReservedNumbersPanel({
       )}
 
       {groups.length > 1 && (
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={busyId !== null || verified.size === 0}
-          onClick={() => void markVerified()}
-          title="Marcá el comprobante de cada reserva que quieras validar"
-        >
-          {busyId === "all"
-            ? "Marcando…"
-            : `Marcar verificadas (${verified.size})`}
-        </Button>
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="success"
+            disabled={busyId !== null || verified.size === 0}
+            onClick={() => void markVerified()}
+            title="Marcá el comprobante de cada reserva que quieras validar"
+          >
+            {busyId === "all"
+              ? "Marcando…"
+              : `Marcar verificadas (${verified.size})`}
+          </Button>
+        </div>
       )}
     </div>
   );
