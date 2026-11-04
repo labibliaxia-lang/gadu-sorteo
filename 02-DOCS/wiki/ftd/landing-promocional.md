@@ -51,8 +51,8 @@ y registra `0044`.
 
 **2, 3, 4, 5 — observado.** La acción valida con `landingContentSchema`, exige sesión de admin y
 `owns_raffle`, y rechaza imágenes que no estén bajo
-`<SUPABASE_URL>/storage/v1/object/public/raffle-images/`. El texto se guarda como strings y se
-renderiza con `<p>`/`<h2>` (whitespace-pre-line), nunca como HTML. El video acepta solo hosts
+`<SUPABASE_URL>/storage/v1/object/public/raffle-images/`. Se comparan origin y pathname
+decodificado, y se rechaza `..` para que un `raffle-images/../avatars/...` no pase la allowlist.
 exactos de YouTube (`youtube.com`, `youtu.be`, `m.youtube.com`) y Vimeo (`vimeo.com`,
 `player.vimeo.com`), con HTTPS e ID validado; el iframe usa una URL generada por
 `videoEmbedUrl`, no la URL cruda.

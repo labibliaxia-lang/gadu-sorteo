@@ -1,10 +1,62 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  isAllowedLandingImage,
   landingContentSchema,
   videoEmbedUrl,
   videoProvider,
 } from "@/lib/landing";
+
+const SUPABASE = "https://demo.supabase.co";
+const BUCKET = `${SUPABASE}/storage/v1/object/public/raffle-images/`;
+
+describe("isAllowedLandingImage", () => {
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = SUPABASE;
+  });
+
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+  });
+
+  it("acepta una imagen del bucket raffle-images", () => {
+    expect(isAllowedLandingImage(`${BUCKET}portada.jpg`)).toBe(true);
+  });
+
+  it("rechaza otro bucket del mismo proyecto", () => {
+    expect(
+      isAllowedLandingImage(
+        `${SUPABASE}/storage/v1/object/public/avatars/foto.jpg`,
+      ),
+    ).toBe(false);
+  });
+
+  it("rechaza path traversal hacia otro bucket", () => {
+    expect(
+      isAllowedLandingImage(
+        `${BUCKET}../avatars/foto.jpg`,
+      ),
+    ).toBe(false);
+    expect(
+      isAllowedLandingImage(
+        `${BUCKET}%2e%2e/avatars/foto.jpg`,
+      ),
+    ).toBe(false);
+  });
+
+  it("rechaza otro host y HTTP", () => {
+    expect(
+      isAllowedLandingImage(
+        "https://evil.com/storage/v1/object/public/raffle-images/foto.jpg",
+      ),
+    ).toBe(false);
+    expect(
+      isAllowedLandingImage(
+        "http://demo.supabase.co/storage/v1/object/public/raffle-images/foto.jpg",
+      ),
+    ).toBe(false);
+  });
+});
 
 describe("videoProvider", () => {
   it("acepta YouTube watch, youtu.be, shorts y embed", () => {

@@ -139,14 +139,38 @@ export function youtubeEmbedUrl(value: string): string | null {
 /**
  * Solo acepta imágenes del bucket público `raffle-images` del proyecto.
  * Se valida en el servidor porque el cliente puede enviar cualquier URL.
+ * Se comparan origin + pathname decodificado y se rechaza `..` para evitar
+ * que una URL como `raffle-images/../avatars/...` pase el startsWith.
  */
 export function isAllowedLandingImage(url: string): boolean {
-  const base = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "")
-    .trim()
-    .replace(/\/+$/, "");
-  if (!base) return false;
+  const baseRaw = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim();
+  if (!baseRaw) return false;
 
-  return url.startsWith(`${base}/storage/v1/object/public/raffle-images/`);
+  let base: URL;
+  let target: URL;
+  try {
+    base = new URL(baseRaw);
+    target = new URL(url);
+  } catch {
+    return false;
+  }
+
+  if (target.protocol !== "https:") return false;
+  if (target.username || target.password) return false;
+  if (target.origin !== base.origin) return false;
+
+  let pathname: string;
+  try {
+    pathname = decodeURIComponent(target.pathname);
+  } catch {
+    return false;
+  }
+
+  if (pathname.includes("..")) return false;
+
+  return pathname.startsWith(
+    "/storage/v1/object/public/raffle-images/",
+  );
 }
 
 /** Parsea el JSON de la base sin romper la página si una fila vieja es inválida. */
