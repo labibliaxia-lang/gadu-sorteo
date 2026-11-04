@@ -3,8 +3,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { CalendarDays, Gift, ShieldCheck, Star, Ticket, Trophy } from "lucide-react";
-
+import {
+  ArrowRight,
+  CalendarDays,
+  Gift,
+  ShieldCheck,
+  Star,
+  Ticket,
+  Trophy,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { parseLandingContent } from "@/lib/landing";
 import { averageRating, formatRating } from "@/lib/reviews";
@@ -19,6 +26,7 @@ import { OrganizerContact } from "@/components/OrganizerContact";
 import { PageViewTracker } from "@/components/PageViewTracker";
 import { PrizeCard } from "@/components/PrizeCard";
 import { RaffleLanding } from "@/components/RaffleLanding";
+import { RaffleMiniCard } from "@/components/RaffleMiniCard";
 import { RaffleQnA } from "@/components/RaffleQnA";
 import { RaffleVisitTracker } from "@/components/RaffleVisitTracker";
 import { ReportRaffleButton } from "@/components/ReportRaffleButton";
@@ -214,6 +222,21 @@ export default async function RafflePage({
   );
 
   const landingBlocks = parseLandingContent(raffle.landing_content);
+
+  // Invitación a la home: otros sorteos activos, con los destacados primero
+  // (migración 0066). `select("*")` funciona igual si 0066 no está aplicada.
+  const { data: otherRafflesData } = await supabase
+    .from("raffles")
+    .select("*")
+    .eq("status", "active")
+    .neq("id", raffle.id)
+    .order("created_at", { ascending: false })
+    .limit(6);
+
+  const otherRaffles = ((otherRafflesData ?? []) as Raffle[]).sort(
+    (a, b) =>
+      Number(Boolean(b.is_featured)) - Number(Boolean(a.is_featured)),
+  );
 
   const {
     data: { user: viewer },
@@ -871,6 +894,35 @@ export default async function RafflePage({
         isLoggedIn={Boolean(viewer)}
         canModerate={canModerateQna}
       />
+
+      {otherRaffles.length > 0 && (
+        <section className="space-y-4 border-t border-hairline pt-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="eyebrow">Más sorteos</p>
+              <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">
+                Seguí participando
+              </h2>
+              <p className="mt-1 text-[13px] text-fg-subtle">
+                Otros sorteos publicados en Gadu. Los destacados aparecen
+                primero.
+              </p>
+            </div>
+            <Link
+              href="/"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Ver todos los sorteos
+              <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {otherRaffles.map((other) => (
+              <RaffleMiniCard key={other.id} raffle={other} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {organizer && (
         <OrganizerContact

@@ -94,6 +94,9 @@ export interface Raffle {
   cancellation_reason: string | null;
   /** Bloques de la landing promocional (migración 0044). */
   landing_content: import("@/lib/landing").LandingBlock[] | null;
+  /** Sorteo destacado por el superadmin (migración 0066). */
+  is_featured: boolean | null;
+  featured_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

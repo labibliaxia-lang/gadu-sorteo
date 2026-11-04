@@ -58,7 +58,7 @@ begin
       select string_agg(e.v, ', ' order by e.v)
       from (
         select lpad(g::text, 4, '0') as v
-        from generate_series(28, 65) as g
+        from generate_series(28, 66) as g
       ) e
       where not exists (
         select 1 from public._applied_migrations m where m.version = e.v
@@ -73,7 +73,7 @@ begin
 
     if v_faltantes is null then
       insert into estado_migraciones (orden, linea) values (
-        2, 'OK      todas las migraciones 0028–0065 están en el ledger'
+        2, 'OK      todas las migraciones 0028–0066 están en el ledger'
       );
     else
       insert into estado_migraciones (orden, linea) values (
@@ -324,10 +324,27 @@ begin
   end if;
 
   -- ------------------------------------------------------------------
-  -- 8) Nota final
+  -- 8) 0066 — sorteos destacados
+  -- ------------------------------------------------------------------
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'raffles'
+      and column_name = 'is_featured'
+  ) then
+    insert into estado_migraciones (orden, linea) values (
+      13, 'OK      0066: raffles.is_featured (sorteos destacados)'
+    );
+  else
+    insert into estado_migraciones (orden, linea) values (
+      13, 'FALTA   0066: falta raffles.is_featured (no se pueden destacar sorteos)'
+    );
+  end if;
+
+  -- ------------------------------------------------------------------
+  -- 9) Nota final
   -- ------------------------------------------------------------------
   insert into estado_migraciones (orden, linea) values (
-    13, 'NOTA    para 0001–0027 (RLS, triggers, RPC de dinero) correr también supabase/tests/verificar_esquema.sql'
+    14, 'NOTA    para 0001–0027 (RLS, triggers, RPC de dinero) correr también supabase/tests/verificar_esquema.sql'
   );
 end
 $bloque$;

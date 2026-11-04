@@ -44,6 +44,7 @@ import {
   type MetricBarPoint,
 } from "@/components/admin/MetricBarChart";
 import { ReportActions } from "@/components/admin/ReportActions";
+import { FeatureRaffleButton } from "@/components/admin/FeatureRaffleButton";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 import { buildDailySeries, type TrafficPoint } from "@/lib/page-views";
 import { REPORT_REASON_LABELS, type ReportReason } from "@/lib/reports";
@@ -197,6 +198,8 @@ interface RaffleRow {
   draw_date: string | null;
   created_at: string;
   created_by: string | null;
+  /** Destacado en la home (migración 0066). */
+  is_featured?: boolean | null;
 }
 
 interface AuditLogRow {
@@ -936,9 +939,9 @@ export default async function SuperAdminPage({
   if (section === "sorteos") {
     const { data: rafflesData, error: rafflesError } = await admin
       .from("raffles")
-      .select(
-        "id, title, status, price_per_number, draw_date, created_at, created_by",
-      )
+      // `*` para que la sección siga funcionando antes de aplicar 0066
+      // (is_featured simplemente no viene y el botón muestra "Destacar").
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
     if (rafflesError) issues.push(`sorteos: ${rafflesError.message}`);
@@ -1868,6 +1871,16 @@ export default async function SuperAdminPage({
                       ? organizerById.get(raffle.created_by) ?? "—"
                       : "—"}
                   </span>
+                ),
+              },
+              {
+                key: "featured",
+                header: "Destacado",
+                render: (raffle) => (
+                  <FeatureRaffleButton
+                    raffleId={raffle.id}
+                    featured={Boolean(raffle.is_featured)}
+                  />
                 ),
               },
               {

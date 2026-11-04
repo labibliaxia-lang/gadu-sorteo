@@ -2209,3 +2209,91 @@ export async function deleteReport(
       : "Denuncia eliminada, pero no se pudo registrar la auditoría; avisá a un desarrollador.",
   };
 }
+
+/**
+ * Destaca un sorteo en la home y en la sección «más sorteos» de las landings,
+ * o lo saca de destacados (migración 0066). Solo superadmin.
+ *
+ * La lectura de `is_featured` es pública; la escritura va por service role y
+ * queda auditada. Si la migración todavía no se aplicó, el error es explícito
+ * en vez de un mensaje de PostgREST.
+ */
+export async function setRaffleFeatured(
+  raffleId: string,
+  featured: boolean,
+): Promise<ActionResult> {
+  const adminUser = await requireSuperadminSession();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  if (!UUID_RE.test(raffleId)) return { ok: false, error: "Sorteo inválido" };
+
+  const admin = createAdminClient();
+
+  const { data: raffleData, error: findError } = await admin
+    .from("raffles")
+    .select("id, title, created_by")
+    .eq("id", raffleId)
+    .maybeSingle();
+
+  if (findError) return { ok: false, error: findError.message };
+  if (!raffleData) return { ok: false, error: "El sorteo no existe." };
+
+  const raffle = raffleData as {
+    id: string;
+    title: string | null;
+    created_by: string | null;
+  };
+
+  const { data: updated, error: updateError } = await admin
+    .from("raffles")
+    .update({
+      is_featured: featured,
+      featured_at: featured ? new Date().toISOString() : null,
+    })
+    .eq("id", raffle.id)
+    .select("id");
+
+  if (updateError) {
+    if (updateError.message.includes("is_featured")) {
+      return {
+        ok: false,
+        error:
+          "Falta aplicar la migración 0066 (sorteos destacados). Pegala en el SQL Editor y reintentá.",
+      };
+    }
+    return { ok: false, error: updateError.message };
+  }
+
+  if (!updated || updated.length === 0) {
+    return { ok: false, error: "El sorteo no existe." };
+  }
+
+  const targetEmail = await loadUserEmail(raffle.created_by);
+
+  const audited = await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: featured ? "RAFFLE_FEATURE" : "RAFFLE_UNFEATURE",
+    targetUserId: raffle.created_by,
+    targetEmail,
+    details: {
+      raffle_id: raffle.id,
+      title: raffle.title,
+      featured,
+    },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/super");
+  revalidatePath(`/sorteos/${raffle.id}`);
+  revalidatePath(`/admin/sorteos/${raffle.id}`);
+
+  return {
+    ok: true,
+    message: audited
+      ? featured
+        ? "Sorteo destacado."
+        : "Sorteo quitado de destacados."
+      : "Cambio aplicado, pero no se pudo registrar la auditoría; avisá a un desarrollador.",
+  };
+}

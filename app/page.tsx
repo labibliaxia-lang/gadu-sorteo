@@ -185,10 +185,23 @@ export default async function HomePage() {
 
   const raffleStats = Object.fromEntries(statsEntries);
 
+  // Destacado: lo marca el superadmin con `is_featured` (migración 0066). Si no
+  // hay ninguno marcado, cae al primer activo para que el hero no quede vacío.
   const featured =
+    raffleList.find(
+      (raffle) => raffle.is_featured && raffle.status === "active",
+    ) ??
     raffleList.find((raffle) => raffle.status === "active") ??
     raffleList[0] ??
     null;
+
+  // En la cartelera, los destacados van primero (el hero ya muestra uno).
+  const listedRaffles = raffleList
+    .filter((raffle) => raffle.id !== featured?.id)
+    .sort(
+      (a, b) =>
+        Number(Boolean(b.is_featured)) - Number(Boolean(a.is_featured)),
+    );
   const featuredStats = featured ? raffleStats[featured.id] : undefined;
   const featuredPercent = rafflePercent(featuredStats);
 
@@ -412,7 +425,7 @@ export default async function HomePage() {
 
         {/* ============ CARTELERA ============ */}
         <RafflesList
-          raffles={raffleList.filter((raffle) => raffle.id !== featured?.id)}
+          raffles={listedRaffles}
           stats={raffleStats}
         />
       </div>
