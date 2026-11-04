@@ -169,6 +169,12 @@ export default async function RootLayout({
       className={`${inter.variable} ${spaceGrotesk.variable} ${plexMono.variable}`}
     >
       <body className="flex min-h-screen flex-col overflow-x-hidden">
+        <a
+          href="#contenido"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+        >
+          Saltar al contenido
+        </a>
         <ThemeProvider>
           <ReferralCapture />
           {user &&
@@ -196,7 +202,10 @@ export default async function RootLayout({
             />
           )}
           <Navbar initialUser={initialUser} />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
+          <main
+            id="contenido"
+            className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6 sm:px-6 sm:pt-8"
+          >
             {children}
           </main>
           <Footer />

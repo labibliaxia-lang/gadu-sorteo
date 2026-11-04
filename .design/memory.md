@@ -69,3 +69,26 @@ firma real.
 
 Pendiente honesto: prueba en teléfono real, lector de pantalla y un sorteo ya sorteado para ver el
 muro de ganadores con datos (hoy la base de desarrollo no tiene ninguno).
+
+## Modo claro propio (2026-11-04)
+
+- **Cambia de material, no de luminosidad.** Papel cálido (`#F6F4EF`), paneles marfil, hairlines
+  cálidos y tinta cálida. La acción primaria sigue en tinta porque el ámbar sobre papel no llega al
+  3:1 de borde de UI; el ámbar aparece como sello: énfasis del H1, progreso, foco, números.
+- **Regla para no volver atrás:** un tema no es "el otro invertido". Si el modo claro vuelve a ser
+  gris azulado, dejó de ser esta marca.
+- Evidencia: `shots/v5-home-light-1440.png`, `shots/v9-home-light-390.png`.
+
+## Accesibilidad verificada
+
+- `.design/a11y.mjs` (CDP, sin dependencias): jerarquía de headings, nombres accesibles, labels,
+  ids duplicados, blancos táctiles y foco real con Tab.
+- Resultado: 1 `h1`, sin saltos de nivel, 0 imágenes sin `alt`, 0 controles sin nombre, 0 inputs sin
+  label, 0 ids duplicados, 22/22 stops con foco visible.
+- Skip link "Saltar al contenido" como primer tab stop (`app/layout.tsx` + `main#contenido`).
+- Contraste: todos los pares de texto usados ≥ 4,5:1 en ambos temas (`.design/contrast.mjs`).
+
+## Deploy
+
+- `.design/verify-prod.mjs` comprueba assets nuevos, referencia en la home y captura 390/1440 de
+  producción. Última corrida: OK, producción sirve la identidad nueva.

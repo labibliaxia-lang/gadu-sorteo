@@ -157,6 +157,16 @@ try {
     await sleep(1200);
   }
 
+  if (process.env.TAB_COUNT) {
+    const tabs = Number(process.env.TAB_COUNT);
+    for (let i = 0; i < tabs; i += 1) {
+      await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 });
+      await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 });
+      await sleep(80);
+    }
+    await sleep(400);
+  }
+
   const result = await send("Runtime.evaluate", {
     expression: auditExpression,
     returnByValue: true,

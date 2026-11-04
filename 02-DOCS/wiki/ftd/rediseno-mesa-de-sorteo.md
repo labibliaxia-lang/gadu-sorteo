@@ -185,8 +185,26 @@ viewport; el H1 conserva "verificar." en ámbar como énfasis de marca) y la hig
   se pudo ver con datos porque la base de desarrollo no tiene sorteos sorteados. La calidad de las
   fotos de premios es contenido del organizador, no del sistema de diseño.
 
+## Cierre 2026-11-04 (segunda pasada) — modo claro propio, accesibilidad y deploy
+
+- **Modo claro con material propio.** Deja de ser el oscuro invertido: canvas papel cálido
+  (`#F6F4EF`), paneles marfil, hairlines cálidos y texto tinta. La acción primaria sigue en tinta
+  (el ámbar sobre papel no alcanza el 3:1 de borde de UI); el ámbar queda como sello en énfasis,
+  progreso y foco. Contraste medido: fg/canvas 16,9:1; fg-subtle/panel 5,8:1; brand-800/panel 5,2:1.
+  Evidencia: `shots/v5-home-light-1440.png`, `shots/v9-home-light-390.png`.
+- **Skip link.** Primer tab stop "Saltar al contenido" en todas las páginas; `main#contenido`.
+- **Auditoría de accesibilidad** (`.design/a11y.mjs`, CDP): un solo `h1`, sin saltos de nivel, 0
+  imágenes sin `alt`, 0 controles sin nombre accesible, 0 inputs sin label, 0 ids duplicados. Foco
+  por teclado: 22/22 stops con indicador visible (el CTA ámbar muestra doble anillo). Blancos
+  táctiles: los únicos <24px son enlaces de texto inline (exentos por WCAG 2.5.8).
+- **Deploy verificado.** `.design/verify-prod.mjs` contra `https://gadu-sorteo-doci.vercel.app`:
+  `logo-gadu-azul.png` 200, `logo-gadu-blanco.png` 200, la home referencia el logo nuevo y captura
+  390/1440 con lazy-loading resuelto. Producción ya sirve la identidad nueva. Evidencia:
+  `shots/prod/home-1440.png`, `shots/prod/home-390.png`.
+
 ## Next
 
-1. Revisar el resultado en un teléfono real (no solo emulación) con datos reales de sorteo.
-2. Decidir si el modo claro se queda o se retira; hoy es una alternativa accesible, no la identidad.
-3. Extender el mismo sistema a las tablas del panel admin si se quiere una identidad completa.
+1. Revisar el resultado en un teléfono real (no solo emulación) y con lector de pantalla.
+2. Extender el mismo sistema a las tablas del panel admin si se quiere una identidad completa.
+3. Higiene de datos del seed ("amoladora" ×4, fechas vencidas con sorteos activos) y unificar
+   formato de fechas/miles en `lib/utils`.

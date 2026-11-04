@@ -62,44 +62,45 @@
     color-scheme: dark;
   }
 
-  /* Modo claro: inverso simétrico. La acción primaria pasa a tinta,
-     porque el ámbar como fondo no alcanza AA sobre blanco. */
+  /* Modo claro "papel de boleto": en vez de invertir el oscuro, cambia de
+     material — papel cálido, tinta y el ámbar como sello. La acción primaria
+     queda en tinta: el ámbar sobre papel no alcanza el 3:1 de borde de UI. */
   .light {
-    --canvas: 240 5% 97%;
-    --panel-1: 0 0% 100%;
-    --panel-2: 240 5% 95%;
-    --panel-3: 240 5% 93%;
-    --hairline: 225 10% 90%;
-    --hairline-strong: 225 8% 80%;
+    --canvas: 43 25% 95%;
+    --panel-1: 45 80% 98%;
+    --panel-2: 43 20% 92%;
+    --panel-3: 43 16% 88%;
+    --hairline: 43 14% 86%;
+    --hairline-strong: 40 12% 76%;
 
-    --fg: 210 9% 6%;
-    --fg-muted: 220 9% 26%;
-    --fg-subtle: 220 5% 42%;
-    --fg-faint: 220 5% 57%;
+    --fg: 45 11% 7%;
+    --fg-muted: 43 8% 23%;
+    --fg-subtle: 43 8% 37%;
+    --fg-faint: 40 8% 52%;
 
-    --shadow-soft: 0 1px 2px 0 rgb(11 12 14 / 0.04);
-    --shadow-card: 0 12px 24px -18px rgb(11 12 14 / 0.25);
+    --shadow-soft: 0 1px 2px 0 rgb(20 19 15 / 0.05);
+    --shadow-card: 0 12px 24px -18px rgb(20 19 15 / 0.28);
 
-    --background: 240 5% 97%;
-    --foreground: 210 9% 6%;
-    --card: 0 0% 100%;
-    --card-foreground: 210 9% 6%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 9% 6%;
-    --primary: 210 9% 7%;
+    --background: 43 25% 95%;
+    --foreground: 45 11% 7%;
+    --card: 45 80% 98%;
+    --card-foreground: 45 11% 7%;
+    --popover: 45 80% 98%;
+    --popover-foreground: 45 11% 7%;
+    --primary: 45 11% 7%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 210 9% 18%;
-    --secondary: 240 5% 95%;
-    --secondary-foreground: 210 9% 6%;
-    --muted: 240 5% 95%;
-    --muted-foreground: 220 6% 40%;
-    --accent: 240 5% 93%;
-    --accent-foreground: 210 9% 6%;
+    --primary-hover: 43 9% 18%;
+    --secondary: 43 20% 92%;
+    --secondary-foreground: 45 11% 7%;
+    --muted: 43 20% 92%;
+    --muted-foreground: 43 8% 36%;
+    --accent: 43 16% 88%;
+    --accent-foreground: 45 11% 7%;
     --destructive: 358 70% 42%;
     --destructive-foreground: 0 0% 100%;
-    --border: 225 10% 90%;
-    --input: 225 10% 90%;
-    --ring: 40 100% 33%;
+    --border: 43 14% 86%;
+    --input: 43 14% 86%;
+    --ring: 40 100% 30%;
     color-scheme: light;
   }
 
