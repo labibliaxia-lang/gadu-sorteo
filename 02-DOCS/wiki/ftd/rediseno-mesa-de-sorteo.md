@@ -149,6 +149,24 @@ hallazgo, vive en [`.design/memory.md`](../../../.design/memory.md).
 La crítica dio por bueno y no se tocó: contraste AA del mono de datos (≈5,6:1 en ambos temas), cero
 degradés decorativos/glow/emojis/violeta, y la card-ticket como firma real.
 
+**Tercera pasada (2026-11-04, veredicto GO).** Un segundo crítico externo revisó las capturas
+`final2-*` y dio **GO** sin bloqueantes: el ticket móvil conserva foto, fecha completa, progreso,
+precio y talón dentro de 390×844 (la fecha termina en y=698, el ticket en y=776, 0 overflow). Se
+aplicaron sus mayores de bajo costo:
+
+- El talón móvil etiqueta el precio ("Por número"), igual que la home de escritorio y las cards: sin
+  la etiqueta, "$ 1.500" junto a la foto se podía leer como el valor del premio.
+- La barra de progreso pasa a 4px con track `hairline-strong`: a 2px y sobre `panel-3` no se leía.
+- Los badges de estado dejan de llevar un ring verde fijo: CERRADO ya no tiene halo de ACTIVO, y en
+  `/verificar` el badge usa el mismo mapa de variantes que la cartelera.
+- "Cómo se verifica" iguala el padding de "Compromiso del sorteo" (px-6) y cada paso arranca con su
+  etiqueta (Compromiso / Semilla / Listado) para que se pueda escanear.
+
+Quedan abiertos por decisión, no por olvido: la cantidad de marcas ámbar (regla de un CTA lleno por
+viewport; el H1 conserva "verificar." en ámbar como énfasis de marca) y la higiene de datos del seed
+("amoladora" ×4, fechas vencidas con sorteos activos). Evidencia: `shots/final3-home-390.png` y
+`shots/final3-verificar-1440.png`.
+
 ## Cierre 2026-11-04 — logos del dueño y pasada de acabado
 
 - **Logos por tema.** El dueño entregó dos PNG: blanco para fondo oscuro y azul para fondo claro.

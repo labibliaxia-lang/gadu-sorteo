@@ -25,6 +25,16 @@ const statusLabel: Record<Raffle["status"], string> = {
   cancelled: "Cancelado",
 };
 
+const statusVariant: Record<
+  Raffle["status"],
+  "success" | "warning" | "secondary"
+> = {
+  active: "success",
+  closed: "warning",
+  drawn: "secondary",
+  cancelled: "secondary",
+};
+
 function siteUrl(): string {
   return (process.env.NEXT_PUBLIC_URL ?? "").trim().replace(/\/+$/, "");
 }
@@ -86,7 +96,7 @@ export default async function VerifyPage({
       <header className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <p className="eyebrow-gold">Verificación pública</p>
-          <Badge variant="secondary">
+          <Badge variant={statusVariant[raffle.status as Raffle["status"]]}>
             {statusLabel[raffle.status as Raffle["status"]]}
           </Badge>
         </div>
@@ -133,22 +143,34 @@ export default async function VerifyPage({
           </section>
 
           <section className="overflow-hidden rounded-lg border border-hairline bg-panel-1">
-            <div className="border-b border-hairline px-4 py-3">
+            <div className="border-b border-hairline px-6 py-3">
               <h2 className="font-display text-lg font-semibold">
                 Cómo se verifica
               </h2>
             </div>
             <ol className="divide-y divide-hairline">
               {[
-                "Antes del sorteo el organizador publica el compromiso: el hash SHA-256 de una semilla secreta. Si la cambiara después, el hash no coincidiría.",
-                "Al sortear se revela la semilla. Cualquiera puede recalcular el hash y comprobar que es la misma que se publicó antes.",
-                "El listado de números vendidos también se hashea. Si se agregara o quitara un número, la huella del resultado no coincidiría.",
+                {
+                  label: "Compromiso",
+                  text: "antes del sorteo el organizador publica el hash SHA-256 de una semilla secreta. Si la cambiara después, el hash no coincidiría.",
+                },
+                {
+                  label: "Semilla",
+                  text: "al sortear se revela la semilla. Cualquiera puede recalcular el hash y comprobar que es la misma que se publicó antes.",
+                },
+                {
+                  label: "Listado",
+                  text: "el listado de números vendidos también se hashea. Si se agregara o quitara un número, la huella del resultado no coincidiría.",
+                },
               ].map((step, index) => (
-                <li key={step} className="flex gap-3 px-4 py-3">
+                <li key={step.label} className="flex gap-3 px-6 py-3">
                   <span className="font-mono text-[11px] leading-5 text-fg-subtle">
                     {String(index + 1).padStart(2, "0")}
                   </span>
-                  <p className="text-[13px] leading-5 text-fg-muted">{step}</p>
+                  <p className="text-[13px] leading-5 text-fg-muted">
+                    <span className="font-medium text-fg">{step.label}</span>{" "}
+                    {step.text}
+                  </p>
                 </li>
               ))}
             </ol>

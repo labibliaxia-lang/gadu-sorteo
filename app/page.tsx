@@ -80,7 +80,7 @@ function FeaturedTicket({
           </div>
         )}
         <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-2 p-3">
-          <Badge variant={status.variant} className="bg-canvas/85 ring-1 ring-emerald-500/20">{status.label}</Badge>
+          <Badge variant={status.variant} className="bg-canvas/85">{status.label}</Badge>
           <span className="rounded-md bg-canvas/80 px-2 py-1 font-mono text-[11px] uppercase tracking-[0.08em] text-fg-muted ring-1 ring-hairline">
             {raffle.auto_draw ? "Automático" : "Manual"}
           </span>
@@ -313,7 +313,7 @@ export default async function HomePage() {
                           ? `${featuredStats.sold.toLocaleString("es-AR")} de ${featuredStats.total.toLocaleString("es-AR")} · ${featuredPercent}%`
                           : "Sorteo activo"}
                       </p>
-                      <div className="h-0.5 overflow-hidden rounded-full bg-panel-3">
+                      <div className="h-1 overflow-hidden rounded-full bg-hairline-strong">
                         <div
                           className="h-full rounded-full bg-brand-500"
                           style={{ width: `${featuredPercent}%` }}
@@ -321,9 +321,14 @@ export default async function HomePage() {
                       </div>
                     </div>
                   </div>
-                  <div className="ticket-stub -mx-0 flex items-center justify-between px-3 pt-2.5 pb-3">
-                    <span className="font-mono text-[13px] text-fg">
-                      {formatPrice(Number(featured.price_per_number))}
+                  <div className="ticket-stub -mx-0 flex items-center justify-between gap-2 px-3 pt-2.5 pb-3">
+                    <span className="flex items-baseline gap-1.5">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-fg-subtle">
+                        Por número
+                      </span>
+                      <span className="font-mono text-[13px] text-fg">
+                        {formatPrice(Number(featured.price_per_number))}
+                      </span>
                     </span>
                     <span className="flex items-center gap-1 rounded-md border border-hairline bg-panel-1 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-muted transition-colors group-hover:border-brand-500/50 group-hover:text-brand-accent">
                       Elegir

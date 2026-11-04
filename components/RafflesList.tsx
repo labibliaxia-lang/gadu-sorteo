@@ -193,7 +193,7 @@ export function RafflesList({
                     </div>
                   )}
                   <span className="absolute left-3 top-3">
-                    <Badge variant={statusVariant[raffle.status]} className="bg-canvas/85 ring-1 ring-emerald-500/20">
+                    <Badge variant={statusVariant[raffle.status]} className="bg-canvas/85">
                       {statusLabel[raffle.status]}
                     </Badge>
                   </span>
