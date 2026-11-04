@@ -33,16 +33,16 @@ export function ResponsiveTable<T>({
   return (
     <div className={className}>
       {/* Desktop */}
-      <div className="hidden overflow-x-auto rounded-xl border md:block">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+      <div className="hidden overflow-x-auto rounded-lg border border-hairline md:block">
+        <table className="w-full text-[13px]">
+          <thead className="border-b border-hairline bg-panel-2/60 text-left">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
                   scope="col"
                   className={cn(
-                    "p-3 font-semibold",
+                    "p-3 font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-fg-subtle",
                     column.align === "right" && "text-right",
                   )}
                 >
@@ -55,7 +55,7 @@ export function ResponsiveTable<T>({
             {rows.map((row) => (
               <tr
                 key={getRowKey(row)}
-                className="border-t transition-colors hover:bg-muted/30"
+                className="border-t border-hairline transition-colors hover:bg-panel-2/50"
               >
                 {columns.map((column) => (
                   <td
@@ -79,7 +79,7 @@ export function ResponsiveTable<T>({
         {rows.map((row) => (
           <li
             key={getRowKey(row)}
-            className="rounded-xl border bg-card p-4 shadow-soft"
+            className="rounded-lg border border-hairline bg-panel-1 p-4"
           >
             <dl className="space-y-1.5">
               {columns.map((column) => (
@@ -87,12 +87,12 @@ export function ResponsiveTable<T>({
                   key={column.key}
                   className="flex items-start justify-between gap-3"
                 >
-                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-fg-subtle">
                     {column.header}
                   </dt>
                   <dd
                     className={cn(
-                      "min-w-0 text-right text-sm",
+                      "min-w-0 text-right text-[13px]",
                       column.align !== "right" && "text-left",
                     )}
                   >

@@ -25,6 +25,7 @@ import { RaffleActions } from "@/components/RaffleActions";
 import { OrganizerOnboarding } from "@/components/OrganizerOnboarding";
 import { AdvancedAnalytics } from "@/components/admin/AdvancedAnalytics";
 import { PremiumGate } from "@/components/admin/PremiumGate";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getPlanContext } from "@/lib/plans";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { Raffle } from "@/lib/types";
@@ -141,28 +142,28 @@ export default async function AdminDashboardPage() {
       />
 
       {/* Tarjetas de resumen */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-px overflow-hidden rounded-xl border border-hairline bg-hairline sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
-          <Card key={s.label}>
-            <CardContent className="flex items-center gap-3 p-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-ink">
-                <s.icon className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="truncate text-sm text-muted-foreground">
-                  {s.label}
-                </p>
-                <p className="truncate text-xl font-bold">{s.value}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div key={s.label} className="bg-panel-1 p-5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
+                {s.label}
+              </p>
+              <s.icon className="h-4 w-4 text-fg-faint" aria-hidden="true" />
+            </div>
+            <p className="mt-4 font-mono text-2xl font-medium tracking-tight text-fg">
+              {s.value}
+            </p>
+          </div>
         ))}
       </div>
 
       {/* Analíticas avanzadas (exclusivo del plan Premium) */}
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-xl font-semibold">Analíticas avanzadas</h2>
+          <h2 className="font-display text-2xl font-semibold tracking-tight">
+            Analíticas avanzadas
+          </h2>
           <Badge variant={planContext.isPremium ? "success" : "secondary"}>
             Plan {planContext.limits.label}
           </Badge>
@@ -179,32 +180,24 @@ export default async function AdminDashboardPage() {
 
       {/* Lista de sorteos */}
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-xl font-semibold">Sorteos</h2>
-          <Link
-            href="/admin/sorteos/nuevo"
-            className={buttonVariants({ size: "sm" })}
-          >
-            <Plus className="mr-1.5 h-4 w-4" />
-            Nuevo sorteo
-          </Link>
-        </div>
+        <h2 className="font-display text-2xl font-semibold tracking-tight">
+          Sorteos
+        </h2>
 
         {list.length === 0 ? (
-          <Card className="border-dashed text-center">
-            <CardContent className="space-y-3 py-12">
-              <Wrench className="mx-auto h-10 w-10 text-muted-foreground" />
-              <p className="text-muted-foreground">
-                Todavía no creaste ningún sorteo.
-              </p>
+          <EmptyState
+            icon={Wrench}
+            title="Todavía no creaste ningún sorteo"
+            description="Creá el primero para empezar a vender números: definís el premio, el precio y la fecha."
+            action={
               <Link
                 href="/admin/sorteos/nuevo"
-                className={buttonVariants()}
+                className={buttonVariants({ variant: "outline" })}
               >
                 Crear el primero
               </Link>
-            </CardContent>
-          </Card>
+            }
+          />
         ) : (
           <div className="space-y-3">
             {list.map((raffle) => (
@@ -218,13 +211,13 @@ export default async function AdminDashboardPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                  <div className="flex flex-wrap gap-x-6 gap-y-1 font-mono text-[12px] text-fg-subtle">
                     <span className="flex items-center gap-1.5">
-                      <Coins className="h-4 w-4" />
+                      <Coins className="h-4 w-4" aria-hidden="true" />
                       {formatPrice(Number(raffle.price_per_number))}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <CalendarDays className="h-4 w-4" />
+                      <CalendarDays className="h-4 w-4" aria-hidden="true" />
                       {formatDateTime(raffle.draw_date)}
                     </span>
                   </div>

@@ -88,6 +88,15 @@ muro de ganadores con datos (hoy la base de desarrollo no tiene ninguno).
 - Skip link "Saltar al contenido" como primer tab stop (`app/layout.tsx` + `main#contenido`).
 - Contraste: todos los pares de texto usados ≥ 4,5:1 en ambos temas (`.design/contrast.mjs`).
 
+## Panel admin (2026-11-04)
+
+- Se renderizó con una cuenta de prueba real (signup por API + rol admin por SQL del dueño).
+  Lección: el proyecto tiene login por email deshabilitado; para QA hay que habilitarlo o usar
+  cookie de sesión. Además, el trigger de alta exige `accepted_terms: true` en los metadatos.
+- El panel ya no lleva footer público ni enlaces de marketing del navbar; el CTA "Nuevo sorteo" es
+  único; tabs con subrayado y `aria-current`; métricas en celdas hairline con mono.
+- Evidencia: `shots/admin-*.png`.
+
 ## Deploy
 
 - `.design/verify-prod.mjs` comprueba assets nuevos, referencia en la home y captura 390/1440 de

@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Instagram, MessageCircle, ShieldCheck } from "lucide-react";
 
 /** Número público de ventas; si falta, el bloque enlaza a /planes. */
@@ -16,6 +19,12 @@ const linkClass =
   "text-[13px] text-fg-subtle transition-colors hover:text-fg";
 
 export function Footer() {
+  const pathname = usePathname();
+
+  // El panel es una herramienta, no una página de marketing: sin footer
+  // público, sin Instagram y sin legales al pie de cada acción.
+  if (pathname.startsWith("/admin")) return null;
+
   return (
     <footer className="mt-24 border-t border-hairline bg-panel-1">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-10 px-4 py-14 sm:px-6 lg:grid-cols-4">

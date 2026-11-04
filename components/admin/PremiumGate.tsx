@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import type { Plan } from "@/lib/types";
 
 export interface PremiumGateProps {
@@ -45,26 +44,20 @@ export function PremiumGate({
 
   if (compact) {
     return (
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-brand-500/30 bg-brand-500/[0.06] p-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-ink">
-          <Crown className="h-4 w-4" />
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-hairline bg-panel-1 p-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-panel-3 text-brand-accent ring-1 ring-hairline">
+          <Crown className="h-4 w-4" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium">
+          <p className="text-[13px] font-medium">
             {title ?? `${feature ?? "Esta función"} es Premium`}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[12px] text-fg-subtle">
             {description ??
               "Canjeá un código premium para desbloquear esta función."}
           </p>
         </div>
-        <Link
-          href="/planes"
-          className={cn(
-            buttonVariants({ size: "sm" }),
-            "bg-brand-500 text-ink hover:bg-brand-400",
-          )}
-        >
+        <Link href="/planes" className={buttonVariants({ size: "sm" })}>
           Canjear código
         </Link>
       </div>
@@ -72,36 +65,28 @@ export function PremiumGate({
   }
 
   return (
-    <Card className="relative overflow-hidden border-brand-500/30">
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-500 to-brand-400" />
-
+    <Card className="relative overflow-hidden border-hairline">
       <CardHeader className="space-y-2">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-ink">
-            <Crown className="h-4 w-4" />
+        <CardTitle className="flex items-center gap-2.5 text-lg">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-panel-3 text-brand-accent ring-1 ring-hairline">
+            <Crown className="h-4 w-4" aria-hidden="true" />
           </span>
           {title ?? `Función Premium${feature ? `: ${feature}` : ""}`}
         </CardTitle>
-        <p className="flex items-start gap-2 text-sm text-muted-foreground">
-          <Lock className="mt-0.5 h-4 w-4 shrink-0" />
+        <p className="flex items-start gap-2 text-[13px] text-fg-subtle">
+          <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           {description ??
             "Esta función está disponible solo con el plan Premium. Mejorá tu plan para desbloquearla."}
         </p>
       </CardHeader>
 
       <CardContent className="flex flex-wrap items-center gap-3">
-        <Link
-          href="/planes"
-          className={cn(
-            buttonVariants({ size: "sm" }),
-            "bg-brand-500 text-ink hover:bg-brand-400",
-          )}
-        >
-          <Crown className="mr-1.5 h-4 w-4" />
+        <Link href="/planes" className={buttonVariants({ size: "sm" })}>
           Canjear código premium
         </Link>
-        <span className="text-xs text-muted-foreground">
-          ¿Ya tenés un código? Canjealo en <code className="font-mono">/planes</code>.
+        <span className="text-[12px] text-fg-subtle">
+          ¿Ya tenés un código? Canjealo en{" "}
+          <code className="font-mono">/planes</code>.
         </span>
       </CardContent>
     </Card>

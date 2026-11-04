@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Ticket } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { Raffle } from "@/lib/types";
 
@@ -60,9 +62,16 @@ export default async function AdminSorteosPage() {
   return (
     <div className="space-y-4">
       {raffles && raffles.length === 0 ? (
-        <p className="py-16 text-center text-muted-foreground">
-          No hay sorteos todavía. Creá el primero.
-        </p>
+        <EmptyState
+          icon={Ticket}
+          title="No hay sorteos todavía"
+          description="Creá el primero desde «Nuevo sorteo» para empezar a vender números."
+          action={
+            <Button asChild variant="outline">
+              <Link href="/admin/sorteos/nuevo">Crear el primero</Link>
+            </Button>
+          }
+        />
       ) : (
         <div className="grid gap-4">
           {raffles?.map((raffle: Raffle) => (
@@ -73,7 +82,7 @@ export default async function AdminSorteosPage() {
                   {statusLabel[raffle.status]}
                 </Badge>
               </CardHeader>
-              <CardContent className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 font-mono text-[12px] text-fg-subtle">
                 <span>
                   {formatPrice(Number(raffle.price_per_number))} por número ·{" "}
                   {formatDateTime(raffle.draw_date)}

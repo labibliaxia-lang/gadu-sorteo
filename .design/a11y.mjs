@@ -5,7 +5,7 @@
  * tamaño de blancos táctiles y foco real por teclado (Tab).
  */
 import { spawn } from "node:child_process";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -120,6 +120,11 @@ try {
   });
 
   await send("Page.enable");
+  if (process.env.ADMIN_COOKIE) {
+    const c = JSON.parse(readFileSync(process.env.ADMIN_COOKIE, "utf8"));
+    await send("Network.enable");
+    await send("Network.setCookie", { name: c.name, value: c.value, domain: new URL(url).hostname, path: "/", httpOnly: false, sameSite: "Lax" });
+  }
   await send("Emulation.setDeviceMetricsOverride", { width, height: 900, deviceScaleFactor: 1, mobile: width < 600 });
   await send("Page.navigate", { url });
   await sleep(5000);

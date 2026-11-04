@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   LogOut,
@@ -40,6 +40,8 @@ type InitialUser = {
 
 export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const inPanel = pathname.startsWith("/admin");
   const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(initialUser?.id ?? null);
   const [email, setEmail] = useState<string | null>(initialUser?.email ?? null);
@@ -152,8 +154,14 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
           />
         </Link>
 
-        {/* Navegación desktop */}
-        <nav className="hidden min-w-0 items-center gap-1 xl:flex">
+        {/* Navegación desktop (oculta dentro del panel) */}
+        <nav
+          className={
+            inPanel
+              ? "hidden"
+              : "hidden min-w-0 items-center gap-1 xl:flex"
+          }
+        >
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
@@ -290,10 +298,11 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
       {mobileOpen && (
         <div className="max-h-[calc(100vh-3.5rem)] overflow-y-auto border-t border-hairline bg-canvas xl:hidden">
           <nav className="flex flex-col gap-1 p-4">
-            {NAV_LINKS.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
+            {!inPanel &&
+              NAV_LINKS.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
                 onClick={() => setMobileOpen(false)}
                 className="rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
               >

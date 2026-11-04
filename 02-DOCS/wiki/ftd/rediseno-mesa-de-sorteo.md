@@ -208,6 +208,33 @@ viewport; el H1 conserva "verificar." en ámbar como énfasis de marca) y la hig
 - **Formato de números unificado** en el detalle: vendidos con separador de miles y número ganador
   con `formatNumber` (4 dígitos), igual que la cartelera y el muro de ganadores.
 
+## Panel admin rediseñado (2026-11-04)
+
+Se renderizó el panel real con una cuenta de prueba (`qa.panel2@gadu.test`, rol admin, borrada al
+terminar) y se ajustó mirando las capturas:
+
+- **Shell:** eyebrow + H1 con Space Grotesk, un único CTA "Nuevo sorteo" (antes estaba duplicado en
+  el dashboard) y navegación de tabs con subrayado y `aria-current` (antes eran enlaces planos sin
+  estado activo). En móvil las tabs envuelven en dos filas en vez de cortarse.
+- **Footer público fuera del panel:** el pie de marketing (Instagram, legales, WhatsApp) ya no se
+  renderiza en `/admin/*`.
+- **Navbar:** dentro del panel se ocultan los enlaces de marketing; queda logo, cuenta y tema.
+- **Métricas:** grilla de celdas con hairlines, números en mono y labels de 11px; se eliminan los
+  chips ámbar decorativos.
+- **Analíticas premium:** bloque neutro con un solo CTA ámbar; se quita el borde/barra de degradé.
+- **Estados vacíos:** se reemplazan los textos sueltos por `EmptyState` con acción.
+- **Tablas:** `ResponsiveTable` pasa a hairline + mono en encabezados; tarjetas en móvil.
+- **Aviso de segundo factor:** fila hairline informativa, no banner ámbar de alerta.
+
+Evidencia: `shots/admin-dashboard.png`, `shots/admin-dashboard-390.png`, `shots/admin-sorteos.png`,
+`shots/admin-sorteos-390.png`, `shots/admin-resenas.png`, `shots/admin-verificacion.png`,
+`shots/admin-design.png`. Auditoría con `.design/a11y.mjs` + cookie de admin: un `h1`, sin saltos de
+nivel, 0 imágenes sin `alt`, 0 controles sin nombre, 0 labels faltantes, 0 ids duplicados.
+
+**Pendiente honesto.** El panel se verificó con una cuenta de organizador sin sorteos: las tablas
+con datos, el editor de landing y las pantallas de superadmin no se recorrieron con datos reales.
+La cuenta de prueba y los usuarios QA siguen en la base hasta que se corra el SQL de limpieza.
+
 ## Next
 
 1. Revisar el resultado en un teléfono real (no solo emulación) y con lector de pantalla.
