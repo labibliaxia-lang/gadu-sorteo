@@ -38,11 +38,38 @@
         "Las 4 acciones del smoke aparecen: ENTRÓ COMO USUARIO, SALIÓ DEL MODO EDITOR, EDITÓ UN PERFIL, RESOLVIÓ UNA DENUNCIA.",
         "La vista public.audit_logs devuelve la misma primera fila que public.admin_audit_logs."
       ]
+    },
+    "3_trafico": {
+      "resultado": "OK",
+      "evidencia": [
+        "POST /api/track-visit {path:'/'} => 204 y page_views suma una fila con user_id null y date del día en Argentina.",
+        "POST con path inválido (/admin) => 400 y no inserta.",
+        "Cargar la Home en Chrome agrega exactamente una visita (tracker montado, sin sesión).",
+        "RPC superadmin_daily_metrics invocada con la anon key => 401 permission denied."
+      ]
+    },
+    "4_dashboard": {
+      "resultado": "OK",
+      "evidencia": [
+        "Con superadmin + cookie admin_verified, /admin/super?tab=dashboard renderiza KPIs reales: MRR estimado, usuarios totales, sorteos activos, visitas 30 días, ingresos estimados, usuarios nuevos.",
+        "44 elementos SVG en pantalla (gráficos de tráfico y de barras renderizados) y sin mensajes de error.",
+        "La misma ruta con sesión de rol user queda bloqueada (cae en /)."
+      ]
+    },
+    "7_denuncia_usuario": {
+      "resultado": "OK",
+      "evidencia": [
+        "Con sesión de usuario, el detalle muestra «Denunciar este sorteo»; el modal permite elegir motivo y comentario y enviar.",
+        "Mensaje «Denuncia enviada. El equipo la va a revisar.» y fila en raffle_reports con status=pending, reporter_id del usuario y motivo elegido.",
+        "Segundo intento sobre el mismo sorteo devuelve «Ya denunciaste este sorteo.» (UNIQUE).",
+        "En un sorteo cerrado el botón no aparece."
+      ]
     }
   },
+  "dependencias": "El árbol de trabajo tenía @supabase/supabase-js 2.118.0 con @supabase/ssr 0.5.2, y eso rompía el render público (home sin sorteos, detalle y verificar 404). Con @supabase/ssr 0.12.7 el build pasa y las tres rutas vuelven a 200. La verificación de los bloques 3/4/7 se hizo en una copia aislada construida con ese fix.",
   "no_cubierto": [
     "Rechazos de impersonación por UI: otro superadmin, cuenta suspendida, email sin confirmar (las reglas están cubiertas por unit tests de canImpersonateTarget).",
     "Pausar sorteo denunciado y eliminar denuncia desde la UI (solo se probó Resolver).",
-    "Bloques 3 (tráfico), 4 (dashboard con gráficos), 7 (denuncia del usuario) y 10 (regresión responsive): no se ejecutaron en esta pasada."
+    "Bloque 10 (regresión responsive general): no se ejecutó en esta pasada."
   ]
 }

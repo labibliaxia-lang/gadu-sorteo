@@ -176,8 +176,11 @@ usuarios QA temporales (borrados al final), se ejecutaron los bloques 5, 6, 8 y 
   devuelve lo mismo que `admin_audit_logs`.
 
 Evidencia: [`.design/smoke/god-mode-2026-11-04.json`](../../../.design/smoke/god-mode-2026-11-04.json).
-Quedan sin ejecutar los bloques 3 (tráfico), 4 (dashboard), 7 (denuncia del usuario), 10 (regresión) y
-los rechazos de impersonación / pausar / eliminar.
+Los bloques 3 (tráfico), 4 (dashboard) y 7 (denuncia del usuario) se sumaron después: track-visit
+inserta y rechaza rutas inválidas, el dashboard muestra KPIs y gráficos reales, y el flujo de denuncia
+del usuario funciona con el aviso de duplicado. Detalle en el
+[smoke test](superadmin-god-mode-smoke-test.md). Quedan sin ejecutar el bloque 10 (regresión), los
+rechazos de impersonación y las acciones de pausar/eliminar.
 
 **Árbol compartido.** Además de este feature hay cambios sin commitear del rediseño visual de páginas
 públicas (`.design/`, `globals.css`, `app/page.tsx`, Navbar/Footer, etc.) y del feature de cancelación

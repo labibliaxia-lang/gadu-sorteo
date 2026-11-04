@@ -8,20 +8,30 @@ status: in-progress
 Checklist manual para probar contra Supabase real lo que no se puede probar en el repo: migración
 0064, tráfico, dashboard, Modo Editor, denuncias y auditoría.
 
-**Resultado 2026-11-04 (parcial, automatizado).** Los bloques **5, 6, 8 y 9** se ejecutaron de punta a
-punta contra un build de producción, con usuarios QA temporales y borrados al final: impersonación
-(entrar, banner, panel bloqueado como target, salir), edición de perfil, resolución de una denuncia y
-auditoría. Todo dio **OK**. Evidencia en
-[`../../.design/smoke/god-mode-2026-11-04.json`](../../../.design/smoke/god-mode-2026-11-04.json).
-Siguen sin ejecutar los bloques 3 (tráfico), 4 (dashboard), 7 (denuncia del usuario) y 10 (regresión),
-y dentro del 5/8 los rechazos y las acciones de pausar/eliminar.
+**Resultado 2026-11-04 (completo salvo bloque 10, automatizado).** Los bloques **3, 4, 5, 6, 7, 8 y 9**
+se ejecutaron contra un build de producción, con usuarios QA temporales y borrados al final:
 
-**Por qué no se ejecutaron los bloques 3, 4 y 7 (2026-11-04).** Al intentarlo, el árbol de trabajo
-tenía una actualización de dependencias a medio aplicar: `package.json` y `package-lock.json` sin
-commitear, `@supabase/supabase-js` instalado en 2.118.0. En ese estado el render público quedó roto:
-la home no listaba sorteos y `/sorteos/[id]` (y también `/verificar`) devolvían 404, aunque la misma
-base respondía 200 por REST con la anon key. El problema es del árbol sin commitear, no de la base ni
-del código commiteado: el mismo build sobre `main` funcionaba antes de esa actualización.
+- **5 · Impersonación:** entrar, banner, panel bloqueado como target, salir; `IMPERSONATE_USER` e
+  `IMPERSONATE_END` con admin y target correctos.
+- **6 · Edición de perfil:** nombre y teléfono actualizados; `EDIT_PROFILE` con `before`/`after`.
+- **8 · Moderación:** denuncia resuelta con `resolved_by` del superadmin; `REPORT_RESOLVE` auditado.
+- **9 · Auditoría:** pestaña con etiquetas legibles y vista `audit_logs` igual a la tabla.
+- **3 · Tráfico:** `/api/track-visit` inserta la vista (204), rechaza rutas inválidas (400), la Home
+  anónima suma exactamente una visita y la RPC de métricas responde 401 con la anon key.
+- **4 · Dashboard:** KPIs reales y gráficos renderizados (44 SVG), sin errores; un rol `user` queda
+  fuera de `/admin/super`.
+- **7 · Denuncia del usuario:** el usuario denuncia desde el modal, nace `pending`, el duplicado
+  responde «Ya denunciaste este sorteo.» y en un sorteo cerrado el botón no aparece.
+
+Evidencia: [`../../.design/smoke/god-mode-2026-11-04.json`](../../../.design/smoke/god-mode-2026-11-04.json).
+Quedan como opcionales el **bloque 10 (regresión responsive)**, los rechazos de impersonación por UI y
+las acciones de pausar/eliminar denuncia.
+
+**Nota de entorno (2026-11-04).** El árbol de trabajo tenía `@supabase/supabase-js` 2.118.0 con
+`@supabase/ssr` 0.5.2: eso rompía el render público (home sin sorteos, `/sorteos/[id]` y `/verificar`
+en 404). Con `@supabase/ssr` 0.12.7 el build pasa y los bloques 3/4/7 se ejecutaron en una copia
+aislada construida con ese fix. El desfase de dependencias pertenece a la actualización de
+MFA/passkeys en curso; `main` seguía sano porque el código commiteado no usa todavía el SDK nuevo.
 
 **Tiempo estimado:** 30–45 minutos.
 **Cuándo hacerlo:** antes de commitear/deployar el feature. Sin este test, el código está probado
