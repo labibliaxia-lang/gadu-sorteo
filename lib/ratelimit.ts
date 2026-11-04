@@ -21,6 +21,7 @@ let checkoutLimiter: Ratelimit | null | undefined;
 let mockLimiter: Ratelimit | null | undefined;
 let webhookLimiter: Ratelimit | null | undefined;
 let loginLimiter: Ratelimit | null | undefined;
+let adminVerifyLimiter: Ratelimit | null | undefined;
 
 function createLimiter(
   prefix: string,
@@ -76,6 +77,13 @@ function getLoginLimiter(): Ratelimit | null {
   return loginLimiter;
 }
 
+function getAdminVerifyLimiter(): Ratelimit | null {
+  if (adminVerifyLimiter === undefined) {
+    adminVerifyLimiter = createLimiter("admin-verify", 5, "15 m");
+  }
+  return adminVerifyLimiter;
+}
+
 async function limit(
   limiter: Ratelimit | null,
   identifier: string,
@@ -110,6 +118,11 @@ export function limitWebhook(ip: string): Promise<RateLimitResult> {
 /** 5 intentos de inicio de sesión cada 15 minutos por IP. */
 export function limitLogin(ip: string): Promise<RateLimitResult> {
   return limit(getLoginLimiter(), ip);
+}
+
+/** 5 intentos de clave maestra cada 15 minutos por IP + usuario. */
+export function limitAdminVerify(identifier: string): Promise<RateLimitResult> {
+  return limit(getAdminVerifyLimiter(), identifier);
 }
 
 /** IP del cliente según los headers de Vercel; "unknown" como último recurso. */

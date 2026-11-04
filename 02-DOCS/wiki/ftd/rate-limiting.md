@@ -22,6 +22,7 @@ tocar la lógica de pagos ni las RPCs de Supabase.
   firma para no consumir la cuota de Mercado Pago con tráfico no autenticado.
 - `app/(auth)/login/actions.ts` + [GoogleAuthButton.tsx](../../../components/GoogleAuthButton.tsx):
   5 intentos de inicio de OAuth cada 15 minutos por IP.
+- `app/admin/verify/actions.ts`: 5 intentos de clave maestra cada 15 minutos por usuario superadmin.
 - `.env.example`: `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.
 - Tests de extracción de IP y `Retry-After`.
 
@@ -39,6 +40,7 @@ rate limiting en cron o páginas; bloqueo distribuido por fingerprint; Upstash Q
 | 5 | Fail-open sin Redis | Advertencia y `success: true` |
 | 6 | Tests | `lib/ratelimit.test.ts` |
 | 7 | Login OAuth | 5 intentos/15 min por IP antes de `signInWithOAuth` |
+| 8 | Clave maestra superadmin | 5 intentos/15 min por usuario antes de comparar el hash |
 
 ## Login y registro
 
@@ -49,6 +51,16 @@ haría falta email/password o detectar la creación de cuenta en el callback.
 
 El botón muestra el error “Demasiados intentos. Espera 15 minutos.” sin revelar si un email existe.
 
+## Superadmin
+
+El superadmin **ya tiene un usuario**: la sesión de Supabase con rol `superadmin`. La clave maestra
+de `/admin/verify` es un segundo factor, no un usuario aparte; no hay un campo de “usuario” adicional
+porque no aportaría seguridad sin un esquema de contraseñas separado.
+
+Lo que faltaba era el límite de intentos de esa clave: ahora hay **5 intentos/15 min por usuario
+superadmin**, antes de comparar el hash. El inicio de OAuth de ese mismo usuario también pasa por el
+límite de login.
+
 ## Evidence
 
 **1-3 — observado.** Las tres rutas llaman al limitador antes de consultar o modificar números. El
@@ -57,6 +69,10 @@ webhook lo hace después de `verifyWebhookSignature`, con la IP de `x-forwarded-
 **Login — observado.** `checkLoginRateLimit()` lee la IP en el servidor y se ejecuta antes de
 `signInWithOAuth`; si falla, el botón muestra el mensaje y no inicia el flujo. Probado contra Upstash
 real: 5 intentos exitosos y el sexto rechazado.
+
+**Superadmin — observado.** `limitAdminVerify(actor.id)` se ejecuta antes de `safeEqualHex`; probado
+contra Upstash real: 5 intentos exitosos y el sexto rechazado. El error se muestra como “Demasiados
+intentos. Esperá 15 minutos.”
 
 **4 — observado.** Las tres respuestas 429 incluyen `Retry-After` calculado desde `reset`.
 
@@ -79,6 +95,8 @@ Gates: `typecheck` 0 · `lint` 0 warnings · `test` 58/58 · `build` 0.
 - No hay rate limiting en cron ni en login con email/contraseña (no existe ese flujo).
 - El límite de login es de aplicación: alguien que llame directo al endpoint de OAuth de Supabase no
   pasa por este gate. Para protección de perímetro total habría que limitar en el proxy/CDN.
+- El límite de clave maestra se apoya en que el atacante ya tenga una sesión `superadmin`; sin esa
+  sesión, `requireSuperadminSession` corta antes. No reemplaza una política de contraseñas fuertes.
 
 ## Next
 

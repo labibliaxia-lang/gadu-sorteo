@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { requireSuperadminSession } from "@/lib/auth";
+import { limitAdminVerify } from "@/lib/ratelimit";
 
 const ADMIN_COOKIE = "admin_verified";
 const MAX_AGE_SECONDS = 30 * 60; // 30 minutos
@@ -81,6 +82,13 @@ export async function verifyAdmin(formData: FormData) {
       data: { user },
     } = await supabase.auth.getUser();
     redirect(user ? "/admin/verify?error=forbidden" : "/login");
+  }
+
+  // La clave maestra es una contraseña: se limita antes de comparar el hash.
+  // Se usa el usuario (no la IP) para que no se evada rotando de red.
+  const rateLimit = await limitAdminVerify(actor.id);
+  if (!rateLimit.success) {
+    redirect("/admin/verify?error=rate");
   }
 
   // Paso 2: hash SHA-256 de la entrada y comparación segura.
