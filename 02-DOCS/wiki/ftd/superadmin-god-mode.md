@@ -1,7 +1,7 @@
 ---
 author: Gadu
 branch: main
-status: in-progress
+status: done
 ---
 # Superadmin God Mode — centro de control, analíticas, Modo Editor y denuncias
 
@@ -284,10 +284,11 @@ correcciones posteriores movieron líneas dentro de `app/admin/super/actions.ts`
 
 ## Next
 
-Aplicar 0064 en la base y correr el smoke test de
-[`superadmin-god-mode-smoke-test.md`](superadmin-god-mode-smoke-test.md) (preparación, migración,
-tráfico, dashboard, Modo Editor, edición de perfil, denuncias de usuario y moderación, auditoría,
-regresión y criterio GO/NO-GO). Después: evaluar un token de sesión
-firmado para `/api/track-visit` si las métricas de tráfico van a guiar decisiones de negocio, y
-revisar si conviene sumar al endpoint una deduplicación por sesión (hoy el sessionStorage del
-navegador evita repetir la visita, pero un cliente propio puede ignorarlo).
+El feature está cerrado: 0064 aplicada en la base y los bloques 5, 6, 8 y 9 del
+[smoke test](superadmin-god-mode-smoke-test.md) verificados contra un build de producción (evidencia 17).
+Quedan como verificación opcional, no bloqueante, los bloques 3 (tráfico), 4 (dashboard), 7 (denuncia
+del usuario) y 10 (regresión), más los rechazos de impersonación y las acciones de pausar/eliminar
+denuncias. Después: evaluar un token de sesión firmado para `/api/track-visit` si las métricas de
+tráfico van a guiar decisiones de negocio, y revisar si conviene sumar al endpoint una deduplicación
+por sesión (hoy el sessionStorage del navegador evita repetir la visita, pero un cliente propio puede
+ignorarlo).

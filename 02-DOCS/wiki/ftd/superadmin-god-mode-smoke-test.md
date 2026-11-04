@@ -16,6 +16,13 @@ auditoría. Todo dio **OK**. Evidencia en
 Siguen sin ejecutar los bloques 3 (tráfico), 4 (dashboard), 7 (denuncia del usuario) y 10 (regresión),
 y dentro del 5/8 los rechazos y las acciones de pausar/eliminar.
 
+**Por qué no se ejecutaron los bloques 3, 4 y 7 (2026-11-04).** Al intentarlo, el árbol de trabajo
+tenía una actualización de dependencias a medio aplicar: `package.json` y `package-lock.json` sin
+commitear, `@supabase/supabase-js` instalado en 2.118.0. En ese estado el render público quedó roto:
+la home no listaba sorteos y `/sorteos/[id]` (y también `/verificar`) devolvían 404, aunque la misma
+base respondía 200 por REST con la anon key. El problema es del árbol sin commitear, no de la base ni
+del código commiteado: el mismo build sobre `main` funcionaba antes de esa actualización.
+
 **Tiempo estimado:** 30–45 minutos.
 **Cuándo hacerlo:** antes de commitear/deployar el feature. Sin este test, el código está probado
 solo con typecheck, lint, unit tests y build.
