@@ -248,7 +248,13 @@ export default function NuevoSorteoPage() {
     const fields = STEP_FIELDS[step];
     if (!fields) return;
     const valid = await trigger(fields);
-    if (valid) setStep((current) => Math.min(3, current + 1));
+    if (!valid) return;
+
+    // El botón «Continuar» y el «Crear sorteo» son el mismo nodo del DOM: React
+    // lo reutiliza al cambiar de paso. Si conserva el foco, el Enter con el que
+    // se confirma el diálogo de archivo lo activa y crea el sorteo sin portada.
+    (document.activeElement as HTMLElement | null)?.blur();
+    setStep((current) => Math.min(3, current + 1));
   }
 
   async function uploadFile(file: File | undefined) {
@@ -292,6 +298,13 @@ export default function NuevoSorteoPage() {
   }
 
   async function onSubmit(values: FormValues) {
+    // La portada viaja aparte del sorteo. Si el alta corre mientras el archivo
+    // todavía sube, el sorteo queda sin portada y el archivo huérfano.
+    if (uploading) {
+      setError("Esperá a que termine de subir la portada antes de crear el sorteo.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -329,6 +342,31 @@ export default function NuevoSorteoPage() {
       return;
     }
 
+    // La RLS de `raffles` exige `is_admin()` y `created_by = auth.uid()`.
+    // Si la pestaña quedó abierta y la sesión cambió de cuenta (otra pestaña,
+    // token viejo), la comprobación de montaje ya no vale: la repetimos acá
+    // para dar un mensaje claro en vez del 42501 crudo de Postgres.
+    const { data: submitProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    const submitRole = (submitProfile?.role as string | null) ?? null;
+    // Solo bloqueamos cuando la fila existe y su rol no es de panel. Si la
+    // lectura falla (sin fila), dejamos que el insert responda: el error de la
+    // base es más honesto que suponer un rol que no pudimos leer.
+    if (
+      submitProfile &&
+      submitRole !== "admin" &&
+      submitRole !== "superadmin"
+    ) {
+      setError(
+        "Tu sesión no tiene rol de organizador en este momento. Cerrá sesión, volvé a entrar y reintentá.",
+      );
+      setLoading(false);
+      return;
+    }
+
     const { data: raffle, error: insertError } = await supabase
       .from("raffles")
       .insert({
@@ -351,7 +389,24 @@ export default function NuevoSorteoPage() {
       .single();
 
     if (insertError || !raffle) {
-      setError(insertError?.message ?? "No se pudo crear el sorteo.");
+      const rawMessage = insertError?.message ?? "No se pudo crear el sorteo.";
+
+      // El error de Postgres no se le puede mostrar a un organizador: no dice
+      // qué hacer. Lo dejamos en consola con el contexto y mostramos la acción.
+      if (rawMessage.includes("row-level security")) {
+        console.error("[crear sorteo] la base rechazó el alta por RLS", {
+          userId: user.id,
+          role: submitRole,
+          message: rawMessage,
+          hint: "Corré supabase/tests/diagnostico_crear_sorteo.sql en el SQL Editor y aplicá 0065 si hay CRÍTICO.",
+        });
+        setError(
+          "La base rechazó el sorteo por un problema de permisos. Cerrá sesión, volvé a entrar y reintentá. Si sigue, avisá al administrador de la plataforma.",
+        );
+      } else {
+        setError(rawMessage);
+      }
+
       setLoading(false);
       return;
     }
@@ -847,7 +902,12 @@ export default function NuevoSorteoPage() {
                 }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={handleDrop}
-                onClick={() => inputRef.current?.click()}
+                onClick={() => {
+                  // Si quedó enfocado el botón de submit (mismo nodo que
+                  // «Continuar»), el Enter del diálogo lo activaría.
+                  (document.activeElement as HTMLElement | null)?.blur();
+                  inputRef.current?.click();
+                }}
                 className={cn(
                   "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-center transition",
                   dragging
@@ -856,12 +916,17 @@ export default function NuevoSorteoPage() {
                 )}
               >
                 {previewUrl || coverUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={previewUrl ?? coverUrl ?? ""}
-                    alt="Portada"
-                    className="max-h-40 rounded-lg object-cover"
-                  />
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={previewUrl ?? coverUrl ?? ""}
+                      alt="Portada"
+                      className="max-h-40 rounded-lg object-cover"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Click para cambiar la imagen
+                    </p>
+                  </>
                 ) : (
                   <>
                     <UploadCloud className="h-8 w-8 text-muted-foreground" />
@@ -914,9 +979,13 @@ export default function NuevoSorteoPage() {
                 <Button
                   type="submit"
                   className="flex-1"
-                  disabled={loading}
+                  disabled={loading || uploading}
                 >
-                  {loading ? "Creando sorteo…" : "Crear sorteo"}
+                  {loading
+                    ? "Creando sorteo…"
+                    : uploading
+                      ? "Subiendo portada…"
+                      : "Crear sorteo"}
                 </Button>
               )}
             </div>
