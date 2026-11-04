@@ -255,3 +255,17 @@ aplicada» hasta que alguien consulta el catálogo. Propuesta: `supabase link` +
   `.design/shots/final-*.png` (Chrome headless vía DevTools Protocol, 1440/390, oscuro y claro).
   Gates: typecheck 0, lint 0 warnings, 127 tests, build 0; contrastes AA verificados con
   `.design/contrast.mjs` y overflow horizontal con `.design/audit.mjs`.
+
+## 2026-11-04 — bug: alta de sorteo rechazada por RLS en raffles  (feature: crear-sorteo-rls)
+Repro      — /admin/sorteos/nuevo → «Crear sorteo» en gadu-sorteo-doci.vercel.app; error literal: new row violates row-level security policy for table "raffles".
+Cause      — la sesión pasa el portón del panel (lee profiles.role) pero la política de INSERT de raffles no la reconoce: la base no coincide con lo declarado en 0014/0030/0041. Las migraciones se aplican a mano y 0025 ya se había aplicado a medias; no es el frontend, que manda created_by desde el commit inicial.
+Fix        — 0065 reafirma is_admin/is_superadmin/owns_raffle y las políticas de 0041 (idempotente); diagnostico_crear_sorteo.sql dice qué pieza falta; el formulario revalida el rol al enviar y traduce el 42501.
+Why missed — una migración a medias no rompe la lectura ni el portón, sólo la escritura, y no hay runner que aplique las migraciones.
+- **Confirmado (2026-11-04, diagnóstico en el SQL Editor).** `is_admin()` en la base es la versión de 0001 (sólo `admin`); 0014 quedó a medias. 0041 está entero (política `raffles_insert_owner`, grants y `owns_raffle` en OK). El dueño entra como `superadmin`, pasa el portón del panel y la política lo rechaza. Fix pendiente: aplicar 0065.
+- **0065 aplicada y verificada (2026-11-04).** El diagnostico posterior da todas las lineas en OK (is_admin() ya incluye superadmin, la politica raffles_insert_owner sigue en su lugar, ledger ultima: 0065). Falta el alta de prueba desde el panel para cerrar el caso.
+
+## 2026-11-04 — bug: subir la portada creaba el sorteo sin portada  (feature: crear-sorteo-rls)
+Repro      — Paso 3 → «Continuar» (deja el foco en ese botón) → click en el recuadro de portada → elegir el archivo → Enter en el diálogo. La página navega al sorteo recién creado y `cover_image_url` queda en null.
+Cause      — React reutiliza el mismo nodo <Button> al pasar de «Continuar» (type=button) a «Crear sorteo» (type=submit) y conserva el foco. El Enter que confirma el diálogo de archivo activa el submit: el alta corre mientras la subida sigue en vuelo. Evidencia: sorteo creado 17:44:44 UTC, objeto en storage 17:44:47 (3,6 s después), portada null; y el intento 17:43:54 se creó sin subida.
+Fix        — `blur()` del botón al cambiar de paso y antes de abrir el diálogo; submit bloqueado y deshabilitado mientras `uploading`; aviso «Click para cambiar la imagen» cuando ya hay portada.
+Why missed — el alta se probó sin una subida en curso; el botón de submit seguía activo durante los segundos de upload.

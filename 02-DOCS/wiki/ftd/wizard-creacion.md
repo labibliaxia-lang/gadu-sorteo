@@ -55,6 +55,15 @@ del sorteo y el RPC `create_raffle_numbers` con limpieza si falla.
 **Pendiente.** Probar el flujo completo en producción: avanzar/volver, errores por paso, crear y
 verificar los números generados.
 
+**Regresión 2026-11-04 — la portada no se guardaba.** En producción, al elegir la imagen de portada
+el asistente navegaba al sorteo recién creado y `cover_image_url` quedaba en `null`. Causa: React
+reutiliza el mismo nodo `<Button>` al pasar de «Continuar» (`type="button"`) a «Crear sorteo»
+(`type="submit"`) y conserva el foco; el Enter con el que se confirma el diálogo de archivo activa
+ese submit mientras la subida sigue en vuelo. Evidencia: sorteo creado 17:44:44 UTC, objeto en
+Storage 17:44:47, portada `null`. Fix: `blur()` al cambiar de paso y antes de abrir el diálogo,
+submit bloqueado y deshabilitado mientras `uploading`, y aviso «Click para cambiar la imagen» cuando
+ya hay portada. Detalle en `02-DOCS/wiki/sdd/decisions.md` (2026-11-04).
+
 ## Next
 
 Comparativa de conversión entre sorteos en el panel global; después, avisos y automatizaciones que

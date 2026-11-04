@@ -58,7 +58,7 @@ begin
       select string_agg(e.v, ', ' order by e.v)
       from (
         select lpad(g::text, 4, '0') as v
-        from generate_series(28, 64) as g
+        from generate_series(28, 65) as g
       ) e
       where not exists (
         select 1 from public._applied_migrations m where m.version = e.v
@@ -73,7 +73,7 @@ begin
 
     if v_faltantes is null then
       insert into estado_migraciones (orden, linea) values (
-        2, 'OK      todas las migraciones 0028–0064 están en el ledger'
+        2, 'OK      todas las migraciones 0028–0065 están en el ledger'
       );
     else
       insert into estado_migraciones (orden, linea) values (
@@ -303,10 +303,31 @@ begin
   end if;
 
   -- ------------------------------------------------------------------
-  -- 7) Nota final
+  -- 7) 0065 — políticas de escritura del panel
+  -- ------------------------------------------------------------------
+  -- El síntoma era "new row violates row-level security policy for table
+  -- raffles" al crear un sorteo: una migración a medias puede dejar la
+  -- política de INSERT ausente o vieja. 0065 la vuelve a dejar como 0041.
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'raffles' and cmd = 'INSERT'
+      and with_check ilike '%created_by%'
+      and with_check ilike '%is_admin%'
+  ) then
+    insert into estado_migraciones (orden, linea) values (
+      12, 'OK      0065/0041: raffles tiene política de INSERT del dueño admin'
+    );
+  else
+    insert into estado_migraciones (orden, linea) values (
+      12, 'CRÍTICO 0065/0041: falta la política de INSERT de raffles (no se puede crear un sorteo)'
+    );
+  end if;
+
+  -- ------------------------------------------------------------------
+  -- 8) Nota final
   -- ------------------------------------------------------------------
   insert into estado_migraciones (orden, linea) values (
-    12, 'NOTA    para 0001–0027 (RLS, triggers, RPC de dinero) correr también supabase/tests/verificar_esquema.sql'
+    13, 'NOTA    para 0001–0027 (RLS, triggers, RPC de dinero) correr también supabase/tests/verificar_esquema.sql'
   );
 end
 $bloque$;

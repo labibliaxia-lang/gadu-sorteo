@@ -87,3 +87,5 @@ necesitan publicar el compromiso antes de sortear; los ya sorteados no cambian.
 Aplicar `0034`, publicar el compromiso de un sorteo de prueba, sortear y verificar el ganador a mano
 con la semilla revelada. Después queda la verificación automática en la página (pegar la semilla o el
 listado y recalcular en el navegador) para que no haga falta usar una terminal.
+
+**UX 2026-11-04 — el botón no estaba donde se lee el paso.** En producción el organizador vio el paso «3. Compromiso publicado» con etiqueta «Pendiente» y no encontró cómo publicarlo: el único botón («Publicar compromiso del sorteo») vivía en la fila de acciones del detalle, lejos del texto. Se agregó `components/PublishCommitmentButton.tsx`, que se renderiza dentro de la misma tarjeta de pasos cuando el compromiso falta, llama `publishDrawCommitment` y refresca. La fila de acciones se conserva.
