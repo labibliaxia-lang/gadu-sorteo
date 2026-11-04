@@ -35,6 +35,7 @@ const statusLabel: Record<Raffle["status"], string> = {
   active: "Activo",
   closed: "Cerrado",
   drawn: "Sorteado",
+  cancelled: "Cancelado",
 };
 
 const statusVariant: Record<
@@ -44,6 +45,7 @@ const statusVariant: Record<
   active: "success",
   closed: "warning",
   drawn: "secondary",
+  cancelled: "secondary",
 };
 
 export default async function AdminDashboardPage() {
@@ -143,7 +145,7 @@ export default async function AdminDashboardPage() {
         {stats.map((s) => (
           <Card key={s.label}>
             <CardContent className="flex items-center gap-3 p-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-ink">
                 <s.icon className="h-5 w-5" />
               </span>
               <div className="min-w-0">

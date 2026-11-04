@@ -182,7 +182,7 @@ export default async function RaffleAnalyticsPage({
         ].map((stat) => (
           <Card key={stat.label}>
             <CardContent className="flex items-center gap-3 p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-ink">
                 <stat.icon className="h-5 w-5" />
               </span>
               <div className="min-w-0">
@@ -227,7 +227,7 @@ export default async function RaffleAnalyticsPage({
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-600 to-orange-600"
+                  className="h-full rounded-full bg-brand-500"
                   style={{ width: `${step.width}%` }}
                 />
               </div>
@@ -276,7 +276,7 @@ export default async function RaffleAnalyticsPage({
                 title={`${shortDay(day.key)}: ${day.sold} vendido(s) · ${formatPrice(day.revenue)}`}
               >
                 <div
-                  className="w-full rounded-t bg-gradient-to-t from-amber-600 to-amber-400 transition-all hover:from-amber-500 hover:to-amber-300"
+                  className="w-full rounded-t bg-brand-500 transition-all hover:bg-brand-400"
                   style={{
                     height: `${Math.max(2, (day.sold / maxDailySold) * 100)}%`,
                   }}

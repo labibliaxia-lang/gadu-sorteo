@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { RaffleActions } from "@/components/RaffleActions";
 import { RaffleDeleteButton } from "@/components/RaffleDeleteButton";
+import { RefundMarkPaidButton } from "@/components/admin/RefundMarkPaidButton";
 import { RaffleCloneButton } from "@/components/RaffleCloneButton";
 import { ReservedNumbersPanel } from "@/components/ReservedNumbersPanel";
 import { formatDateTime, formatPrice } from "@/lib/utils";
@@ -34,6 +35,7 @@ const statusLabel: Record<Raffle["status"], string> = {
   active: "Activo",
   closed: "Cerrado",
   drawn: "Sorteado",
+  cancelled: "Cancelado",
 };
 
 export default async function AdminRaffleDetailPage({
@@ -200,6 +202,51 @@ export default async function AdminRaffleDetailPage({
     })
     .sort((a, b) => a.name.localeCompare(b.name, "es"));
 
+  let refunds: {
+    id: string;
+    user_id: string;
+    user_name: string;
+    amount: number;
+    status: string;
+    paid_at: string | null;
+  }[] = [];
+
+  if (raffle.status === "cancelled") {
+    const { data: refundRows } = await supabase
+      .from("refunds")
+      .select("id, user_id, amount, status, paid_at")
+      .eq("raffle_id", params.id)
+      .order("created_at", { ascending: true });
+
+    const refundUserIds = Array.from(
+      new Set((refundRows ?? []).map((row) => row.user_id as string)),
+    );
+    let refundNames = new Map<string, string>();
+
+    if (refundUserIds.length > 0) {
+      const admin = createAdminClient();
+      const { data: profiles } = await admin
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", refundUserIds);
+      refundNames = new Map(
+        (profiles ?? []).map((profile) => [
+          profile.id as string,
+          (profile.full_name as string | null)?.trim() || "Comprador",
+        ]),
+      );
+    }
+
+    refunds = (refundRows ?? []).map((row) => ({
+      id: row.id as string,
+      user_id: row.user_id as string,
+      user_name: refundNames.get(row.user_id as string) ?? "Comprador",
+      amount: Number(row.amount),
+      status: row.status as string,
+      paid_at: (row.paid_at as string | null) ?? null,
+    }));
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -292,6 +339,51 @@ export default async function AdminRaffleDetailPage({
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {raffle.status === "cancelled" && (
+            <div className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
+              <div>
+                <p className="font-semibold">Sorteo cancelado</p>
+                <p className="text-xs text-muted-foreground">
+                  {raffle.cancellation_reason ||
+                    "No se alcanzó el mínimo de venta o el organizador lo canceló."}
+                </p>
+              </div>
+
+              {refunds.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No hay compradores con números vendidos para devolver.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Devoluciones manuales ({refunds.filter((r) => r.status === "paid").length}/
+                    {refunds.length} pagadas):
+                  </p>
+                  {refunds.map((refund) => (
+                    <div
+                      key={refund.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-background/70 p-3 text-sm"
+                    >
+                      <div>
+                        <p className="font-medium">{refund.user_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatPrice(refund.amount)}
+                          {refund.paid_at
+                            ? ` · ${formatDateTime(refund.paid_at)}`
+                            : ""}
+                        </p>
+                      </div>
+                      <RefundMarkPaidButton
+                        refundId={refund.id}
+                        paid={refund.status === "paid"}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

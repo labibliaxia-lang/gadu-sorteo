@@ -1,6 +1,6 @@
 export type Role = "user" | "admin" | "superadmin";
 export type Plan = "organizador" | "premium";
-export type RaffleStatus = "active" | "closed" | "drawn";
+export type RaffleStatus = "active" | "closed" | "drawn" | "cancelled";
 export type NumberStatus = "available" | "reserved" | "sold";
 export type PaymentStatus =
   | "pending"
@@ -89,6 +89,9 @@ export interface Raffle {
   winners_count: number;
   /** Hash combinado de todos los premios (migración 0058). */
   results_hash: string | null;
+  /** Cancelación manual (migración 0063). */
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
   /** Bloques de la landing promocional (migración 0044). */
   landing_content: import("@/lib/landing").LandingBlock[] | null;
   created_by: string | null;

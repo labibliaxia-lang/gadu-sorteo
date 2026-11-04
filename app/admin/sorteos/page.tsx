@@ -19,6 +19,7 @@ const statusLabel: Record<Raffle["status"], string> = {
   active: "Activo",
   closed: "Cerrado",
   drawn: "Sorteado",
+  cancelled: "Cancelado",
 };
 
 const statusVariant: Record<
@@ -28,6 +29,7 @@ const statusVariant: Record<
   active: "success",
   closed: "warning",
   drawn: "secondary",
+  cancelled: "secondary",
 };
 
 export default async function AdminSorteosPage() {

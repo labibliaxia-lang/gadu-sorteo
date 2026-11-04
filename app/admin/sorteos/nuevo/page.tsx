@@ -930,7 +930,7 @@ export default function NuevoSorteoPage() {
           <CardTitle className="text-lg">Vista previa</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="relative aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-zinc-900 to-amber-950">
+          <div className="relative aspect-video overflow-hidden rounded-xl bg-panel-2">
             {previewUrl || coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

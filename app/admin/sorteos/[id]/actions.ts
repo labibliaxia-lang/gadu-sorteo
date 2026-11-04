@@ -569,6 +569,74 @@ export type DrawResult =
   | { ok: true; winningNumber: number }
   | { ok: false; error: string };
 
+/**
+ * Cancela un sorteo activo/cerrado y genera devoluciones pendientes por
+ * comprador. La RPC valida dueño/superadmin y estado; no toca el motor.
+ */
+export async function cancelRaffle(
+  raffleId: string,
+  reason?: string,
+): Promise<ActionResult> {
+  const ctx = await requireAdminSession();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  const id = uuidSchema.safeParse(raffleId);
+  if (!id.success) return { ok: false, error: firstIssue(id.error) };
+
+  if (!(await ownsRaffle(id.data))) {
+    return { ok: false, error: "No autorizado" };
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc("cancel_raffle", {
+    p_raffle_id: id.data,
+    p_reason: reason?.trim() || null,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/sorteos");
+  revalidatePath(`/admin/sorteos/${id.data}`);
+  revalidatePath(`/sorteos/${id.data}`);
+  revalidatePath("/mis-numeros");
+  return { ok: true };
+}
+
+/** Marca una devolución como pagada; RLS y `owns_raffle` lo limitan al dueño. */
+export async function markRefundPaid(
+  refundId: string,
+): Promise<ActionResult> {
+  const ctx = await requireAdminSession();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  const id = uuidSchema.safeParse(refundId);
+  if (!id.success) return { ok: false, error: firstIssue(id.error) };
+
+  const supabase = createClient();
+  const { data: refund } = await supabase
+    .from("refunds")
+    .select("id, raffle_id")
+    .eq("id", id.data)
+    .maybeSingle();
+
+  if (!refund) return { ok: false, error: "La devolución no existe." };
+  if (!(await ownsRaffle(refund.raffle_id as string))) {
+    return { ok: false, error: "No autorizado" };
+  }
+
+  const { error } = await supabase
+    .from("refunds")
+    .update({ status: "paid", paid_at: new Date().toISOString() })
+    .eq("id", id.data);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/admin/sorteos/${refund.raffle_id}`);
+  revalidatePath("/mis-numeros");
+  return { ok: true };
+}
+
 /** Activa/desactiva el sorteo automático de un sorteo propio. */
 export async function setAutoDraw(
   raffleId: string,
