@@ -30,6 +30,9 @@ aceptación, y bloquear a las cuentas que entran por Google hasta que acepten.
   aceptación; permite ver Términos/Privacidad antes de aceptar.
 - `app/actions/terms.ts` (`acceptTerms`): validación de versión con Zod y actualización de la
   evidencia.
+- `app/(auth)/register/page.tsx`: pantalla propia de registro con el checkbox de Términos y el
+  mismo botón de Google. Antes redirigía a `/login`; ahora el alta tiene su propio punto de entrada
+  legal.
 - `app/perfil/page.tsx`: muestra la versión aceptada, la fecha y la versión vigente, con enlaces a
   Términos y Privacidad.
 
@@ -45,6 +48,7 @@ aceptación, y bloquear a las cuentas que entran por Google hasta que acepten.
 | 4 | Google bloqueado hasta aceptar | `TermsGate` + modal |
 | 5 | Enlaces legales clicables | `target="_blank"` |
 | 6 | Gates verdes | typecheck/lint/test/build |
+| 7 | Registro con checkbox visible | `/register` muestra `LoginForm` con T&C |
 
 ## Evidence
 
@@ -66,7 +70,11 @@ perfil y el modal desaparece.
 `rel="noopener noreferrer"`.
 
 **6 — observado.** `npm run typecheck` → 0. `npm run lint` → `✔ No ESLint warnings or errors`.
-`npm test` → 38/38. `npm run build` → 0.
+`npm test` → 58/58. `npm run build` → 0.
+
+**7 — observado.** `/register` ya no redirige: renderiza el mismo `LoginForm` con el checkbox
+obligatorio y el botón de Google. El alta sigue siendo Google; la aceptación se guarda en el
+callback.
 
 **7 — observado.** `/perfil` lee `terms_version` y muestra «Términos aceptados · Versión 1.0 ·
 fecha», junto a la versión vigente; si falta la aceptación lo indica en ámbar.
@@ -79,9 +87,9 @@ en la base.
 quedó vieja, bloquea cualquier ruta (salvo legales y login) con un modal que no deja scrollear el
 fondo; al aceptar, la app queda desbloqueada sin recargar.
 
-**Nota de producto.** El registro actual es solo con Google (`/register` redirige a `/login`), por eso
-el checkbox vive en el login, que es la puerta real de alta. El trigger de email queda listo para
-cualquier alta por email/contraseña que se agregue después.
+**Nota de producto.** El registro actual es solo con Google y `/register` es ahora una pantalla
+propia con el checkbox de T&C. La cuenta se crea en el primer inicio de sesión; el trigger de email
+queda listo para cualquier alta por email/contraseña que se agregue después.
 
 ## Next
 
