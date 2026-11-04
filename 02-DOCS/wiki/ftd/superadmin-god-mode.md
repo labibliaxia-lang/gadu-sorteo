@@ -263,6 +263,8 @@ correcciones posteriores movieron líneas dentro de `app/admin/super/actions.ts`
 - **0064 aplicada y verificada (2026-11-04).** El script de auditoría confirma `page_views` con RLS
   y sin policy de INSERT, la RPC `superadmin_daily_metrics(integer)`, `raffle_reports` con UNIQUE y
   RLS, y la vista `audit_logs`. El panel ya no debería mostrar los avisos de degradación.
+- **0065 aplicada y verificada (2026-11-04).** El mismo script confirma la política de INSERT del dueño
+  admin en `raffles` y el ledger con **38 filas**, de `0028` a `0065`, sin faltantes.
 - **Smoke test E2E de impersonación: hecho el camino feliz (2026-11-04).** Entrar, banner, panel
   bloqueado como target, salir y auditoría se probaron contra un build de producción con usuarios QA
   (ver evidencia 17). Quedan los **rechazos** (otro superadmin, suspendido, email sin confirmar) y
@@ -287,11 +289,10 @@ correcciones posteriores movieron líneas dentro de `app/admin/super/actions.ts`
 
 ## Next
 
-El feature está cerrado: 0064 aplicada en la base y los bloques 5, 6, 8 y 9 del
-[smoke test](superadmin-god-mode-smoke-test.md) verificados contra un build de producción (evidencia 17).
-Quedan como verificación opcional, no bloqueante, los bloques 3 (tráfico), 4 (dashboard), 7 (denuncia
-del usuario) y 10 (regresión), más los rechazos de impersonación y las acciones de pausar/eliminar
-denuncias. Después: evaluar un token de sesión firmado para `/api/track-visit` si las métricas de
-tráfico van a guiar decisiones de negocio, y revisar si conviene sumar al endpoint una deduplicación
-por sesión (hoy el sessionStorage del navegador evita repetir la visita, pero un cliente propio puede
-ignorarlo).
+El feature está cerrado: `0064` y `0065` aplicadas en la base (ledger de 38 filas) y los bloques 3, 4,
+5, 6, 7, 8 y 9 del [smoke test](superadmin-god-mode-smoke-test.md) verificados contra un build de
+producción (evidencia 17). Quedan como verificación opcional, no bloqueante, el bloque 10 (regresión
+responsive), los rechazos de impersonación y las acciones de pausar/eliminar denuncias. Después:
+evaluar un token de sesión firmado para `/api/track-visit` si las métricas de tráfico van a guiar
+decisiones de negocio, y revisar si conviene sumar al endpoint una deduplicación por sesión (hoy el
+sessionStorage del navegador evita repetir la visita, pero un cliente propio puede ignorarlo).
