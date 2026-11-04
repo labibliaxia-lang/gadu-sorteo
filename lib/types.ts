@@ -47,6 +47,7 @@ export interface Profile {
   admin_request_status: AdminRequestStatus;
   verification_status: VerificationStatus;
   dni_front_url: string | null;
+  dni_back_url: string | null;
   face_url: string | null;
   dni_verified: boolean;
   face_verified: boolean;

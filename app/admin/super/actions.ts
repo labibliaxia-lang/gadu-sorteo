@@ -52,6 +52,7 @@ interface TargetProfile {
   admin_request_status: string | null;
   role_requested: boolean | null;
   dni_front_url: string | null;
+  dni_back_url: string | null;
   face_url: string | null;
 }
 
@@ -77,7 +78,7 @@ async function loadTargets(
   const { data, error } = await admin
     .from("profiles")
     .select(
-      "id, email, role, admin_request_status, role_requested, dni_front_url, face_url",
+      "id, email, role, admin_request_status, role_requested, dni_front_url, dni_back_url, face_url",
     )
     .in("id", ids);
 
@@ -840,7 +841,7 @@ export async function deleteUsers(userIds: string[]): Promise<ActionResult> {
     // con el usuario. Las rutas se capturan antes (loadTargets) y los archivos
     // se eliminan DESPUÉS de borrar la cuenta: si se borraran primero y el
     // deleteUser fallara, se perdía la evidencia sin haber eliminado al usuario.
-    const files = [t.dni_front_url, t.face_url].filter(
+    const files = [t.dni_front_url, t.dni_back_url, t.face_url].filter(
       (f): f is string => Boolean(f),
     );
 
