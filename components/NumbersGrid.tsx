@@ -7,6 +7,11 @@ import { AlertTriangle, Clock, MessageCircle } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatPrice } from "@/lib/utils";
+import {
+  locateNumber as findNumberLocation,
+  normalizeJumpInput,
+  parseJumpNumber,
+} from "@/lib/jump-number";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notifyReservation } from "@/app/sorteos/actions";
@@ -120,6 +125,14 @@ export function NumbersGrid({
   const [totalCount, setTotalCount] = useState(0);
   const [reserving, setReserving] = useState(false);
   const [jumpValue, setJumpValue] = useState("");
+  // Número que la grilla acaba de ubicar: se resalta unos segundos para que el
+  // comprador lo vea aunque la página haya cambiado. `seq` fuerza el efecto
+  // cuando se busca el mismo número dos veces.
+  const [highlight, setHighlight] = useState<{ num: number; seq: number } | null>(
+    null,
+  );
+  const highlightSeq = useRef(0);
+  const jumpTimer = useRef<number | null>(null);
   const [summary, setSummary] = useState<{
     numbers: number[];
     total: number;
@@ -272,6 +285,21 @@ export function NumbersGrid({
       supabase.removeChannel(channel);
     };
   }, [supabase, raffleId]);
+
+  // El resaltado del número buscado se apaga solo: es una ayuda, no un estado.
+  useEffect(() => {
+    if (!highlight) return;
+    const timer = window.setTimeout(() => setHighlight(null), 2500);
+    return () => window.clearTimeout(timer);
+  }, [highlight]);
+
+  // Sin temporizador pendiente al desmontar (o al cambiar de sorteo).
+  useEffect(
+    () => () => {
+      if (jumpTimer.current !== null) window.clearTimeout(jumpTimer.current);
+    },
+    [],
+  );
 
   const toggle = useCallback(
     (num: number) => {
@@ -515,24 +543,78 @@ export function NumbersGrid({
     return count;
   }, [numbers]);
 
+  /** Cambia a la página del número, lo resalta y le da el foco. */
+  function goToNumber(target: number) {
+    const location = findNumberLocation(target, totalCount, pageSize, cols);
+    if (!location) return;
+
+    setError(null);
+    setPage(location.page);
+    highlightSeq.current += 1;
+    setHighlight({ num: target, seq: highlightSeq.current });
+
+    // La página nueva se pinta en el próximo render: recién ahí existe el
+    // botón del número para poder enfocarlo.
+    window.setTimeout(() => {
+      parentRef.current
+        ?.querySelector<HTMLButtonElement>(`[data-number="${target}"]`)
+        ?.focus({ preventScroll: true });
+    }, 80);
+  }
+
   function jumpToNumber() {
-    const target = Number(jumpValue);
-    if (!Number.isInteger(target) || target < 1 || target > totalCount) {
+    const target = parseJumpNumber(jumpValue, totalCount);
+    if (target === null) {
       setError(
         `Elegí un número entre 1 y ${totalCount.toLocaleString("es-AR")}.`,
       );
       return;
     }
 
-    setError(null);
-    const targetIndex = target - 1;
-    const targetPage = Math.floor(targetIndex / pageSize);
-    const rowIndex = Math.floor((targetIndex % pageSize) / cols);
-    setPage(targetPage);
-    window.setTimeout(() => {
-      parentRef.current?.scrollTo({ top: 0 });
-      virtualizer.scrollToIndex(rowIndex, { align: "center" });
-    }, 0);
+    goToNumber(target);
+
+    // Confirmar con Enter o «Ir» además elige el número si está disponible.
+    const status = numbers.get(target)?.status ?? "available";
+    if (status !== "available") {
+      setError(
+        `El número ${fmtNum(target)} no está disponible (${
+          status === "sold" ? "vendido" : "reservado"
+        }).`,
+      );
+      return;
+    }
+
+    if (!userId) {
+      setLoginRequired(true);
+      return;
+    }
+
+    setSelectionExpired(false);
+    setSelected((prev) => {
+      if (prev.has(target)) return prev;
+      const next = new Set(prev);
+      next.add(target);
+      return next;
+    });
+  }
+
+  /**
+   * Mientras escribe, la grilla ubica el número sin seleccionarlo: evita
+   * saltos a medio tipear y deja la selección para Enter o «Ir».
+   */
+  function handleJumpChange(raw: string) {
+    const normalized = normalizeJumpInput(raw, digits);
+    setJumpValue(normalized);
+
+    if (jumpTimer.current !== null) {
+      window.clearTimeout(jumpTimer.current);
+      jumpTimer.current = null;
+    }
+
+    const target = parseJumpNumber(normalized, totalCount);
+    if (target === null) return;
+
+    jumpTimer.current = window.setTimeout(() => goToNumber(target), 350);
   }
 
   function clearSelection() {
@@ -671,16 +753,24 @@ export function NumbersGrid({
               inputMode="numeric"
               pattern="[0-9]*"
               value={jumpValue}
-              onChange={(event) => setJumpValue(event.target.value)}
+              onChange={(event) => handleJumpChange(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
                   event.preventDefault();
                   jumpToNumber();
                 }
               }}
-              placeholder="Ej: 1250"
+              placeholder={`Ej: ${fmtNum(Math.min(150, totalCount))}`}
+              aria-describedby="jump-number-help"
               className="h-9 w-28"
             />
+            <p
+              id="jump-number-help"
+              className="w-full text-[11px] text-muted-foreground"
+            >
+              Al escribirlo, la grilla salta al número y lo resalta. Enter o
+              «Ir» también lo dejan seleccionado.
+            </p>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={jumpToNumber}>
             Ir
@@ -744,6 +834,7 @@ export function NumbersGrid({
                       <button
                         key={num}
                         type="button"
+                        data-number={num}
                         onClick={() => toggle(num)}
                         disabled={disabled}
                         aria-label={`Número ${fmtNum(num)} - ${status}`}
@@ -759,6 +850,8 @@ export function NumbersGrid({
                             "cursor-not-allowed border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
                           isSelected &&
                             "border-brand-500 bg-brand-500 font-semibold text-ink ring-2 ring-brand-500/30",
+                          highlight?.num === num &&
+                            "border-amber-400 ring-2 ring-amber-400/70 ring-offset-1 ring-offset-panel-1",
                           disabled && "cursor-not-allowed",
                         )}
                       >

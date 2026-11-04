@@ -25,8 +25,23 @@ export function ShareButton({
 }) {
   const [copied, setCopied] = useState(false);
 
+  /**
+   * URL que se comparte. En la página pública del sorteo se usa la URL real
+   * (conserva `?ref=` y cualquier parámetro de campaña); fuera de ella, la
+   * ruta canónica de la landing. Nunca un enlace genérico al inicio.
+   */
+  function buildShareUrl(): string {
+    if (typeof window === "undefined") return "";
+    const { origin, pathname, href } = window.location;
+    const publicPath = `/sorteos/${sorteoId}`;
+    if (pathname === publicPath || pathname.startsWith(`${publicPath}/`)) {
+      return href;
+    }
+    return `${origin}${publicPath}`;
+  }
+
   async function handleShare() {
-    const url = `${window.location.origin}/sorteos/${sorteoId}`;
+    const url = buildShareUrl();
     const text = `¡Participá en "${titulo}" en Gadu Sorteos!`;
 
     if (navigator.share) {
