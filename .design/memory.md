@@ -92,3 +92,7 @@ muro de ganadores con datos (hoy la base de desarrollo no tiene ninguno).
 
 - `.design/verify-prod.mjs` comprueba assets nuevos, referencia en la home y captura 390/1440 de
   producción. Última corrida: OK, producción sirve la identidad nueva.
+- El modo claro se revisó en todas las públicas (planes, cómo funciona, verificar, detalle), no solo
+  en la home. Capturas: `shots/light-*.png`.
+- Regla de datos: los números que el usuario compara (vendidos, ganador) van siempre con el mismo
+  formato que la cartelera; nada de "1005" al lado de "1.005".

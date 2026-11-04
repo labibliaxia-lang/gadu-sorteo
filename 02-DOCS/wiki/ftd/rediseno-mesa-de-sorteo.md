@@ -201,6 +201,12 @@ viewport; el H1 conserva "verificar." en ámbar como énfasis de marca) y la hig
   `logo-gadu-azul.png` 200, `logo-gadu-blanco.png` 200, la home referencia el logo nuevo y captura
   390/1440 con lazy-loading resuelto. Producción ya sirve la identidad nueva. Evidencia:
   `shots/prod/home-1440.png`, `shots/prod/home-390.png`.
+- **Modo claro verificado en todas las públicas**, no solo en la home: planes, cómo funciona,
+  verificar y detalle a 390/1440 con el tema claro forzado por CDP. Evidencia:
+  `shots/light-planes-1440.png`, `shots/light-como-1440.png`, `shots/light-verificar-1440.png`,
+  `shots/light-detail-390.png`.
+- **Formato de números unificado** en el detalle: vendidos con separador de miles y número ganador
+  con `formatNumber` (4 dígitos), igual que la cartelera y el muro de ganadores.
 
 ## Next
 

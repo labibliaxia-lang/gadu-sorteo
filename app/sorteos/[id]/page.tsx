@@ -23,7 +23,7 @@ import { RaffleQnA } from "@/components/RaffleQnA";
 import { RaffleVisitTracker } from "@/components/RaffleVisitTracker";
 import { ReportRaffleButton } from "@/components/ReportRaffleButton";
 import { ShareButton } from "@/components/ShareButton";
-import { formatDateTime, formatPrice } from "@/lib/utils";
+import { formatDateTime, formatNumber, formatPrice } from "@/lib/utils";
 import type { Prize, PublicOrganizer, Raffle, RaffleWinner } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -399,7 +399,8 @@ export default async function RafflePage({
             <div className="max-w-xl space-y-2">
               <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.06em] text-fg-subtle">
                 <span>
-                  {soldTotal ?? 0} de {numbersTotal} números vendidos
+                  {(soldTotal ?? 0).toLocaleString("es-AR")} de{" "}
+                  {numbersTotal.toLocaleString("es-AR")} números vendidos
                 </span>
                 <span className="text-fg">{soldPercent}%</span>
               </div>
@@ -491,7 +492,7 @@ export default async function RafflePage({
                   Número
                 </p>
                 <p className="font-mono text-2xl font-medium text-brand-accent">
-                  {raffle.winner_number}
+                  {formatNumber(raffle.winner_number)}
                 </p>
               </div>
             </div>
