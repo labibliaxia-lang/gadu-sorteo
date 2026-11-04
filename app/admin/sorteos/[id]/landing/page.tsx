@@ -6,6 +6,7 @@ import { requireAdminSession } from "@/lib/auth";
 import { parseLandingContent } from "@/lib/landing";
 import { createClient } from "@/lib/supabase/server";
 import { LandingEditor } from "@/components/admin/LandingEditor";
+import { CopyLandingLink } from "@/components/CopyLandingLink";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,14 @@ export default async function LandingBuilderPage({
           <ExternalLink className="h-4 w-4" />
         </Link>
       </header>
+
+      <div className="rounded-xl border bg-muted/30 p-3">
+        <p className="mb-2 text-xs font-medium text-muted-foreground">
+          Enlace público: la landing ya está generada desde que creaste el
+          sorteo, sin paso de publicación.
+        </p>
+        <CopyLandingLink raffleId={params.id} />
+      </div>
 
       <LandingEditor
         raffleId={raffle.id}

@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { RaffleActions } from "@/components/RaffleActions";
+import { CopyLandingLink } from "@/components/CopyLandingLink";
 import { PublishCommitmentButton } from "@/components/PublishCommitmentButton";
 import { RaffleDeleteButton } from "@/components/RaffleDeleteButton";
 import { RefundMarkPaidButton } from "@/components/admin/RefundMarkPaidButton";
@@ -41,8 +42,10 @@ const statusLabel: Record<Raffle["status"], string> = {
 
 export default async function AdminRaffleDetailPage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams?: { creado?: string };
 }) {
   const supabase = createClient();
 
@@ -250,6 +253,21 @@ export default async function AdminRaffleDetailPage({
 
   return (
     <div className="space-y-6">
+      {searchParams?.creado === "1" && (
+        <div className="space-y-3 rounded-xl border border-emerald-600/30 bg-emerald-500/5 p-4">
+          <div>
+            <p className="font-semibold">
+              Sorteo creado. Tu landing ya está publicada.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Compartila ahora mismo: no hay que publicar nada más. El contenido
+              promocional lo podés editar después.
+            </p>
+          </div>
+          <CopyLandingLink raffleId={raffle.id} />
+        </div>
+      )}
+
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle>{raffle.title}</CardTitle>
@@ -451,6 +469,25 @@ export default async function AdminRaffleDetailPage({
             soldCount={soldCount ?? 0}
             disabled={raffle.status === "drawn"}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Landing pública</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p className="text-muted-foreground">
+            La página del sorteo se genera al crearlo y queda publicada en esta
+            dirección. Copiala para difundirla en el momento que quieras.
+          </p>
+          <CopyLandingLink raffleId={raffle.id} />
+          <Link
+            href={`/admin/sorteos/${raffle.id}/landing`}
+            className="inline-flex text-sm text-amber-700 underline-offset-4 hover:underline dark:text-amber-300"
+          >
+            Editar contenido de la landing
+          </Link>
         </CardContent>
       </Card>
 

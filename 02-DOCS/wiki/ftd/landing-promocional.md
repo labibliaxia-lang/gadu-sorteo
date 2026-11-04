@@ -75,3 +75,12 @@ otra feature. No se creó una migración duplicada ni se renombró la existente.
 
 Probar el editor con imagen y video reales; después, comparativa de conversión entre sorteos y el
 resto del backlog legal/operativo.
+
+**Landing generada desde la creación (2026-11-04).** La landing pública no tiene paso de publicación: su dirección `/sorteos/<id>` existe desde que el sorteo se crea y se arma en cada render con los datos del sorteo (portada, título, descripción, premios y grid). Lo que faltaba era mostrarla y dejar copiar el enlace en el panel:
+
+- `components/CopyLandingLink.tsx`: muestra la URL pública, la copia al portapapeles y abre la landing. Arma la URL con `window.location.origin` en el cliente, así no depende de `NEXT_PUBLIC_URL`.
+- El alta redirige a `/admin/sorteos/<id>?creado=1` y el detalle abre con el banner «Sorteo creado. Tu landing ya está publicada» + el enlace para compartir.
+- El detalle suma la tarjeta «Landing pública» con el enlace siempre disponible y el acceso a editar el contenido.
+- El editor de la landing muestra el mismo enlace arriba.
+
+**Observado.** Typecheck/lint/tests/build en verde; pendiente la corrida visual con sesión de panel.

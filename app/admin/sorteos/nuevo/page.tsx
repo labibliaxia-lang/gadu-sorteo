@@ -425,7 +425,9 @@ export default function NuevoSorteoPage() {
       return;
     }
 
-    router.push(`/admin/sorteos/${raffle.id}`);
+    // El detalle abre con el banner «Sorteo creado»: muestra el enlace de la
+    // landing recién generada para que el organizador la comparta al instante.
+    router.push(`/admin/sorteos/${raffle.id}?creado=1`);
     router.refresh();
   }
 
