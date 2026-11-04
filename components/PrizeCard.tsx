@@ -15,7 +15,7 @@ function PrizeImage({
   className?: string;
 }) {
   return (
-    <div className={cn("relative w-full overflow-hidden bg-muted", className)}>
+    <div className={cn("relative w-full overflow-hidden bg-panel-2", className)}>
       {src ? (
         <Image
           src={src}
@@ -38,7 +38,7 @@ export function PrizeCard({ prize }: { prize: Prize }) {
   const isFirst = prize.position === 1;
 
   return (
-    <Card className="group overflow-hidden border-border transition hover:-translate-y-0.5 hover:border-brand-500/50 hover:shadow-card">
+    <Card className="group overflow-hidden border-hairline transition-colors hover:border-hairline-strong">
       <div className="relative">
         {hasSecondImage ? (
           <div className="grid grid-cols-2 gap-px">
@@ -65,7 +65,7 @@ export function PrizeCard({ prize }: { prize: Prize }) {
             className={
               isFirst
                 ? "border-transparent bg-brand-500 text-ink"
-                : "border-transparent bg-ink/80 text-white"
+                : "border-transparent bg-panel-3 text-fg-muted"
             }
           >
             {isFirst ? "1.er premio" : `Puesto ${prize.position}`}

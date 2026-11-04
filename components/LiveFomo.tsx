@@ -12,7 +12,7 @@ interface Toast {
   count: number;
 }
 
-/** Ventana para agrupar nÃºmeros vendidos del mismo sorteo en un solo aviso. */
+/** Ventana para agrupar números vendidos del mismo sorteo en un solo aviso. */
 const AGGREGATE_MS = 1500;
 const TOAST_MS = 7000;
 const MAX_TOASTS = 3;
@@ -20,10 +20,10 @@ const MAX_TOASTS = 3;
 /**
  * Feed en vivo de compras sobre la home.
  *
- * Escucha los UPDATE de `raffle_numbers` a `sold` (pÃºblicos por RLS) y muestra
+ * Escucha los UPDATE de `raffle_numbers` a `sold` (públicos por RLS) y muestra
  * un aviso agregado por sorteo. No usa `payments` porque esa tabla no es
- * legible para visitantes, y nunca muestra datos del comprador: solo el tÃ­tulo
- * pÃºblico del sorteo y la cantidad de nÃºmeros.
+ * legible para visitantes, y nunca muestra datos del comprador: solo el título
+ * público del sorteo y la cantidad de números.
  */
 export function LiveFomo() {
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -135,17 +135,17 @@ export function LiveFomo() {
           key={toast.id}
           role="status"
           aria-live="polite"
-          className="pointer-events-auto flex items-start gap-3 rounded-xl border bg-card p-3 shadow-lg"
+          className="pointer-events-auto flex items-start gap-3 rounded-lg border border-hairline bg-panel-1 p-3 shadow-card"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-panel-3 text-brand-accent ring-1 ring-hairline">
             <ShoppingBag className="h-4 w-4" />
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold">
-              Â¡Alguien acaba de comprar {toast.count} nÃºmero
+              ¡Alguien acaba de comprar {toast.count} número
               {toast.count === 1 ? "" : "s"}!
             </p>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-xs text-fg-subtle">
               en {toast.title}
             </p>
           </div>

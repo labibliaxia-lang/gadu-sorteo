@@ -1,116 +1,115 @@
-"use client";
-
-import { useState } from "react";
-import {
-  ChevronDown,
-  CreditCard,
-  Eye,
-  Info,
-  MousePointerClick,
-  ShieldCheck,
-  Truck,
-  Trophy,
-} from "lucide-react";
-
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { ArrowRight, CreditCard, Eye, MousePointerClick, Truck } from "lucide-react";
 
 const STEPS = [
   {
+    n: "01",
     icon: MousePointerClick,
     title: "Elegí tus números",
-    desc: "Seleccioná los números de la suerte en un grid en tiempo real.",
+    desc: "Seleccionalos en la grilla del sorteo. Los que elegís quedan reservados a tu nombre mientras completás el pago.",
+  },
+  {
+    n: "02",
+    icon: CreditCard,
+    title: "Transferí y avisá",
+    desc: "Transferí el total con los datos del organizador y enviá el comprobante por WhatsApp. Cuando lo confirma, tus números pasan a vendidos.",
+  },
+  {
+    n: "03",
+    icon: Eye,
+    title: "Sorteo verificable",
+    desc: "El ganador se define con una semilla comprometida antes del sorteo. Cualquiera puede recalcularlo y comprobar que no se eligió después.",
+  },
+];
+
+const GUARANTEES = [
+  {
+    icon: Eye,
+    title: "Resultados públicos",
+    desc: "Números vendidos, ganador, semilla y hash quedan a la vista en la página del sorteo.",
   },
   {
     icon: CreditCard,
-    title: "Transferí y enviá el comprobante",
-    desc: "Hacé la transferencia, mandá el comprobante por WhatsApp y el organizador valida tu pago.",
-  },
-  {
-    icon: Trophy,
-    title: "¡Participá y ganá!",
-    desc: "Seguí el sorteo en vivo y descubrí si sos el ganador.",
-  },
-];
-
-const BENEFITS = [
-  {
-    icon: ShieldCheck,
-    title: "Pago simple y seguro",
-    desc: "Transferencia bancaria y comprobante por WhatsApp. El organizador confirma tu pago.",
-  },
-  {
-    icon: Eye,
-    title: "Transparencia total",
-    desc: "Todos los números y el ganador se muestran públicamente.",
+    title: "Pago claro",
+    desc: "Transferencia y comprobante por WhatsApp. Sin cobros automáticos ni sorpresas.",
   },
   {
     icon: Truck,
-    title: "Entrega a todo el país",
-    desc: "Coordinamos la entrega de tu premio en cualquier punto de Argentina.",
+    title: "Entrega coordinada",
+    desc: "El premio se entrega en cualquier punto de Argentina, coordinado con el organizador.",
   },
 ];
 
+/**
+ * Protocolo del sitio en tres pasos. Antes vivía escondido en un acordeón:
+ * la transparencia es el argumento de venta, así que va siempre visible.
+ */
 export function HowItWorks() {
-  const [open, setOpen] = useState(false);
-
   return (
-    <section className="space-y-3">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:border-slate-400 hover:shadow-md dark:border-slate-700"
-      >
-        <Info className="h-4 w-4 text-amber-500" />
-        ¿Cómo funciona este sistema?
-        <ChevronDown
-          className={cn("h-4 w-4 transition-transform", open && "rotate-180")}
-        />
-      </button>
-
-      <div
-        className={cn(
-          "grid transition-all duration-300 ease-in-out",
-          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
-        )}
-      >
-        <div className="overflow-hidden">
-          <div className="space-y-6 pt-2">
-            {/* Pasos numerados */}
-            <div className="grid gap-6 md:grid-cols-3">
-              {STEPS.map((step, i) => (
-                <Card key={step.title} className="relative overflow-hidden">
-                  <CardContent className="space-y-3 p-6">
-                    <span className="absolute right-4 top-3 text-5xl font-black text-muted-foreground/10">
-                      {i + 1}
-                    </span>
-                    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
-                      <step.icon className="h-6 w-6" />
-                    </span>
-                    <h3 className="text-lg font-semibold">{step.title}</h3>
-                    <p className="text-sm text-muted-foreground">{step.desc}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Garantías / características */}
-            <div className="grid gap-6 rounded-3xl border bg-muted/40 p-8 md:grid-cols-3">
-              {BENEFITS.map((b) => (
-                <div key={b.title} className="flex gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-                    <b.icon className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <h3 className="font-semibold">{b.title}</h3>
-                    <p className="text-sm text-muted-foreground">{b.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+    <section className="space-y-8" aria-labelledby="protocolo">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="eyebrow">El protocolo</p>
+          <h2
+            id="protocolo"
+            className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
+          >
+            Tres pasos, sin letra chica.
+          </h2>
+          <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-fg-subtle">
+            Ni ruletas ocultas ni resultados que cambian: compra, pago y sorteo
+            con la misma información disponible para todos.
+          </p>
         </div>
+        <Link
+          href="/como-funciona"
+          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-fg-muted transition-colors hover:text-fg"
+        >
+          Ver la verificación completa
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
       </div>
+
+      <ol className="grid gap-px overflow-hidden rounded-xl border border-hairline bg-hairline sm:grid-cols-3">
+        {STEPS.map((step) => (
+          <li key={step.n} className="bg-panel-1 p-6">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[11px] tracking-[0.18em] text-brand-accent">
+                {step.n}
+              </span>
+              <step.icon
+                className="h-4 w-4 text-fg-subtle"
+                aria-hidden="true"
+              />
+            </div>
+            <h3 className="mt-6 font-display text-lg font-semibold tracking-tight">
+              {step.title}
+            </h3>
+            <p className="mt-2 text-[13px] leading-relaxed text-fg-subtle">
+              {step.desc}
+            </p>
+          </li>
+        ))}
+      </ol>
+
+      <ul className="grid gap-6 border-t border-hairline pt-8 sm:grid-cols-3">
+        {GUARANTEES.map((item) => (
+          <li key={item.title} className="flex gap-3">
+            <span
+              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-panel-2 text-brand-accent ring-1 ring-hairline"
+              aria-hidden="true"
+            >
+              <item.icon className="h-4 w-4" />
+            </span>
+            <div>
+              <h3 className="text-[13px] font-semibold text-fg">{item.title}</h3>
+              <p className="mt-1 text-[13px] leading-relaxed text-fg-subtle">
+                {item.desc}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

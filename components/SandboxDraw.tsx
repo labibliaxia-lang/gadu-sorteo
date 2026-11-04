@@ -271,7 +271,7 @@ export function SandboxDraw() {
 
       <div className="relative rounded-2xl border border-white/10 bg-ink p-6 text-center text-white">
         <div className="pointer-events-none absolute inset-0 blueprint-grid opacity-20" />
-        <p className="relative text-xs uppercase tracking-[0.3em] text-brand-300">
+        <p className="relative text-xs uppercase tracking-[0.3em] text-brand-accent">
           Simulador de sorteo
         </p>
         <p className="relative mt-3 font-mono text-5xl font-black tabular-nums sm:text-6xl">
@@ -293,7 +293,7 @@ export function SandboxDraw() {
           {phase === "done" && (
             <>
               <p className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-1.5 text-sm">
-                <Trophy className="h-4 w-4 text-brand-300" />
+                <Trophy className="h-4 w-4 text-brand-accent" />
                 {activePrizes} premio{activePrizes === 1 ? "" : "s"} sorteado
                 {activePrizes === 1 ? "" : "s"}
               </p>
@@ -314,7 +314,7 @@ export function SandboxDraw() {
       {commitment && phase !== "done" && (
         <div className="space-y-2 rounded-xl border border-brand-500/30 bg-brand-500/5 p-5">
           <p className="flex items-center gap-2 text-sm font-semibold">
-            <KeyRound className="h-4 w-4 text-brand-700 dark:text-brand-300" />
+            <KeyRound className="h-4 w-4 text-brand-800 dark:text-brand-300" />
             Paso 1 completado: compromiso publicado
           </p>
           <p className="text-xs text-muted-foreground">

@@ -81,6 +81,7 @@ const STATUS_LABEL: Record<string, string> = {
   active: "Activo",
   closed: "Cerrado",
   drawn: "Sorteado",
+  cancelled: "Cancelado",
 };
 
 function pct(value: number): string {
@@ -376,7 +377,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
 
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600/10 text-violet-800 dark:text-violet-300">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 text-brand-800 dark:text-brand-300">
               <Percent className="h-5 w-5" />
             </span>
             <div className="min-w-0">
@@ -440,7 +441,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
 
           <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-all"
+              className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-400 transition-all"
               style={{
                 width: `${Math.min(100, (kpis?.visitConversion ?? 0) * 100)}%`,
               }}

@@ -85,10 +85,11 @@ export default async function PlanesPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-10">
       <header className="space-y-3 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500 text-ink">
           <Ticket className="h-6 w-6" />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-brand-800 dark:text-brand-300">Organizadores</p>
+        <h1 className="font-display text-[2.2rem] font-semibold leading-tight tracking-[-0.03em]">
           Planes para organizadores
         </h1>
         <p className="mx-auto max-w-xl text-muted-foreground">
@@ -98,7 +99,7 @@ export default async function PlanesPage() {
         {user && (
           <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
             {currentPlan === "premium" ? (
-              <Badge className="border-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white">
+              <Badge className="border-transparent bg-brand-500 text-ink">
                 <Crown className="mr-1 h-3.5 w-3.5" />
                 Plan Premium activo
                 {premiumUntil ? ` hasta ${premiumUntil}` : ""}
@@ -127,37 +128,38 @@ export default async function PlanesPage() {
               key={plan}
               className={cn(
                 "flex flex-col",
-                isPremium && "border-violet-500/40",
+                isPremium && "border-hairline-strong",
               )}
             >
               <CardHeader className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <CardTitle className="text-xl">{limits.label}</CardTitle>
-                  {isPremium && (
-                    <Badge className="border-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white">
-                      Recomendado
-                    </Badge>
-                  )}
+                  {isPremium && <Badge variant="secondary">Recomendado</Badge>}
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-[13px] text-fg-subtle">
                   {limits.description}
                 </p>
-                <p className="pt-2 text-3xl font-extrabold">
-                  {price > 0 ? (
-                    <>
-                      {formatPrice(price)}
-                      <span className="ml-1 text-sm font-normal text-muted-foreground">
-                        / mes
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-2xl">Consultar</span>
-                  )}
-                </p>
+                <div className="pt-2">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
+                    Precio mensual
+                  </p>
+                  <p className="mt-1 font-mono text-2xl font-medium tracking-tight text-fg">
+                    {price > 0 ? (
+                      <>
+                        {formatPrice(price)}
+                        <span className="ml-1 font-normal text-fg-subtle">
+                          / mes
+                        </span>
+                      </>
+                    ) : (
+                      "A convenir"
+                    )}
+                  </p>
+                </div>
               </CardHeader>
 
               <CardContent className="flex flex-1 flex-col gap-5">
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-2 text-[13px]">
                   {PLAN_BENEFITS[plan].map((benefit) => (
                     <li key={benefit} className="flex items-start gap-2">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
@@ -172,21 +174,21 @@ export default async function PlanesPage() {
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={cn(
-                        buttonVariants(),
-                        "w-full bg-emerald-700 text-white hover:bg-emerald-800",
-                      )}
+                      className={cn(buttonVariants(), "w-full")}
                     >
                       <MessageCircle className="mr-1.5 h-4 w-4" />
-                      Pagar este plan por WhatsApp
+                      Contratar por WhatsApp
                     </a>
                   ) : (
-                    <p className="rounded-md bg-muted/60 p-3 text-center text-xs text-muted-foreground">
-                      Configurá `NEXT_PUBLIC_SALES_WHATSAPP` para recibir
-                      consultas.
-                    </p>
+                    <Link
+                      href="/ayuda"
+                      className={cn(buttonVariants(), "w-full")}
+                    >
+                      <MessageCircle className="mr-1.5 h-4 w-4" />
+                      Hablar con ventas
+                    </Link>
                   )}
-                  <p className="text-center text-xs text-muted-foreground">
+                  <p className="text-center text-[12px] text-fg-subtle">
                     Prepago manual: transferís, mandás el comprobante y te
                     entregamos el código de 30 días.
                   </p>
@@ -197,7 +199,7 @@ export default async function PlanesPage() {
         })}
       </section>
 
-      <section className="rounded-2xl border bg-muted/30 p-5">
+      <section className="rounded-xl border border-hairline bg-panel-1/50 p-5">
         <h2 className="text-lg font-semibold">
           ¿Preferís pagar por comisión?
         </h2>

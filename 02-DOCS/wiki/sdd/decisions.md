@@ -227,3 +227,31 @@ aplicada» hasta que alguien consulta el catálogo. Propuesta: `supabase link` +
   building the same project concurrently** (that session was also rewriting `lib/superadmin.ts`,
   `app/admin/super/*` and adding migration `0025`). Rule: one build per tree at a time, or one worktree
   per session.
+
+## 2026-11-03 — Identidad "Mesa de sorteo": dark SaaS con ámbar, no lavanda (FTD)
+
+- **Context.** La interfaz pública funcionaba pero se leía como plantilla: hero oscuro flotante,
+  tres tarjetas de métricas idénticas, "cómo funciona" escondido en un acordeón y una grilla de
+  tarjetas iguales. El brief del dueño pedía confianza, transparencia y emoción, sin clichés de IA.
+  El diagnóstico inicial esperaba degradés violeta; el degradé violeta existía, pero en el panel
+  premium (`planes`, `PremiumGate`, `LicenseCodesPanel`), no en la home.
+- **Options considered.**
+  1. Aplicar `dark-saas` con sus tokens exactos, incluido el acento lavanda `#5E6AD2`. Rejected — es
+     el violeta que el brief señala como cliché de IA y borra la marca.
+  2. Aplicar `bento-grid`. Rejected — el contenido de la cartelera es variable y el grid estricto
+     deja huecos muertos; su paleta pastel es el look "Apple clone".
+  3. Adoptar la **estructura** de `dark-saas` (superficies en escalones, hairlines de 1px, densidad
+     técnica, títulos con tracking negativo, un solo acento) y conservar el ámbar de Gadu como
+     acento, con el mono para precios, números y hashes. **Chosen.**
+- **Why.** El ámbar ya era la identidad y significa "boleto / luz de mesa de sorteo"; el sistema
+  dark-saas le da el marco de instrumento de precisión que la promesa de verificación necesita. Un
+  solo acento hace que el CTA de compra sea el único objeto que brilla.
+- **Consequences.** El sitio pasa a oscuro por defecto y deja de seguir el tema del sistema
+  (`enableSystem: false`); el modo claro queda como alternativa accesible con acción primaria en
+  tinta. Todos los componentes heredan del contrato shadcn, así que el panel admin también cambia
+  de piel y hubo que quitarle sus degradés violeta. La firma visual es la card-ticket con
+  perforación.
+- **Evidence.** `02-DOCS/wiki/ftd/rediseno-mesa-de-sorteo.md` + `.design/direction.md` +
+  `.design/shots/final-*.png` (Chrome headless vía DevTools Protocol, 1440/390, oscuro y claro).
+  Gates: typecheck 0, lint 0 warnings, 127 tests, build 0; contrastes AA verificados con
+  `.design/contrast.mjs` y overflow horizontal con `.design/audit.mjs`.

@@ -104,7 +104,7 @@ export function TermsGate({
               href={TERMS_PATH}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-brand-700 underline underline-offset-4 dark:text-brand-300"
+              className="text-brand-800 underline underline-offset-4 dark:text-brand-300"
             >
               Términos y Condiciones
             </Link>{" "}
@@ -113,7 +113,7 @@ export function TermsGate({
               href={PRIVACY_PATH}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-brand-700 underline underline-offset-4 dark:text-brand-300"
+              className="text-brand-800 underline underline-offset-4 dark:text-brand-300"
             >
               Política de Privacidad
             </Link>

@@ -22,6 +22,7 @@ const statusLabel: Record<Raffle["status"], string> = {
   active: "Activo",
   closed: "Cerrado",
   drawn: "Sorteado",
+  cancelled: "Cancelado",
 };
 
 function siteUrl(): string {
@@ -73,7 +74,7 @@ export default async function VerifyPage({
   const drawn = raffle.status === "drawn" && raffle.winner_number != null;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-8">
       <Link
         href={`/sorteos/${params.id}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -84,13 +85,13 @@ export default async function VerifyPage({
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-mono text-xs font-semibold uppercase tracking-widest text-brand-700 dark:text-brand-300">
+          <p className="eyebrow-gold">
             Verificación pública
           </p>
-          <h1 className="font-display text-3xl font-bold tracking-tight">
+          <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.02em]">
             {raffle.title}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[13px] text-fg-subtle">
             {drawn && raffle.drawn_at
               ? `Sorteado: ${formatDateTime(raffle.drawn_at)}`
               : "Todavía no se realizó el sorteo."}
@@ -102,40 +103,40 @@ export default async function VerifyPage({
       </header>
 
       {!drawn ? (
-        <section className="space-y-3 rounded-xl border bg-muted/30 p-6">
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <ShieldCheck className="h-5 w-5 text-amber-500" />
-            Compromiso publicado
+        <section className="space-y-3 rounded-lg border border-hairline bg-panel-1 p-6">
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+            <ShieldCheck className="h-5 w-5 text-brand-accent" />
+            Compromiso del sorteo
           </h2>
           {raffle.draw_commitment ? (
             <>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-[13px] text-fg-subtle">
                 El organizador ya publicó el compromiso (hash de la semilla).
                 Cuando se sortee vas a poder comparar el resultado acá.
               </p>
-              <code className="block break-all rounded-md bg-muted/60 p-3 font-mono text-xs">
+              <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono text-xs">
                 {raffle.draw_commitment}
               </code>
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Todavía no hay compromiso publicado para este sorteo.
+            <p className="text-[13px] text-fg-subtle">
+              Este sorteo todavía no publicó el compromiso de la semilla. Cuando lo haga, vas a poder compararlo acá antes del sorteo.
             </p>
           )}
           <Link
             href={`/sorteos/${params.id}/en-vivo`}
-            className="text-sm text-brand-700 underline-offset-4 hover:underline dark:text-brand-300"
+            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
           >
             Ir a la sala en vivo
           </Link>
         </section>
       ) : (
         <>
-          <section className="rounded-xl border border-brand-500/40 bg-brand-500/5 p-6">
-            <p className="flex items-center gap-2 text-sm font-semibold text-brand-800 dark:text-brand-300">
+          <section className="rounded-lg border border-brand-500/25 bg-brand-500/[0.06] p-6">
+            <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.1em] text-brand-accent">
               <Trophy className="h-5 w-5" /> Resultado certificado
             </p>
-            <p className="mt-2 font-mono text-5xl font-black text-brand-800 dark:text-brand-200">
+            <p className="mt-3 font-mono text-5xl font-medium tracking-tight text-brand-accent">
               {String(raffle.winner_number).padStart(4, "0")}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -144,11 +145,11 @@ export default async function VerifyPage({
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold">Huellas del sorteo</h2>
+            <h2 className="font-display text-lg font-semibold">Huellas del sorteo</h2>
             <div className="space-y-2 text-xs">
               <div>
                 <p className="font-medium">Compromiso publicado antes de sortear</p>
-                <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.draw_commitment ?? "—"}
                 </code>
               </div>
@@ -156,7 +157,7 @@ export default async function VerifyPage({
                 <p className="font-medium">
                   Huella del listado vendido (<code>numbers_hash</code>)
                 </p>
-                <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.numbers_hash ?? "—"}
                 </code>
               </div>
@@ -164,13 +165,13 @@ export default async function VerifyPage({
                 <p className="font-medium">
                   Huella del resultado (<code>result_hash</code>)
                 </p>
-                <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.result_hash ?? "—"}
                 </code>
               </div>
               <div>
                 <p className="font-medium">Semilla revelada</p>
-                <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.draw_seed ?? "—"}
                 </code>
               </div>
@@ -178,18 +179,18 @@ export default async function VerifyPage({
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold">
+            <h2 className="font-display text-lg font-semibold">
               Números vendidos que participaron ({soldNumbers.length})
             </h2>
-            <div className="flex max-h-64 flex-wrap gap-1.5 overflow-y-auto rounded-lg border bg-muted/20 p-3">
+            <div className="flex max-h-64 flex-wrap gap-1.5 overflow-y-auto rounded-lg border border-hairline bg-panel-1/60 p-3">
               {soldNumbers.map((number) => (
                 <span
                   key={number}
                   className={
                     winners.some((winner) => winner.number === number) ||
                     number === raffle.winner_number
-                      ? "rounded-md bg-amber-500 px-2 py-0.5 font-mono text-xs font-bold text-white"
-                      : "rounded-md bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground"
+                      ? "rounded-md bg-brand-500 px-2 py-0.5 font-mono text-xs font-semibold text-ink"
+                      : "rounded-md bg-panel-2 px-2 py-0.5 font-mono text-xs text-fg-subtle"
                   }
                 >
                   {number}
@@ -204,7 +205,7 @@ export default async function VerifyPage({
 
           {winners.length > 1 && (
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold">Resultados por premio</h2>
+              <h2 className="font-display text-lg font-semibold">Resultados por premio</h2>
               <MultiPrizeVerifier
                 raffleId={raffle.id}
                 seed={raffle.draw_seed ?? ""}
@@ -221,13 +222,13 @@ export default async function VerifyPage({
             </section>
           )}
 
-          <section className="space-y-3 rounded-xl border p-5">
-            <h2 className="text-lg font-semibold">
+          <section className="space-y-3 rounded-lg border border-hairline bg-panel-1 p-5">
+            <h2 className="font-display text-lg font-semibold">
               {winners.length > 1
                 ? "Certificados por premio"
                 : "Certificado de ganador"}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-[13px] text-fg-subtle">
               Descargá el certificado con el número, el ganador y el hash de
               verificación.
             </p>
@@ -273,13 +274,13 @@ export default async function VerifyPage({
       <div className="flex flex-wrap gap-3 text-sm">
         <Link
           href={`/sorteos/${params.id}`}
-          className="text-amber-700 underline-offset-4 hover:underline dark:text-amber-400"
+          className="text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
         >
           Página pública del sorteo
         </Link>
         <Link
           href={`/sorteos/${params.id}/en-vivo`}
-          className="text-amber-700 underline-offset-4 hover:underline dark:text-amber-400"
+          className="text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
         >
           Sala en vivo
         </Link>

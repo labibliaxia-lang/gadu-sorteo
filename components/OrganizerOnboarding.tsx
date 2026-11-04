@@ -112,7 +112,7 @@ export function OrganizerOnboarding({
         <ol className="mt-5 space-y-4">
           {STEPS.map((step) => (
             <li key={step.title} className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-ink">
                 <step.icon className="h-5 w-5" />
               </span>
               <div className="space-y-0.5">

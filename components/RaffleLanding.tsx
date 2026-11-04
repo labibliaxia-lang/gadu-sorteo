@@ -113,7 +113,7 @@ export function RaffleLanding({
         <button
           type="button"
           onClick={scrollToGrid}
-          className="fixed bottom-24 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-800 lg:bottom-6"
+          className="fixed bottom-24 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-card transition-colors hover:bg-primary-hover lg:bottom-6"
         >
           <Ticket className="h-4 w-4" />
           Participar y elegir mis números

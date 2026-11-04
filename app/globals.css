@@ -2,58 +2,112 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Gadu Sorteo — sistema "Mesa de sorteo" (dark SaaS + ámbar)
+   Un canvas casi negro, escalones de superficie, hairlines de 1px
+   y un único acento: el ámbar del boleto. El cuerpo de texto es
+   Inter; los datos, IBM Plex Mono; los títulos, Space Grotesk.
+   ============================================================ */
+
 @layer base {
   :root {
-    /* Superficie clara: gris acero muy suave, no blanco puro. */
-    --background: 210 25% 98%;
-    --foreground: 215 45% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 215 45% 9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 45% 9%;
-    /* Amarillo seguridad como acción principal. */
+    /* --- Superficies (dark-saas tokens, exactos) --- */
+    --canvas: 240 33% 0.6%;
+    --panel-1: 210 6% 6.3%;
+    --panel-2: 210 5% 8.2%;
+    --panel-3: 210 5% 9.8%;
+    --hairline: 225 7% 15%;
+    --hairline-strong: 225 7% 20%;
+
+    /* --- Texto --- */
+    --fg: 180 5% 97%;
+    --fg-muted: 217 26% 85%;
+    --fg-subtle: 220 6% 57%;
+    --fg-faint: 220 5% 41%;
+
+    /* --- Acento único --- */
+    --gold: 43 98% 48%;
+    --gold-hover: 43 100% 56%;
+    --on-gold: 240 33% 3%;
+
+    /* --- Semánticos --- */
+    --success: 142 64% 40%;
+    --danger: 359 75% 59%;
+
+    --shadow-soft: 0 1px 0 0 rgb(255 255 255 / 0.03) inset;
+    --shadow-card: 0 12px 32px -20px rgb(0 0 0 / 0.8);
+
+    /* --- Contrato shadcn/Tailwind: todo el sitio hereda de acá --- */
+    --background: 240 33% 0.6%;
+    --foreground: 180 5% 97%;
+    --card: 210 6% 6.3%;
+    --card-foreground: 180 5% 97%;
+    --popover: 210 5% 8.2%;
+    --popover-foreground: 180 5% 97%;
     --primary: 43 98% 48%;
-    --primary-foreground: 215 60% 8%;
-    --secondary: 210 24% 94%;
-    --secondary-foreground: 215 45% 12%;
-    --muted: 210 20% 95%;
-    --muted-foreground: 215 16% 38%;
-    --accent: 43 90% 94%;
-    --accent-foreground: 215 45% 12%;
-    --destructive: 0 72% 45%;
+    --primary-foreground: 240 33% 3%;
+    --primary-hover: 43 100% 56%;
+    --secondary: 210 5% 9.8%;
+    --secondary-foreground: 180 5% 97%;
+    --muted: 210 5% 8.2%;
+    --muted-foreground: 220 6% 57%;
+    --accent: 210 5% 9.8%;
+    --accent-foreground: 180 5% 97%;
+    --destructive: 359 75% 59%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 24% 87%;
-    --input: 214 24% 87%;
-    --ring: 43 96% 45%;
-    --radius: 0.75rem;
+    --border: 225 7% 15%;
+    --input: 225 7% 15%;
+    --ring: 43 98% 48%;
+    --radius: 0.625rem;
+    color-scheme: dark;
+  }
+
+  /* Modo claro: inverso simétrico. La acción primaria pasa a tinta,
+     porque el ámbar como fondo no alcanza AA sobre blanco. */
+  .light {
+    --canvas: 240 5% 97%;
+    --panel-1: 0 0% 100%;
+    --panel-2: 240 5% 95%;
+    --panel-3: 240 5% 93%;
+    --hairline: 225 10% 90%;
+    --hairline-strong: 225 8% 80%;
+
+    --fg: 210 9% 6%;
+    --fg-muted: 220 9% 26%;
+    --fg-subtle: 220 5% 42%;
+    --fg-faint: 220 5% 57%;
+
+    --shadow-soft: 0 1px 2px 0 rgb(11 12 14 / 0.04);
+    --shadow-card: 0 12px 24px -18px rgb(11 12 14 / 0.25);
+
+    --background: 240 5% 97%;
+    --foreground: 210 9% 6%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 9% 6%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 9% 6%;
+    --primary: 210 9% 7%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 210 9% 18%;
+    --secondary: 240 5% 95%;
+    --secondary-foreground: 210 9% 6%;
+    --muted: 240 5% 95%;
+    --muted-foreground: 220 6% 40%;
+    --accent: 240 5% 93%;
+    --accent-foreground: 210 9% 6%;
+    --destructive: 358 70% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 225 10% 90%;
+    --input: 225 10% 90%;
+    --ring: 40 100% 33%;
     color-scheme: light;
   }
 
+  /* next-themes puede escribir .dark explícitamente: mismo mapa que :root. */
   .dark {
-    --background: 222 45% 7%;
-    --foreground: 210 30% 96%;
-    --card: 222 40% 10%;
-    --card-foreground: 210 30% 96%;
-    --popover: 222 40% 10%;
-    --popover-foreground: 210 30% 96%;
-    --primary: 43 96% 52%;
-    --primary-foreground: 215 60% 8%;
-    --secondary: 217 30% 16%;
-    --secondary-foreground: 210 30% 96%;
-    --muted: 217 30% 14%;
-    --muted-foreground: 215 15% 65%;
-    --accent: 217 30% 18%;
-    --accent-foreground: 210 30% 96%;
-    --destructive: 0 62% 45%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 217 25% 20%;
-    --input: 217 25% 20%;
-    --ring: 43 96% 52%;
     color-scheme: dark;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -65,34 +119,137 @@
   body {
     @apply bg-background font-sans text-foreground antialiased;
     font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
   }
 
   h1,
   h2,
   h3,
   h4 {
-    @apply font-display tracking-tight;
+    @apply font-display font-semibold tracking-tight;
   }
 
   ::selection {
-    background: hsl(43 98% 48% / 0.35);
+    background: rgb(245 179 1 / 0.3);
+    color: var(--fg);
   }
 
   :focus-visible {
-    outline-color: hsl(var(--ring));
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Números y hashes siempre alineados en columna. */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
 @layer components {
-  /* Bloque de plano técnico para heros y previews. */
+  /* Grid técnico del hero: 1px a muy baja opacidad, desvanecido al borde. */
+  .hairline-grid {
+    background-image:
+      linear-gradient(to right, hsl(var(--fg) / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--fg) / 0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 25%, transparent 100%);
+    -webkit-mask-image: radial-gradient(
+      ellipse 80% 70% at 50% 30%,
+      black 25%,
+      transparent 100%
+    );
+  }
+
+  /* Alias heredado del sistema anterior. */
   .blueprint-grid {
     background-image:
-      linear-gradient(to right, rgb(148 163 184 / 0.12) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(148 163 184 / 0.12) 1px, transparent 1px);
-    background-size: 24px 24px;
+      linear-gradient(to right, hsl(var(--fg) / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--fg) / 0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 25%, transparent 100%);
+    -webkit-mask-image: radial-gradient(
+      ellipse 80% 70% at 50% 30%,
+      black 25%,
+      transparent 100%
+    );
   }
 
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Etiqueta de sistema: mono, mayúsculas, 11px. El "eyebrow" del sitio. */
+  .eyebrow {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-fg-subtle;
+  }
+
+  /* Acento de texto seguro en ambos temas: ámbar claro sobre negro,
+     ámbar oscuro sobre blanco. Para rellenos se usa brand-500. */
+  .text-brand-accent {
+    @apply text-brand-800 dark:text-brand-300;
+  }
+
+  .eyebrow-gold {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-brand-800 dark:text-brand-300;
+  }
+
+  /* Regla de 1px a todo el ancho: separa secciones sin cajas. */
+  .hairline {
+    @apply border-t border-hairline;
+  }
+
+  /* Hero a sangre completa sin salirse del flujo del documento. */
+  .full-bleed {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
+
+  /* --- Firma: card-ticket con perforación ---
+     Borde punteado + muescas laterales que dejan ver el fondo de la página.
+     Se lee como un boleto real: el objeto que la plataforma vende. */
+  .ticket-stub {
+    position: relative;
+    border-top: 1px dashed hsl(var(--fg) / 0.2);
+    background: hsl(var(--panel-2) / 0.55);
+  }
+
+  .ticket-stub::before,
+  .ticket-stub::after {
+    content: "";
+    position: absolute;
+    top: -9px;
+    height: 18px;
+    width: 18px;
+    border-radius: 9999px;
+    background: hsl(var(--canvas));
+    box-shadow: inset 0 0 0 1px hsl(var(--fg) / 0.18);
+  }
+
+  .ticket-stub::before {
+    left: -9.5px;
+  }
+
+  .ticket-stub::after {
+    right: -9.5px;
+  }
+
+  /* Botón de acción secundario sobre canvas oscuro. */
+  .btn-ghost-strong {
+    @apply inline-flex h-11 items-center justify-center rounded-lg border border-hairline-strong bg-panel-1 px-5 text-sm font-medium text-fg transition-colors hover:border-hairline-strong hover:bg-panel-2;
   }
 }

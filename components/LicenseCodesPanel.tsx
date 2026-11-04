@@ -63,7 +63,7 @@ function formatDate(value: string | null): string {
 function PlanBadge({ plan }: { plan: string }) {
   if (plan === "premium") {
     return (
-      <Badge className="border-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white">
+      <Badge className="border-transparent bg-brand-500 text-ink">
         <Crown className="mr-1 h-3 w-3" />
         Premium
       </Badge>

@@ -22,6 +22,7 @@ import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { RequestAdminButton } from "@/components/RequestAdminButton";
+import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { href: "/", label: "Inicio" },
@@ -124,21 +125,21 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
   const initial = (displayName || email || "U").charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4">
+    <header className="sticky top-0 z-50 border-b border-hairline bg-canvas/90 backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-6 sm:px-6">
         {/* Logo */}
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2"
           aria-label="Gadu Sorteos — inicio"
         >
-          <span className="rounded-lg bg-white px-2 py-1.5 shadow-sm ring-1 ring-black/5">
+          <span className="rounded-md bg-white px-2 py-1 ring-1 ring-white/10">
             <Image
               src="/logo-gadu-wordmark.png"
               alt="Gadu Sorteos"
               width={112}
               height={44}
-              className="h-7 w-auto"
+              className="h-6 w-auto"
               priority
             />
           </span>
@@ -150,7 +151,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
             <Link
               key={l.href}
               href={l.href}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+              className="rounded-md px-3 py-2 text-[13px] font-medium text-fg-subtle transition-colors hover:bg-panel-2 hover:text-fg"
             >
               {l.label}
             </Link>
@@ -196,7 +197,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                 <span className="hidden 2xl:inline">Perfil</span>
               </Link>
               {!isAdmin && !roleRequested && <RequestAdminButton />}
-              <span className="flex items-center gap-2 rounded-full border px-2 py-1 text-sm">
+              <span className="flex items-center gap-2 rounded-md border border-hairline px-2 py-1 text-[13px] text-fg-muted">
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -206,7 +207,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                     className="h-6 w-6 rounded-full object-cover"
                   />
                 ) : (
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
                     {initial}
                   </span>
                 )}
@@ -215,7 +216,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                 </span>
               </span>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={signOut}
                 title="Cerrar sesión"
@@ -240,31 +241,39 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
+          {!userId && (
+            <Link
+              href="/login"
+              className="rounded-md px-2 py-2 text-[13px] font-medium text-fg-muted transition-colors hover:bg-panel-2 hover:text-fg xl:hidden"
+            >
+              Ingresar
+            </Link>
+          )}
           <button
             type="button"
             onClick={toggleTheme}
             aria-label="Cambiar tema"
-            className="rounded-md p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            className="rounded-md p-2 text-fg-subtle transition-colors hover:bg-panel-2 hover:text-fg"
           >
             {mounted && resolvedTheme === "dark" ? (
-              <Sun className="h-5 w-5" />
+              <Sun className="h-4 w-4" />
             ) : (
-              <Moon className="h-5 w-5" />
+              <Moon className="h-4 w-4" />
             )}
           </button>
 
           {/* Toggle móvil / tablet */}
           <button
             type="button"
-            className="xl:hidden"
+            className="rounded-md p-2 text-fg-muted transition-colors hover:bg-panel-2 hover:text-fg xl:hidden"
             onClick={() => setMobileOpen((v) => !v)}
             aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={mobileOpen}
           >
             {mobileOpen ? (
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             ) : (
-              <Menu className="h-6 w-6" />
+              <Menu className="h-5 w-5" />
             )}
           </button>
         </div>
@@ -272,24 +281,24 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
 
       {/* Menú móvil / tablet */}
       {mobileOpen && (
-        <div className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t xl:hidden">
+        <div className="max-h-[calc(100vh-3.5rem)] overflow-y-auto border-t border-hairline bg-canvas xl:hidden">
           <nav className="flex flex-col gap-1 p-4">
             {NAV_LINKS.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setMobileOpen(false)}
-                className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                className="rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
               >
                 {l.label}
               </Link>
             ))}
 
-            <div className="my-2 border-t" />
+            <div className="my-2 border-t border-hairline" />
 
             {userId ? (
               <>
-                <div className="mb-2 flex items-center gap-3 rounded-lg bg-accent/50 p-3">
+                <div className="mb-2 flex items-center gap-3 rounded-lg bg-panel-1 p-3">
                   {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -299,7 +308,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                       className="h-10 w-10 rounded-full object-cover"
                     />
                   ) : (
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500 text-lg font-bold text-white">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground">
                       {initial}
                     </span>
                   )}
@@ -308,9 +317,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                       {displayName || email}
                     </p>
                     {email && (
-                      <p className="truncate text-xs text-muted-foreground">
-                        {email}
-                      </p>
+                      <p className="truncate text-xs text-fg-subtle">{email}</p>
                     )}
                   </div>
                 </div>
@@ -318,7 +325,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                   <Link
                     href="/admin"
                     onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                    className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
                   >
                     <LayoutDashboard className="h-4 w-4" /> Organizador
                   </Link>
@@ -326,21 +333,21 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                 <Link
                   href="/mis-pagos"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
                 >
                   <Receipt className="h-4 w-4" /> Mis pagos
                 </Link>
                 <Link
                   href="/mis-numeros"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
                 >
                   <Ticket className="h-4 w-4" /> Mis números
                 </Link>
                 <Link
                   href="/perfil"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
                 >
                   <User className="h-4 w-4" /> Perfil
                 </Link>
@@ -351,7 +358,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                     setMobileOpen(false);
                     signOut();
                   }}
-                  className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-destructive hover:bg-accent"
+                  className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-destructive hover:bg-panel-2"
                 >
                   <LogOut className="h-4 w-4" /> Cerrar sesión
                 </button>
@@ -361,14 +368,14 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                 <Link
                   href="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                  className="rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
                 >
                   Ingresar
                 </Link>
                 <Link
                   href="/register"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-accent"
+                  className={cn(buttonVariants(), "mt-1")}
                 >
                   Registrarse
                 </Link>

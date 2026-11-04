@@ -111,8 +111,8 @@ function storageErrorMessage(message: string, label: string): string {
  */
 function profileErrorMessage(message: string): string {
   const m = message.toLowerCase();
-  if (m.includes("dni_back_url")) {
-    return "La base de datos no está actualizada: ejecutá la migración 0017_organizer_verification.sql en el SQL Editor de Supabase (agrega dni_back_url y las políticas del bucket) y volvé a intentar.";
+  if (m.includes("dni_back_url") || (m.includes("column") && m.includes("does not exist"))) {
+    return "La base de datos no está actualizada: ejecutá la migración 0017_organizer_verification.sql (agrega dni_back_url y las políticas del bucket) y volvé a intentar.";
   }
   return message;
 }

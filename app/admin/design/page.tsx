@@ -78,7 +78,7 @@ export default async function DesignPreviewPage() {
         </div>
 
         <div className="space-y-3 rounded-xl border border-brand-500/40 bg-brand-50/40 p-4 dark:bg-brand-900/10">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-700 dark:text-brand-300">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand-800 dark:text-brand-300">
             Después
           </p>
           <Card>
@@ -208,7 +208,7 @@ export default async function DesignPreviewPage() {
 
       <section className="rounded-2xl border bg-ink p-6 text-white">
         <div className="blueprint-grid rounded-xl p-6">
-          <p className="font-mono text-xs uppercase tracking-widest text-brand-300">
+          <p className="font-mono text-xs uppercase tracking-widest text-brand-accent">
             Identidad
           </p>
           <p className="font-display mt-2 max-w-md text-2xl font-bold">

@@ -41,7 +41,7 @@ export default function AdminVerifyPage({
   return (
     <div className="mx-auto flex w-full max-w-md flex-col py-8 sm:py-16">
       <div className="w-full rounded-2xl border bg-card p-6 shadow-xl sm:p-8">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500 text-ink">
           <Lock className="h-7 w-7" />
         </div>
 

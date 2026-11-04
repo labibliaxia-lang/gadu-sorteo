@@ -15,10 +15,13 @@ export function ShareButton({
   sorteoId,
   titulo,
   className,
+  compact = false,
 }: {
   sorteoId: string;
   titulo: string;
   className?: string;
+  /** Solo ícono: para talones de tarjeta donde la acción primaria manda. */
+  compact?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -44,6 +47,26 @@ export function ShareButton({
     }
   }
 
+  if (compact) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        onClick={handleShare}
+        aria-label={`Compartir ${titulo}`}
+        title={copied ? "Enlace copiado" : "Compartir"}
+        className={className}
+      >
+        {copied ? (
+          <Check className="h-4 w-4 text-emerald-400" />
+        ) : (
+          <Share2 className="h-4 w-4" />
+        )}
+      </Button>
+    );
+  }
+
   return (
     <Button
       type="button"
@@ -55,7 +78,7 @@ export function ShareButton({
     >
       {copied ? (
         <>
-          <Check className="mr-1.5 h-4 w-4 text-green-600" />
+          <Check className="mr-1.5 h-4 w-4 text-emerald-500" />
           ¡Copiado!
         </>
       ) : (

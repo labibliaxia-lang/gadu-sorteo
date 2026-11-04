@@ -45,8 +45,8 @@ export function PremiumGate({
 
   if (compact) {
     return (
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-brand-500/30 bg-brand-500/[0.06] p-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-ink">
           <Crown className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
@@ -62,7 +62,7 @@ export function PremiumGate({
           href="/planes"
           className={cn(
             buttonVariants({ size: "sm" }),
-            "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700",
+            "bg-brand-500 text-ink hover:bg-brand-400",
           )}
         >
           Canjear código
@@ -72,12 +72,12 @@ export function PremiumGate({
   }
 
   return (
-    <Card className="relative overflow-hidden border-violet-500/30">
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-violet-600 to-fuchsia-600" />
+    <Card className="relative overflow-hidden border-brand-500/30">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-500 to-brand-400" />
 
       <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-ink">
             <Crown className="h-4 w-4" />
           </span>
           {title ?? `Función Premium${feature ? `: ${feature}` : ""}`}
@@ -94,7 +94,7 @@ export function PremiumGate({
           href="/planes"
           className={cn(
             buttonVariants({ size: "sm" }),
-            "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-700 hover:to-fuchsia-700",
+            "bg-brand-500 text-ink hover:bg-brand-400",
           )}
         >
           <Crown className="mr-1.5 h-4 w-4" />

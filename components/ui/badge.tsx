@@ -3,20 +3,25 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Badge de estado: tinte al 10% + texto semántico + hairline.
+ * Mono y mayúsculas cortas: se lee como un sello, no como una etiqueta web.
+ */
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 font-mono text-[11px] font-medium uppercase tracking-[0.06em] transition-colors",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground",
+        default: "border-hairline bg-panel-2 text-fg-muted",
+        secondary: "border-hairline bg-panel-2 text-fg-subtle",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground",
-        outline: "border-border text-foreground",
-        success: "border-transparent bg-emerald-700 text-white",
-        warning: "border-transparent bg-amber-500 text-amber-950",
-        info: "border-transparent bg-sky-700 text-white",
+          "border-red-500/25 bg-red-500/10 text-red-700 dark:text-red-300",
+        outline: "border-hairline-strong text-fg-muted",
+        success:
+          "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+        warning:
+          "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+        info: "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-300",
       },
     },
     defaultVariants: {

@@ -7,7 +7,7 @@ import { Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/utils";
-import { publishDrawCommitment, drawWinner as drawRaffleWinner } from "@/app/admin/sorteos/[id]/actions";
+import { publishDrawCommitment, drawWinner as drawRaffleWinner, cancelRaffle } from "@/app/admin/sorteos/[id]/actions";
 
 interface RaffleActionsProps {
   raffleId: string;
@@ -102,6 +102,28 @@ export function RaffleActions({
     router.refresh();
   }
 
+  async function cancelRaffleAction() {
+    if (
+      !window.confirm(
+        "¿Cancelar el sorteo? Se generarán devoluciones pendientes para los compradores. Esta acción no se puede deshacer.",
+      )
+    ) {
+      return;
+    }
+
+    const reason = window.prompt(
+      "Motivo de la cancelación (opcional). Ej: no se alcanzó el mínimo de venta.",
+    );
+    if (reason === null) return;
+
+    setBusy("cancel");
+    setError(null);
+    const result = await cancelRaffle(raffleId, reason || undefined);
+    if (!result.ok) setError(result.error);
+    setBusy(null);
+    router.refresh();
+  }
+
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
@@ -113,6 +135,15 @@ export function RaffleActions({
         {status === "closed" && (
           <Button variant="outline" onClick={reopenRaffle} disabled={busy !== null}>
             Reabrir
+          </Button>
+        )}
+        {(status === "active" || status === "closed") && (
+          <Button
+            variant="destructive"
+            onClick={cancelRaffleAction}
+            disabled={busy !== null}
+          >
+            {busy === "cancel" ? "Cancelando…" : "Cancelar sorteo"}
           </Button>
         )}
         {(status === "active" || status === "closed") && !hasCommitment && (

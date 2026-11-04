@@ -147,7 +147,7 @@ export default async function OrganizerProfilePage({
             className="h-20 w-20 rounded-full object-cover"
           />
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-2xl font-bold text-white">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-panel-3 text-2xl font-semibold text-brand-accent ring-1 ring-hairline">
             {initial}
           </div>
         )}
@@ -199,7 +199,7 @@ export default async function OrganizerProfilePage({
                 href={websiteHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-brand-700 underline-offset-4 hover:underline dark:text-brand-300"
+                className="text-brand-800 underline-offset-4 hover:underline dark:text-brand-300"
               >
                 Sitio web
               </a>
@@ -209,7 +209,7 @@ export default async function OrganizerProfilePage({
                 href={instagramHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-brand-700 underline-offset-4 hover:underline dark:text-brand-300"
+                className="text-brand-800 underline-offset-4 hover:underline dark:text-brand-300"
               >
                 Instagram
               </a>

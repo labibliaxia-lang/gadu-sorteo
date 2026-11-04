@@ -32,12 +32,6 @@ type VerificationStatus = "pending" | "approved" | "rejected";
 
 // El bucket organizer-kyc sólo acepta JPG/PNG de hasta 5 MB (migración 0061).
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-// Antes de recomprimir aceptamos fotos grandes de celular (hasta 25 MB).
-const MAX_SOURCE_BYTES = 25 * 1024 * 1024;
-// Objetivo por imagen: tres fotos tienen que entrar en el cuerpo de la request
-// del Server Action (Vercel corta cerca de 4,5 MB aunque el bucket admita 5 MB).
-const TARGET_IMAGE_BYTES = 1_200_000;
-const MAX_IMAGE_EDGE = 1600;
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png"];
 const ACCEPT_ATTR = ACCEPTED_IMAGE_TYPES.join(",");
 
@@ -49,99 +43,10 @@ function validateImageFile(file: File, label: string): string | null {
   if (file.size <= 0) {
     return `${label}: el archivo está vacío.`;
   }
-  if (file.size > MAX_SOURCE_BYTES) {
-    return `${label}: la imagen es demasiado grande (máximo 25 MB).`;
+  if (file.size > MAX_IMAGE_BYTES) {
+    return `${label}: la imagen no puede superar los 5 MB.`;
   }
   return null;
-}
-
-function loadImageSource(
-  file: File,
-): Promise<ImageBitmap | HTMLImageElement | null> {
-  if (typeof createImageBitmap === "function") {
-    return createImageBitmap(file).catch(() => loadImageElement(file));
-  }
-  return loadImageElement(file);
-}
-
-function loadImageElement(file: File): Promise<HTMLImageElement | null> {
-  if (typeof Image === "undefined") return Promise.resolve(null);
-  return new Promise((resolve) => {
-    const url = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(image);
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve(null);
-    };
-    image.src = url;
-  });
-}
-
-function canvasToBlob(
-  canvas: HTMLCanvasElement,
-  quality: number,
-): Promise<Blob | null> {
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), "image/jpeg", quality);
-  });
-}
-
-/**
- * Recomprime fotos grandes antes de enviarlas. Sin esto, tres fotos de celular
- * pueden superar el límite de la request del hosting aunque cada una entre en
- * el bucket, y el envío del KYC fallaría con un error genérico.
- */
-async function prepareImageFile(file: File): Promise<File> {
-  if (file.size <= TARGET_IMAGE_BYTES) return file;
-
-  const source = await loadImageSource(file);
-  if (!source) return file;
-
-  try {
-    const sourceWidth =
-      typeof HTMLImageElement !== "undefined" &&
-      source instanceof HTMLImageElement
-        ? source.naturalWidth
-        : source.width;
-    const sourceHeight =
-      typeof HTMLImageElement !== "undefined" &&
-      source instanceof HTMLImageElement
-        ? source.naturalHeight
-        : source.height;
-    if (!sourceWidth || !sourceHeight) return file;
-
-    const scale = Math.min(
-      1,
-      MAX_IMAGE_EDGE / Math.max(sourceWidth, sourceHeight),
-    );
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(sourceWidth * scale));
-    canvas.height = Math.max(1, Math.round(sourceHeight * scale));
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
-
-    let quality = 0.82;
-    let blob = await canvasToBlob(canvas, quality);
-    while (blob && blob.size > TARGET_IMAGE_BYTES && quality > 0.45) {
-      quality = Math.round((quality - 0.1) * 100) / 100;
-      blob = await canvasToBlob(canvas, quality);
-    }
-
-    if (!blob || blob.size >= file.size) return file;
-    const baseName = file.name.replace(/\.[^.]+$/, "") || "imagen";
-    return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
-  } catch {
-    return file;
-  } finally {
-    if (typeof ImageBitmap !== "undefined" && source instanceof ImageBitmap) {
-      source.close();
-    }
-  }
 }
 
 /**
@@ -209,9 +114,6 @@ export default function VerificacionPage() {
   const [dniFrontFile, setDniFrontFile] = useState<File | null>(null);
   const [dniBackFile, setDniBackFile] = useState<File | null>(null);
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
-  const [preparing, setPreparing] = useState<
-    "front" | "back" | "selfie" | null
-  >(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [cameraState, setCameraState] = useState<"off" | "starting" | "on">(
@@ -221,7 +123,6 @@ export default function VerificacionPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const mountedRef = useRef(true);
-  const cameraTimeoutRef = useRef<number | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -234,10 +135,6 @@ export default function VerificacionPage() {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      if (cameraTimeoutRef.current !== null) {
-        window.clearTimeout(cameraTimeoutRef.current);
-        cameraTimeoutRef.current = null;
-      }
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     };
@@ -310,10 +207,9 @@ export default function VerificacionPage() {
     };
   }, []);
 
-  async function selectFile(
+  function selectFile(
     event: ChangeEvent<HTMLInputElement>,
     label: string,
-    slot: "front" | "back" | "selfie",
     onSelect: (file: File | null) => void,
   ) {
     const file = event.target.files?.[0] ?? null;
@@ -327,27 +223,7 @@ export default function VerificacionPage() {
       return;
     }
     setError(null);
-    setPreparing(slot);
-    try {
-      const prepared = await prepareImageFile(file);
-      if (prepared.size > MAX_IMAGE_BYTES) {
-        setError(
-          `${label}: la imagen no se pudo reducir por debajo de 5 MB. Probá con otra foto.`,
-        );
-        return;
-      }
-      onSelect(prepared);
-    } catch {
-      if (file.size <= MAX_IMAGE_BYTES) {
-        onSelect(file);
-      } else {
-        setError(
-          `${label}: no se pudo procesar la imagen. Probá con otra foto.`,
-        );
-      }
-    } finally {
-      if (mountedRef.current) setPreparing(null);
-    }
+    onSelect(file);
   }
 
   function stopCamera() {
@@ -371,10 +247,9 @@ export default function VerificacionPage() {
 
     setCameraState("starting");
     let settled = false;
-    cameraTimeoutRef.current = window.setTimeout(() => {
+    const timeout = window.setTimeout(() => {
       if (settled) return;
       settled = true;
-      cameraTimeoutRef.current = null;
       if (mountedRef.current) {
         setCameraState("off");
         setCameraError(
@@ -393,27 +268,20 @@ export default function VerificacionPage() {
         audio: false,
       });
 
-      // Si el timeout ganó la carrera o el componente se desmontó mientras se
-      // esperaba el permiso, el stream llega tarde: hay que apagarlo igual.
-      if (settled || !mountedRef.current) {
+      // Si el timeout ganó la carrera, el stream llega tarde: se apaga.
+      if (settled) {
         stream.getTracks().forEach((track) => track.stop());
         return;
       }
 
       settled = true;
-      if (cameraTimeoutRef.current !== null) {
-        window.clearTimeout(cameraTimeoutRef.current);
-        cameraTimeoutRef.current = null;
-      }
+      window.clearTimeout(timeout);
       streamRef.current = stream;
-      setCameraState("on");
+      if (mountedRef.current) setCameraState("on");
     } catch (err) {
       if (!settled) {
         settled = true;
-        if (cameraTimeoutRef.current !== null) {
-          window.clearTimeout(cameraTimeoutRef.current);
-          cameraTimeoutRef.current = null;
-        }
+        window.clearTimeout(timeout);
       }
       if (mountedRef.current) {
         setCameraState("off");
@@ -538,24 +406,6 @@ export default function VerificacionPage() {
 
     setSubmitting(true);
     try {
-      // Se guardan los datos personales antes de enviar: si el usuario editó
-      // campos sin tocar "Guardar datos", el servidor (que relee el perfil)
-      // no rechaza el KYC por datos viejos.
-      const saved = await saveKycData({
-        full_name: fullName,
-        phone,
-        location,
-        dni_number: dniNumber,
-        dni_address: dniAddress,
-      });
-      if (!saved.ok) {
-        setError(
-          saved.error ??
-            "No se pudieron guardar tus datos personales antes de enviar.",
-        );
-        return;
-      }
-
       const fd = new FormData();
       fd.append("dni_front", dniFrontFile);
       fd.append("dni_back", dniBackFile);
@@ -599,7 +449,7 @@ export default function VerificacionPage() {
           }
         : {
             icon: Clock,
-            text: "Pendiente de revisión. Si todavía no enviaste las tres imágenes, completá los pasos y enviá la solicitud.",
+            text: "Pendiente de revisión por el superadmin.",
             cls: "text-amber-800 dark:text-amber-300",
           };
 
@@ -750,10 +600,9 @@ export default function VerificacionPage() {
               className="hidden"
               id="kyc-dni-front"
               onChange={(event) =>
-                void selectFile(
+                selectFile(
                   event,
                   "Frente del DNI",
-                  "front",
                   setDniFrontFile,
                 )
               }
@@ -775,17 +624,13 @@ export default function VerificacionPage() {
               variant="outline"
               size="sm"
               className="w-full"
-              disabled={submitting || preparing !== null}
+              disabled={submitting}
               onClick={() =>
                 document.getElementById("kyc-dni-front")?.click()
               }
             >
               <UploadCloud className="mr-1.5 h-4 w-4" />
-              {preparing === "front"
-                ? "Procesando…"
-                : dniFrontPreview
-                  ? "Cambiar frente"
-                  : "Subir frente"}
+              {dniFrontPreview ? "Cambiar frente" : "Subir frente"}
             </Button>
           </CardContent>
         </Card>
@@ -807,12 +652,7 @@ export default function VerificacionPage() {
               className="hidden"
               id="kyc-dni-back"
               onChange={(event) =>
-                void selectFile(
-                  event,
-                  "Dorso del DNI",
-                  "back",
-                  setDniBackFile,
-                )
+                selectFile(event, "Dorso del DNI", setDniBackFile)
               }
             />
             {dniBackPreview ? (
@@ -832,15 +672,11 @@ export default function VerificacionPage() {
               variant="outline"
               size="sm"
               className="w-full"
-              disabled={submitting || preparing !== null}
+              disabled={submitting}
               onClick={() => document.getElementById("kyc-dni-back")?.click()}
             >
               <UploadCloud className="mr-1.5 h-4 w-4" />
-              {preparing === "back"
-                ? "Procesando…"
-                : dniBackPreview
-                  ? "Cambiar dorso"
-                  : "Subir dorso"}
+              {dniBackPreview ? "Cambiar dorso" : "Subir dorso"}
             </Button>
           </CardContent>
         </Card>
@@ -906,7 +742,7 @@ export default function VerificacionPage() {
                   className="hidden"
                   id="kyc-selfie-file"
                   onChange={(event) =>
-                    void selectFile(event, "Selfie", "selfie", setSelfieFile)
+                    selectFile(event, "Selfie", setSelfieFile)
                   }
                 />
                 <div className="flex flex-wrap gap-2">
@@ -928,13 +764,13 @@ export default function VerificacionPage() {
                     type="button"
                     variant="secondary"
                     size="sm"
-                    disabled={submitting || preparing !== null}
+                    disabled={submitting}
                     onClick={() =>
                       document.getElementById("kyc-selfie-file")?.click()
                     }
                   >
                     <ImagePlus className="mr-1.5 h-4 w-4" />
-                    {preparing === "selfie" ? "Procesando…" : "Subir foto"}
+                    Subir foto
                   </Button>
                 </div>
               </>
@@ -963,7 +799,6 @@ export default function VerificacionPage() {
               onClick={() => void handleSubmit()}
               disabled={
                 submitting ||
-                preparing !== null ||
                 !docsReady ||
                 !dataComplete ||
                 status === "approved"
@@ -976,11 +811,6 @@ export default function VerificacionPage() {
               )}
               {submitting ? "Enviando…" : "Enviar solicitud de verificación"}
             </Button>
-            {preparing !== null && (
-              <p className="text-xs text-muted-foreground">
-                Procesando y optimizando la imagen…
-              </p>
-            )}
             {!docsReady && (
               <p className="text-xs text-muted-foreground">
                 Las tres imágenes son obligatorias para enviar.

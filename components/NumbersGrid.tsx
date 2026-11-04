@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { MessageCircle } from "lucide-react";
+import { AlertTriangle, Clock, MessageCircle } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatPrice } from "@/lib/utils";
@@ -62,12 +63,12 @@ function formatCountdown(totalSeconds: number): string {
 }
 
 function useColumnCount() {
-  const [cols, setCols] = useState(5);
+  const [cols, setCols] = useState(6);
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      if (w < 480) setCols(4);
-      else if (w < 640) setCols(5);
+      if (w < 420) setCols(6);
+      else if (w < 640) setCols(8);
       else if (w < 1024) setCols(10);
       else setCols(20);
     };
@@ -132,12 +133,25 @@ export function NumbersGrid({
     setSummary(null),
   );
 
-  const rowCount = Math.ceil(totalCount / cols);
+  // Paginación: cada página entra completa en el panel, sin scroll anidado.
+  // La virtualización se mantiene para el sorteo grande: solo se montan las
+  // filas de la página visible.
+  const pageRows = 9;
+  const pageSize = Math.max(cols, cols * pageRows);
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
+  const [page, setPage] = useState(0);
+  useEffect(() => {
+    setPage((prev) => Math.min(prev, Math.max(0, pageCount - 1)));
+  }, [pageCount]);
+
+  const pageStart = page * pageSize;
+  const pageEnd = Math.min(totalCount, pageStart + pageSize);
+  const rowCount = Math.ceil((pageEnd - pageStart) / cols);
 
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 52,
+    estimateSize: () => 50,
     overscan: 6,
   });
 
@@ -511,8 +525,14 @@ export function NumbersGrid({
     }
 
     setError(null);
-    const rowIndex = Math.floor((target - 1) / cols);
-    virtualizer.scrollToIndex(rowIndex, { align: "center" });
+    const targetIndex = target - 1;
+    const targetPage = Math.floor(targetIndex / pageSize);
+    const rowIndex = Math.floor((targetIndex % pageSize) / cols);
+    setPage(targetPage);
+    window.setTimeout(() => {
+      parentRef.current?.scrollTo({ top: 0 });
+      virtualizer.scrollToIndex(rowIndex, { align: "center" });
+    }, 0);
   }
 
   function clearSelection() {
@@ -525,7 +545,7 @@ export function NumbersGrid({
   return (
     <div className={cn("space-y-4", selected.size > 0 && "pb-28 lg:pb-0")}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-[13px] text-fg-subtle">
           <span>
             <span aria-live="polite">
               {selected.size} número{selected.size === 1 ? "" : "s"}{" "}
@@ -538,26 +558,28 @@ export function NumbersGrid({
           </span>
           {selected.size > 0 && deadline !== null && (
             <span
-              className="rounded-full bg-secondary px-2 py-0.5 font-mono text-xs font-semibold text-foreground"
+              className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 font-mono text-[11px] font-semibold text-foreground"
               title="Tiempo para terminar de elegir. La reserva después dura 48 horas."
             >
-              ⏱ Elegí en {formatCountdown(remaining)}
+              <Clock className="h-3 w-3" aria-hidden="true" /> Elegí en {formatCountdown(remaining)}
             </span>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={handleReservePrepaid}
-            disabled={selected.size === 0 || reserving || !isActive}
-            className="bg-emerald-700 text-white hover:bg-emerald-800"
-          >
-            <MessageCircle className="mr-1.5 h-4 w-4" />
-            {reserving
-              ? "Reservando…"
-              : userId
-                ? "Reservar y enviar comprobante"
-                : "Inicia sesión para participar"}
-          </Button>
+          {userId ? (
+            <Button
+              onClick={handleReservePrepaid}
+              disabled={selected.size === 0 || reserving || !isActive}
+            >
+              <MessageCircle className="mr-1.5 h-4 w-4" />
+              {reserving ? "Reservando…" : "Reservar y enviar comprobante"}
+            </Button>
+          ) : (
+            <Link href={loginHref} className={buttonVariants()}>
+              <MessageCircle className="mr-1.5 h-4 w-4" />
+              Iniciar sesión para participar
+            </Link>
+          )}
 
           {MP_ENABLED && !isTransfer && (
             <>
@@ -592,14 +614,14 @@ export function NumbersGrid({
       </div>
 
       {error && (
-        <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+        <p className="rounded-md bg-destructive/10 p-3 text-[13px] text-destructive">
           {error}
         </p>
       )}
 
       {selectionExpired && (
-        <p className="rounded-md bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">
-          ⚠️ Tu selección expiró. Elegí de nuevo tus números.
+        <p className="flex items-start gap-2 rounded-md bg-amber-500/10 p-3 text-[13px] text-amber-700 dark:text-amber-300">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" aria-hidden="true" /> Tu selección expiró. Elegí de nuevo tus números.
         </p>
       )}
 
@@ -617,20 +639,22 @@ export function NumbersGrid({
           </span>
         </div>
         <div
-          className="flex flex-wrap gap-x-4 gap-y-2 rounded-xl border bg-muted/30 px-3 py-2 text-xs"
+          className="flex flex-wrap gap-x-4 gap-y-2 rounded-lg border border-hairline bg-panel-1/60 px-3 py-2 text-[11px] text-fg-subtle"
           aria-label="Leyenda de estados"
         >
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-emerald-500" /> Disponible
+            <span className="h-3 w-3 rounded-[3px] border border-hairline-strong bg-panel-1" />{" "}
+            Disponible
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-amber-500" /> Reservado
+            <span className="h-3 w-3 rounded-full bg-brand-500" /> Reservado
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-rose-500" /> Vendido
+            <span className="h-3 w-3 rounded-[3px] bg-panel-3 line-through" />{" "}
+            Vendido
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-blue-500" /> Tu selección
+            <span className="h-3 w-3 rounded-[3px] bg-brand-500" /> Tu selección
           </span>
         </div>
 
@@ -681,7 +705,7 @@ export function NumbersGrid({
       ) : (
         <div
           ref={parentRef}
-          className="h-[60vh] overflow-auto rounded-xl border bg-card p-2 shadow-soft sm:p-3"
+          className="overflow-hidden rounded-xl border border-hairline bg-panel-1 p-2 sm:p-3"
         >
           <div
             style={{
@@ -691,7 +715,7 @@ export function NumbersGrid({
             }}
           >
             {virtualizer.getVirtualItems().map((virtualRow) => {
-              const start = virtualRow.index * cols;
+              const start = pageStart + virtualRow.index * cols;
               return (
                 <div
                   key={virtualRow.key}
@@ -708,7 +732,7 @@ export function NumbersGrid({
                 >
                   {Array.from({ length: cols }).map((_, i) => {
                     const num = start + i + 1;
-                    if (num > totalCount) {
+                    if (num > pageEnd) {
                       return <div key={i} />;
                     }
                     const n = numbers.get(num);
@@ -723,26 +747,26 @@ export function NumbersGrid({
                         onClick={() => toggle(num)}
                         disabled={disabled}
                         aria-label={`Número ${fmtNum(num)} - ${status}`}
+                        aria-pressed={isSelected}
                         className={cn(
-                          "relative flex h-11 items-center justify-center overflow-hidden rounded-lg border border-border bg-card text-xs font-semibold leading-none text-foreground transition-all duration-150 hover:border-brand-400 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 sm:h-10 sm:text-sm",
+                          "relative flex h-11 items-center justify-center overflow-hidden rounded-md border text-xs font-medium leading-none transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-10 sm:text-[13px]",
+                          status === "available" &&
+                            !isSelected &&
+                            "border-hairline bg-panel-1 text-fg-muted hover:border-brand-500/60 hover:text-fg",
                           status === "sold" &&
-                            "cursor-not-allowed bg-muted/40 text-muted-foreground opacity-70",
+                            "cursor-not-allowed border-transparent bg-panel-2/40 text-fg-subtle/50 line-through",
                           status === "reserved" &&
-                            "cursor-not-allowed bg-amber-500/10 text-amber-800 dark:text-amber-300",
+                            "cursor-not-allowed border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
                           isSelected &&
-                            "border-blue-500 ring-2 ring-blue-500/60",
+                            "border-brand-500 bg-brand-500 font-semibold text-ink ring-2 ring-brand-500/30",
                           disabled && "cursor-not-allowed",
                         )}
                       >
                         <span
                           className={cn(
-                            "absolute right-1 top-1 h-2 w-2 rounded-full",
-                            status === "sold" && "bg-rose-500",
+                            "absolute right-1 top-1 h-1.5 w-1.5 rounded-full",
                             status === "reserved" && "bg-amber-500",
-                            isSelected && "bg-blue-500",
-                            status === "available" &&
-                              !isSelected &&
-                              "bg-emerald-500",
+                            isSelected && "bg-ink",
                           )}
                         />
                         {fmtNum(num)}
@@ -756,8 +780,41 @@ export function NumbersGrid({
         </div>
       )}
 
+      {!loading && totalCount > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="font-mono text-[12px] text-fg-subtle">
+            {(pageStart + 1).toLocaleString("es-AR")}–
+            {pageEnd.toLocaleString("es-AR")} de{" "}
+            {totalCount.toLocaleString("es-AR")} números
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((prev) => Math.max(0, prev - 1))}
+              disabled={page === 0}
+            >
+              Anterior
+            </Button>
+            <span className="font-mono text-[11px] text-fg-subtle">
+              Página {page + 1} de {pageCount}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((prev) => Math.min(pageCount - 1, prev + 1))}
+              disabled={page >= pageCount - 1}
+            >
+              Siguiente
+            </Button>
+          </div>
+        </div>
+      )}
+
       {selected.size > 0 && isActive && !summary && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-lg backdrop-blur lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-sm font-semibold">
@@ -770,14 +827,21 @@ export function NumbersGrid({
                   : ""}
               </p>
             </div>
-            <Button
-              className="shrink-0 bg-emerald-700 text-white hover:bg-emerald-800"
-              disabled={reserving || !isActive}
-              onClick={handleReservePrepaid}
-            >
-              <MessageCircle className="mr-1.5 h-4 w-4" />
-              {reserving ? "Reservando…" : "Reservar"}
-            </Button>
+            {userId ? (
+              <Button
+                className="shrink-0"
+                disabled={reserving || !isActive}
+                onClick={handleReservePrepaid}
+              >
+                <MessageCircle className="mr-1.5 h-4 w-4" />
+                {reserving ? "Reservando…" : "Reservar"}
+              </Button>
+            ) : (
+              <Link href={loginHref} className={buttonVariants()}>
+                <MessageCircle className="mr-1.5 h-4 w-4" />
+                Iniciar sesión
+              </Link>
+            )}
           </div>
         </div>
       )}
@@ -793,7 +857,7 @@ export function NumbersGrid({
           <div
             ref={loginTrapRef}
             tabIndex={-1}
-            className="w-full max-w-sm rounded-2xl border bg-card p-6 text-center shadow-xl outline-none"
+            className="w-full max-w-sm rounded-xl border border-hairline bg-panel-1 p-6 text-center shadow-card outline-none"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="login-required-title" className="text-lg font-semibold">
@@ -825,7 +889,7 @@ export function NumbersGrid({
           <div
             ref={summaryTrapRef}
             tabIndex={-1}
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border bg-card p-6 shadow-xl outline-none"
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-hairline bg-panel-1 p-6 shadow-card outline-none"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="summary-title" className="text-lg font-semibold">
@@ -850,8 +914,8 @@ export function NumbersGrid({
             </div>
 
             {summary.notice && (
-              <p className="mt-3 rounded-md bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
-                ⚠️ {summary.notice} El resumen incluye solo los que sí quedaron
+              <p className="mt-3 flex items-start gap-2 rounded-md bg-amber-500/10 p-2 text-[12px] text-amber-700 dark:text-amber-300">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> {summary.notice} El resumen incluye solo los que sí quedaron
                 reservados.
               </p>
             )}
@@ -897,14 +961,14 @@ export function NumbersGrid({
                 rel="noopener noreferrer"
                 className={cn(
                   buttonVariants(),
-                  "mt-4 w-full bg-emerald-700 text-white hover:bg-emerald-800",
+                  "mt-4 w-full",
                 )}
               >
                 <MessageCircle className="mr-1.5 h-4 w-4" />
                 Enviar comprobante por WhatsApp
               </a>
             ) : (
-              <p className="mt-4 rounded-md bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
+              <p className="mt-4 flex items-start gap-2 rounded-md bg-amber-500/10 p-3 text-[12px] text-amber-700 dark:text-amber-300">
                 El organizador no cargó un WhatsApp de contacto. Usá los datos
                 de transferencia y coordiná el pago desde la página del sorteo.
               </p>

@@ -18,6 +18,7 @@ const config: Config = {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          hover: "hsl(var(--primary-hover))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -43,7 +44,32 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Identidad “taller de confianza”: amarillo seguridad + azul profundo.
+
+        /* ==== Sistema "Mesa de sorteo" (dark-saas) ==== */
+        canvas: "hsl(var(--canvas) / <alpha-value>)",
+        panel: {
+          1: "hsl(var(--panel-1) / <alpha-value>)",
+          2: "hsl(var(--panel-2) / <alpha-value>)",
+          3: "hsl(var(--panel-3) / <alpha-value>)",
+        },
+        hairline: {
+          DEFAULT: "hsl(var(--hairline) / <alpha-value>)",
+          strong: "hsl(var(--hairline-strong) / <alpha-value>)",
+        },
+        fg: {
+          DEFAULT: "hsl(var(--fg) / <alpha-value>)",
+          muted: "hsl(var(--fg-muted) / <alpha-value>)",
+          subtle: "hsl(var(--fg-subtle) / <alpha-value>)",
+          faint: "hsl(var(--fg-faint) / <alpha-value>)",
+        },
+        gold: {
+          DEFAULT: "hsl(var(--gold) / <alpha-value>)",
+          hover: "hsl(var(--gold-hover) / <alpha-value>)",
+          ink: "hsl(var(--on-gold) / <alpha-value>)",
+        },
+        success: "hsl(var(--success) / <alpha-value>)",
+
+        /* ==== Identidad heredada: taller de confianza ==== */
         brand: {
           DEFAULT: "#F5B301",
           50: "#FFF9E6",
@@ -87,38 +113,36 @@ const config: Config = {
           "monospace",
         ],
       },
+      fontSize: {
+        "2xs": ["0.6875rem", { lineHeight: "1rem" }],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        soft: "0 1px 2px 0 rgb(7 23 38 / 0.04), 0 1px 3px 0 rgb(7 23 38 / 0.06)",
-        card: "0 4px 16px -4px rgb(7 23 38 / 0.10), 0 2px 4px -2px rgb(7 23 38 / 0.06)",
-        glow: "0 0 0 1px rgb(245 179 1 / 0.35), 0 8px 24px -4px rgb(245 179 1 / 0.25)",
+        soft: "var(--shadow-soft)",
+        card: "var(--shadow-card)",
+        glow: "0 0 0 1px rgb(245 179 1 / 0.35), 0 8px 24px -12px rgb(245 179 1 / 0.35)",
       },
       keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
         "fade-up": {
           from: { opacity: "0", transform: "translateY(6px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "live-pulse": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.35" },
+        },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-up": "fade-up 0.25s ease-out both",
+        "fade-up": "fade-up 0.28s ease-out both",
+        "live-pulse": "live-pulse 2.4s ease-in-out infinite",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 };
 
 export default config;

@@ -214,7 +214,7 @@ export function ProfileEditor({
             {isOrganizer && profile.slug && (
               <Link
                 href={`/organizador/${profile.slug}`}
-                className="text-xs text-brand-700 underline-offset-4 hover:underline dark:text-brand-300"
+                className="text-xs text-brand-800 underline-offset-4 hover:underline dark:text-brand-300"
               >
                 Ver perfil público
               </Link>

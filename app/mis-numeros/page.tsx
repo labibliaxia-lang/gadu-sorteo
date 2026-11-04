@@ -50,6 +50,7 @@ const STATUS_LABEL: Record<string, string> = {
   active: "Activo",
   closed: "Cerrado",
   drawn: "Sorteado",
+  cancelled: "Cancelado",
 };
 
 function whatsappHref(
@@ -287,6 +288,13 @@ export default function MisNumerosPage() {
                     </Badge>
                     {g.reserved.length > 0 && (
                       <Badge variant="warning">Pago pendiente</Badge>
+                    )}
+
+                    {g.raffle.status === "cancelled" && (
+                      <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs">
+                        Sorteo cancelado. Contactá al organizador para
+                        coordinar la devolución de tus números pagados.
+                      </p>
                     )}
 
                     {g.raffle.status === "drawn" &&

@@ -160,16 +160,16 @@ export function LiveDrawAnimation({
 
   return (
     <div className="space-y-5">
-      <div className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-zinc-900 via-zinc-800 to-amber-950 p-8 text-center text-white shadow-xl">
-        <p className="text-xs uppercase tracking-[0.3em] text-amber-300">
+      <div className="relative overflow-hidden rounded-xl border border-hairline bg-panel-1 p-8 text-center">
+        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-accent">
           {phase === "done" ? "Resultado final" : "Sorteo en vivo"}
         </p>
 
         <p
           className={
             phase === "spinning"
-              ? "mt-4 font-mono text-6xl font-black tabular-nums tracking-widest sm:text-8xl"
-              : "mt-4 font-mono text-6xl font-black tabular-nums tracking-widest text-amber-300 sm:text-8xl"
+              ? "mt-4 font-mono text-6xl font-medium tabular-nums tracking-[0.08em] text-fg sm:text-8xl"
+              : "mt-4 font-mono text-6xl font-medium tabular-nums tracking-[0.08em] text-brand-accent sm:text-8xl"
           }
           aria-live="polite"
         >
@@ -179,18 +179,18 @@ export function LiveDrawAnimation({
         {phase === "done" && winner != null ? (
           <div className="mt-4 space-y-1">
             <p className="flex items-center justify-center gap-2 text-lg font-semibold">
-              <Trophy className="h-5 w-5 text-amber-400" /> Número ganador
+              <Trophy className="h-5 w-5 text-brand-accent" /> Número ganador
             </p>
-            <p className="text-sm text-zinc-300">
+            <p className="text-[13px] text-fg-subtle">
               {soldCount} números vendidos participaron.
             </p>
           </div>
         ) : phase === "spinning" ? (
-          <p className="mt-4 text-sm text-zinc-300">
+          <p className="mt-4 text-[13px] text-fg-subtle">
             Mezclando los números vendidos…
           </p>
         ) : (
-          <p className="mt-4 text-sm text-zinc-300">
+          <p className="mt-4 text-[13px] text-fg-subtle">
             {soldCount} número{soldCount === 1 ? "" : "s"} vendido
             {soldCount === 1 ? "" : "s"} en juego.
           </p>
@@ -205,19 +205,19 @@ export function LiveDrawAnimation({
           )}
 
           {phase === "idle" && canDraw && !hasCommitment && (
-            <p className="text-sm text-amber-300">
+            <p className="text-[13px] text-brand-accent">
               Falta publicar el compromiso del sorteo antes de sortear.
             </p>
           )}
 
           {phase === "idle" && canDraw && hasCommitment && soldCount === 0 && (
-            <p className="text-sm text-amber-300">
+            <p className="text-[13px] text-brand-accent">
               Necesitás al menos un número vendido para sortear.
             </p>
           )}
 
           {phase === "idle" && !canDraw && (
-            <p className="text-sm text-zinc-300">
+            <p className="text-[13px] text-fg-subtle">
               Esperando que el organizador inicie el sorteo.
             </p>
           )}
