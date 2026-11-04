@@ -36,6 +36,12 @@ next-env.d.ts
 .idea
 .vscode
 
+# GuardianShield: auditoría local del MCP (base SQLite, no versionar)
+.guardianshield_data/
+
+# Supabase CLI: estado local del proyecto (no versionar)
+supabase/.temp/
+
 # rsc local state (hooks, seals, logs) and managed skill links — machine-local
 .rsc/
 .worktrees/
