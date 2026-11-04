@@ -154,6 +154,13 @@ nuevo sin trackear de otro feature en curso; después se commiteó aparte (`9336
 no se repitió acá porque el árbol está siendo editado en paralelo por otro agente (rediseño visual,
 `.design/`).
 
+**16 — observado (verificación negativa, 2026-11-04).** Con la anon key y sin sesión, PostgREST
+rechaza toda escritura por permisos (401 / `42501`): INSERT en `page_views`, `raffle_reports`,
+`admin_audit_logs`, `refunds` y `_applied_migrations`; UPDATE en `raffles`, `profiles` y `refunds`.
+La URL pública del bucket KYC responde `NoSuchBucket` (es privado). Es decir: ni con la clave que
+viaja al navegador se puede inflar el tráfico, escribir auditoría, marcar una devolución como pagada
+ni cerrar un sorteo; eso solo pasa por las Server Actions con `requireSuperadminSession()`.
+
 **Árbol compartido.** Además de este feature hay cambios sin commitear del rediseño visual de páginas
 públicas (`.design/`, `globals.css`, `app/page.tsx`, Navbar/Footer, etc.) y del feature de cancelación
 (`0063`, `lib/types.ts`, `RefundMarkPaidButton`, `cancelacion-devoluciones.md`). No se cuentan como
@@ -242,6 +249,11 @@ correcciones posteriores movieron líneas dentro de `app/admin/super/actions.ts`
 - **Email sin confirmar.** El flujo depende de `generateLink` + `verifyOtp`; si el destino no confirmó
   el email, la acción traduce el error (`actions.ts:1496-1521`) y limpia la cookie, pero no se probó
   contra Supabase real. El brief lo pedía como caso de rechazo: queda verificar el mensaje exacto.
+- **Auditoría de `EDIT_PROFILE` best-effort.** A diferencia de entrar/salir del modo editor, la edición
+  de perfil no se revierte si el insert en `admin_audit_logs` falla después del update: `logAction`
+  reintenta dos veces y, si igual falla, la edición queda hecha sin fila y el mensaje no lo advierte.
+  Es el mismo criterio que el resto de las acciones del panel; revertir un update de perfil a ciegas
+  sería peor (podría pisar un cambio del usuario).
 - **TTL de la cookie: 2 h.** Si el admin cierra el navegador o deja pasar ese tiempo, la sesión de
   superadmin no se restaura sola y hay que volver a pasar por `/admin/verify` (fail-closed
   deliberado). Si nunca usa «Salir del modo editor» queda la entrada auditada y no habrá
