@@ -85,21 +85,20 @@ export default async function PlanesPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-10">
       <header className="space-y-3 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500 text-ink">
-          <Ticket className="h-6 w-6" />
-        </div>
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-brand-800 dark:text-brand-300">Organizadores</p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-brand-800 dark:text-brand-300">
+          Organizadores
+        </p>
         <h1 className="font-display text-[2.2rem] font-semibold leading-tight tracking-[-0.03em]">
           Planes para organizadores
         </h1>
-        <p className="mx-auto max-w-xl text-muted-foreground">
+        <p className="mx-auto max-w-xl text-[13px] text-fg-subtle">
           Publicá tus sorteos con tu cuenta. Pagás por mes y, si preferís otro
           esquema, la comisión se acuerda por WhatsApp.
         </p>
         {user && (
           <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
             {currentPlan === "premium" ? (
-              <Badge className="border-transparent bg-brand-500 text-ink">
+              <Badge variant="secondary">
                 <Crown className="mr-1 h-3.5 w-3.5" />
                 Plan Premium activo
                 {premiumUntil ? ` hasta ${premiumUntil}` : ""}

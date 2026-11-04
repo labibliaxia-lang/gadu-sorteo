@@ -2,6 +2,7 @@
  * Auditoría visual con Chrome DevTools Protocol.
  * Uso: node .design/audit.mjs <url> [width] [height] [out.png]
  * - Emula el viewport exacto (incluye móvil con viewport meta).
+ * - Recorre la página para disparar el lazy-loading de imágenes.
  * - Reporta overflow horizontal y las primeras secciones de <main>.
  * - Si se pasa out.png, guarda una captura de página completa.
  */
@@ -14,7 +15,7 @@ const url = process.argv[2] ?? "http://localhost:3100/";
 const width = Number(process.argv[3] ?? 390);
 const height = Number(process.argv[4] ?? 900);
 const outFile = process.argv[5] ?? null;
-const port = 9333;
+const port = 9334;
 const chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 const profile = mkdtempSync(join(tmpdir(), "gadu-cdp-"));
 
@@ -64,29 +65,52 @@ function send(method, params = {}) {
   });
 }
 
-const expression = `(() => {
-  const vw = window.innerWidth;
-  const out = [];
-  for (const el of document.querySelectorAll("body *")) {
-    const r = el.getBoundingClientRect();
-    if (r.width === 0 && r.height === 0) continue;
-    if (r.right > vw + 1 || r.left < -1) {
-      const cls = typeof el.className === "string" ? el.className.slice(0, 100) : "";
-      out.push({ tag: el.tagName.toLowerCase(), cls, left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width), text: (el.textContent || "").trim().slice(0, 40) });
-    }
+/** Recorre la página de arriba a abajo para que next/image cargue todo. */
+const scrollExpression = `(async () => {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const root = document.documentElement;
+  const prevBehavior = root.style.scrollBehavior;
+  root.style.scrollBehavior = "auto";
+  const total = document.body.scrollHeight;
+  for (let y = 0; y < total; y += Math.round(window.innerHeight * 0.8)) {
+    window.scrollTo(0, y);
+    await wait(140);
   }
-  const nodes = [...document.querySelectorAll("main h1, main h2, main section")].slice(0, 10).map((el) => {
-    const r = el.getBoundingClientRect();
-    const cs = getComputedStyle(el);
-    return { tag: el.tagName.toLowerCase(), text: (el.textContent || "").trim().slice(0, 32), top: Math.round(r.top + window.scrollY), height: Math.round(r.height), font: cs.fontSize, color: cs.color };
-  });
-  return JSON.stringify({
-    vw, vh,
-    docScrollWidth: document.documentElement.scrollWidth,
-    bodyOverflowX: getComputedStyle(document.body).overflowX,
-    overflow: out.slice(0, 20),
-    nodes,
-  }, null, 1);
+  window.scrollTo(0, 0);
+  root.scrollTop = 0;
+  root.style.scrollBehavior = prevBehavior;
+  await wait(1200);
+  return "ok";
+})()`;
+
+const auditExpression = `(() => {
+  try {
+    const vw = window.innerWidth;
+    const out = [];
+    for (const el of document.querySelectorAll("body *")) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) continue;
+      if (r.right > vw + 1 || r.left < -1) {
+        const cls = typeof el.className === "string" ? el.className.slice(0, 90) : "";
+        out.push({ tag: el.tagName.toLowerCase(), cls, left: Math.round(r.left), right: Math.round(r.right), text: (el.textContent || "").trim().slice(0, 30) });
+      }
+    }
+    const imgs = [...document.images].map((img) => ({
+      src: (img.currentSrc || img.src || "").split("/").pop(),
+      w: img.naturalWidth,
+      h: img.naturalHeight,
+      complete: img.complete,
+    }));
+    return JSON.stringify({
+      vw,
+      docScrollWidth: document.documentElement.scrollWidth,
+      docScrollHeight: document.documentElement.scrollHeight,
+      overflow: out.slice(0, 15),
+      images: imgs.slice(0, 40),
+    }, null, 1);
+  } catch (err) {
+    return "ERR " + (err && err.message ? err.message : String(err));
+  }
 })()`;
 
 try {
@@ -120,18 +144,24 @@ try {
     mobile: width < 600,
   });
   await send("Page.navigate", { url });
-  await sleep(6000);
+  await sleep(5000);
+
+  await send("Runtime.evaluate", {
+    expression: scrollExpression,
+    awaitPromise: true,
+    returnByValue: true,
+  });
 
   if (process.env.EXTRA_JS) {
     await send("Runtime.evaluate", { expression: process.env.EXTRA_JS });
-    await sleep(800);
+    await sleep(1200);
   }
 
   const result = await send("Runtime.evaluate", {
-    expression,
+    expression: auditExpression,
     returnByValue: true,
   });
-  console.log(result.result.value);
+  console.log(result.result.value ?? JSON.stringify(result));
 
   if (outFile) {
     const metrics = await send("Page.getLayoutMetrics");
@@ -143,7 +173,7 @@ try {
         x: 0,
         y: 0,
         width,
-        height: Math.min(Math.ceil(content.height), 12000),
+        height: Math.min(Math.ceil(content.height), 14000),
         scale: 1,
       },
     });

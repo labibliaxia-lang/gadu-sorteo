@@ -19,13 +19,22 @@ export default function LoginPage({
   return (
     <div className="flex min-h-[70vh] items-center justify-center">
       <div className="w-full max-w-sm rounded-2xl border bg-card p-8 text-center shadow-sm">
-        <div className="mx-auto mb-5 flex w-fit items-center justify-center rounded-2xl bg-white px-4 py-2.5 shadow ring-1 ring-black/5">
+        <div className="mx-auto mb-5 flex w-fit items-center justify-center">
           <Image
-            src="/logo-gadu-wordmark.png"
+            src="/logo-gadu-azul.png"
             alt="Gadu Sorteos"
-            width={128}
-            height={50}
-            className="h-8 w-auto"
+            width={200}
+            height={100}
+            className="h-11 w-auto dark:hidden"
+            priority
+          />
+          <Image
+            src="/logo-gadu-blanco.png"
+            alt=""
+            aria-hidden="true"
+            width={200}
+            height={100}
+            className="hidden h-11 w-auto dark:block"
             priority
           />
         </div>

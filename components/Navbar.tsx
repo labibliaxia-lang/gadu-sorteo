@@ -130,19 +130,26 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
         {/* Logo */}
         <Link
           href="/"
-          className="flex shrink-0 items-center gap-2"
+          className="flex shrink-0 items-center"
           aria-label="Gadu Sorteos — inicio"
         >
-          <span className="rounded-md bg-white px-2 py-1 ring-1 ring-white/10">
-            <Image
-              src="/logo-gadu-wordmark.png"
-              alt="Gadu Sorteos"
-              width={112}
-              height={44}
-              className="h-6 w-auto"
-              priority
-            />
-          </span>
+          <Image
+            src="/logo-gadu-azul.png"
+            alt="Gadu Sorteos"
+            width={200}
+            height={100}
+            className="h-10 w-auto dark:hidden"
+            priority
+          />
+          <Image
+            src="/logo-gadu-blanco.png"
+            alt=""
+            aria-hidden="true"
+            width={200}
+            height={100}
+            className="hidden h-10 w-auto dark:block"
+            priority
+          />
         </Link>
 
         {/* Navegación desktop */}

@@ -22,15 +22,21 @@ export function Footer() {
         {/* Marca */}
         <div className="col-span-2 space-y-4 lg:col-span-1">
           <Link href="/" className="inline-flex" aria-label="Gadu Sorteos — inicio">
-            <span className="rounded-md bg-white px-2 py-1 ring-1 ring-white/10">
-              <Image
-                src="/logo-gadu-wordmark.png"
-                alt="Gadu Sorteos"
-                width={112}
-                height={44}
-                className="h-6 w-auto"
-              />
-            </span>
+            <Image
+              src="/logo-gadu-azul.png"
+              alt="Gadu Sorteos"
+              width={200}
+              height={100}
+              className="h-9 w-auto dark:hidden"
+            />
+            <Image
+              src="/logo-gadu-blanco.png"
+              alt=""
+              aria-hidden="true"
+              width={200}
+              height={100}
+              className="hidden h-9 w-auto dark:block"
+            />
           </Link>
           <p className="max-w-xs text-[13px] leading-relaxed text-fg-subtle">
             Sorteos transparentes con premios de todo tipo. Elegí tus números,

@@ -133,18 +133,39 @@ hallazgo, vive en [`.design/memory.md`](../../../.design/memory.md).
 
 **Abierto, con criterio (no bloquea el cierre del rediseño):**
 
-- La grilla de números corta una fila al medio y no señala que hay más (altura múltiplo de la celda,
-  máscara inferior y contador de rango).
-- El ámbar se repite demasiado: siete "Participar" llenos y varios links compiten con el CTA del
-  hero. La regla es un CTA lleno por viewport; el resto a neutro.
-- `/planes` no tiene botón por card: "Consultar" ocupa el lugar del precio. Es una decisión de
-  producto (si el CTA es WhatsApp, vuelve el número que se había dejado de exponer).
+- ~~La grilla de números corta una fila al medio y no señala que hay más.~~ **Corregido:** paginación
+  por bloques que entran completos en el panel (54 a 390, 180 a 1440), contador de rango y
+  Anterior/Siguiente; sin scroll anidado.
+- ~~El ámbar se repite demasiado: siete "Participar" llenos y varios links compiten con el CTA del
+  hero.~~ **Corregido:** las cards de la cartelera pasan a CTA outline; el ámbar lleno queda en el
+  CTA del hero, "Registrarse" y el CTA del detalle.
+- ~~`/planes` no tiene botón por card: "Consultar" ocupa el lugar del precio.~~ **Corregido:** CTA
+  primaria por card ("Contratar por WhatsApp" o "Hablar con ventas" → `/ayuda`), precio como dato
+  secundario y badge/borde neutros.
 - Formato de datos inconsistente entre pantallas (mayúsculas, miles y fechas) y datos de prueba
   visibles en la cartelera ("amoladora" ×4, descripción "d,jabsdkvabdjkl"). El segundo es higiene
   de datos, no de código.
 
 La crítica dio por bueno y no se tocó: contraste AA del mono de datos (≈5,6:1 en ambos temas), cero
 degradés decorativos/glow/emojis/violeta, y la card-ticket como firma real.
+
+## Cierre 2026-11-04 — logos del dueño y pasada de acabado
+
+- **Logos por tema.** El dueño entregó dos PNG: blanco para fondo oscuro y azul para fondo claro.
+  Se copiaron a `public/logo-gadu-blanco.png` y `public/logo-gadu-azul.png` y se usan en Navbar,
+  Footer y login con `dark:hidden` / `hidden dark:block`, sin chip blanco y con `alt` único (la
+  segunda imagen queda `aria-hidden`). Evidencia: `shots/v2-home-1440.png`,
+  `shots/v2-home-light-1440.png`, `shots/v4-login-390.png`.
+- **Microtipo.** Los datos mono suben de 10-11px a 11-12px; las fechas dejan de ir en mayúsculas.
+- **Medición final.** `.design/audit.mjs` (Chrome DevTools Protocol) entrega 0 nodos fuera del
+  viewport a 390 y capturas de página completa con lazy-loading resuelto. `.design/contrast.mjs`
+  mantiene todos los pares de texto usados ≥ 4,5:1 en ambos temas.
+- **Gates.** `npm run typecheck` → 0 · `npm run lint` → sin warnings · `npm test` → 127/127 ·
+  build de producción exit 0, ejecutado en una copia aislada porque otra sesión estaba compilando la
+  misma carpeta `.next` (la carpeta de build es compartida y dos builds simultáneos la corrompen).
+- **Pendiente honesto.** Sin prueba en teléfono real ni lector de pantalla; el muro de ganadores no
+  se pudo ver con datos porque la base de desarrollo no tiene sorteos sorteados. La calidad de las
+  fotos de premios es contenido del organizador, no del sistema de diseño.
 
 ## Next
 
