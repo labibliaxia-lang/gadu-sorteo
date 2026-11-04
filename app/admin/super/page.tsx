@@ -6,6 +6,7 @@ import {
   Crown,
   FlaskConical,
   MessageCircle,
+  ShieldCheck,
   Ticket,
   TrendingUp,
   Users,
@@ -257,6 +258,109 @@ async function loadMetrics(
   };
 }
 
+// ---------------------------------------------------------------------
+// Verificaciones de identidad (KYC)
+// ---------------------------------------------------------------------
+
+interface PendingKycRow {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  created_at: string | null;
+  dni_front_url: string | null;
+  dni_back_url: string | null;
+  face_url: string | null;
+}
+
+const KYC_SELECT =
+  "id, full_name, email, created_at, dni_front_url, dni_back_url, face_url";
+const KYC_SELECT_LEGACY =
+  "id, full_name, email, created_at, dni_front_url, face_url";
+// La solicitud es "revisable" cuando subió al menos una imagen: el valor por
+// defecto de verification_status es 'pending' para TODOS los perfiles, así que
+// sin este filtro la lista se llenaría de usuarios que nunca pidieron KYC.
+const KYC_DOCS_OR =
+  "dni_front_url.not.is.null,dni_back_url.not.is.null,face_url.not.is.null";
+const KYC_DOCS_OR_LEGACY =
+  "dni_front_url.not.is.null,face_url.not.is.null";
+
+type AdminClient = ReturnType<typeof createAdminClient>;
+
+interface PendingKycResult {
+  rows: PendingKycRow[];
+  /** true si la base todavía no tiene `dni_back_url` (migración 0017 vieja). */
+  missingBackColumn: boolean;
+  error: string | null;
+}
+
+/**
+ * Lista las solicitudes KYC pendientes. Si la base quedó atrás y no tiene
+ * `dni_back_url`, reintenta sin esa columna para que el panel NO se rompa
+ * mientras se aplica la migración 0017; el aviso queda en `issues`.
+ */
+async function loadPendingKyc(admin: AdminClient): Promise<PendingKycResult> {
+  const full = await admin
+    .from("profiles")
+    .select(KYC_SELECT)
+    .eq("verification_status", "pending")
+    .or(KYC_DOCS_OR)
+    .order("created_at", { ascending: true })
+    .limit(20);
+
+  if (!full.error) {
+    return {
+      rows: (full.data ?? []) as unknown as PendingKycRow[],
+      missingBackColumn: false,
+      error: null,
+    };
+  }
+
+  if (full.error.message.toLowerCase().includes("dni_back_url")) {
+    const legacy = await admin
+      .from("profiles")
+      .select(KYC_SELECT_LEGACY)
+      .eq("verification_status", "pending")
+      .or(KYC_DOCS_OR_LEGACY)
+      .order("created_at", { ascending: true })
+      .limit(20);
+
+    if (legacy.error) {
+      return {
+        rows: [],
+        missingBackColumn: true,
+        error: legacy.error.message,
+      };
+    }
+
+    const rows = (
+      (legacy.data ?? []) as unknown as Omit<PendingKycRow, "dni_back_url">[]
+    ).map((row) => ({ ...row, dni_back_url: null }));
+
+    return { rows, missingBackColumn: true, error: null };
+  }
+
+  return {
+    rows: [],
+    missingBackColumn: false,
+    error: full.error.message,
+  };
+}
+
+/** Contador de KYC pendientes con el mismo criterio que la lista. */
+async function countPendingKyc(
+  admin: AdminClient,
+  missingBackColumn: boolean,
+): Promise<{ count: number; error: string | null }> {
+  const { count, error } = await admin
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .eq("verification_status", "pending")
+    .or(missingBackColumn ? KYC_DOCS_OR_LEGACY : KYC_DOCS_OR);
+
+  if (error) return { count: 0, error: error.message };
+  return { count: count ?? 0, error: null };
+}
+
 export default async function SuperAdminPage({
   searchParams,
 }: {
@@ -395,36 +499,30 @@ export default async function SuperAdminPage({
   if (logsError) issues.push(`auditoría: ${logsError.message}`);
 
   // --- Verificaciones de identidad pendientes (URLs firmadas temporales) ---
-  // Se consultan por separado DNI y selfie: quien sube sólo uno de los dos
-  // también tiene que aparecer aquí (antes exigía DNI y quedaba invisible).
-  const kycFields = "id, full_name, email, dni_front_url, face_url";
-  const [dniKyc, faceKyc] = await Promise.all([
-    admin
-      .from("profiles")
-      .select(kycFields)
-      .eq("verification_status", "pending")
-      .not("dni_front_url", "is", null)
-      .limit(20),
-    admin
-      .from("profiles")
-      .select(kycFields)
-      .eq("verification_status", "pending")
-      .not("face_url", "is", null)
-      .limit(20),
-  ]);
-
-  if (dniKyc.error) issues.push(`verificaciones (DNI): ${dniKyc.error.message}`);
-  if (faceKyc.error)
-    issues.push(`verificaciones (selfie): ${faceKyc.error.message}`);
-
-  const kycById = new Map<string, any>();
-  for (const row of [...(dniKyc.data ?? []), ...(faceKyc.data ?? [])]) {
-    kycById.set(row.id, row);
+  // Una sola consulta: frente, dorso y selfie. Antes se unían dos consultas y
+  // el dorso no existía, así que las solicitudes podían quedar incompletas o
+  // invisibles. El bucket es privado: se firma cada ruta por 1 hora.
+  const pendingKycResult = await loadPendingKyc(admin);
+  if (pendingKycResult.error) {
+    issues.push(`verificaciones: ${pendingKycResult.error}`);
   }
-  const pendingKyc = Array.from(kycById.values()).slice(0, 20);
+  if (pendingKycResult.missingBackColumn) {
+    issues.push(
+      "La base todavía no tiene dni_back_url: ejecutá la migración 0017_organizer_verification.sql para revisar el dorso del DNI.",
+    );
+  }
+
+  const kycPendingCountResult = await countPendingKyc(
+    admin,
+    pendingKycResult.missingBackColumn,
+  );
+  if (kycPendingCountResult.error) {
+    issues.push(`verificaciones (contador): ${kycPendingCountResult.error}`);
+  }
+  const kycPendingCount = kycPendingCountResult.count;
 
   const pendingVerifications = await Promise.all(
-    pendingKyc.map(async (p: any) => {
+    pendingKycResult.rows.map(async (p) => {
       const sign = async (path: string | null) => {
         if (!path) return null;
         const { data } = await admin.storage
@@ -432,11 +530,14 @@ export default async function SuperAdminPage({
           .createSignedUrl(path, 3600);
         return data?.signedUrl ?? null;
       };
-      return {
-        ...p,
-        dniUrl: await sign(p.dni_front_url),
-        faceUrl: await sign(p.face_url),
-      };
+
+      const [dniFrontUrl, dniBackUrl, faceUrl] = await Promise.all([
+        sign(p.dni_front_url),
+        sign(p.dni_back_url),
+        sign(p.face_url),
+      ]);
+
+      return { ...p, dniFrontUrl, dniBackUrl, faceUrl };
     }),
   );
 
@@ -506,8 +607,13 @@ export default async function SuperAdminPage({
     },
     {
       icon: MessageCircle,
-      label: "Solicitudes pendientes",
+      label: "Solicitudes de rol pendientes",
       value: String(pendingCount),
+    },
+    {
+      icon: ShieldCheck,
+      label: "Verificaciones KYC pendientes",
+      value: String(kycPendingCount),
     },
     {
       icon: Coins,
@@ -717,7 +823,23 @@ export default async function SuperAdminPage({
 
       {/* Verificaciones de identidad */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Verificaciones de identidad</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-xl font-semibold">Verificaciones de identidad</h2>
+          <Badge variant="secondary">
+            {kycPendingCount} pendiente{kycPendingCount === 1 ? "" : "s"}
+          </Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Solicitudes con al menos una imagen subida. El bucket es privado: cada
+          imagen se muestra con una URL firmada que vence en 1 hora.
+          {kycPendingCount > pendingVerifications.length && (
+            <>
+              {" "}
+              Se muestran las {pendingVerifications.length} más antiguas de{" "}
+              {kycPendingCount}; revisá el resto a medida que se resuelvan.
+            </>
+          )}
+        </p>
         {pendingVerifications.length === 0 ? (
           <Card className="border-dashed text-center">
             <CardContent className="py-12 text-muted-foreground">
@@ -726,59 +848,81 @@ export default async function SuperAdminPage({
           </Card>
         ) : (
           <div className="space-y-3">
-            {pendingVerifications.map((p) => (
-              <Card key={p.id}>
-                <CardContent className="space-y-3 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="min-w-0 space-y-1">
-                      <p className="font-semibold">
-                        {p.full_name || "Sin nombre"}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {p.email || p.id}
-                      </p>
+            {pendingVerifications.map((p) => {
+              const documents = [
+                {
+                  key: "front",
+                  label: "DNI · frente",
+                  alt: "Frente del DNI",
+                  url: p.dniFrontUrl,
+                },
+                {
+                  key: "back",
+                  label: "DNI · dorso",
+                  alt: "Dorso del DNI",
+                  url: p.dniBackUrl,
+                },
+                {
+                  key: "face",
+                  label: "Selfie",
+                  alt: "Selfie",
+                  url: p.faceUrl,
+                },
+              ];
+              const loadedCount = documents.filter((doc) => doc.url).length;
+              // Se aprueba sólo si las TRES imágenes se pudieron firmar y
+              // mostrar: una ruta en la base no alcanza si el objeto no existe.
+              const hasAllDocuments = loadedCount === 3;
+
+              return (
+                <Card key={p.id}>
+                  <CardContent className="space-y-3 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0 space-y-1">
+                        <p className="font-semibold">
+                          {p.full_name || "Sin nombre"}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {p.email || p.id}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Alta del perfil:{" "}
+                          {p.created_at
+                            ? formatDateTime(p.created_at)
+                            : "sin fecha"}{" "}
+                          · {loadedCount}/3 imágenes
+                        </p>
+                      </div>
+                      <VerificationActions
+                        userId={p.id}
+                        hasAllDocuments={hasAllDocuments}
+                      />
                     </div>
-                    <VerificationActions userId={p.id} />
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        DNI (frente)
-                      </p>
-                      {p.dniUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={p.dniUrl}
-                          alt="DNI frente"
-                          className="aspect-[16/10] w-full rounded-lg border object-cover"
-                        />
-                      ) : (
-                        <div className="flex aspect-[16/10] items-center justify-center rounded-lg border text-sm text-muted-foreground">
-                          Sin DNI
-                        </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {documents.map((doc) =>
+                        doc.url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            key={doc.key}
+                            src={doc.url}
+                            alt={doc.alt}
+                            className="aspect-[16/10] w-full rounded-lg border object-cover"
+                          />
+                        ) : (
+                          <div
+                            key={doc.key}
+                            className="flex aspect-[16/10] w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-2 text-center text-xs text-muted-foreground"
+                          >
+                            <span className="font-medium">{doc.label}</span>
+                            <span>Sin imagen</span>
+                          </div>
+                        ),
                       )}
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        Selfie
-                      </p>
-                      {p.faceUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={p.faceUrl}
-                          alt="Selfie"
-                          className="aspect-[16/10] w-full rounded-lg border object-cover"
-                        />
-                      ) : (
-                        <div className="flex aspect-[16/10] items-center justify-center rounded-lg border text-sm text-muted-foreground">
-                          Sin selfie
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

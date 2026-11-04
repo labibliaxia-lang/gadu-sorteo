@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import {
   Camera,
   CheckCircle2,
   Clock,
+  ImagePlus,
+  Loader2,
   UploadCloud,
   XCircle,
 } from "lucide-react";
@@ -19,17 +26,172 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  saveKycData,
-  submitDni,
-  submitSelfie,
-} from "@/app/admin/verificacion/actions";
+import { saveKycData, submitKyc } from "@/app/admin/verificacion/actions";
 
 type VerificationStatus = "pending" | "approved" | "rejected";
 
-export default function VerificacionPage() {
-  const supabase = createClient();
+// El bucket organizer-kyc sólo acepta JPG/PNG de hasta 5 MB (migración 0061).
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+// Antes de recomprimir aceptamos fotos grandes de celular (hasta 25 MB).
+const MAX_SOURCE_BYTES = 25 * 1024 * 1024;
+// Objetivo por imagen: tres fotos tienen que entrar en el cuerpo de la request
+// del Server Action (Vercel corta cerca de 4,5 MB aunque el bucket admita 5 MB).
+const TARGET_IMAGE_BYTES = 1_200_000;
+const MAX_IMAGE_EDGE = 1600;
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png"];
+const ACCEPT_ATTR = ACCEPTED_IMAGE_TYPES.join(",");
 
+/** Valida del lado del cliente; el servidor vuelve a validar. */
+function validateImageFile(file: File, label: string): string | null {
+  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+    return `${label}: subí una imagen JPG o PNG.`;
+  }
+  if (file.size <= 0) {
+    return `${label}: el archivo está vacío.`;
+  }
+  if (file.size > MAX_SOURCE_BYTES) {
+    return `${label}: la imagen es demasiado grande (máximo 25 MB).`;
+  }
+  return null;
+}
+
+function loadImageSource(
+  file: File,
+): Promise<ImageBitmap | HTMLImageElement | null> {
+  if (typeof createImageBitmap === "function") {
+    return createImageBitmap(file).catch(() => loadImageElement(file));
+  }
+  return loadImageElement(file);
+}
+
+function loadImageElement(file: File): Promise<HTMLImageElement | null> {
+  if (typeof Image === "undefined") return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+    image.src = url;
+  });
+}
+
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  quality: number,
+): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), "image/jpeg", quality);
+  });
+}
+
+/**
+ * Recomprime fotos grandes antes de enviarlas. Sin esto, tres fotos de celular
+ * pueden superar el límite de la request del hosting aunque cada una entre en
+ * el bucket, y el envío del KYC fallaría con un error genérico.
+ */
+async function prepareImageFile(file: File): Promise<File> {
+  if (file.size <= TARGET_IMAGE_BYTES) return file;
+
+  const source = await loadImageSource(file);
+  if (!source) return file;
+
+  try {
+    const sourceWidth =
+      typeof HTMLImageElement !== "undefined" &&
+      source instanceof HTMLImageElement
+        ? source.naturalWidth
+        : source.width;
+    const sourceHeight =
+      typeof HTMLImageElement !== "undefined" &&
+      source instanceof HTMLImageElement
+        ? source.naturalHeight
+        : source.height;
+    if (!sourceWidth || !sourceHeight) return file;
+
+    const scale = Math.min(
+      1,
+      MAX_IMAGE_EDGE / Math.max(sourceWidth, sourceHeight),
+    );
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+    canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+
+    let quality = 0.82;
+    let blob = await canvasToBlob(canvas, quality);
+    while (blob && blob.size > TARGET_IMAGE_BYTES && quality > 0.45) {
+      quality = Math.round((quality - 0.1) * 100) / 100;
+      blob = await canvasToBlob(canvas, quality);
+    }
+
+    if (!blob || blob.size >= file.size) return file;
+    const baseName = file.name.replace(/\.[^.]+$/, "") || "imagen";
+    return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
+  } catch {
+    return file;
+  } finally {
+    if (typeof ImageBitmap !== "undefined" && source instanceof ImageBitmap) {
+      source.close();
+    }
+  }
+}
+
+/**
+ * Crea y libera la URL de vista previa del archivo.
+ * Se crea dentro del efecto para que StrictMode (doble efecto en desarrollo)
+ * no revoque una URL que la vista sigue usando.
+ */
+function useObjectUrl(file: File | null): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!file) {
+      setUrl(null);
+      return;
+    }
+    const nextUrl = URL.createObjectURL(file);
+    setUrl(nextUrl);
+    return () => URL.revokeObjectURL(nextUrl);
+  }, [file]);
+
+  return url;
+}
+
+function cameraErrorMessage(error: unknown): string {
+  const name =
+    error instanceof DOMException
+      ? error.name
+      : typeof error === "object" && error !== null && "name" in error
+        ? String((error as { name?: unknown }).name ?? "")
+        : "";
+
+  switch (name) {
+    case "NotAllowedError":
+    case "PermissionDeniedError":
+    case "SecurityError":
+      return "Bloqueaste el acceso a la cámara. Habilitá el permiso de cámara en el navegador o subí una foto de tu selfie.";
+    case "NotFoundError":
+    case "DevicesNotFoundError":
+      return "No encontramos una cámara conectada. Subí una foto de tu selfie desde el celular o la computadora.";
+    case "NotReadableError":
+    case "TrackStartError":
+      return "La cámara está siendo usada por otra aplicación. Cerrá esa app e intentá de nuevo, o subí una foto.";
+    case "OverconstrainedError":
+      return "La cámara no admite la configuración solicitada. Probá de nuevo o subí una foto de tu selfie.";
+    default:
+      return "No se pudo abrir la cámara. Revisá los permisos del navegador o subí una foto de tu selfie.";
+  }
+}
+
+export default function VerificacionPage() {
   const [status, setStatus] = useState<VerificationStatus>("pending");
   const [loading, setLoading] = useState(true);
 
@@ -44,147 +206,266 @@ export default function VerificacionPage() {
   const [deliveryPostalCode, setDeliveryPostalCode] = useState("");
   const [dataBusy, setDataBusy] = useState(false);
 
-  const [dniFile, setDniFile] = useState<File | null>(null);
-  const [dniPreview, setDniPreview] = useState<string | null>(null);
-  const [dniBusy, setDniBusy] = useState(false);
-  const dniInputRef = useRef<HTMLInputElement>(null);
-
+  const [dniFrontFile, setDniFrontFile] = useState<File | null>(null);
+  const [dniBackFile, setDniBackFile] = useState<File | null>(null);
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
-  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
-  const [selfieBusy, setSelfieBusy] = useState(false);
-  const [cameraOn, setCameraOn] = useState(false);
+  const [preparing, setPreparing] = useState<
+    "front" | "back" | "selfie" | null
+  >(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [cameraState, setCameraState] = useState<"off" | "starting" | "on">(
+    "off",
+  );
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const mountedRef = useRef(true);
+  const cameraTimeoutRef = useRef<number | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const dniFrontPreview = useObjectUrl(dniFrontFile);
+  const dniBackPreview = useObjectUrl(dniBackFile);
+  const selfiePreview = useObjectUrl(selfieFile);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (cameraTimeoutRef.current !== null) {
+        window.clearTimeout(cameraTimeoutRef.current);
+        cameraTimeoutRef.current = null;
+      }
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    };
+  }, []);
+
+  // El <video> recién existe cuando cameraState === "on": por eso el stream se
+  // engancha acá y no dentro de startCamera (antes quedaba en negro).
+  useEffect(() => {
+    if (cameraState !== "on") return;
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (!video || !stream) return;
+    video.srcObject = stream;
+    const playPromise = video.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        if (mountedRef.current) {
+          setCameraError(
+            "La cámara se abrió pero no se pudo reproducir. Probá de nuevo o subí una foto de tu selfie.",
+          );
+        }
+      });
+    }
+  }, [cameraState]);
+
   useEffect(() => {
     let active = true;
+    const supabase = createClient();
+
     async function load() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      const { data } = await supabase
-        .from("profiles")
-        .select(
-          "verification_status, full_name, phone, location, dni_number, dni_address, address_line, city, province, postal_code",
-        )
-        .eq("id", user.id)
-        .single();
-      if (active) {
-        setStatus(data?.verification_status ?? "pending");
-        setFullName(data?.full_name ?? "");
-        setPhone(data?.phone ?? "");
-        setLocation(data?.location ?? "");
-        setDniNumber(data?.dni_number ?? "");
-        setDniAddress(data?.dni_address ?? "");
-        setDeliveryAddress(data?.address_line ?? "");
-        setDeliveryCity(data?.city ?? "");
-        setDeliveryProvince(data?.province ?? "");
-        setDeliveryPostalCode(data?.postal_code ?? "");
-        setLoading(false);
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          if (active) setLoading(false);
+          return;
+        }
+        const { data } = await supabase
+          .from("profiles")
+          .select(
+            "verification_status, full_name, phone, location, dni_number, dni_address, address_line, city, province, postal_code",
+          )
+          .eq("id", user.id)
+          .single();
+        if (active) {
+          setStatus((data?.verification_status as VerificationStatus) ?? "pending");
+          setFullName(data?.full_name ?? "");
+          setPhone(data?.phone ?? "");
+          setLocation(data?.location ?? "");
+          setDniNumber(data?.dni_number ?? "");
+          setDniAddress(data?.dni_address ?? "");
+          setDeliveryAddress(data?.address_line ?? "");
+          setDeliveryCity(data?.city ?? "");
+          setDeliveryProvince(data?.province ?? "");
+          setDeliveryPostalCode(data?.postal_code ?? "");
+          setLoading(false);
+        }
+      } catch {
+        if (active) {
+          setError("No se pudieron cargar tus datos. Recargá la página.");
+          setLoading(false);
+        }
       }
     }
-    load();
+
+    void load();
     return () => {
       active = false;
-      streamRef.current?.getTracks().forEach((t) => t.stop());
     };
-  }, [supabase]);
+  }, []);
 
-  function onDniChange(e: ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0] ?? null;
-    setDniFile(f);
-    setDniPreview(f ? URL.createObjectURL(f) : null);
-  }
+  async function selectFile(
+    event: ChangeEvent<HTMLInputElement>,
+    label: string,
+    slot: "front" | "back" | "selfie",
+    onSelect: (file: File | null) => void,
+  ) {
+    const file = event.target.files?.[0] ?? null;
+    // Permite volver a elegir el mismo archivo después de un error.
+    event.target.value = "";
+    if (!file) return;
 
-  async function handleDni() {
-    if (!dniFile) return;
-    if (!dataComplete) {
-      setError(
-        "Completá y guardá tus datos personales antes de subir el DNI.",
-      );
+    const problem = validateImageFile(file, label);
+    if (problem) {
+      setError(problem);
       return;
     }
-    setDniBusy(true);
     setError(null);
-    setSuccess(null);
-    const fd = new FormData();
-    fd.append("dni", dniFile);
-    const res = await submitDni(fd);
-    if (!res.ok) setError(res.error ?? "Error al subir el DNI");
-    else {
-      setSuccess("DNI enviado. Quedó pendiente de revisión.");
-      setStatus("pending");
-      setDniFile(null);
-    }
-    setDniBusy(false);
-  }
-
-  async function startCamera() {
+    setPreparing(slot);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      setCameraOn(true);
-      setError(null);
+      const prepared = await prepareImageFile(file);
+      if (prepared.size > MAX_IMAGE_BYTES) {
+        setError(
+          `${label}: la imagen no se pudo reducir por debajo de 5 MB. Probá con otra foto.`,
+        );
+        return;
+      }
+      onSelect(prepared);
     } catch {
-      setError("No se pudo acceder a la cámara. Permití el acceso e intentá de nuevo.");
+      if (file.size <= MAX_IMAGE_BYTES) {
+        onSelect(file);
+      } else {
+        setError(
+          `${label}: no se pudo procesar la imagen. Probá con otra foto.`,
+        );
+      }
+    } finally {
+      if (mountedRef.current) setPreparing(null);
     }
   }
 
   function stopCamera() {
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
-    setCameraOn(false);
+    setCameraState("off");
   }
 
-  function captureSelfie() {
-    const video = videoRef.current;
-    if (!video || !video.videoWidth) return;
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.drawImage(video, 0, 0);
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const file = new File([blob], "selfie.jpg", { type: "image/jpeg" });
-      setSelfieFile(file);
-      setSelfiePreview(URL.createObjectURL(blob));
-      stopCamera();
-    }, "image/jpeg", 0.9);
-  }
+  async function startCamera() {
+    setError(null);
+    setCameraError(null);
 
-  async function handleSelfie() {
-    if (!selfieFile) return;
-    if (!dataComplete) {
-      setError(
-        "Completá y guardá tus datos personales antes del selfie.",
+    if (cameraState === "starting" || cameraState === "on") return;
+
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setCameraError(
+        "Este navegador no permite usar la cámara. Podés subir una foto de tu selfie con el botón de abajo.",
       );
       return;
     }
-    setSelfieBusy(true);
-    setError(null);
-    setSuccess(null);
-    const fd = new FormData();
-    fd.append("selfie", selfieFile);
-    const res = await submitSelfie(fd);
-    if (!res.ok) setError(res.error ?? "Error al subir el selfie");
-    else {
-      setSuccess("Selfie enviado. Quedó pendiente de revisión.");
-      setStatus("pending");
-      setSelfieFile(null);
+
+    setCameraState("starting");
+    let settled = false;
+    cameraTimeoutRef.current = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      cameraTimeoutRef.current = null;
+      if (mountedRef.current) {
+        setCameraState("off");
+        setCameraError(
+          "La cámara tardó demasiado en responder. Probá de nuevo o subí una foto de tu selfie.",
+        );
+      }
+    }, 20000);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      // Si el timeout ganó la carrera o el componente se desmontó mientras se
+      // esperaba el permiso, el stream llega tarde: hay que apagarlo igual.
+      if (settled || !mountedRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      settled = true;
+      if (cameraTimeoutRef.current !== null) {
+        window.clearTimeout(cameraTimeoutRef.current);
+        cameraTimeoutRef.current = null;
+      }
+      streamRef.current = stream;
+      setCameraState("on");
+    } catch (err) {
+      if (!settled) {
+        settled = true;
+        if (cameraTimeoutRef.current !== null) {
+          window.clearTimeout(cameraTimeoutRef.current);
+          cameraTimeoutRef.current = null;
+        }
+      }
+      if (mountedRef.current) {
+        setCameraState("off");
+        setCameraError(cameraErrorMessage(err));
+      }
     }
-    setSelfieBusy(false);
+  }
+
+  function captureSelfie() {
+    setCameraError(null);
+    const video = videoRef.current;
+    if (!video || video.readyState < 2 || video.videoWidth === 0) {
+      setCameraError(
+        "La cámara todavía no está lista. Esperá un segundo y volvé a intentar.",
+      );
+      return;
+    }
+
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        setCameraError(
+          "No se pudo procesar la imagen de la cámara. Subí una foto de tu selfie.",
+        );
+        return;
+      }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            setCameraError(
+              "No se pudo capturar la selfie. Volvé a intentar o subí una foto.",
+            );
+            return;
+          }
+          const file = new File([blob], "selfie.jpg", { type: "image/jpeg" });
+          if (!mountedRef.current) return;
+          setSelfieFile(file);
+          stopCamera();
+        },
+        "image/jpeg",
+        0.9,
+      );
+    } catch {
+      setCameraError(
+        "No se pudo capturar la selfie. Volvé a intentar o subí una foto de tu selfie.",
+      );
+    }
   }
 
   const dataComplete =
@@ -208,34 +489,106 @@ export default function VerificacionPage() {
       dniAddress,
     );
 
+  const docsReady = Boolean(dniFrontFile && dniBackFile && selfieFile);
+
   async function saveData() {
     setDataBusy(true);
     setError(null);
     setSuccess(null);
 
-    const result = await saveKycData({
-      full_name: fullName,
-      phone,
-      location,
-      dni_number: dniNumber,
-      dni_address: dniAddress,
-    });
+    try {
+      const result = await saveKycData({
+        full_name: fullName,
+        phone,
+        location,
+        dni_number: dniNumber,
+        dni_address: dniAddress,
+      });
 
-    setDataBusy(false);
+      if (!result.ok) {
+        setError(result.error ?? "No se pudieron guardar los datos");
+        return;
+      }
+      setSuccess("Datos personales guardados.");
+    } catch {
+      setError(
+        "No se pudieron guardar los datos (¿sin conexión?). Probá de nuevo.",
+      );
+    } finally {
+      setDataBusy(false);
+    }
+  }
 
-    if (!result.ok) {
-      setError(result.error ?? "No se pudieron guardar los datos");
+  async function handleSubmit() {
+    setError(null);
+    setSuccess(null);
+
+    if (!dataComplete) {
+      setError(
+        "Completá y guardá tus datos personales antes de enviar la solicitud.",
+      );
+      return;
+    }
+    if (!dniFrontFile || !dniBackFile || !selfieFile) {
+      setError(
+        "Para enviar la solicitud necesitás el frente del DNI, el dorso del DNI y la selfie.",
+      );
       return;
     }
 
-    setSuccess("Datos personales guardados.");
+    setSubmitting(true);
+    try {
+      // Se guardan los datos personales antes de enviar: si el usuario editó
+      // campos sin tocar "Guardar datos", el servidor (que relee el perfil)
+      // no rechaza el KYC por datos viejos.
+      const saved = await saveKycData({
+        full_name: fullName,
+        phone,
+        location,
+        dni_number: dniNumber,
+        dni_address: dniAddress,
+      });
+      if (!saved.ok) {
+        setError(
+          saved.error ??
+            "No se pudieron guardar tus datos personales antes de enviar.",
+        );
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append("dni_front", dniFrontFile);
+      fd.append("dni_back", dniBackFile);
+      fd.append("selfie", selfieFile);
+
+      const result = await submitKyc(fd);
+      if (!result.ok) {
+        setError(result.error ?? "No se pudo enviar la solicitud.");
+        return;
+      }
+
+      setStatus("pending");
+      setSuccess(
+        "Solicitud enviada, pendiente de revisión. El superadmin revisará las tres imágenes.",
+      );
+      setDniFrontFile(null);
+      setDniBackFile(null);
+      setSelfieFile(null);
+      stopCamera();
+    } catch {
+      setError(
+        "No se pudo completar el envío (¿sin conexión?). Tu selección sigue cargada: probá de nuevo.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const banner =
     status === "approved"
       ? {
           icon: CheckCircle2,
-          text: "Identidad verificada.",
+          text: "Identidad verificada. Ya podés publicar sorteos.",
           cls: "text-emerald-700 dark:text-emerald-400",
         }
       : status === "rejected"
@@ -246,7 +599,7 @@ export default function VerificacionPage() {
           }
         : {
             icon: Clock,
-            text: "Pendiente de revisión por el superadmin.",
+            text: "Pendiente de revisión. Si todavía no enviaste las tres imágenes, completá los pasos y enviá la solicitud.",
             cls: "text-amber-800 dark:text-amber-300",
           };
 
@@ -261,8 +614,8 @@ export default function VerificacionPage() {
           Verificación de identidad
         </h1>
         <p className="text-sm text-muted-foreground">
-          Es obligatoria para publicar sorteos. Completá tus datos y subí el
-          frente del DNI y una selfie.
+          Es obligatoria para publicar sorteos. Necesitás tres imágenes
+          independientes: frente del DNI, dorso del DNI y selfie.
         </p>
       </header>
 
@@ -379,61 +732,131 @@ export default function VerificacionPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* DNI */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* 1. Frente del DNI */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">1. Frente del DNI</CardTitle>
+            <CardTitle className="flex items-center justify-between gap-2 text-lg">
+              <span>1. Frente del DNI</span>
+              {dniFrontPreview && (
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {dniPreview ? (
+            <input
+              type="file"
+              accept={ACCEPT_ATTR}
+              className="hidden"
+              id="kyc-dni-front"
+              onChange={(event) =>
+                void selectFile(
+                  event,
+                  "Frente del DNI",
+                  "front",
+                  setDniFrontFile,
+                )
+              }
+            />
+            {dniFrontPreview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={dniPreview}
+                src={dniFrontPreview}
                 alt="Frente del DNI"
                 className="aspect-[16/10] w-full rounded-lg border object-cover"
               />
             ) : (
-              <div className="flex aspect-[16/10] w-full items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
+              <div className="flex aspect-[16/10] w-full items-center justify-center rounded-lg border border-dashed px-3 text-center text-sm text-muted-foreground">
                 Sin imagen
               </div>
             )}
-            <input
-              ref={dniInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={onDniChange}
-            />
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => dniInputRef.current?.click()}
-              >
-                <UploadCloud className="mr-1.5 h-4 w-4" />
-                {dniPreview ? "Cambiar" : "Subir foto"}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleDni}
-                disabled={!dniFile || dniBusy || !dataComplete}
-              >
-                {dniBusy ? "Enviando…" : "Enviar DNI"}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              disabled={submitting || preparing !== null}
+              onClick={() =>
+                document.getElementById("kyc-dni-front")?.click()
+              }
+            >
+              <UploadCloud className="mr-1.5 h-4 w-4" />
+              {preparing === "front"
+                ? "Procesando…"
+                : dniFrontPreview
+                  ? "Cambiar frente"
+                  : "Subir frente"}
+            </Button>
           </CardContent>
         </Card>
 
-        {/* Selfie */}
+        {/* 2. Dorso del DNI */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">2. Selfie en vivo</CardTitle>
+            <CardTitle className="flex items-center justify-between gap-2 text-lg">
+              <span>2. Dorso del DNI</span>
+              {dniBackPreview && (
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {cameraOn ? (
+            <input
+              type="file"
+              accept={ACCEPT_ATTR}
+              className="hidden"
+              id="kyc-dni-back"
+              onChange={(event) =>
+                void selectFile(
+                  event,
+                  "Dorso del DNI",
+                  "back",
+                  setDniBackFile,
+                )
+              }
+            />
+            {dniBackPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={dniBackPreview}
+                alt="Dorso del DNI"
+                className="aspect-[16/10] w-full rounded-lg border object-cover"
+              />
+            ) : (
+              <div className="flex aspect-[16/10] w-full items-center justify-center rounded-lg border border-dashed px-3 text-center text-sm text-muted-foreground">
+                Sin imagen
+              </div>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              disabled={submitting || preparing !== null}
+              onClick={() => document.getElementById("kyc-dni-back")?.click()}
+            >
+              <UploadCloud className="mr-1.5 h-4 w-4" />
+              {preparing === "back"
+                ? "Procesando…"
+                : dniBackPreview
+                  ? "Cambiar dorso"
+                  : "Subir dorso"}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* 3. Selfie */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between gap-2 text-lg">
+              <span>3. Selfie en vivo</span>
+              {selfiePreview && (
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {cameraState === "on" ? (
               <>
                 <video
                   ref={videoRef}
@@ -466,34 +889,111 @@ export default function VerificacionPage() {
                     className="aspect-[16/10] w-full rounded-lg border object-cover"
                   />
                 ) : (
-                  <div className="flex aspect-[16/10] w-full items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
-                    Sin imagen
+                  <div className="flex aspect-[16/10] w-full items-center justify-center rounded-lg border border-dashed px-3 text-center text-sm text-muted-foreground">
+                    {cameraState === "starting" ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Conectando cámara…
+                      </span>
+                    ) : (
+                      "Sin imagen"
+                    )}
                   </div>
                 )}
+                <input
+                  type="file"
+                  accept={ACCEPT_ATTR}
+                  className="hidden"
+                  id="kyc-selfie-file"
+                  onChange={(event) =>
+                    void selectFile(event, "Selfie", "selfie", setSelfieFile)
+                  }
+                />
                 <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={startCamera}
+                    disabled={submitting || cameraState === "starting"}
+                    onClick={() => void startCamera()}
                   >
-                    <Camera className="mr-1.5 h-4 w-4" />
+                    {cameraState === "starting" ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Camera className="mr-1.5 h-4 w-4" />
+                    )}
                     {selfiePreview ? "Volver a capturar" : "Abrir cámara"}
                   </Button>
                   <Button
                     type="button"
+                    variant="secondary"
                     size="sm"
-                    onClick={handleSelfie}
-                    disabled={!selfieFile || selfieBusy || !dataComplete}
+                    disabled={submitting || preparing !== null}
+                    onClick={() =>
+                      document.getElementById("kyc-selfie-file")?.click()
+                    }
                   >
-                    {selfieBusy ? "Enviando…" : "Enviar selfie"}
+                    <ImagePlus className="mr-1.5 h-4 w-4" />
+                    {preparing === "selfie" ? "Procesando…" : "Subir foto"}
                   </Button>
                 </div>
               </>
             )}
+            {cameraError && (
+              <p className="text-xs text-amber-800 dark:text-amber-300">
+                {cameraError}
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardContent className="space-y-3 p-4">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <span>
+              Frente: {dniFrontFile ? "listo ✓" : "falta"}
+            </span>
+            <span>Dorso: {dniBackFile ? "listo ✓" : "falta"}</span>
+            <span>Selfie: {selfieFile ? "listo ✓" : "falta"}</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              onClick={() => void handleSubmit()}
+              disabled={
+                submitting ||
+                preparing !== null ||
+                !docsReady ||
+                !dataComplete ||
+                status === "approved"
+              }
+            >
+              {submitting ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              ) : (
+                <UploadCloud className="mr-1.5 h-4 w-4" />
+              )}
+              {submitting ? "Enviando…" : "Enviar solicitud de verificación"}
+            </Button>
+            {preparing !== null && (
+              <p className="text-xs text-muted-foreground">
+                Procesando y optimizando la imagen…
+              </p>
+            )}
+            {!docsReady && (
+              <p className="text-xs text-muted-foreground">
+                Las tres imágenes son obligatorias para enviar.
+              </p>
+            )}
+            {status === "approved" && (
+              <p className="text-xs text-muted-foreground">
+                Tu identidad ya está verificada.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {error && (
         <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
