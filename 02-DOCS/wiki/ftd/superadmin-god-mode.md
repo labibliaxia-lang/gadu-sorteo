@@ -290,9 +290,10 @@ correcciones posteriores movieron líneas dentro de `app/admin/super/actions.ts`
 ## Next
 
 El feature está cerrado: `0064` y `0065` aplicadas en la base (ledger de 38 filas) y los bloques 3, 4,
-5, 6, 7, 8 y 9 del [smoke test](superadmin-god-mode-smoke-test.md) verificados contra un build de
-producción (evidencia 17). Quedan como verificación opcional, no bloqueante, el bloque 10 (regresión
-responsive), los rechazos de impersonación y las acciones de pausar/eliminar denuncias. Después:
-evaluar un token de sesión firmado para `/api/track-visit` si las métricas de tráfico van a guiar
-decisiones de negocio, y revisar si conviene sumar al endpoint una deduplicación por sesión (hoy el
-sessionStorage del navegador evita repetir la visita, pero un cliente propio puede ignorarlo).
+5, 6, 7, 8, 9 y 10 del [smoke test](superadmin-god-mode-smoke-test.md) verificados contra un build de
+producción (evidencia 17). Quedan como verificación opcional, no bloqueante, los rechazos de
+impersonación por UI, las acciones de pausar/eliminar denuncias, la paginación con más de una página y
+generar/revocar un código de licencia real. Después: evaluar un token de sesión firmado para
+`/api/track-visit` si las métricas de tráfico van a guiar decisiones de negocio, y revisar si conviene
+sumar al endpoint una deduplicación por sesión (hoy el sessionStorage del navegador evita repetir la
+visita, pero un cliente propio puede ignorarlo).

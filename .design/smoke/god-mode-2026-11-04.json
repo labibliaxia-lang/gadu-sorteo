@@ -64,12 +64,23 @@
         "Segundo intento sobre el mismo sorteo devuelve «Ya denunciaste este sorteo.» (UNIQUE).",
         "En un sorteo cerrado el botón no aparece."
       ]
+    },
+    "10_regresion_responsive": {
+      "resultado": "OK",
+      "evidencia": [
+        "Usuarios: la búsqueda filtra en servidor («Mostrando 1–1 de 1 usuarios»), el rol se cambia desde el select y queda auditado (CHANGE_ROLE con admin y target correctos).",
+        "Dashboard: panel de precios de planes con Guardar, panel de licencias con «Generar código», «Anular» y «Quitar beneficio», y sección de solicitudes de rol.",
+        "Pestaña Sorteos: el link público abre 200 y el link de admin abre 200.",
+        "KYC: /admin/verificacion carga con su cola y 4 imágenes.",
+        "Móvil 375: home y detalle con scrollWidth=375 y 0 nodos fuera. Admin sorteos también da scrollWidth=375; los 24 nodos que exceden el viewport viven dentro de scrollers horizontales intencionales (tabs) con overflow-x-auto."
+      ]
     }
   },
   "dependencias": "El árbol de trabajo tenía @supabase/supabase-js 2.118.0 con @supabase/ssr 0.5.2, y eso rompía el render público (home sin sorteos, detalle y verificar 404). Con @supabase/ssr 0.12.7 el build pasa y las tres rutas vuelven a 200. La verificación de los bloques 3/4/7 se hizo en una copia aislada construida con ese fix.",
   "no_cubierto": [
     "Rechazos de impersonación por UI: otro superadmin, cuenta suspendida, email sin confirmar (las reglas están cubiertas por unit tests de canImpersonateTarget).",
     "Pausar sorteo denunciado y eliminar denuncia desde la UI (solo se probó Resolver).",
-    "Bloque 10 (regresión responsive general): no se ejecutó en esta pasada."
+    "Paginación con más de una página: el listado tenía 12 usuarios (una sola página), así que los botones se vieron deshabilitados pero no se navegó entre páginas.",
+    "Generar y revocar un código de licencia real: se verificó que el panel y sus botones están, no se creó un código."
   ]
 }

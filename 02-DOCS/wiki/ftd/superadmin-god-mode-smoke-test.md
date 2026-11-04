@@ -1,15 +1,15 @@
 ---
 author: Gadu
 branch: main
-status: in-progress
+status: done
 ---
 # Smoke test — Superadmin God Mode
 
 Checklist manual para probar contra Supabase real lo que no se puede probar en el repo: migración
 0064, tráfico, dashboard, Modo Editor, denuncias y auditoría.
 
-**Resultado 2026-11-04 (completo salvo bloque 10, automatizado).** Los bloques **3, 4, 5, 6, 7, 8 y 9**
-se ejecutaron contra un build de producción, con usuarios QA temporales y borrados al final:
+**Resultado 2026-11-04 (completo, automatizado).** Los bloques **3 a 10** se ejecutaron contra un build
+de producción, con usuarios QA temporales y borrados al final:
 
 - **5 · Impersonación:** entrar, banner, panel bloqueado como target, salir; `IMPERSONATE_USER` e
   `IMPERSONATE_END` con admin y target correctos.
@@ -22,15 +22,18 @@ se ejecutaron contra un build de producción, con usuarios QA temporales y borra
   fuera de `/admin/super`.
 - **7 · Denuncia del usuario:** el usuario denuncia desde el modal, nace `pending`, el duplicado
   responde «Ya denunciaste este sorteo.» y en un sorteo cerrado el botón no aparece.
+- **10 · Regresión y responsive:** búsqueda en servidor, cambio de rol auditado, paneles de precios y
+  licencias, solicitudes de rol, links de sorteos (200 público y admin), `/admin/verificacion` con su
+  cola e imágenes, y 375 px sin scroll horizontal de página (los scrollers de tabs son internos).
 
 Evidencia: [`../../.design/smoke/god-mode-2026-11-04.json`](../../../.design/smoke/god-mode-2026-11-04.json).
-Quedan como opcionales el **bloque 10 (regresión responsive)**, los rechazos de impersonación por UI y
-las acciones de pausar/eliminar denuncia.
+Sin ejecutar por ser opcionales: los rechazos de impersonación por UI, pausar/eliminar denuncia, la
+paginación con más de una página y generar/revocar un código de licencia real.
 
 **Nota de entorno (2026-11-04).** El árbol de trabajo tenía `@supabase/supabase-js` 2.118.0 con
 `@supabase/ssr` 0.5.2: eso rompía el render público (home sin sorteos, `/sorteos/[id]` y `/verificar`
-en 404). Con `@supabase/ssr` 0.12.7 el build pasa y los bloques 3/4/7 se ejecutaron en una copia
-aislada construida con ese fix. El desfase de dependencias pertenece a la actualización de
+en 404). Con `@supabase/ssr` 0.12.7 el build pasa y los bloques 3, 4, 7 y 10 se ejecutaron en una
+copia aislada construida con ese fix. El desfase de dependencias pertenece a la actualización de
 MFA/passkeys en curso; `main` seguía sano porque el código commiteado no usa todavía el SDK nuevo.
 
 **Tiempo estimado:** 30–45 minutos.
