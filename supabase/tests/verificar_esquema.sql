@@ -206,4 +206,51 @@ from (
         and coalesce(with_check, '') ilike '%raffles%'
     ) then 'OK      visitas: sólo se aceptan de sorteos activos (0027)'
     else 'AVISO   política de visitas sin restringir: cualquiera puede inflar el contador (aplicá 0027)' end
+
+  -- ------------------------------------------------------------------
+  -- 12) Tráfico de páginas y su lectura (0064)
+  -- ------------------------------------------------------------------
+  union all
+  select 18, case
+    when to_regclass('public.page_views') is null
+      then 'FALTA   tabla page_views (0064)'
+    when not (select c.relrowsecurity from pg_class c
+              where c.oid = to_regclass('public.page_views'))
+      then 'CRÍTICO page_views sin RLS: cualquiera con grants puede leer el tráfico'
+    when exists (
+      select 1 from pg_policies
+      where schemaname = 'public' and tablename = 'page_views' and cmd = 'INSERT'
+    ) then 'AVISO   page_views con policy de INSERT: el tráfico se puede inflar desde el cliente (0064)'
+    when to_regprocedure('public.superadmin_daily_metrics(integer)') is null
+      then 'FALTA   función superadmin_daily_metrics(integer) (0064)'
+    else 'OK      page_views con RLS, sin INSERT público y RPC superadmin_daily_metrics (0064)' end
+
+  -- ------------------------------------------------------------------
+  -- 13) Denuncias de sorteos y alias de auditoría (0064)
+  -- ------------------------------------------------------------------
+  union all
+  select 19, case
+    when to_regclass('public.raffle_reports') is null
+      then 'FALTA   tabla raffle_reports (0064)'
+    when not (select c.relrowsecurity from pg_class c
+              where c.oid = to_regclass('public.raffle_reports'))
+      then 'CRÍTICO raffle_reports sin RLS: cualquier usuario podría leer denuncias ajenas'
+    when not exists (
+      select 1 from pg_indexes
+      where schemaname = 'public' and tablename = 'raffle_reports'
+        and indexdef ilike '%unique%' and indexdef ilike '%(raffle_id, reporter_id)%'
+    ) then 'CRÍTICO raffle_reports sin UNIQUE (raffle_id, reporter_id): se puede denunciar dos veces'
+    when exists (
+      select 1 from pg_policies
+      where schemaname = 'public' and tablename = 'raffle_reports' and cmd = 'INSERT'
+        and coalesce(with_check, '') not ilike '%status%'
+    ) then 'AVISO   denuncias: la policy no fija status/fechas; un cliente podría auto-ocultar su denuncia'
+    else 'OK      raffle_reports con RLS, una denuncia por usuario/sorteo y estado fijado en el servidor (0064)' end
+
+  union all
+  select 20, case when to_regclass('public.audit_logs') is null
+      then 'AVISO   falta la vista audit_logs (0064): es el alias de lectura de admin_audit_logs'
+    when to_regclass('public.admin_audit_logs') is null
+      then 'CRÍTICO falta la tabla admin_audit_logs (0012): no hay auditoría'
+    else 'OK      auditoría: admin_audit_logs + vista audit_logs (0064)' end
 ) checks;

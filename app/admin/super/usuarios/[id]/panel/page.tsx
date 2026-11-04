@@ -174,7 +174,7 @@ export default async function SupportPanelPage({
             ].map((stat) => (
               <Card key={stat.label}>
                 <CardContent className="flex items-center gap-3 p-4">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-ink">
                     <stat.icon className="h-5 w-5" />
                   </span>
                   <div>

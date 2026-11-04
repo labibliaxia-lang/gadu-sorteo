@@ -422,7 +422,7 @@ export default async function SuperUserSupportPage({
                     <span className="space-x-3 text-xs">
                       <Link
                         href={`/sorteos/${raffle.id}`}
-                        className="text-brand-700 hover:underline dark:text-brand-300"
+                        className="text-brand-800 hover:underline dark:text-brand-300"
                       >
                         Público
                       </Link>

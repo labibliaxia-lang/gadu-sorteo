@@ -3,11 +3,13 @@ import { IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
 
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 import { ProfileCompletionGate } from "@/components/ProfileCompletionGate";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { TermsGate } from "@/components/TermsGate";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { createClient } from "@/lib/supabase/server";
+import { readImpersonationOrigin } from "@/lib/impersonation-server";
 import { TERMS_VERSION } from "@/lib/terms";
 import "./globals.css";
 
@@ -148,6 +150,18 @@ export default async function RootLayout({
       }
     : null;
 
+  // Modo Editor: con la sesión del usuario impersonado, /admin/super deja de
+  // ser accesible, así que este banner global es la única salida y tiene que
+  // aparecer en todas las páginas. Si la lectura falla, la app sigue igual.
+  let impersonation: Awaited<
+    ReturnType<typeof readImpersonationOrigin>
+  > = null;
+  try {
+    impersonation = await readImpersonationOrigin();
+  } catch {
+    impersonation = null;
+  }
+
   return (
     <html
       lang="es"
@@ -175,8 +189,14 @@ export default async function RootLayout({
                 acceptedVersion={acceptedTermsVersion}
               />
             ))}
+          {impersonation && (
+            <ImpersonationBanner
+              targetName={impersonation.targetName}
+              adminEmail={impersonation.adminEmail}
+            />
+          )}
           <Navbar initialUser={initialUser} />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
             {children}
           </main>
           <Footer />

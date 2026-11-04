@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { CalendarDays, ShieldCheck, Star, Ticket, Trophy } from "lucide-react";
+import { CalendarDays, Gift, ShieldCheck, Star, Ticket, Trophy } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { parseLandingContent } from "@/lib/landing";
@@ -16,10 +16,12 @@ import { DrawVerifier } from "@/components/DrawVerifier";
 import { NumbersGrid } from "@/components/NumbersGrid";
 import { OrganizerCard } from "@/components/OrganizerCard";
 import { OrganizerContact } from "@/components/OrganizerContact";
+import { PageViewTracker } from "@/components/PageViewTracker";
 import { PrizeCard } from "@/components/PrizeCard";
 import { RaffleLanding } from "@/components/RaffleLanding";
 import { RaffleQnA } from "@/components/RaffleQnA";
 import { RaffleVisitTracker } from "@/components/RaffleVisitTracker";
+import { ReportRaffleButton } from "@/components/ReportRaffleButton";
 import { ShareButton } from "@/components/ShareButton";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import type { Prize, PublicOrganizer, Raffle, RaffleWinner } from "@/lib/types";
@@ -30,6 +32,7 @@ const statusLabel: Record<Raffle["status"], string> = {
   active: "Activo",
   closed: "Cerrado",
   drawn: "Sorteado",
+  cancelled: "Cancelado",
 };
 
 /**
@@ -290,24 +293,25 @@ export default async function RafflePage({
   const raffleWinners = (winnerRows ?? []) as RaffleWinner[];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <RaffleVisitTracker raffleId={raffle.id} />
-      <section className="grid gap-6 md:grid-cols-2">
-        <div className="relative aspect-video w-full overflow-hidden rounded-2xl border bg-muted shadow-soft">
+      <PageViewTracker path={`/sorteos/${raffle.id}`} />
+      <section className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
+        <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-hairline bg-panel-2">
           {raffle.cover_image_url ? (
             <Image
               src={raffle.cover_image_url}
               alt={raffle.title}
               fill
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-6xl">
-              🛠️
+            <div className="flex h-full flex-col items-center justify-center gap-2">
+              <Gift className="h-7 w-7 text-fg-subtle" aria-hidden="true" />
+              <span className="eyebrow">Premio en juego</span>
             </div>
           )}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink/80 to-transparent" />
           <div className="absolute left-3 top-3 flex flex-wrap gap-2">
             <Badge
               variant={
@@ -320,22 +324,20 @@ export default async function RafflePage({
             >
               {statusLabel[raffle.status as Raffle["status"]]}
             </Badge>
-            <Badge className="border-transparent bg-ink/80 text-white">
+            <Badge variant="secondary" className="bg-canvas/85 ring-1 ring-hairline">
               {raffle.auto_draw ? "Automático" : "Manual"}
             </Badge>
           </div>
-          <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-ink/70 px-2.5 py-1 text-xs font-medium text-white/80">
-            <ShieldCheck className="h-3.5 w-3.5" />
+          <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md bg-canvas/85 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.08em] text-fg-muted ring-1 ring-hairline">
+            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
             Resultado verificable
           </span>
         </div>
 
-        <div className="space-y-4">
-          <p className="font-mono text-xs uppercase tracking-widest text-brand-700 dark:text-brand-300">
-            Sorteo verificable
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+        <div className="space-y-5">
+          <p className="eyebrow-gold">Sorteo verificable</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.025em] sm:text-4xl">
               {raffle.title}
             </h1>
             <Badge variant="secondary">
@@ -343,35 +345,50 @@ export default async function RafflePage({
             </Badge>
           </div>
           <ShareButton sorteoId={raffle.id} titulo={raffle.title} />
+          {raffle.status === "active" && viewer?.id !== raffle.created_by && (
+            <ReportRaffleButton raffleId={raffle.id} isLoggedIn={Boolean(viewer)} />
+          )}
           {raffle.description && (
-            <p className="max-w-xl text-muted-foreground">
+            <p className="max-w-xl text-[15px] leading-relaxed text-fg-subtle">
               {raffle.description}
             </p>
           )}
 
-          <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card p-3 text-sm shadow-soft">
+          {raffle.status === "cancelled" && (
+            <div className="max-w-xl rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
+              <p className="font-semibold">Sorteo cancelado</p>
+              <p className="mt-1 text-muted-foreground">
+                {raffle.cancellation_reason ||
+                  "El organizador canceló este sorteo."}{" "}
+                Si compraste números, contactá al organizador para coordinar la
+                devolución.
+              </p>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-5 rounded-lg border border-hairline bg-panel-1 p-4 text-[13px]">
             <span className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <CalendarDays className="h-4 w-4 text-fg-subtle" aria-hidden="true" />
               <span>
-                <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
+                <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
                   Fecha del sorteo
                 </span>
                 {formatDateTime(raffle.draw_date)}
               </span>
             </span>
-            <span className="hidden h-8 w-px bg-border sm:block" />
+            <span className="hidden h-9 w-px bg-hairline sm:block" />
             <span>
-              <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
+              <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
                 Precio por número
               </span>
-              <span className="font-display text-xl font-bold">
+              <span className="font-mono text-xl text-fg">
                 {formatPrice(Number(raffle.price_per_number))}
               </span>
             </span>
           </div>
 
-          {raffle.status !== "drawn" && (
-            <p className="max-w-xl rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
+          {(raffle.status === "active" || raffle.status === "closed") && (
+            <p className="max-w-xl rounded-lg border border-hairline bg-panel-1/60 p-3 text-[13px] leading-relaxed text-fg-subtle">
               {raffle.auto_draw
                 ? "Sorteo automático: se ejecuta solo a la fecha y hora programadas; el resultado se publica al confirmarse."
                 : "Sorteo manual: el organizador lo ejecuta a la fecha y hora programadas; el resultado se publica al confirmarse."}
@@ -379,16 +396,14 @@ export default async function RafflePage({
           )}
 
           {numbersTotal && numbersTotal > 0 && (
-            <div className="max-w-xl space-y-1.5">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="max-w-xl space-y-2">
+              <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.06em] text-fg-subtle">
                 <span>
                   {soldTotal ?? 0} de {numbersTotal} números vendidos
                 </span>
-                <span className="font-mono font-semibold text-foreground">
-                  {soldPercent}%
-                </span>
+                <span className="text-fg">{soldPercent}%</span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div className="h-1 overflow-hidden rounded-full bg-panel-3">
                 <div
                   className="h-full rounded-full bg-brand-500"
                   style={{ width: `${soldPercent}%` }}
@@ -450,20 +465,20 @@ export default async function RafflePage({
             )}
             <Link
               href={`/sorteos/${raffle.id}/en-vivo`}
-              className="inline-flex h-11 items-center rounded-lg border border-border bg-background px-5 text-sm font-semibold text-foreground transition hover:bg-accent"
+              className="btn-ghost-strong"
             >
               Sala en vivo
             </Link>
           </div>
 
           {raffle.status === "drawn" && raffle.winner_number != null && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-500/30 bg-brand-500/5 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-brand-500/25 bg-brand-500/[0.06] p-4">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500/15 text-brand-700 dark:text-brand-300">
+                <span className="flex h-10 w-10 items-center justify-center rounded-md bg-brand-500/10 text-brand-accent ring-1 ring-brand-500/20">
                   <Trophy className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
                     Ganador
                   </p>
                   <p className="font-semibold">
@@ -472,10 +487,10 @@ export default async function RafflePage({
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
                   Número
                 </p>
-                <p className="font-mono text-2xl font-bold text-brand-700 dark:text-brand-300">
+                <p className="font-mono text-2xl font-medium text-brand-accent">
                   {raffle.winner_number}
                 </p>
               </div>
@@ -516,13 +531,13 @@ export default async function RafflePage({
       </section>
 
       {raffleWinners.length > 1 && (
-        <section className="space-y-4 rounded-xl border bg-card p-5 shadow-soft">
+        <section className="space-y-4 rounded-xl border border-hairline bg-panel-1 p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="font-display text-xl font-semibold">
                 Ganadores por premio
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-[13px] text-fg-subtle">
                 Resultado publicado automáticamente y congelado. Cada premio
                 conserva su hash.
               </p>
@@ -539,11 +554,11 @@ export default async function RafflePage({
             {raffleWinners.map((winner) => (
               <div
                 key={winner.position}
-                className="rounded-xl border border-brand-500/30 bg-brand-500/5 p-4"
+                className="rounded-lg border border-brand-500/25 bg-brand-500/[0.06] p-4"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
                       {winner.position === 1
                         ? "1.er premio"
                         : `${winner.position}º premio`}
@@ -551,15 +566,15 @@ export default async function RafflePage({
                     <p className="truncate font-semibold">
                       {winner.prize_title ?? "Premio"}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-[13px] text-fg-subtle">
                       {winner.user_name ?? "Ganador anónimo"}
                     </p>
                   </div>
-                  <p className="font-mono text-2xl font-bold text-brand-800 dark:text-brand-200">
+                  <p className="font-mono text-2xl font-medium text-brand-accent">
                     {String(winner.number).padStart(4, "0")}
                   </p>
                 </div>
-                <p className="mt-2 break-all font-mono text-[10px] text-muted-foreground">
+                <p className="mt-2 break-all font-mono text-[11px] text-muted-foreground">
                   {winner.winner_hash}
                 </p>
               </div>
@@ -576,7 +591,7 @@ export default async function RafflePage({
       )}
 
       {raffle.status !== "drawn" && raffle.draw_commitment && (
-        <section className="space-y-3 rounded-xl border bg-muted/30 p-5">
+        <section className="space-y-3 rounded-lg border border-hairline bg-panel-1/60 p-5">
           <h2 className="text-lg font-semibold">
             Compromiso del sorteo publicado
           </h2>
@@ -589,7 +604,7 @@ export default async function RafflePage({
           </p>
           <div className="space-y-1 text-xs">
             <p className="font-medium">Compromiso (hash de la semilla)</p>
-            <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+            <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
               {raffle.draw_commitment}
             </code>
             {raffle.draw_commitment_at && (
@@ -604,9 +619,9 @@ export default async function RafflePage({
       {raffle.status === "drawn" &&
         raffle.numbers_hash &&
         raffle.result_hash && (
-          <section className="space-y-4 rounded-xl border bg-card p-5 shadow-sm">
+          <section className="space-y-4 rounded-xl border border-hairline bg-panel-1 p-5">
             <div className="space-y-1">
-              <h2 className="text-lg font-semibold">
+              <h2 className="font-display text-xl font-semibold">
                 Huellas del sorteo (verificable)
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -630,7 +645,7 @@ export default async function RafflePage({
                 <p className="font-medium">
                   Huella del listado vendido (<code>numbers_hash</code>)
                 </p>
-                <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.numbers_hash}
                 </code>
               </div>
@@ -638,7 +653,7 @@ export default async function RafflePage({
                 <p className="font-medium">
                   Huella del resultado (<code>result_hash</code>)
                 </p>
-                <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.result_hash}
                 </code>
               </div>
@@ -648,7 +663,7 @@ export default async function RafflePage({
                     Compromiso publicado antes del sorteo{" "}
                     (<code>draw_commitment</code>)
                   </p>
-                  <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                  <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                     {raffle.draw_commitment}
                   </code>
                 </div>
@@ -658,7 +673,7 @@ export default async function RafflePage({
                   <p className="font-medium">
                     Semilla revelada (<code>draw_seed</code>)
                   </p>
-                  <code className="block break-all rounded-md bg-muted/60 p-3 font-mono">
+                  <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                     {raffle.draw_seed}
                   </code>
                   {raffle.draw_seed_revealed_at && (
@@ -743,22 +758,24 @@ export default async function RafflePage({
       {raffle.status === "active" && (
         <section id="elegir-numeros" className="scroll-mt-24 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-xl font-semibold">Elegí tus números</h2>
+            <h2 className="font-display text-2xl font-semibold tracking-tight">
+              Elegí tus números
+            </h2>
             {isDev && (
               <span className="rounded-full bg-yellow-500/20 px-3 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-300">
                 Modo simulación de pagos activo
               </span>
             )}
           </div>
-          <div className="grid gap-2 rounded-xl border bg-card p-3 text-sm shadow-soft sm:grid-cols-3">
+          <div className="grid gap-2 rounded-lg border border-hairline bg-panel-1 p-3 text-[13px] sm:grid-cols-3">
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-500 text-xs font-bold text-ink">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary font-mono text-[11px] font-medium text-primary-foreground">
                 1
               </span>
               Elegí tus números
             </div>
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-panel-3 font-mono text-[11px] font-medium text-fg-subtle">
                 2
               </span>
               {raffle.payment_type === "transferencia"
@@ -766,7 +783,7 @@ export default async function RafflePage({
                 : "Pagá online"}
             </div>
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-panel-3 font-mono text-[11px] font-medium text-fg-subtle">
                 3
               </span>
               {raffle.payment_type === "transferencia"
@@ -774,36 +791,6 @@ export default async function RafflePage({
                 : "Confirmá el pago"}
             </div>
           </div>
-          {raffle.payment_type === "transferencia" && (
-            <div className="rounded-xl border bg-muted/40 p-4">
-              <p className="text-sm font-semibold">Datos para transferencia</p>
-              <div className="mt-2 grid gap-3 text-sm sm:grid-cols-3">
-                {raffle.transfer_alias && (
-                  <div>
-                    <p className="text-muted-foreground">Alias</p>
-                    <p className="font-mono font-semibold">
-                      {raffle.transfer_alias}
-                    </p>
-                  </div>
-                )}
-                {raffle.transfer_cbu && (
-                  <div>
-                    <p className="text-muted-foreground">CBU</p>
-                    <p className="font-mono font-semibold">
-                      {raffle.transfer_cbu}
-                    </p>
-                  </div>
-                )}
-                {raffle.transfer_bank && (
-                  <div>
-                    <p className="text-muted-foreground">Banco</p>
-                    <p className="font-semibold">{raffle.transfer_bank}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           <NumbersGrid
             raffleId={raffle.id}
             raffleTitle={raffle.title}
@@ -819,11 +806,51 @@ export default async function RafflePage({
               whatsapp: raffle.whatsapp_contact || null,
             }}
           />
+
+          {raffle.payment_type === "transferencia" && (
+            <div className="rounded-lg border border-hairline bg-panel-1/60 p-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-subtle">
+                Datos para transferir cuando reserves
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {raffle.transfer_alias && (
+                  <div>
+                    <p className="font-mono text-[11px] text-fg-subtle">Alias</p>
+                    <p className="font-mono text-[13px] font-medium text-fg">
+                      {raffle.transfer_alias}
+                    </p>
+                  </div>
+                )}
+                {raffle.transfer_cbu && (
+                  <div>
+                    <p className="font-mono text-[11px] text-fg-subtle">CBU</p>
+                    <p className="font-mono text-[13px] font-medium text-fg">
+                      {raffle.transfer_cbu}
+                    </p>
+                  </div>
+                )}
+                {raffle.transfer_bank && (
+                  <div>
+                    <p className="font-mono text-[11px] text-fg-subtle">Banco</p>
+                    <p className="font-mono text-[13px] font-medium text-fg">
+                      {raffle.transfer_bank}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <p className="mt-3 text-[12px] text-fg-subtle">
+                Primero elegí tus números y reservá: el comprobante se envía
+                después por WhatsApp.
+              </p>
+            </div>
+          )}
         </section>
       )}
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Premios</h2>
+      <section className="space-y-4 border-t border-hairline pt-8">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">
+          Premios
+        </h2>
         {prizes && prizes.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {prizes.map((prize: Prize) => (

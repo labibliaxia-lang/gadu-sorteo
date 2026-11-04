@@ -6,6 +6,12 @@ import { z } from "zod";
 import { requireSuperadminSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { canImpersonateTarget } from "@/lib/impersonation";
+import {
+  clearImpersonationOrigin,
+  readImpersonationOrigin,
+  setImpersonationOrigin,
+} from "@/lib/impersonation-server";
 import {
   ASSIGNABLE_ROLES,
   EMAIL_RE,
@@ -30,6 +36,7 @@ export interface SuperAdminUserRow {
   created_at: string;
   admin_request_status: string | null;
   is_banned: boolean;
+  phone: string | null;
 }
 
 /** Escapa los comodines de LIKE para que la entrada sea literal. */
@@ -140,6 +147,15 @@ function revalidateAdminViews() {
   revalidatePath("/", "layout");
 }
 
+/**
+ * Escribe una fila de auditoría. Devuelve `false` solo si no se pudo registrar
+ * tras reintentar: las acciones sensibles (impersonación) usan ese resultado
+ * para fallar cerrado en lugar de dejar una acción sin rastro.
+ *
+ * Dos intentos: la auditoría no puede perderse por un error transitorio.
+ * Si aun así falla, no hay transacción que abarque la acción + el log en las
+ * Server Actions, así que el llamador decide (ver `startImpersonation`).
+ */
 async function logAction(params: {
   adminId: string;
   adminEmail: string | null;
@@ -147,25 +163,29 @@ async function logAction(params: {
   targetUserId: string | null;
   targetEmail: string | null;
   details: Record<string, unknown>;
-}): Promise<void> {
+}): Promise<boolean> {
   const admin = createAdminClient();
-  const { error } = await admin.from("admin_audit_logs").insert({
+  const payload = {
     admin_id: params.adminId,
     admin_email: params.adminEmail,
     action: params.action,
     target_user_id: params.targetUserId,
     target_email: params.targetEmail,
     details: JSON.stringify(params.details),
-  });
+  };
 
-  // La operación ya se aplicó: si falla el log no se revierte, pero no puede
-  // quedar en silencio (antes el error se descartaba por completo).
-  if (error) {
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const { error } = await admin.from("admin_audit_logs").insert(payload);
+    if (!error) return true;
+
     console.error("[logAction] no se pudo registrar la auditoría:", error.message, {
       action: params.action,
       targetUserId: params.targetUserId,
+      attempt,
     });
   }
+
+  return false;
 }
 
 // =====================================================================
@@ -219,7 +239,7 @@ export async function listUsers(params: {
   let request = admin
     .from("profiles")
     .select(
-      "id, full_name, email, role, created_at, admin_request_status, is_banned",
+      "id, full_name, email, role, created_at, admin_request_status, is_banned, phone",
       { count: "exact" },
     );
 
@@ -1432,5 +1452,760 @@ export async function extendUserPlan(input: {
           year: "numeric",
         })
       : "sin vencimiento",
+  };
+}
+
+// =====================================================================
+// Modo editor: impersonación segura de un usuario (solo superadmin)
+// =====================================================================
+//
+// Flujo:
+//   1. `startImpersonation` guarda el refresh token del admin en una cookie
+//      httpOnly y cambia la sesión del navegador por la del usuario destino.
+//   2. `stopImpersonation` usa ese refresh token para recuperar la sesión del
+//      superadmin y verifica que siga siéndolo.
+//
+// Garantías:
+//   * El rol se lee SIEMPRE de `profiles` en el servidor (requireSuperadminSession).
+//   * Nunca se permite impersonar a sí mismo, a otro superadmin, a una cuenta
+//     suspendida ni a un usuario sin email.
+//   * El refresh token del admin vive SOLO en la cookie httpOnly: no viaja al
+//     cliente ni en las respuestas.
+//   * Toda impersonación efectiva queda en `admin_audit_logs` (IMPERSONATE_USER)
+//     y toda salida (IMPERSONATE_END), con el admin real como autor.
+
+export type ImpersonationStartResult =
+  | { ok: true; targetName: string }
+  | { ok: false; error: string };
+
+export type ImpersonationStopResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+export type ProfileEditResult =
+  | { ok: true; message?: string }
+  | { ok: false; error: string };
+
+interface ImpersonationTargetRow {
+  id: string;
+  email: string | null;
+  role: string;
+  is_banned: boolean | null;
+  full_name: string | null;
+}
+
+interface ProfileTargetRow {
+  id: string;
+  email: string | null;
+  role: string;
+  full_name: string | null;
+  phone: string | null;
+}
+
+/**
+ * Traduce los errores crudos de Supabase Auth (generateLink / verifyOtp) a
+ * mensajes accionables en español. Nunca se devuelve el mensaje original:
+ * puede nombrar detalles internos del proyecto.
+ */
+function friendlyImpersonationAuthError(message: string): string {
+  const m = (message ?? "").toLowerCase();
+
+  if (
+    m.includes("not confirmed") ||
+    m.includes("email_not_confirmed") ||
+    m.includes("confirm your email")
+  ) {
+    return "Ese usuario todavía no confirmó su email: pedile que lo confirme antes de usar el modo editor.";
+  }
+  if (m.includes("banned") || m.includes("suspended")) {
+    return "La cuenta está suspendida: no se puede usar el modo editor.";
+  }
+  if (m.includes("not found") || m.includes("user_not_found")) {
+    return "Ese usuario no existe en Auth: revisá su cuenta.";
+  }
+  if (
+    m.includes("expired") ||
+    m.includes("invalid") ||
+    m.includes("otp") ||
+    m.includes("token")
+  ) {
+    return "El enlace de acceso del usuario expiró o no es válido. Probá de nuevo.";
+  }
+  return "No se pudo iniciar sesión como el usuario. Probá de nuevo.";
+}
+
+/** Cierra la sesión actual sin que un fallo de red impida seguir con la salida. */
+async function signOutQuietly(
+  supabase: ReturnType<typeof createClient>,
+): Promise<void> {
+  try {
+    // `local`: limpia las cookies de esta sesión sin depender de la red.
+    await supabase.auth.signOut({ scope: "local" });
+  } catch {
+    // La cookie de restauración se borra igual en el llamador.
+  }
+}
+
+/**
+ * Entra en "modo editor" como el usuario indicado. Solo superadmin.
+ *
+ * Pasos: validar actor y destino → guardar el origen (refresh token del admin)
+ * en cookie httpOnly → generar un magic link server-side y canjearlo con el
+ * cliente SSR para que las cookies de sesión del destino se escriban →
+ * auditar → responder. Ante cualquier fallo se borra la cookie de restauración
+ * para no dejar al navegador en un estado a medias.
+ */
+export async function startImpersonation(
+  userId: string,
+): Promise<ImpersonationStartResult> {
+  const adminUser = await requireSuperadminSession();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+  if (!UUID_RE.test(userId)) return { ok: false, error: "Usuario inválido" };
+
+  const admin = createAdminClient();
+  const { data: targetData, error: targetError } = await admin
+    .from("profiles")
+    .select("id, email, role, is_banned, full_name")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (targetError) {
+    console.error(
+      "[startImpersonation] no se pudo cargar el usuario:",
+      targetError.message,
+    );
+    return { ok: false, error: "No se pudo cargar el usuario. Probá de nuevo." };
+  }
+  if (!targetData) return { ok: false, error: "Usuario no encontrado" };
+
+  const target = targetData as ImpersonationTargetRow;
+  const targetEmail = (target.email ?? "").trim();
+  const allowed = canImpersonateTarget(
+    {
+      id: target.id,
+      role: target.role,
+      is_banned: target.is_banned,
+      email: targetEmail,
+    },
+    adminUser.id,
+  );
+  if (!allowed.ok) return allowed;
+
+  const targetName = (target.full_name ?? "").trim() || targetEmail;
+
+  const supabase = createClient();
+
+  // Sesión REAL del admin (la del navegador, no la que se va a crear).
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (
+    !session?.refresh_token ||
+    !session.user ||
+    session.user.id !== adminUser.id
+  ) {
+    return {
+      ok: false,
+      error:
+        "No se pudo leer tu sesión de superadmin. Volvé a iniciar sesión y probá de nuevo.",
+    };
+  }
+
+  // El refresh token del admin queda SOLO en esta cookie httpOnly.
+  await setImpersonationOrigin({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    adminRefreshToken: session.refresh_token,
+    targetId: target.id,
+    targetName,
+    startedAt: new Date().toISOString(),
+  });
+
+  try {
+    const { data: linkData, error: linkError } =
+      await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email: targetEmail,
+      });
+
+    if (linkError) {
+      await clearImpersonationOrigin();
+      return {
+        ok: false,
+        error: friendlyImpersonationAuthError(linkError.message),
+      };
+    }
+
+    const tokenHash = linkData?.properties?.hashed_token;
+    if (!tokenHash) {
+      await clearImpersonationOrigin();
+      return {
+        ok: false,
+        error: "No se pudo generar el acceso al usuario. Probá de nuevo.",
+      };
+    }
+
+    // Canjea el token con el MISMO cliente SSR: así las cookies de sesión del
+    // usuario destino se escriben en este navegador (Server Action).
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      type: "magiclink",
+      token_hash: tokenHash,
+    });
+
+    if (verifyError) {
+      await clearImpersonationOrigin();
+      return {
+        ok: false,
+        error: friendlyImpersonationAuthError(verifyError.message),
+      };
+    }
+  } catch (error) {
+    await clearImpersonationOrigin();
+    console.error(
+      "[startImpersonation] fallo inesperado al cambiar de sesión:",
+      error instanceof Error ? error.message : error,
+    );
+    return {
+      ok: false,
+      error: "No se pudo iniciar el modo editor. Probá de nuevo.",
+    };
+  }
+
+  // Recién acá la impersonación es efectiva: es lo que se audita. Si la
+  // auditoría no se puede escribir, se deshace la sesión del destino: nunca
+  // queda una impersonación efectiva sin rastro.
+  const audited = await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "IMPERSONATE_USER",
+    targetUserId: target.id,
+    targetEmail,
+    details: { target_email: targetEmail, target_role: target.role },
+  });
+
+  if (!audited) {
+    await signOutQuietly(supabase);
+    await clearImpersonationOrigin();
+    revalidatePath("/", "layout");
+    return {
+      ok: false,
+      error:
+        "El modo editor se canceló porque no se pudo registrar la auditoría. Probá de nuevo.",
+    };
+  }
+
+  return { ok: true, targetName };
+}
+
+/**
+ * Sale del "modo editor": restaura la sesión del superadmin con el refresh
+ * token guardado al entrar y verifica en `profiles` que siga siendo superadmin.
+ */
+export async function stopImpersonation(): Promise<ImpersonationStopResult> {
+  const origin = await readImpersonationOrigin();
+  if (!origin) {
+    return { ok: false, error: "No estás en modo editor." };
+  }
+
+  // Email del destino para el registro de auditoría (si la cuenta todavía
+  // existe). Un fallo acá no impide salir: la salida se audita igual.
+  let targetEmail: string | null = null;
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("profiles")
+      .select("email")
+      .eq("id", origin.targetId)
+      .maybeSingle();
+    targetEmail = (data as { email: string | null } | null)?.email ?? null;
+  } catch {
+    targetEmail = null;
+  }
+
+  // La salida se audita ANTES de tocar la sesión: si el registro no se puede
+  // escribir, no se cambia nada (el admin sigue en modo editor y puede
+  // reintentar). Así no existe una salida sin auditoría. Si después falla la
+  // restauración, la impersonación igual termina (signOut), así que la fila
+  // sigue siendo exacta.
+  const audited = await logAction({
+    adminId: origin.adminId,
+    adminEmail: origin.adminEmail,
+    action: "IMPERSONATE_END",
+    targetUserId: origin.targetId,
+    targetEmail,
+    details: {
+      target_name: origin.targetName,
+      started_at: origin.startedAt,
+      ended_at: new Date().toISOString(),
+    },
+  });
+
+  if (!audited) {
+    return {
+      ok: false,
+      error: "No se pudo registrar la salida en la auditoría. Probá de nuevo.",
+    };
+  }
+
+  const supabase = createClient();
+  const { data: refreshed, error: refreshError } =
+    await supabase.auth.refreshSession({
+      refresh_token: origin.adminRefreshToken,
+    });
+
+  if (
+    refreshError ||
+    !refreshed.session ||
+    !refreshed.user ||
+    refreshed.user.id !== origin.adminId
+  ) {
+    await signOutQuietly(supabase);
+    await clearImpersonationOrigin();
+    return {
+      ok: false,
+      error: "La sesión de superadmin venció; volvé a iniciar sesión.",
+    };
+  }
+
+  // Fail closed: si no se puede confirmar el rol, no se restaura nada.
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", refreshed.user.id)
+    .maybeSingle();
+
+  if (profileError || profile?.role !== "superadmin") {
+    await signOutQuietly(supabase);
+    await clearImpersonationOrigin();
+    return {
+      ok: false,
+      error: "La sesión de superadmin ya no es válida; volvé a iniciar sesión.",
+    };
+  }
+
+  await clearImpersonationOrigin();
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/super");
+
+  return { ok: true };
+}
+
+// =====================================================================
+// Soporte: edición manual del perfil (nombre y teléfono) con auditoría
+// =====================================================================
+
+/**
+ * Edita el nombre y el teléfono de un perfil desde el panel de soporte.
+ *
+ * Límites deliberados: nunca toca email, rol, plan ni fechas; sólo esos dos
+ * campos. La edición queda auditada siempre (con el antes y el después), incluso
+ * si los valores no cambian.
+ */
+export async function updateUserProfile(input: {
+  userId: string;
+  fullName: string;
+  phone: string;
+}): Promise<ProfileEditResult> {
+  const adminUser = await requireSuperadminSession();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  const userId = String(input?.userId ?? "").trim();
+  if (!UUID_RE.test(userId)) return { ok: false, error: "Usuario inválido" };
+
+  const fullName = String(input?.fullName ?? "").trim();
+  if (fullName.length < 2 || fullName.length > 120) {
+    return {
+      ok: false,
+      error: "El nombre debe tener entre 2 y 120 caracteres.",
+    };
+  }
+
+  const rawPhone = String(input?.phone ?? "").trim();
+  if (rawPhone.length > 30) {
+    return {
+      ok: false,
+      error: "El teléfono no puede superar los 30 caracteres.",
+    };
+  }
+  // Vacío = sin teléfono.
+  const phone = rawPhone.length > 0 ? rawPhone : null;
+
+  const admin = createAdminClient();
+  const { data: targetData, error: targetError } = await admin
+    .from("profiles")
+    .select("id, email, role, full_name, phone")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (targetError) {
+    console.error(
+      "[updateUserProfile] no se pudo cargar el perfil:",
+      targetError.message,
+    );
+    return { ok: false, error: "No se pudo cargar el usuario. Probá de nuevo." };
+  }
+  if (!targetData) return { ok: false, error: "Usuario no encontrado." };
+
+  const target = targetData as ProfileTargetRow;
+  if (target.role === "superadmin" || target.id === adminUser.id) {
+    return {
+      ok: false,
+      error: "No se puede editar el perfil de un superadmin.",
+    };
+  }
+
+  const before = {
+    full_name: target.full_name ?? null,
+    phone: target.phone ?? null,
+  };
+
+  // Sólo estas dos columnas: email, rol y plan quedan fuera del update.
+  const { data: updated, error: updateError } = await admin
+    .from("profiles")
+    .update({ full_name: fullName, phone })
+    .eq("id", userId)
+    .neq("role", "superadmin")
+    .select("id");
+
+  if (updateError) {
+    console.error(
+      "[updateUserProfile] no se pudo guardar el perfil:",
+      updateError.message,
+    );
+    return {
+      ok: false,
+      error: "No se pudo guardar el perfil. Probá de nuevo.",
+    };
+  }
+  if (!updated || updated.length === 0) {
+    return {
+      ok: false,
+      error:
+        "No se aplicó el cambio: el usuario ya no admite modificaciones.",
+    };
+  }
+
+  await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "EDIT_PROFILE",
+    targetUserId: userId,
+    targetEmail: target.email ?? null,
+    details: {
+      before,
+      after: { full_name: fullName, phone },
+    },
+  });
+
+  revalidatePath("/admin/super");
+  revalidatePath(`/admin/super/usuarios/${userId}`);
+
+  return { ok: true, message: "Perfil actualizado." };
+}
+
+// =====================================================================
+// Moderación de denuncias de sorteos (raffle_reports, 0064)
+// =====================================================================
+//
+// El alta la hace el usuario con su cliente (RLS: reporter_id = auth.uid()).
+// Acá la moderación corre con service role y SIEMPRE deja rastro en
+// `admin_audit_logs` con las acciones REPORT_RESOLVE, REPORT_RAFFLE_PAUSE y
+// REPORT_DELETE.
+//
+// Pausar un sorteo significa CERRAR SU VENTA (`raffles.status = 'closed'`), que
+// es la transición que ya existe en el dominio. No se tocan pagos, reservas,
+// números vendidos ni el motor de sorteo: el sorteo cerrado se puede sortear
+// como cualquier otro y las devoluciones siguen siendo manuales.
+
+export type ReportActionResult =
+  | { ok: true; message?: string }
+  | { ok: false; error: string };
+
+/** Fila de `raffle_reports` que necesita la moderación. */
+interface ReportAuditRow {
+  id: string;
+  raffle_id: string;
+  reporter_id: string;
+  reason: string;
+  comment: string | null;
+  status: string;
+  created_at: string;
+}
+
+/** Dueño de un sorteo, para `target_user_id` de la auditoría. */
+async function loadRaffleOwnerId(raffleId: string): Promise<string | null> {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("raffles")
+      .select("created_by")
+      .eq("id", raffleId)
+      .maybeSingle();
+
+    if (error) {
+      console.error(
+        "[loadRaffleOwnerId] no se pudo leer el sorteo:",
+        error.message,
+      );
+      return null;
+    }
+
+    return (
+      (data as { created_by: string | null } | null)?.created_by ?? null
+    );
+  } catch (error) {
+    console.error("[loadRaffleOwnerId] error:", error);
+    return null;
+  }
+}
+
+/** Email del dueño para completar la auditoría (si se puede leer). */
+async function loadUserEmail(userId: string | null): Promise<string | null> {
+  if (!userId) return null;
+
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("profiles")
+      .select("email")
+      .eq("id", userId)
+      .maybeSingle();
+
+    return (data as { email: string | null } | null)?.email ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Marca una denuncia como resuelta o descartada. Solo superadmin.
+ *
+ * Se audita el estado NUEVO (el efectivo) junto con el reporte, el sorteo y el
+ * denunciante; el destino de la auditoría es el dueño del sorteo, que es la
+ * persona afectada por la denuncia.
+ */
+export async function resolveReport(
+  reportId: string,
+  status: "resolved" | "dismissed",
+): Promise<ReportActionResult> {
+  const adminUser = await requireSuperadminSession();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  if (!UUID_RE.test(reportId)) {
+    return { ok: false, error: "Denuncia inválida" };
+  }
+  if (status !== "resolved" && status !== "dismissed") {
+    return { ok: false, error: "Estado inválido" };
+  }
+
+  const admin = createAdminClient();
+  const { data: reportData, error: findError } = await admin
+    .from("raffle_reports")
+    .select("id, raffle_id, reporter_id, reason, comment, status, created_at")
+    .eq("id", reportId)
+    .maybeSingle();
+
+  if (findError) return { ok: false, error: findError.message };
+  if (!reportData) return { ok: false, error: "La denuncia no existe." };
+
+  const report = reportData as ReportAuditRow;
+
+  const { data: updated, error: updateError } = await admin
+    .from("raffle_reports")
+    .update({
+      status,
+      resolved_at: new Date().toISOString(),
+      resolved_by: adminUser.id,
+    })
+    .eq("id", reportId)
+    .select("id");
+
+  if (updateError) return { ok: false, error: updateError.message };
+  if (!updated || updated.length === 0) {
+    return { ok: false, error: "No se pudo actualizar la denuncia." };
+  }
+
+  const targetUserId = await loadRaffleOwnerId(report.raffle_id);
+  const targetEmail = await loadUserEmail(targetUserId);
+
+  const audited = await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "REPORT_RESOLVE",
+    targetUserId,
+    targetEmail,
+    details: {
+      report_id: reportId,
+      raffle_id: report.raffle_id,
+      reporter_id: report.reporter_id,
+      status,
+    },
+  });
+
+  revalidatePath("/admin/super");
+
+  const done = status === "resolved" ? "Denuncia resuelta." : "Denuncia descartada.";
+  return {
+    ok: true,
+    message: audited
+      ? done
+      : `${done} Ojo: no se pudo registrar la auditoría; avisá a un desarrollador.`,
+  };
+}
+
+/**
+ * Pausa el sorteo denunciado cerrando su venta (`active` → `closed`).
+ *
+ * El UPDATE lleva la guarda `.eq("status", "active")`: si el organizador ya lo
+ * cerró, sorteó o canceló entre la lectura y la escritura, no se pisa ese
+ * estado y se responde que el sorteo ya no está activo. No toca pagos, reservas
+ * ni el motor de sorteo.
+ */
+export async function pauseReportedRaffle(
+  reportId: string,
+): Promise<ReportActionResult> {
+  const adminUser = await requireSuperadminSession();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  if (!UUID_RE.test(reportId)) {
+    return { ok: false, error: "Denuncia inválida" };
+  }
+
+  const admin = createAdminClient();
+  const { data: reportData, error: findError } = await admin
+    .from("raffle_reports")
+    .select("id, raffle_id, reporter_id")
+    .eq("id", reportId)
+    .maybeSingle();
+
+  if (findError) return { ok: false, error: findError.message };
+  if (!reportData) return { ok: false, error: "La denuncia no existe." };
+
+  const report = reportData as ReportAuditRow;
+
+  const { data: raffleData, error: raffleError } = await admin
+    .from("raffles")
+    .select("id, status, created_by")
+    .eq("id", report.raffle_id)
+    .maybeSingle();
+
+  if (raffleError) return { ok: false, error: raffleError.message };
+  if (!raffleData) return { ok: false, error: "El sorteo no existe." };
+
+  const raffle = raffleData as {
+    id: string;
+    status: string;
+    created_by: string | null;
+  };
+
+  if (raffle.status !== "active") {
+    return { ok: false, error: "El sorteo ya no está activo." };
+  }
+
+  const { data: updated, error: updateError } = await admin
+    .from("raffles")
+    .update({ status: "closed" })
+    .eq("id", raffle.id)
+    .eq("status", "active")
+    .select("id");
+
+  if (updateError) return { ok: false, error: updateError.message };
+  if (!updated || updated.length === 0) {
+    return { ok: false, error: "El sorteo ya no está activo." };
+  }
+
+  const targetUserId = raffle.created_by;
+  const targetEmail = await loadUserEmail(targetUserId);
+
+  const audited = await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "REPORT_RAFFLE_PAUSE",
+    targetUserId,
+    targetEmail,
+    details: {
+      report_id: reportId,
+      raffle_id: raffle.id,
+      from: "active",
+      to: "closed",
+    },
+  });
+
+  revalidatePath(`/sorteos/${raffle.id}`);
+  revalidatePath("/admin/super");
+
+  return {
+    ok: true,
+    message: audited
+      ? "Sorteo pausado (cerrado)."
+      : "Sorteo pausado (cerrado), pero no se pudo registrar la auditoría; avisá a un desarrollador.",
+  };
+}
+
+/**
+ * Elimina una denuncia (no el sorteo). Solo superadmin.
+ *
+ * Se carga la fila ANTES del DELETE para poder auditar el snapshot completo:
+ * después de borrarla ya no hay de dónde sacar raffle_id, reporter ni motivo.
+ */
+export async function deleteReport(
+  reportId: string,
+): Promise<ReportActionResult> {
+  const adminUser = await requireSuperadminSession();
+  if (!adminUser) return { ok: false, error: "No autorizado" };
+
+  if (!UUID_RE.test(reportId)) {
+    return { ok: false, error: "Denuncia inválida" };
+  }
+
+  const admin = createAdminClient();
+  const { data: reportData, error: findError } = await admin
+    .from("raffle_reports")
+    .select("id, raffle_id, reporter_id, reason, comment, status, created_at")
+    .eq("id", reportId)
+    .maybeSingle();
+
+  if (findError) return { ok: false, error: findError.message };
+  if (!reportData) return { ok: false, error: "La denuncia no existe." };
+
+  const report = reportData as ReportAuditRow;
+
+  const { data: deleted, error: deleteError } = await admin
+    .from("raffle_reports")
+    .delete()
+    .eq("id", reportId)
+    .select("id");
+
+  if (deleteError) return { ok: false, error: deleteError.message };
+  if (!deleted || deleted.length === 0) {
+    return { ok: false, error: "No se pudo eliminar la denuncia." };
+  }
+
+  const targetUserId = await loadRaffleOwnerId(report.raffle_id);
+  const targetEmail = await loadUserEmail(targetUserId);
+
+  const audited = await logAction({
+    adminId: adminUser.id,
+    adminEmail: adminUser.email,
+    action: "REPORT_DELETE",
+    targetUserId,
+    targetEmail,
+    details: {
+      report_id: reportId,
+      raffle_id: report.raffle_id,
+      reporter_id: report.reporter_id,
+      reason: report.reason,
+      status: report.status,
+    },
+  });
+
+  revalidatePath("/admin/super");
+
+  return {
+    ok: true,
+    message: audited
+      ? "Denuncia eliminada."
+      : "Denuncia eliminada, pero no se pudo registrar la auditoría; avisá a un desarrollador.",
   };
 }

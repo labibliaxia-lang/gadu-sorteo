@@ -19,6 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { EditProfileButton } from "@/components/admin/EditProfileButton";
+import { ImpersonateButton } from "@/components/admin/ImpersonateButton";
 import {
   ASSIGNABLE_ROLES,
   ROLE_OPTIONS,
@@ -172,6 +174,24 @@ export function SuperAdminDashboard({
     setError(null);
   }
 
+  /** Refleja en la lista el nombre/teléfono que el servidor acaba de guardar. */
+  function applyProfileEdit(
+    userId: string,
+    values: { fullName: string; phone: string },
+  ) {
+    setUsers((prev) =>
+      prev.map((row) =>
+        row.id === userId
+          ? {
+              ...row,
+              full_name: values.fullName,
+              phone: values.phone.trim() === "" ? null : values.phone.trim(),
+            }
+          : row,
+      ),
+    );
+  }
+
   async function refreshAll() {
     await load({ q: query, nextPage: page, nextRole: role });
     router.refresh();
@@ -322,13 +342,14 @@ export function SuperAdminDashboard({
               <th className="p-3">Rol actual</th>
               <th className="p-3">Cambiar rol</th>
               <th className="p-3">Soporte</th>
+              <th className="p-3">Modo editor</th>
             </tr>
           </thead>
           <tbody>
             {users.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="p-6 text-center text-muted-foreground"
                 >
                   {loading ? "Buscando…" : "Sin resultados."}
@@ -364,6 +385,11 @@ export function SuperAdminDashboard({
                     </td>
                     <td className="break-all p-3 text-muted-foreground">
                       {u.email || "—"}
+                      {u.phone && (
+                        <p className="mt-0.5 break-all text-xs text-fg-subtle">
+                          {u.phone}
+                        </p>
+                      )}
                     </td>
                     <td className="p-3">
                       <Badge
@@ -434,6 +460,23 @@ export function SuperAdminDashboard({
                         Ver ficha
                       </Link>
                     </td>
+                    <td className="p-3">
+                      <div className="flex flex-col items-start gap-1.5">
+                        <EditProfileButton
+                          userId={u.id}
+                          initialFullName={u.full_name}
+                          initialPhone={u.phone}
+                          label={u.email ?? u.id}
+                          onSaved={(values) => applyProfileEdit(u.id, values)}
+                        />
+                        <ImpersonateButton
+                          userId={u.id}
+                          targetName={u.full_name ?? u.email}
+                          role={u.role}
+                          disabled={busy}
+                        />
+                      </div>
+                    </td>
                   </tr>
                 );
               })
@@ -473,6 +516,11 @@ export function SuperAdminDashboard({
                     <p className="break-all text-xs text-muted-foreground">
                       {u.email || "—"}
                     </p>
+                    {u.phone && (
+                      <p className="break-all text-xs text-fg-subtle">
+                        {u.phone}
+                      </p>
+                    )}
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       <Badge
                         variant={
@@ -539,10 +587,26 @@ export function SuperAdminDashboard({
                   )}
                   <Link
                     href={`/admin/super/usuarios/${u.id}`}
-                    className="text-xs font-medium text-brand-700 hover:underline dark:text-brand-300"
+                    className="text-xs font-medium text-brand-800 hover:underline dark:text-brand-300"
                   >
                     Ver ficha
                   </Link>
+                </div>
+
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <EditProfileButton
+                    userId={u.id}
+                    initialFullName={u.full_name}
+                    initialPhone={u.phone}
+                    label={u.email ?? u.id}
+                    onSaved={(values) => applyProfileEdit(u.id, values)}
+                  />
+                  <ImpersonateButton
+                    userId={u.id}
+                    targetName={u.full_name ?? u.email}
+                    role={u.role}
+                    disabled={busy}
+                  />
                 </div>
               </div>
             );
