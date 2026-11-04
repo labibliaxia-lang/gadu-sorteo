@@ -1,0 +1,48 @@
+{
+  "fecha": "2026-11-04",
+  "entorno": "next start (build de producción) en http://localhost:3105",
+  "gate": "cookie admin_verified firmada localmente con ADMIN_SESSION_SECRET (el mismo secreto que usa la app)",
+  "datos": "usuarios QA temporales creados con service role; reporte, filas de auditoría y usuarios borrados al final",
+  "bloques": {
+    "5_impersonacion": {
+      "resultado": "OK",
+      "evidencia": [
+        "El panel /admin/super?tab=usuarios muestra la fila del target y el botón «Entrar como usuario».",
+        "Al confirmar, la app navega a / con el banner «Modo Editor: estás viendo la app como QA Target (smoke)».",
+        "Con la sesión del target, /admin/super no entra: queda bloqueado (redirige a /admin/verify).",
+        "«Salir del modo editor» restaura la sesión del superadmin y vuelve a /admin/super sin banner.",
+        "Auditoría: IMPERSONATE_USER (qa.super → qa.target) e IMPERSONATE_END (qa.super → qa.target)."
+      ]
+    },
+    "6_edicion_perfil": {
+      "resultado": "OK",
+      "evidencia": [
+        "El diálogo «Editar perfil» actualiza nombre y teléfono del target.",
+        "profiles queda con full_name y phone nuevos.",
+        "Auditoría EDIT_PROFILE con details.before y details.after correctos."
+      ]
+    },
+    "8_moderacion_denuncia": {
+      "resultado": "OK (resolver)",
+      "evidencia": [
+        "Denuncia de prueba creada (reporter = target, reason = otro, comment = smoke test automatizado).",
+        "En la pestaña Denuncias, «Resolver» la saca de la cola de pendientes.",
+        "raffle_reports queda status=resolved, resolved_at y resolved_by = superadmin.",
+        "Auditoría REPORT_RESOLVE con report_id, raffle_id, reporter_id y status."
+      ]
+    },
+    "9_auditoria": {
+      "resultado": "OK",
+      "evidencia": [
+        "La pestaña Auditoría lista 21 registros con etiquetas legibles y filtro por acción.",
+        "Las 4 acciones del smoke aparecen: ENTRÓ COMO USUARIO, SALIÓ DEL MODO EDITOR, EDITÓ UN PERFIL, RESOLVIÓ UNA DENUNCIA.",
+        "La vista public.audit_logs devuelve la misma primera fila que public.admin_audit_logs."
+      ]
+    }
+  },
+  "no_cubierto": [
+    "Rechazos de impersonación por UI: otro superadmin, cuenta suspendida, email sin confirmar (las reglas están cubiertas por unit tests de canImpersonateTarget).",
+    "Pausar sorteo denunciado y eliminar denuncia desde la UI (solo se probó Resolver).",
+    "Bloques 3 (tráfico), 4 (dashboard con gráficos), 7 (denuncia del usuario) y 10 (regresión responsive): no se ejecutaron en esta pasada."
+  ]
+}

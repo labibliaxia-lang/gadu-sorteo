@@ -161,6 +161,24 @@ La URL pública del bucket KYC responde `NoSuchBucket` (es privado). Es decir: n
 viaja al navegador se puede inflar el tráfico, escribir auditoría, marcar una devolución como pagada
 ni cerrar un sorteo; eso solo pasa por las Server Actions con `requireSuperadminSession()`.
 
+**17 — observado (smoke E2E real, 2026-11-04).** Sobre un build de producción (`next start`) y con
+usuarios QA temporales (borrados al final), se ejecutaron los bloques 5, 6, 8 y 9 del smoke test:
+
+- **Impersonación:** el botón «Entrar como usuario» existe en la fila; al confirmar, la app navega a
+  `/` con el banner «Modo Editor: estás viendo la app como …»; con la sesión del target, `/admin/super`
+  queda bloqueado; «Salir del modo editor» restaura la sesión del superadmin. Auditoría:
+  `IMPERSONATE_USER` e `IMPERSONATE_END` con el admin y el target correctos (nunca invertidos).
+- **Edición de perfil:** el diálogo actualiza nombre y teléfono; `profiles` refleja el cambio y
+  `EDIT_PROFILE` guarda `before`/`after`.
+- **Moderación:** una denuncia de prueba pasa a `resolved` con `resolved_at` y `resolved_by` del
+  superadmin, y deja `REPORT_RESOLVE` con `report_id`, `raffle_id` y `reporter_id`.
+- **Auditoría:** la pestaña lista las cuatro acciones con etiquetas legibles y la vista `audit_logs`
+  devuelve lo mismo que `admin_audit_logs`.
+
+Evidencia: [`.design/smoke/god-mode-2026-11-04.json`](../../../.design/smoke/god-mode-2026-11-04.json).
+Quedan sin ejecutar los bloques 3 (tráfico), 4 (dashboard), 7 (denuncia del usuario), 10 (regresión) y
+los rechazos de impersonación / pausar / eliminar.
+
 **Árbol compartido.** Además de este feature hay cambios sin commitear del rediseño visual de páginas
 públicas (`.design/`, `globals.css`, `app/page.tsx`, Navbar/Footer, etc.) y del feature de cancelación
 (`0063`, `lib/types.ts`, `RefundMarkPaidButton`, `cancelacion-devoluciones.md`). No se cuentan como
@@ -242,10 +260,10 @@ correcciones posteriores movieron líneas dentro de `app/admin/super/actions.ts`
 - **0064 aplicada y verificada (2026-11-04).** El script de auditoría confirma `page_views` con RLS
   y sin policy de INSERT, la RPC `superadmin_daily_metrics(integer)`, `raffle_reports` con UNIQUE y
   RLS, y la vista `audit_logs`. El panel ya no debería mostrar los avisos de degradación.
-- **Smoke test E2E de impersonación con un usuario real.** Falta probar contra la base: entrar como
-  usuario con email confirmado, verificar `IMPERSONATE_USER`, salir, comprobar que la sesión del admin
-  vuelve y que se registró `IMPERSONATE_END`. Los tests actuales son unitarios sobre módulos puros
-  (cookie y reglas), no sobre las Server Actions ni el route handler.
+- **Smoke test E2E de impersonación: hecho el camino feliz (2026-11-04).** Entrar, banner, panel
+  bloqueado como target, salir y auditoría se probaron contra un build de producción con usuarios QA
+  (ver evidencia 17). Quedan los **rechazos** (otro superadmin, suspendido, email sin confirmar) y
+  pausar/eliminar denuncias desde la UI; las reglas puras ya están en `canImpersonateTarget`.
 - **Email sin confirmar.** El flujo depende de `generateLink` + `verifyOtp`; si el destino no confirmó
   el email, la acción traduce el error (`actions.ts:1496-1521`) y limpia la cookie, pero no se probó
   contra Supabase real. El brief lo pedía como caso de rechazo: queda verificar el mensaje exacto.

@@ -1,12 +1,20 @@
 ---
 author: Gadu
 branch: main
-status: pending
+status: in-progress
 ---
 # Smoke test — Superadmin God Mode
 
 Checklist manual para probar contra Supabase real lo que no se puede probar en el repo: migración
 0064, tráfico, dashboard, Modo Editor, denuncias y auditoría.
+
+**Resultado 2026-11-04 (parcial, automatizado).** Los bloques **5, 6, 8 y 9** se ejecutaron de punta a
+punta contra un build de producción, con usuarios QA temporales y borrados al final: impersonación
+(entrar, banner, panel bloqueado como target, salir), edición de perfil, resolución de una denuncia y
+auditoría. Todo dio **OK**. Evidencia en
+[`../../.design/smoke/god-mode-2026-11-04.json`](../../../.design/smoke/god-mode-2026-11-04.json).
+Siguen sin ejecutar los bloques 3 (tráfico), 4 (dashboard), 7 (denuncia del usuario) y 10 (regresión),
+y dentro del 5/8 los rechazos y las acciones de pausar/eliminar.
 
 **Tiempo estimado:** 30–45 minutos.
 **Cuándo hacerlo:** antes de commitear/deployar el feature. Sin este test, el código está probado
