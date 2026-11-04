@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireSuperadminSession } from "@/lib/auth";
+import { canFeature } from "@/lib/featured";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { canImpersonateTarget } from "@/lib/impersonation";
@@ -2214,6 +2215,9 @@ export async function deleteReport(
  * Destaca un sorteo en la home y en la sección «más sorteos» de las landings,
  * o lo saca de destacados (migración 0066). Solo superadmin.
  *
+ * Regla: **un solo destacado a la vez** y solo sobre sorteos activos. Al
+ * marcar uno, el anterior se desmarca en la misma acción.
+ *
  * La lectura de `is_featured` es pública; la escritura va por service role y
  * queda auditada. Si la migración todavía no se aplicó, el error es explícito
  * en vez de un mensaje de PostgREST.
@@ -2231,7 +2235,7 @@ export async function setRaffleFeatured(
 
   const { data: raffleData, error: findError } = await admin
     .from("raffles")
-    .select("id, title, created_by")
+    .select("id, title, created_by, status")
     .eq("id", raffleId)
     .maybeSingle();
 
@@ -2242,7 +2246,26 @@ export async function setRaffleFeatured(
     id: string;
     title: string | null;
     created_by: string | null;
+    status: string;
   };
+
+  if (featured && !canFeature(raffle.status)) {
+    return {
+      ok: false,
+      error: "Solo un sorteo activo puede destacarse.",
+    };
+  }
+
+  // Un solo destacado a la vez: el anterior se desmarca antes de marcar este.
+  if (featured) {
+    const { error: clearError } = await admin
+      .from("raffles")
+      .update({ is_featured: false, featured_at: null })
+      .eq("is_featured", true)
+      .neq("id", raffle.id);
+
+    if (clearError) return { ok: false, error: clearError.message };
+  }
 
   const { data: updated, error: updateError } = await admin
     .from("raffles")
@@ -2280,6 +2303,7 @@ export async function setRaffleFeatured(
       raffle_id: raffle.id,
       title: raffle.title,
       featured,
+      mode: "single",
     },
   });
 
@@ -2292,7 +2316,7 @@ export async function setRaffleFeatured(
     ok: true,
     message: audited
       ? featured
-        ? "Sorteo destacado."
+        ? "Sorteo destacado. Se quitó el destacado anterior."
         : "Sorteo quitado de destacados."
       : "Cambio aplicado, pero no se pudo registrar la auditoría; avisá a un desarrollador.",
   };

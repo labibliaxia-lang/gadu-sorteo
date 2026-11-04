@@ -1880,6 +1880,7 @@ export default async function SuperAdminPage({
                   <FeatureRaffleButton
                     raffleId={raffle.id}
                     featured={Boolean(raffle.is_featured)}
+                    status={raffle.status}
                   />
                 ),
               },

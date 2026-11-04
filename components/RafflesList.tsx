@@ -213,7 +213,7 @@ export function RafflesList({
                           {raffle.title}
                         </Link>
                       </h3>
-                      {raffle.is_featured && (
+                      {raffle.is_featured && raffle.status === "active" && (
                         <span className="mt-1.5 inline-flex rounded-full bg-brand-500/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-brand-accent">
                           Destacado
                         </span>

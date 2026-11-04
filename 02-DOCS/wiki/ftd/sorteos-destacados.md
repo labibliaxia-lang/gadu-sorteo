@@ -76,3 +76,18 @@ renderiza «Más sorteos · Seguí participando» con `auto 2026` primero, badge
 
 Aplicar `0066` en el SQL Editor, destacar un sorteo desde el panel superadmin y
 comprobar que aparece primero en la home y en la sección «Más sorteos».
+
+## Decisión 2026-11-04 — un solo sorteo destacado a la vez
+
+- **Contexto.** Con varios destacados, el hero de la home mostraba el primero
+  por fecha de creación (no el último marcado), el badge se repetía en la
+  cartelera y se podía destacar un sorteo cerrado o cancelado.
+- **Decisión.** Un solo destacado (`is_featured`) y solo sobre sorteos activos.
+  Al marcar uno, el anterior se desmarca en la misma acción.
+- **Por qué.** El hero tiene un solo lugar: un segundo destacado no gana
+  exposición y diluye el significado. Un solo destacado además obliga a rotar.
+- **Consecuencias.** `setRaffleFeatured` desmarca el anterior y rechaza sorteos
+  no activos; el hero ordena por `featured_at`; el badge solo aparece en sorteos
+  activos; el botón «Destacar» se deshabilita fuera de `active`.
+- **Cuándo se revisa.** Si la home suma una fila «Destacados» con 3 tarjetas,
+  volver a permitir varios con tope y orden por `featured_at`.

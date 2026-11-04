@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { parseLandingContent } from "@/lib/landing";
+import { sortFeaturedFirst } from "@/lib/featured";
 import { averageRating, formatRating } from "@/lib/reviews";
 import type { PublicQuestion } from "@/lib/questions";
 import { maybeAutoDrawRaffle, maybeNotifyManualDraw } from "@/lib/auto-draw";
@@ -223,8 +224,9 @@ export default async function RafflePage({
 
   const landingBlocks = parseLandingContent(raffle.landing_content);
 
-  // Invitación a la home: otros sorteos activos, con los destacados primero
-  // (migración 0066). `select("*")` funciona igual si 0066 no está aplicada.
+  // Invitación a la home: otros sorteos activos, con el destacado primero
+  // (decisión 2026-11-04: un solo destacado). `select("*")` funciona igual si
+  // 0066 no está aplicada.
   const { data: otherRafflesData } = await supabase
     .from("raffles")
     .select("*")
@@ -233,10 +235,7 @@ export default async function RafflePage({
     .order("created_at", { ascending: false })
     .limit(6);
 
-  const otherRaffles = ((otherRafflesData ?? []) as Raffle[]).sort(
-    (a, b) =>
-      Number(Boolean(b.is_featured)) - Number(Boolean(a.is_featured)),
-  );
+  const otherRaffles = sortFeaturedFirst((otherRafflesData ?? []) as Raffle[]);
 
   const {
     data: { user: viewer },
