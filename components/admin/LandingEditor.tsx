@@ -17,7 +17,7 @@ import {
 import {
   landingContentSchema,
   type LandingBlock,
-  youtubeEmbedUrl,
+  videoEmbedUrl,
 } from "@/lib/landing";
 import { createClient } from "@/lib/supabase/client";
 import { saveLandingContent } from "@/app/admin/sorteos/[id]/landing/actions";
@@ -209,7 +209,7 @@ export function LandingEditor({
               }
             >
               <Youtube className="mr-1.5 h-4 w-4" />
-              Video de YouTube
+              Video de YouTube o Vimeo
             </Button>
           </div>
         </CardContent>
@@ -347,19 +347,19 @@ export function LandingEditor({
                 {block.type === "video" && (
                   <div className="space-y-2">
                     <Label htmlFor={`video-${block.id}`}>
-                      Enlace de YouTube
+                      Enlace de YouTube o Vimeo
                     </Label>
                     <Input
                       id={`video-${block.id}`}
                       value={block.url}
-                      placeholder="https://www.youtube.com/watch?v=…"
+                      placeholder="https://www.youtube.com/watch?v=… o https://vimeo.com/…"
                       onChange={(event) =>
                         patchBlock(block.id, { url: event.target.value })
                       }
                     />
-                    {youtubeEmbedUrl(block.url) ? (
+                    {videoEmbedUrl(block.url) ? (
                       <iframe
-                        src={youtubeEmbedUrl(block.url) ?? ""}
+                        src={videoEmbedUrl(block.url) ?? ""}
                         title="Vista previa del video"
                         className="aspect-video w-full rounded-lg border"
                         loading="lazy"
@@ -369,7 +369,7 @@ export function LandingEditor({
                     ) : (
                       <p className="text-xs text-muted-foreground">
                         Pegá un enlace de YouTube (watch, youtu.be, shorts o
-                        embed).
+                        embed) o de Vimeo (vimeo.com o player.vimeo.com).
                       </p>
                     )}
                   </div>

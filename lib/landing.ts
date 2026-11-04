@@ -6,7 +6,8 @@ import { z } from "zod";
  * Reglas de seguridad:
  * - El texto se renderiza como texto React, nunca como HTML.
  * - Las imágenes deben venir del bucket público de portadas de Gadu.
- * - El video solo acepta un ID válido de YouTube; no se guarda HTML/iframe.
+ * - El video solo acepta YouTube o Vimeo; se guarda la URL original y se
+ *   genera el embed a partir de un ID validado. Nunca se guarda HTML/iframe.
  */
 
 const TEXT_MAX = 1200;
@@ -33,8 +34,8 @@ export const videoBlockSchema = z.object({
   url: z
     .string()
     .trim()
-    .refine((value) => youtubeId(value) !== null, {
-      message: "Pegá un enlace válido de YouTube",
+    .refine((value) => videoProvider(value) !== null, {
+      message: "Pegá un enlace válido de YouTube o Vimeo",
     }),
 });
 
@@ -51,29 +52,88 @@ export type TextBlock = z.infer<typeof textBlockSchema>;
 export type ImageBlock = z.infer<typeof imageBlockSchema>;
 export type VideoBlock = z.infer<typeof videoBlockSchema>;
 
-/** Extrae el ID de 11 caracteres de un link de YouTube (watch, youtu.be, embed). */
-export function youtubeId(value: string): string | null {
+export type VideoProvider = "youtube" | "vimeo";
+
+export interface VideoRef {
+  provider: VideoProvider;
+  id: string;
+}
+
+/**
+ * Parsea un link de YouTube o Vimeo y devuelve proveedor + ID.
+ * Se exige HTTPS y un host exacto: nada de `youtube.com@evil.com` ni rutas
+ * arbitrarias que después terminen dentro de un iframe.
+ */
+export function videoProvider(value: string): VideoRef | null {
   const raw = value.trim();
   if (!raw) return null;
 
-  const patterns = [
-    /(?:youtube\.com\/watch\?[^#]*\bv=)([A-Za-z0-9_-]{11})/,
-    /(?:youtu\.be\/)([A-Za-z0-9_-]{11})/,
-    /(?:youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/,
-    /(?:youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/,
-  ];
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return null;
+  }
 
-  for (const pattern of patterns) {
-    const match = raw.match(pattern);
-    if (match?.[1]) return match[1];
+  if (url.protocol !== "https:") return null;
+  if (url.username || url.password) return null;
+
+  const host = url.hostname.toLowerCase().replace(/^www\./, "");
+  const path = url.pathname.replace(/\/+$/, "");
+
+  if (host === "youtu.be") {
+    const id = path.split("/").filter(Boolean)[0];
+    return id && /^[A-Za-z0-9_-]{11}$/.test(id)
+      ? { provider: "youtube", id }
+      : null;
+  }
+
+  if (host === "youtube.com" || host === "m.youtube.com") {
+    if (path === "/watch") {
+      const id = url.searchParams.get("v");
+      return id && /^[A-Za-z0-9_-]{11}$/.test(id)
+        ? { provider: "youtube", id }
+        : null;
+    }
+
+    const match = path.match(/^\/(?:embed|shorts)\/([A-Za-z0-9_-]{11})$/);
+    return match ? { provider: "youtube", id: match[1] } : null;
+  }
+
+  if (host === "vimeo.com") {
+    const id = path.split("/").filter(Boolean)[0];
+    return id && /^\d{6,12}$/.test(id)
+      ? { provider: "vimeo", id }
+      : null;
+  }
+
+  if (host === "player.vimeo.com") {
+    const match = path.match(/^\/video\/(\d{6,12})$/);
+    return match ? { provider: "vimeo", id: match[1] } : null;
   }
 
   return null;
 }
 
+/** Compatibilidad con los bloques y la UI existentes. */
+export function youtubeId(value: string): string | null {
+  const ref = videoProvider(value);
+  return ref?.provider === "youtube" ? ref.id : null;
+}
+
+/** URL de embed generada por nosotros; nunca se usa la URL cruda en el iframe. */
+export function videoEmbedUrl(value: string): string | null {
+  const ref = videoProvider(value);
+  if (!ref) return null;
+  if (ref.provider === "youtube") {
+    return `https://www.youtube.com/embed/${ref.id}`;
+  }
+  return `https://player.vimeo.com/video/${ref.id}`;
+}
+
+/** Compatibilidad: solo YouTube. */
 export function youtubeEmbedUrl(value: string): string | null {
-  const id = youtubeId(value);
-  return id ? `https://www.youtube.com/embed/${id}` : null;
+  return youtubeId(value) ? videoEmbedUrl(value) : null;
 }
 
 /**
@@ -86,9 +146,7 @@ export function isAllowedLandingImage(url: string): boolean {
     .replace(/\/+$/, "");
   if (!base) return false;
 
-  return url.startsWith(
-    `${base}/storage/v1/object/public/raffle-images/`,
-  );
+  return url.startsWith(`${base}/storage/v1/object/public/raffle-images/`);
 }
 
 /** Parsea el JSON de la base sin romper la página si una fila vieja es inválida. */

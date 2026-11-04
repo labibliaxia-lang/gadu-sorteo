@@ -49,8 +49,8 @@ export default async function LandingBuilderPage({
             Landing promocional
           </h1>
           <p className="text-sm text-muted-foreground">
-            Contenido arriba del grid: texto, imágenes y videos. Se guarda como
-            bloques seguros, sin HTML.
+            Contenido arriba del grid: texto, imágenes y videos de YouTube o
+            Vimeo. Se guarda como bloques seguros, sin HTML.
           </p>
         </div>
         <Link

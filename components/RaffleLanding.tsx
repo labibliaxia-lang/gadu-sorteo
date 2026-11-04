@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Ticket } from "lucide-react";
 
 import {
-  youtubeEmbedUrl,
+  videoEmbedUrl,
   type LandingBlock,
 } from "@/lib/landing";
 
@@ -84,7 +84,7 @@ export function RaffleLanding({
           );
         }
 
-        const embed = youtubeEmbedUrl(block.url);
+        const embed = videoEmbedUrl(block.url);
 
         return (
           <div
