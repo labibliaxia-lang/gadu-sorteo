@@ -48,22 +48,29 @@ contenido promocional de la landing (bloques de 0044).
 
 ## Evidence
 
-**1 — pendiente de aplicación.** La migración está escrita; el código consulta
-con `select("*")` para que la app siga funcionando si 0066 todavía no está
-aplicada (`is_featured` llega ausente y se trata como `false`).
+**1 — observed (2026-11-04).** `0066` aplicada en el SQL Editor: la columna
+`is_featured` existe y el primer destacado quedó con `featured_at`. El código
+consulta con `select("*")`, así que también funcionaba antes de aplicarla
+(`is_featured` llegaba ausente y se trataba como `false`).
 
-**2-3 — observed by reading, pendiente corrida.** `setRaffleFeatured` repite la
-comprobación de rol, valida el UUID, audita y responde con un mensaje explícito
-si falta la migración. `FeatureRaffleButton` apaga el botón mientras guarda y
-muestra el error debajo.
+**2-3 — observed en producción (2026-11-04).** El dueño destacó `auto 2026`
+desde **Super → Sorteos** y quedó la fila de auditoría:
 
-**4 — observed by reading.** En la home, `featured` es el primer activo con
-`is_featured`, luego el primer activo, luego el primero de la lista; la cartelera
-ordena los destacados primero y muestra el badge.
+```text
+2026-11-04T19:45:10Z | RAFFLE_FEATURE | labibliaxia@gmail.com |
+{"raffle_id":"a925dacd-…","title":"auto 2026","featured":true}
+```
 
-**5 — observed en producción (2026-11-04).** La landing de un sorteo renderiza
-la sección «Más sorteos · Seguí participando» con hasta 6 tarjetas de otros
-sorteos activos y el CTA «Ver todos los sorteos» apuntando a `/`.
+`setRaffleFeatured` repite la comprobación de rol, valida el UUID, audita y
+responde con un mensaje explícito si falta la migración.
+
+**4 — observed con captura (2026-11-04).** La home muestra el ticket
+«SORTEO DESTACADO · auto 2026» en el hero (`.design/shots/featured-home.png`).
+
+**5 — observed en producción (2026-11-04).** La landing de otro sorteo
+renderiza «Más sorteos · Seguí participando» con `auto 2026` primero, badge
+«Destacado», y el CTA «Ver todos los sorteos» a la home
+(`.design/shots/featured-landing-more.png`).
 
 ## Next
 
