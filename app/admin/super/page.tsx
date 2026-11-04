@@ -1361,7 +1361,7 @@ export default async function SuperAdminPage({
                     tone="amber"
                     valueType="count"
                     empty={{
-                      icon: Users,
+                      icon: "users",
                       title: "Sin altas en el período",
                       description:
                         "Cuando se registren cuentas nuevas vas a ver la serie diaria acá.",
@@ -1385,7 +1385,7 @@ export default async function SuperAdminPage({
                     tone="gold"
                     valueType="ars"
                     empty={{
-                      icon: Coins,
+                      icon: "coins",
                       title: "Sin ventas en el período",
                       description:
                         "No hay números vendidos en los últimos 30 días.",

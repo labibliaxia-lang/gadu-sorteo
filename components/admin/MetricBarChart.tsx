@@ -1,6 +1,6 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
+import { Coins, Users, type LucideIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
   Bar,
@@ -55,14 +55,25 @@ const TONES: Record<Tone, { dark: string; light: string }> = {
   gold: { dark: "#F5B301", light: "#8C6400" },
 };
 
+type EmptyIcon = "users" | "coins";
+
+const EMPTY_ICONS: Record<EmptyIcon, LucideIcon> = {
+  users: Users,
+  coins: Coins,
+};
+
 interface Props {
   data: MetricBarPoint[];
   /** Nombre de la serie (eje, tooltip y leyenda accesible). */
   label: string;
   tone: Tone;
   valueType: "count" | "ars";
+  /**
+   * Icono serializable: el dashboard es un Server Component y no puede pasar
+   * componentes/funciones a este Client Component.
+   */
   empty: {
-    icon: LucideIcon;
+    icon: EmptyIcon;
     title: string;
     description: string;
   };
@@ -89,7 +100,7 @@ export function MetricBarChart({
   if (data.length === 0 || total === 0) {
     return (
       <EmptyState
-        icon={empty.icon}
+        icon={EMPTY_ICONS[empty.icon]}
         title={empty.title}
         description={empty.description}
       />
