@@ -184,7 +184,7 @@ export default async function RafflePage({
 
   const { data: organizerRatings } = raffle.created_by
     ? await supabase
-        .from("reviews")
+        .from("public_reviews")
         .select("rating")
         .eq("organizer_id", raffle.created_by)
         .limit(1000)
@@ -227,11 +227,25 @@ export default async function RafflePage({
   }
 
   const { data: questionRows } = await supabase
-    .from("raffle_questions")
-    .select("id, user_id, question, answer, created_at, answered_at")
+    .from("public_questions")
+    .select("id, question, answer, created_at, answered_at")
     .eq("raffle_id", raffle.id)
     .order("created_at", { ascending: false })
     .limit(50);
+
+  // `public_questions` no expone user_id. Para saber cuáles son del visitante
+  // se consultan solo sus propios IDs contra la tabla autenticada.
+  const myQuestionIds = new Set<string>();
+  if (viewer) {
+    const { data: mine } = await supabase
+      .from("raffle_questions")
+      .select("id")
+      .eq("raffle_id", raffle.id)
+      .eq("user_id", viewer.id);
+    for (const row of mine ?? []) {
+      if (row.id) myQuestionIds.add(row.id as string);
+    }
+  }
 
   const questions: PublicQuestion[] = (questionRows ?? []).map((row) => ({
     id: row.id as string,
@@ -239,7 +253,7 @@ export default async function RafflePage({
     answer: (row.answer as string | null) ?? null,
     createdAt: row.created_at as string,
     answeredAt: (row.answered_at as string | null) ?? null,
-    isMine: Boolean(viewer && row.user_id === viewer.id),
+    isMine: myQuestionIds.has(row.id as string),
   }));
 
   const canModerateQna = Boolean(

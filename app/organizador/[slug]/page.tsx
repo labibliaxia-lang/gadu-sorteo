@@ -124,7 +124,7 @@ export default async function OrganizerProfilePage({
     : null;
 
   const { data: reviewRows } = await supabase
-    .from("reviews")
+    .from("public_reviews")
     .select(
       "id, organizer_id, raffle_id, user_name, rating, comment, reply, created_at",
     )
