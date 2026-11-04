@@ -20,6 +20,7 @@ let warnedMissingConfig = false;
 let checkoutLimiter: Ratelimit | null | undefined;
 let mockLimiter: Ratelimit | null | undefined;
 let webhookLimiter: Ratelimit | null | undefined;
+let loginLimiter: Ratelimit | null | undefined;
 
 function createLimiter(
   prefix: string,
@@ -68,6 +69,13 @@ function getWebhookLimiter(): Ratelimit | null {
   return webhookLimiter;
 }
 
+function getLoginLimiter(): Ratelimit | null {
+  if (loginLimiter === undefined) {
+    loginLimiter = createLimiter("login", 5, "15 m");
+  }
+  return loginLimiter;
+}
+
 async function limit(
   limiter: Ratelimit | null,
   identifier: string,
@@ -97,6 +105,11 @@ export function limitMockPayment(userId: string): Promise<RateLimitResult> {
 /** 60 requests por minuto por IP (Mercado Pago). */
 export function limitWebhook(ip: string): Promise<RateLimitResult> {
   return limit(getWebhookLimiter(), ip);
+}
+
+/** 5 intentos de inicio de sesión cada 15 minutos por IP. */
+export function limitLogin(ip: string): Promise<RateLimitResult> {
+  return limit(getLoginLimiter(), ip);
 }
 
 /** IP del cliente según los headers de Vercel; "unknown" como último recurso. */
