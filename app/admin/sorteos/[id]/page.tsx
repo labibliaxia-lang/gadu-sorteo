@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { RaffleActions } from "@/components/RaffleActions";
+import { PublishCommitmentButton } from "@/components/PublishCommitmentButton";
 import { RaffleDeleteButton } from "@/components/RaffleDeleteButton";
 import { RefundMarkPaidButton } from "@/components/admin/RefundMarkPaidButton";
 import { RaffleCloneButton } from "@/components/RaffleCloneButton";
@@ -463,17 +464,24 @@ export default async function AdminRaffleDetailPage({
               label: "1. Datos del sorteo",
               detail: "Título, precio, fecha y datos de pago.",
               done: true,
+              action: null,
             },
             {
               label: "2. Números y premios",
               detail: "Generá los números y cargá los premios.",
               done: true,
+              action: null,
             },
             {
               label: "3. Compromiso publicado",
               detail:
                 "Publicá el hash de la semilla antes de sortear: sin esto no se puede ejecutar el sorteo.",
               done: Boolean(raffle.draw_commitment),
+              // El botón vive acá y no solo en la fila de acciones: el paso que
+              // dice «Pendiente» tiene que traer la acción al lado.
+              action: raffle.draw_commitment ? null : (
+                <PublishCommitmentButton raffleId={raffle.id} />
+              ),
             },
             {
               label: "4. Sorteo",
@@ -482,6 +490,7 @@ export default async function AdminRaffleDetailPage({
                   ? "Ya hay números vendidos: podés sortear."
                   : "Necesitás al menos un número vendido para sortear.",
               done: raffle.status === "drawn",
+              action: null,
             },
           ].map((step) => (
             <div
@@ -492,9 +501,12 @@ export default async function AdminRaffleDetailPage({
                 <p className="font-medium">{step.label}</p>
                 <p className="text-xs text-muted-foreground">{step.detail}</p>
               </div>
-              <Badge variant={step.done ? "success" : "warning"}>
-                {step.done ? "Listo" : "Pendiente"}
-              </Badge>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={step.done ? "success" : "warning"}>
+                  {step.done ? "Listo" : "Pendiente"}
+                </Badge>
+                {step.action}
+              </div>
             </div>
           ))}
           <div className="flex flex-wrap gap-2 pt-2 text-xs">
