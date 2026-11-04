@@ -55,6 +55,16 @@ el motivo en el mismo mensaje de error que ya usaba el salto.
 `window.location.href` cuando está en esa página y cae a la ruta canónica en
 cualquier otro caso, así el organizador comparte el enlace de su landing.
 
+**6 — observed en producción (2026-11-04, Chrome headless contra la landing de
+`a925dacd…`).** Al escribir `00150` en "Ir a un número", la grilla cambió a
+"Página 2 de 112" y el botón del 150 quedó visible con el anillo ámbar
+(`border-amber-400 ring-2 ring-amber-400/70`). El salto de tipeo no mueve el
+foco del campo: el comprador puede seguir escribiendo. Enter y «Ir» sí mueven
+el foco al número y lo dejan elegido; sin sesión abren el pedido de login.
+
+**Nota.** La verificación se hizo con Chrome headless (DevTools Protocol), sin
+sesión, así que la selección con sesión queda pendiente de probar a mano.
+
 ## Next
 
 Probar en la landing pública de `a925dacd…` (10.000 números): escribir `00150`,

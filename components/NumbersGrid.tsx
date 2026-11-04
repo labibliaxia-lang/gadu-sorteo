@@ -543,8 +543,8 @@ export function NumbersGrid({
     return count;
   }, [numbers]);
 
-  /** Cambia a la página del número, lo resalta y le da el foco. */
-  function goToNumber(target: number) {
+  /** Cambia a la página del número y lo resalta; opcionalmente le da el foco. */
+  function goToNumber(target: number, moveFocus = false) {
     const location = findNumberLocation(target, totalCount, pageSize, cols);
     if (!location) return;
 
@@ -552,6 +552,10 @@ export function NumbersGrid({
     setPage(location.page);
     highlightSeq.current += 1;
     setHighlight({ num: target, seq: highlightSeq.current });
+
+    // Al tipear NO movemos el foco: el comprador sigue escribiendo en el
+    // campo. Solo lo pedimos al confirmar con Enter o «Ir».
+    if (!moveFocus) return;
 
     // La página nueva se pinta en el próximo render: recién ahí existe el
     // botón del número para poder enfocarlo.
@@ -571,7 +575,7 @@ export function NumbersGrid({
       return;
     }
 
-    goToNumber(target);
+    goToNumber(target, true);
 
     // Confirmar con Enter o «Ir» además elige el número si está disponible.
     const status = numbers.get(target)?.status ?? "available";
