@@ -144,8 +144,8 @@ usan `window` dentro de efectos/handlers.
 
 **14 — observado.** `git status --porcelain` y `git diff --name-only` no listan
 `app/api/checkout/**`, `app/api/webhooks/**`, `app/api/cron/**`, `lib/payments.ts`, `lib/mercadopago.ts`
-ni cambios sobre `supabase/migrations/0063_*`. `0063_raffle_cancellation_refunds.sql` aparece como
-archivo **nuevo sin trackear** de otro feature en curso (cancelación/devoluciones), no de este trabajo.
+ni cambios sobre `supabase/migrations/0063_*`. Al momento de la verificación `0063` era un archivo
+nuevo sin trackear de otro feature en curso; después se commiteó aparte (`93367bf`).
 
 **15 — observado.** `npx tsc --noEmit` → 0. `npx next lint` (con `NODE_OPTIONS=--max-old-space-size=4096`)
 → `✔ No ESLint warnings or errors`. `npm test` → **11 files / 127 tests passed** (incluye
@@ -232,9 +232,9 @@ correcciones posteriores movieron líneas dentro de `app/admin/super/actions.ts`
 
 ## Limitaciones y pendientes
 
-- **Aplicar 0064 en Supabase.** Sin la migración el panel degrada con avisos (`dailyNote` en
-  `page.tsx:568-573`, `reportsNote` en `988-989`) y el tracking no persiste; el resto de la consola
-  sigue funcionando. Correr después `supabase/tests/verificar_esquema.sql` (check 18).
+- **0064 aplicada y verificada (2026-11-04).** El script de auditoría confirma `page_views` con RLS
+  y sin policy de INSERT, la RPC `superadmin_daily_metrics(integer)`, `raffle_reports` con UNIQUE y
+  RLS, y la vista `audit_logs`. El panel ya no debería mostrar los avisos de degradación.
 - **Smoke test E2E de impersonación con un usuario real.** Falta probar contra la base: entrar como
   usuario con email confirmado, verificar `IMPERSONATE_USER`, salir, comprobar que la sesión del admin
   vuelve y que se registró `IMPERSONATE_END`. Los tests actuales son unitarios sobre módulos puros
@@ -249,8 +249,8 @@ correcciones posteriores movieron líneas dentro de `app/admin/super/actions.ts`
 - El MRR incluye planes manuales y canjes de licencia como si fueran suscripciones mensuales: es
   estimación, no facturación real.
 - Los visitantes únicos solo cubren usuarios autenticados; no hay identificador anónimo por privacidad.
-- No se repitió `npm run build` en esta verificación por el árbol compartido; el Lead lo corrió con
-  exit 0 y `/api/track-visit` presente.
+- `npm run build` se repitió sobre el árbol ya commiteado (`8615c55`) → exit 0, con `/api/track-visit`
+  en la salida.
 
 ## Next
 

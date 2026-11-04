@@ -70,7 +70,7 @@ heredar tokens y quitar violeta. Contenido de las fotos de premios (las sube el 
 | 6 | Contraste AA en los pares de texto usados | `.design/contrast.mjs` |
 | 7 | Sin overflow horizontal a 390/768/1440 | `.design/audit.mjs` (CDP) |
 | 8 | Gates verdes | typecheck/lint/test/build |
-| 9 | Crítica visual externa y correcciones | informe del subagente crítico |
+| 9 | Crítica visual externa y correcciones | `.design/memory.md` + `shots/qa4-home-390.png`, `shots/qa2-verificar-1440.png` |
 
 ## Evidence
 
@@ -108,9 +108,43 @@ este documento y en `.design/memory.md`.
 números se verificó por lectura de código (virtualización intacta) y por captura; elegir un número
 real, reservarlo y pagar requiere sesión y no se ejecutó en esta pasada.
 
+**Re-verificación tras las correcciones de la crítica (2026-11-04).** `npm run typecheck` → 0 ·
+`npm run lint` → sin warnings · `npm test` → 127/127 · `npm run build` → exit 0. El render de las
+dos pantallas corregidas se verificó con Chrome headless (`.design/audit.mjs`) sobre el servidor de
+desarrollo, a 390×844 y 1440×900.
+
 ## Crítica
 
-(se completa con el informe del subagente crítico y las correcciones aplicadas)
+Segunda pasada de un subagente crítico sin permiso de escritura, sobre las capturas finales.
+Veredicto inicial: **NO-GO** (1 bloqueante, 4 altos). El detalle completo, con el estado de cada
+hallazgo, vive en [`.design/memory.md`](../../../.design/memory.md).
+
+**Corregido en esta pasada:**
+
+- **BLOQUEANTE — el destacado móvil había perdido la fecha.** A 390 era una fila de lista (miniatura
+  de 40px, título y una línea de progreso): sin foto, sin barra, sin CTA y sin fecha en la primera
+  pantalla. Ahora es el mismo ticket recomprimido: foto, fecha completa en una línea, progreso con
+  barra, precio y "Elegir" en el talón perforado. La fecha queda sobre el fold a 390×844.
+  Evidencia: `shots/qa4-home-390.png` y `shots/qa4-home-top-390.png`.
+- **ALTO — `/sorteos/[id]/verificar` era una página casi vacía.** El estado "todavía no hay
+  compromiso" no explicaba nada y dejaba ~200px de negro muerto. Se agregó el bloque "Cómo se
+  verifica" con los tres pasos (compromiso antes, semilla revelada, hash del listado) y el badge de
+  estado quedó anclado al eyebrow en vez de flotar solo. Evidencia: `shots/qa2-verificar-1440.png`.
+
+**Abierto, con criterio (no bloquea el cierre del rediseño):**
+
+- La grilla de números corta una fila al medio y no señala que hay más (altura múltiplo de la celda,
+  máscara inferior y contador de rango).
+- El ámbar se repite demasiado: siete "Participar" llenos y varios links compiten con el CTA del
+  hero. La regla es un CTA lleno por viewport; el resto a neutro.
+- `/planes` no tiene botón por card: "Consultar" ocupa el lugar del precio. Es una decisión de
+  producto (si el CTA es WhatsApp, vuelve el número que se había dejado de exponer).
+- Formato de datos inconsistente entre pantallas (mayúsculas, miles y fechas) y datos de prueba
+  visibles en la cartelera ("amoladora" ×4, descripción "d,jabsdkvabdjkl"). El segundo es higiene
+  de datos, no de código.
+
+La crítica dio por bueno y no se tocó: contraste AA del mono de datos (≈5,6:1 en ambos temas), cero
+degradés decorativos/glow/emojis/violeta, y la card-ticket como firma real.
 
 ## Next
 

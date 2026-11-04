@@ -83,11 +83,14 @@ export default async function VerifyPage({
         Volver al sorteo
       </Link>
 
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="eyebrow-gold">Verificación pública</p>
+          <Badge variant="secondary">
+            {statusLabel[raffle.status as Raffle["status"]]}
+          </Badge>
+        </div>
         <div>
-          <p className="eyebrow-gold">
-            Verificación pública
-          </p>
           <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.02em]">
             {raffle.title}
           </h1>
@@ -97,39 +100,60 @@ export default async function VerifyPage({
               : "Todavía no se realizó el sorteo."}
           </p>
         </div>
-        <Badge variant="secondary">
-          {statusLabel[raffle.status as Raffle["status"]]}
-        </Badge>
       </header>
 
       {!drawn ? (
-        <section className="space-y-3 rounded-lg border border-hairline bg-panel-1 p-6">
-          <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
-            <ShieldCheck className="h-5 w-5 text-brand-accent" />
-            Compromiso del sorteo
-          </h2>
-          {raffle.draw_commitment ? (
-            <>
+        <>
+          <section className="space-y-3 rounded-lg border border-hairline bg-panel-1 p-6">
+            <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+              <ShieldCheck className="h-5 w-5 text-brand-accent" />
+              Compromiso del sorteo
+            </h2>
+            {raffle.draw_commitment ? (
+              <>
+                <p className="text-[13px] text-fg-subtle">
+                  El organizador ya publicó el compromiso (hash de la semilla).
+                  Cuando se sortee vas a poder comparar el resultado acá.
+                </p>
+                <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono text-xs">
+                  {raffle.draw_commitment}
+                </code>
+              </>
+            ) : (
               <p className="text-[13px] text-fg-subtle">
-                El organizador ya publicó el compromiso (hash de la semilla).
-                Cuando se sortee vas a poder comparar el resultado acá.
+                Este sorteo todavía no publicó el compromiso de la semilla. Cuando lo haga, vas a poder compararlo acá antes del sorteo.
               </p>
-              <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono text-xs">
-                {raffle.draw_commitment}
-              </code>
-            </>
-          ) : (
-            <p className="text-[13px] text-fg-subtle">
-              Este sorteo todavía no publicó el compromiso de la semilla. Cuando lo haga, vas a poder compararlo acá antes del sorteo.
-            </p>
-          )}
-          <Link
-            href={`/sorteos/${params.id}/en-vivo`}
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
-          >
-            Ir a la sala en vivo
-          </Link>
-        </section>
+            )}
+            <Link
+              href={`/sorteos/${params.id}/en-vivo`}
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
+            >
+              Ir a la sala en vivo
+            </Link>
+          </section>
+
+          <section className="overflow-hidden rounded-lg border border-hairline bg-panel-1">
+            <div className="border-b border-hairline px-4 py-3">
+              <h2 className="font-display text-lg font-semibold">
+                Cómo se verifica
+              </h2>
+            </div>
+            <ol className="divide-y divide-hairline">
+              {[
+                "Antes del sorteo el organizador publica el compromiso: el hash SHA-256 de una semilla secreta. Si la cambiara después, el hash no coincidiría.",
+                "Al sortear se revela la semilla. Cualquiera puede recalcular el hash y comprobar que es la misma que se publicó antes.",
+                "El listado de números vendidos también se hashea. Si se agregara o quitara un número, la huella del resultado no coincidiría.",
+              ].map((step, index) => (
+                <li key={step} className="flex gap-3 px-4 py-3">
+                  <span className="font-mono text-[11px] leading-5 text-fg-subtle">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <p className="text-[13px] leading-5 text-fg-muted">{step}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </>
       ) : (
         <>
           <section className="rounded-lg border border-brand-500/25 bg-brand-500/[0.06] p-6">

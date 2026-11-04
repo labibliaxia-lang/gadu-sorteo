@@ -65,15 +65,20 @@ superadmin. El trigger bloquea cambios de monto/comprador y setea `paid_at`.
 contactar al organizador; Mis Números muestra el mismo aviso en el boleto. El listado usa la etiqueta
 «Cancelado».
 
-**7 — parcial.** `typecheck` 0 · `lint` 0 warnings · `test` 106/106 (suite actual).
-**Build pendiente**: otro proceso está editando 76 archivos de diseño en paralelo y `next build` agota
-la memoria del entorno; no se mezcló ese trabajo en esta fase.
+**7 — observado (2026-11-04).** `npm run typecheck` → 0 · `npm run lint` → sin warnings · `npm test`
+→ 127/127 · `npm run build` → exit 0. La migración `0063` está aplicada y verificada en la base
+(`estado_migraciones.sql`: `refunds` con RLS/UNIQUE, `cancelled_at`, `cancellation_reason` y estado
+`cancelled`).
 
-## Bloqueo de cierre
+## Estado
 
-Hay cambios externos sin commitear en `app/globals.css`, `app/page.tsx`, `Navbar`, `Footer`, UI y
-otras páginas. No se commiteó esta fase para no mezclar ese rediseño. Cuando ese proceso termine, hay
-que correr `npm run build`, aplicar 0063 y commitear solo los archivos de cancelación.
+**Desbloqueado (2026-11-04).** El rediseño visual se commiteó (`9997cad`) y el árbol quedó limpio;
+la migración `0063` está aplicada en Supabase y verificada con el script de auditoría (tabla
+`refunds` con RLS y UNIQUE, columnas de cancelación y estado `cancelled`). Ya no hay cambios
+externos que impidan correr los gates ni commitear.
+
+Lo que falta no es código: probar el flujo completo contra un sorteo de staging con dos compradores
+(cancelar → 2 filas `pending` → marcar una `paid` → comprobar RLS con otro organizador).
 
 ## Límites honestos
 

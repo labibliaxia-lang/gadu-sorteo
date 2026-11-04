@@ -190,6 +190,7 @@ export default async function HomePage() {
     raffleList[0] ??
     null;
   const featuredStats = featured ? raffleStats[featured.id] : undefined;
+  const featuredPercent = rafflePercent(featuredStats);
 
   const platformStats = [
     {
@@ -264,42 +265,71 @@ export default async function HomePage() {
                 Transferencia · comprobante por WhatsApp · resultado con hash
               </p>
 
-              {/* Versión compacta del destacado en móvil. */}
+              {/* Versión compacta del destacado en móvil: el mismo ticket,
+                  recomprimido. La fecha no puede caer bajo el fold: es el dato
+                  que dispara la urgencia. */}
               {featured && (
                 <Link
                   href={`/sorteos/${featured.id}`}
-                  className="group mt-8 flex items-center gap-3 rounded-xl border border-hairline bg-panel-1 p-3 transition-colors hover:border-hairline-strong lg:hidden"
+                  className="group mt-8 block overflow-hidden rounded-xl border border-hairline bg-panel-1 transition-colors hover:border-hairline-strong lg:hidden"
                 >
-                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-panel-2">
-                    {featured.cover_image_url ? (
-                      <Image
-                        src={featured.cover_image_url}
-                        alt={featured.title}
-                        fill
-                        sizes="56px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <span className="flex h-full items-center justify-center">
-                        <Gift className="h-5 w-5 text-fg-subtle" />
-                      </span>
-                    )}
+                  <div className="flex items-center justify-between gap-2 border-b border-hairline px-4 py-2">
+                    <span className="eyebrow-gold">Sorteo destacado</span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-fg-subtle">
+                      {featured.draw_commitment
+                        ? "Compromiso publicado"
+                        : "Verificable"}
+                    </span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {featured.title}
-                    </p>
-                    <p className="font-mono text-[12px] text-fg-subtle">
-                      {featuredStats
-                        ? `${featuredStats.sold} de ${featuredStats.total} vendidos`
-                        : "Sorteo activo"}{" "}
-                      · {formatPrice(Number(featured.price_per_number))}
-                    </p>
+                  <div className="flex gap-3 p-3 pb-2">
+                    <div className="relative h-[84px] w-[68px] shrink-0 overflow-hidden rounded-lg border border-hairline bg-panel-2">
+                      {featured.cover_image_url ? (
+                        <Image
+                          src={featured.cover_image_url}
+                          alt={featured.title}
+                          fill
+                          sizes="68px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-full items-center justify-center">
+                          <Gift className="h-5 w-5 text-fg-subtle" />
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <p className="truncate text-sm font-medium">
+                        {featured.title}
+                      </p>
+                      <p className="flex items-center gap-1.5 font-mono text-[11px] text-fg-subtle">
+                        <CalendarDays
+                          className="h-3 w-3 shrink-0"
+                          aria-hidden="true"
+                        />
+                        {formatDateTime(featured.draw_date)}
+                      </p>
+                      <p className="font-mono text-[11px] text-fg-subtle">
+                        {featuredStats
+                          ? `${featuredStats.sold.toLocaleString("es-AR")} de ${featuredStats.total.toLocaleString("es-AR")} · ${featuredPercent}%`
+                          : "Sorteo activo"}
+                      </p>
+                      <div className="h-0.5 overflow-hidden rounded-full bg-panel-3">
+                        <div
+                          className="h-full rounded-full bg-brand-500"
+                          style={{ width: `${featuredPercent}%` }}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <ArrowRight
-                    className="h-4 w-4 shrink-0 text-brand-accent"
-                    aria-hidden="true"
-                  />
+                  <div className="ticket-stub -mx-0 flex items-center justify-between px-3 pt-2.5 pb-3">
+                    <span className="font-mono text-[13px] text-fg">
+                      {formatPrice(Number(featured.price_per_number))}
+                    </span>
+                    <span className="flex items-center gap-1 rounded-md border border-hairline bg-panel-1 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-muted transition-colors group-hover:border-brand-500/50 group-hover:text-brand-accent">
+                      Elegir
+                      <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                    </span>
+                  </div>
                 </Link>
               )}
 
