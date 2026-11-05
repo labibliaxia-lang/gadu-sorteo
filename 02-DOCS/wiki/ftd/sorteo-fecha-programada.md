@@ -59,3 +59,30 @@ más tarde (no se cierra una ventana), para no impedir el sorteo si se demora un
 
 Aplicar 0047 y probar con un sorteo de fecha futura; después, mostrar el contador también en la vista
 pública del sorteo.
+
+## Enmienda 2026-11-05 — contador público y fecha fija mientras hay venta
+
+**Qué se agrega.**
+
+- `lib/countdown.ts` + `lib/countdown.test.ts`: estado puro de la cuenta regresiva
+  (`running` / `reached` / `inactive`) y formato `2d 04:12:05`. Nunca devuelve negativos.
+- `components/RaffleCountdown.tsx`: contador cliente. Antes de montar muestra la fecha exacta, así no
+  rompe la hidratación; al llegar a cero dice **«Fecha alcanzada · sorteo pendiente»** en vez de
+  reiniciarse o mostrar negativos.
+- `app/sorteos/[id]/page.tsx`: contador en el bloque de fecha del sorteo.
+- `components/RaffleMiniCard.tsx`: versión corta («Cierra en …») en las tarjetas.
+- `supabase/migrations/0074_lock_draw_date_when_live.sql`: con el sorteo `active`, cambiar
+  `draw_date` aborta. Superadmin y `service_role` quedan exceptuados. Para moverla: cerrar y
+  republicar. **Escrita, sin aplicar.**
+- `app/admin/sorteos/[id]/editar/EditarSorteoForm.tsx`: con el sorteo activo la fecha se muestra
+  fija, con la explicación.
+- `supabase/tests/verificar_0074.sql`: control (editar el título sigue permitido) antes del ataque
+  (extender la fecha), y `rollback`.
+
+**Por qué por defecto y no opcional.** `raffles.draw_date` es `not null`: todo sorteo tiene fecha.
+Un interruptor dejaría al organizador esconder un dato que ya existe y es parte del contrato, y
+permitiría reiniciar la urgencia cuando le convenga. La cuenta regresiva no es un adorno: es la
+promesa de la fecha, y por eso la fecha se vuelve inmutable mientras hay venta.
+
+**Evidencia.** `lib/countdown.test.ts` (12 casos) y el contrato en `lib/security-invariants.test.ts`
+sobre la última definición de `lock_draw_date_when_live`.

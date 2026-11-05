@@ -275,3 +275,10 @@ Decision   — el consentimiento se registra en `profiles` (fecha + versión) y 
 Why        — pedirlo en cada autenticación no agrega evidencia legal (la fila del perfil ya la tiene) y pone fricción en el paso inmediatamente anterior a la compra, para el 100% de los usuarios.
 Trade-off  — un navegador limpio o un cambio de `TERMS_VERSION` vuelven a pedir el checkbox; el modal `TermsGate` sigue siendo la red para cuentas OAuth sin aceptación registrada.
 Evidence   — `lib/terms.ts` (`termsCookieAccepted`) + `lib/terms.test.ts`; `LoginForm`, `GoogleAuthButton`, `app/auth/callback/route.ts` y `app/actions/terms.ts`. Gates: typecheck 0, lint 0 warnings, tests y build verdes.
+
+## 2026-11-05 — La cuenta regresiva es pública y la fecha no se mueve con el sorteo en venta  (feature: sorteo-fecha-programada)
+Decision   — el contador se muestra siempre, sin interruptor: `draw_date` es obligatoria en `raffles`, así que todo sorteo tiene fecha y esconderla sería ocultar un dato que ya está en la base.
+Guard      — mientras el sorteo está `active`, cambiar `draw_date` aborta (0074, escrita sin aplicar). Superadmin y `service_role` exceptuados; para moverla hay que cerrar y republicar.
+Why        — un contador que se reinicia entrena a los compradores a ignorarlo. La urgencia solo vale si la fecha es una promesa.
+Behaviour  — al llegar a cero muestra «Fecha alcanzada · sorteo pendiente» en vez de negativos o reinicio (el sorteo manual puede demorarse).
+Evidence   — `lib/countdown.ts` + 12 tests; `RaffleCountdown`; contrato en `security-invariants.test.ts`; `verificar_0074.sql`.

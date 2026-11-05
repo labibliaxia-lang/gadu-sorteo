@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUploader } from "@/components/ImageUploader";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 import { updateRaffle } from "@/app/admin/sorteos/[id]/actions";
 import type { Raffle } from "@/lib/types";
 
@@ -248,15 +248,30 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
 
               <div className="space-y-2">
                 <Label htmlFor="draw_date">Fecha del sorteo</Label>
-                <div className="relative">
-                  <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="draw_date"
-                    type="datetime-local"
-                    className="pl-9"
-                    {...register("draw_date")}
-                  />
-                </div>
+                {raffle.status === "active" ? (
+                  <>
+                    <div className="rounded-md border border-input bg-muted px-3 py-2 font-mono text-sm">
+                      {formatDateTime(raffle.draw_date)}
+                    </div>
+                    {/* La fecha viaja igual: con el sorteo en venta no se toca. */}
+                    <input type="hidden" {...register("draw_date")} />
+                    <p className="text-xs text-muted-foreground">
+                      Con el sorteo en venta la fecha queda fija: la cuenta
+                      regresiva pública no se puede reiniciar. Para moverla,
+                      cerrá el sorteo y volvé a publicarlo.
+                    </p>
+                  </>
+                ) : (
+                  <div className="relative">
+                    <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="draw_date"
+                      type="datetime-local"
+                      className="pl-9"
+                      {...register("draw_date")}
+                    />
+                  </div>
+                )}
                 {errors.draw_date && (
                   <p className="text-sm text-destructive">
                     {errors.draw_date.message}

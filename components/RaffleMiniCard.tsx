@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CalendarDays, Gift } from "lucide-react";
 
 import { formatDateTime, formatPrice } from "@/lib/utils";
+import { RaffleCountdown } from "@/components/RaffleCountdown";
 import type { Raffle } from "@/lib/types";
 
 /**
@@ -43,6 +44,13 @@ export function RaffleMiniCard({ raffle }: { raffle: Raffle }) {
           <CalendarDays className="h-3 w-3 shrink-0" aria-hidden="true" />
           {formatDateTime(raffle.draw_date)}
         </p>
+        <span className="mt-0.5 block">
+          <RaffleCountdown
+            drawDate={raffle.draw_date}
+            status={raffle.status}
+            compact
+          />
+        </span>
         <p className="mt-1 font-mono text-[12px] text-fg">
           {formatPrice(Number(raffle.price_per_number))}{" "}
           <span className="text-[11px] text-fg-subtle">por número</span>

@@ -27,6 +27,7 @@ import { OrganizerCard } from "@/components/OrganizerCard";
 import { OrganizerContact } from "@/components/OrganizerContact";
 import { PageViewTracker } from "@/components/PageViewTracker";
 import { PrizeCard } from "@/components/PrizeCard";
+import { RaffleCountdown } from "@/components/RaffleCountdown";
 import { RaffleLanding } from "@/components/RaffleLanding";
 import { RaffleMiniCard } from "@/components/RaffleMiniCard";
 import { RaffleQnA } from "@/components/RaffleQnA";
@@ -400,6 +401,12 @@ export default async function RafflePage({
                   Fecha del sorteo
                 </span>
                 {formatDateTime(raffle.draw_date)}
+                <span className="mt-0.5 block">
+                  <RaffleCountdown
+                    drawDate={raffle.draw_date}
+                    status={raffle.status as Raffle["status"]}
+                  />
+                </span>
               </span>
             </span>
             <span className="hidden h-9 w-px bg-hairline sm:block" />

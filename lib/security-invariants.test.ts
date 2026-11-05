@@ -97,6 +97,20 @@ describe("blindaje: reserva y dinero", () => {
     expect(cuerpo).toMatch(/ya fue sorteado/i);
   });
 
+  it("organizer_mark_reserved_sold rechaza confirmar pagos tras sortear (0074)", () => {
+    // 0071 cerró este agujero para `sell_numbers` y `organizer_mark_sold`, pero
+    // no para el prepago manual, que es el camino que se usa hoy. Confirmar un
+    // pago después del sorteo cambia el listado vendido, rompe `numbers_hash` y
+    // hace que el verificador acuse fraude en un sorteo limpio.
+    const cuerpo = lastDefinition("organizer_mark_reserved_sold");
+
+    expect(cuerpo).toMatch(/v_status\s*=\s*'drawn'/i);
+    expect(cuerpo).toMatch(/ya fue sorteado/i);
+    // Y sigue siendo todo o nada: sin esto, una venta parcial quedaría sin
+    // comprador.
+    expect(cuerpo).toMatch(/v_count\s*<>\s*v_expected/i);
+  });
+
   it("void_sold_numbers solo con el sorteo en venta (hallazgo #8)", () => {
     const cuerpo = lastDefinition("void_sold_numbers");
 
@@ -134,6 +148,16 @@ describe("blindaje: resultado del sorteo", () => {
 
     expect(cuerpo).toMatch(/old\.draw_date/i);
     expect(cuerpo).toMatch(/new\.draw_date/i);
+  });
+
+  it("la fecha no se mueve con el sorteo en venta: la cuenta regresiva es una promesa", () => {
+    const cuerpo = lastDefinition("lock_draw_date_when_live");
+
+    expect(cuerpo).toMatch(/new\.draw_date\s+is\s+distinct\s+from\s+old\.draw_date/i);
+    expect(cuerpo).toMatch(/old\.status\s*=\s*'active'/i);
+    // Superadmin y procesos del motor quedan exceptuados.
+    expect(cuerpo).toMatch(/is_superadmin\(\)/i);
+    expect(cuerpo).toMatch(/service_role/i);
   });
 
   it("payments admite los estados de devolución (hallazgo #8)", () => {
