@@ -1,0 +1,29 @@
+﻿B13 y la casilla de listado — verificacion final
+================================================
+
+B13 — dos clics en Continuar ya no crean el sorteo
+  Antes: React reutilizaba el mismo <button> y le cambiaba type a submit a
+         mitad del clic. Cuatro sorteos de prueba se crearon asi en produccion.
+  Ahora: key="continuar" / key="crear" fuerzan nodo nuevo, y onSubmit arranca
+         con `if (step !== 3) return`.
+  Medido: dos clics en Continuar -> 0 POST a /rest/v1/raffles, y se llega al
+         paso 3 normalmente.
+
+Casilla «No publicar en el listado»
+  Bug propio, encontrado al interceptar el POST: la etiqueta decia «No publicar»
+  pero el campo registraba is_listed directo, asi que marcarla PUBLICABA.
+  Ahora el campo es no_listado (default false) y el payload mapea
+  is_listed: !no_listado.
+
+  Medido, con la casilla marcada:
+    POST /rest/v1/raffles ...... is_listed: false
+    en la base ................. is_listed: false, status active
+    home ....................... no aparece
+    enlace directo ............. HTTP 200
+
+Limpieza
+  11 sorteos, 0 deslistados, 0 de prueba. 0 cuentas @gadu.test.
+  .sim-password.tmp, .env.prod-sim.local y .mfa-secrets.json borrados.
+
+Gates
+  typecheck 0 | lint limpio | 253/253 tests en 25 archivos | build 0

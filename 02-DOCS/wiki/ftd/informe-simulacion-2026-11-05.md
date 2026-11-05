@@ -392,7 +392,7 @@ de 30, cero, negativos y decimales). Gates 236/236.
 lados) y sorteos activos (2 / 20, mismo conteo y misma excepción de superadmin). El `Math.min(1000, …)`
 del wizard que había marcado como sospechoso es el **valor por defecto** del campo, no un tope.
 
-### B13 — «Continuar» puede crear el sorteo sin pasar por la revisión · **medio — encontrado al verificar**
+### B13 — «Continuar» podía crear el sorteo sin pasar por la revisión · **medio — ✅ arreglado, desplegado y verificado**
 
 Durante la verificación de la casilla de listado aparecieron **dos sorteos creados sin haber apretado
 «Crear sorteo»**: dos clics en «Continuar» bastaron.
@@ -410,11 +410,33 @@ Consecuencia práctica: queda un sorteo publicado —visible en la home— que e
 crear todavía. Es exactamente el escenario que sufrí cuatro veces mientras probaba, con el agravante de
 que estaban en la web real.
 
-**Arreglo sugerido:** botones separados para avanzar y crear (dos nodos distintos, no dos handlers sobre
-el mismo), y `disabled` mientras `loading`. Es más simple que cualquier artilugio sobre el handler.
+**Arreglo aplicado (más chico que separar los botones):** `key="continuar"` / `key="crear"` en cada rama,
+para que React **no reutilice el nodo** cuando cambia el paso, más una guarda al entrar a `onSubmit`:
+`if (step !== 3) return`.
 
-**No está arreglado:** lo dejo documentado para que decidas, porque cambia la estructura del pie del
-wizard y no quería tocar eso sin tu visto bueno.
+La causa no era el `type` (el botón de «Continuar» ya era `type="button"`): era la reconciliación de React,
+que mantiene el mismo `<button>` y le cambia el `type` a `submit` en caliente cuando el clic ya está en
+curso. Con claves distintas se desmonta y se monta otro nodo.
+
+**Verificado en la web desplegada:** dos clics en «Continuar» → **0 peticiones** `POST /rest/v1/raffles`,
+y se llega al paso 3 normalmente. Antes, ese mismo flujo creaba sorteos.
+Evidencia: `evidencia/2026-11-05-b13-verificado/`.
+
+### B14 — La casilla «No publicar» publicaba · **bug propio, encontrado al verificar**
+
+La casilla que agregué para B10 tenía la etiqueta «No publicar en el listado» pero registraba
+directamente el campo `is_listed`. Marcarla ponía `is_listed = true`, o sea **publicaba** el sorteo que
+se quería ocultar.
+
+No lo detecté leyendo el código: lo encontré al interceptar el `POST /rest/v1/raffles` y ver
+`"is_listed": true` con la casilla tildada.
+
+**Arreglo aplicado:** el campo pasó a llamarse `no_listado` (default `false`) y el payload mapea
+`is_listed: !values.no_listado`. Nombrar el campo por lo que la persona marca, no por la columna, evita
+la clase entera de error.
+
+**Verificado en la web:** con la casilla marcada, el `POST` lleva `is_listed: false`, la fila queda
+`is_listed = false` y `status = active`, **no aparece en la home** y el enlace directo responde 200.
 
 ---
 
