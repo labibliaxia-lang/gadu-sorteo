@@ -302,6 +302,10 @@ export default function NuevoSorteoPage() {
   }
 
   async function onSubmit(values: FormValues) {
+    // Cinturón además de los tirantes: el alta sólo puede venir del paso 3. Si
+    // un envío se escapa desde otro paso (B13), no se crea nada.
+    if (step !== 3) return;
+
     // La portada viaja aparte del sorteo. Si el alta corre mientras el archivo
     // todavía sube, el sorteo queda sin portada y el archivo huérfano.
     if (uploading) {
@@ -1005,7 +1009,12 @@ export default function NuevoSorteoPage() {
               )}
 
               {step < 3 ? (
+                // Las claves distintas obligan a React a montar un nodo nuevo al
+                // cambiar de paso. Sin ellas reutiliza el mismo <button> y le
+                // cambia `type` a "submit" a mitad del clic: ahí se crea el
+                // sorteo sin pasar por la revisión (B13).
                 <Button
+                  key="continuar"
                   type="button"
                   onClick={() => void nextStep()}
                   className="flex-1"
@@ -1014,6 +1023,7 @@ export default function NuevoSorteoPage() {
                 </Button>
               ) : (
                 <Button
+                  key="crear"
                   type="submit"
                   className="flex-1"
                   disabled={loading || uploading}
