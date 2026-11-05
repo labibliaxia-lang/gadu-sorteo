@@ -22,6 +22,14 @@ interface PendingEnrollment {
   secret: string;
 }
 
+/** Nombre legible y único del factor: dos altas el mismo día no deben chocar. */
+function factorFriendlyName(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `Gadu ${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate(),
+  )} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 /** Traduce los errores de Supabase MFA sin filtrar detalles internos. */
 function mfaErrorMessage(message: string): string {
   const m = message.toLowerCase();
@@ -84,7 +92,7 @@ export function MfaPanel({
     try {
       const { data, error: enrollError } = await supabase.auth.mfa.enroll({
         factorType: "totp",
-        friendlyName: `Gadu ${new Date().toISOString().slice(0, 10)}`,
+        friendlyName: factorFriendlyName(new Date()),
       });
 
       if (enrollError) {
@@ -249,11 +257,18 @@ export function MfaPanel({
                 <p className="text-sm font-medium">
                   1. Escaneá el código con tu app autenticadora
                 </p>
-                {/* El SVG lo genera Supabase; se muestra como imagen de datos
-                    para no inyectar markup en el DOM. */}
+                {/* El SDK de Supabase ya entrega `qr_code` como data URL completa
+                    (auth-js le antepone `data:image/svg+xml;utf-8,`). Envolverla
+                    otra vez rompe la imagen; solo se envuelve si viniera cruda. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`data:image/svg+xml;utf-8,${encodeURIComponent(enrollment.qrCode)}`}
+                  src={
+                    enrollment.qrCode.startsWith("data:")
+                      ? enrollment.qrCode
+                      : `data:image/svg+xml;utf-8,${encodeURIComponent(
+                          enrollment.qrCode,
+                        )}`
+                  }
                   alt="Código QR para la app autenticadora"
                   width={160}
                   height={160}
