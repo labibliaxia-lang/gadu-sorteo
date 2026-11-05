@@ -223,12 +223,23 @@ exit 0.
 Evidencia: `evidencia/2026-11-05-b4-verificado/` (2 capturas + `verificacion.json` + `pasos.json`).
 
 **Hallazgo que apareció al verificar (B12).** La primera corrida dio un falso negativo contra el sorteo
-«amoladora», que tiene `whatsapp_contact` en `NULL`. `NumbersGrid` corta antes con «El organizador
-todavía no cargó un WhatsApp de contacto». O sea: **un sorteo se puede publicar sin datos de cobro y el
-comprador lo descubre recién al intentar reservar**. El wizard tiene `transfer_alias`, `transfer_cbu`,
-`transfer_bank` y `whatsapp_contact` como opcionales (`sorteos/nuevo/page.tsx:59-62`). En producción hay
-al menos tres sorteos activos en esa situación. No está arreglado: falta decidir si el wizard debe
-exigirlos al publicar.
+«amoladora», que tiene `whatsapp_contact` en `NULL`. `NumbersGrid` cortaba con «El organizador todavía
+no cargó un WhatsApp de contacto» **después** de que la persona eligiera sus números.
+
+Ojo con el diagnóstico fácil: el wizard **ya exige** alias o CBU y WhatsApp desde su `superRefine`
+(`sorteos/nuevo/page.tsx:78-93`). No hay hueco de validación: el problema es **data vieja** — sorteos
+creados antes de esa regla. En producción había al menos cuatro activos en esa situación («amoladora»
+x2, «camion», «amo»).
+
+**Arreglo aplicado (del lado del comprador).** `NumbersGrid` detecta que no hay WhatsApp y muestra el
+aviso arriba de la grilla, con el botón de reservar deshabilitado. El comprador deja de caminar hasta el
+final para chocar con un error.
+
+**Verificado en la web desplegada:** el sorteo «amoladora» muestra el aviso y no ofrece el botón de
+reservar (`evidencia/2026-11-05-b6-b12-verificado/`).
+
+**Pendiente de decisión:** esos cuatro sorteos siguen sin poder venderse. O los organizadores cargan los
+datos, o se desactivan hasta que lo hagan.
 
 ### B5 — El wizard pedía 4 datos y la base exigía 9 · **alto — ✅ arreglado**
 
@@ -262,13 +273,26 @@ incluido el caso explícito «con sólo los 4 del wizard viejo todavía falta».
 
 Verificado: `typecheck` 0, `lint` 0, **218/218 tests** en 20 archivos.
 
-### B6 — El verificador «automático» no es automático · **medio [visto en vivo]**
+### B6 — El verificador «automático» no es automático · **medio — ✅ arreglado, desplegado y verificado**
 
-La sección se llama **«Verificador automático»** y dice «Se ejecuta en tu navegador». Pero no ejecuta
-nada hasta que el usuario aprieta **«Comprobar»**. Antes de ese clic no hay ningún check visible: sólo
-cuatro huellas en texto.
+La sección se llamaba **«Verificador automático»** y decía «Se ejecuta en tu navegador». Pero no
+ejecutaba nada hasta que el usuario apretaba **«Comprobar»**. Antes de ese clic no había ningún check:
+sólo cuatro huellas en texto. Un verificador que parece corrido y no lo está es peor que uno que pide
+el clic explícitamente.
 
-Un verificador que parece corrido y no lo está es peor que uno que pide el clic explícitamente.
+**Arreglo aplicado.** `DrawVerifier` corre al montar, con el listado oficial ya cargado, y el botón
+queda para reejecutar después de pegar otro listado.
+
+**Verificado en la web desplegada** con un sorteo temporal ya sorteado (hashes calculados por el propio
+script, sorteo borrado al terminar):
+
+| Comprobación | Resultado |
+|---|---|
+| Sin tocar ningún botón | ✅ «✓ Verificado: el resultado es consistente con la semilla comprometida» |
+| Los 4 checks | ✅ en verde, «Ganador calculado: 10» |
+| Control de que no es decorativo | ✅ pegando `3, 7, 99` avisa que no coincide |
+
+Evidencia: `evidencia/2026-11-05-b6-b12-verificado/`.
 
 ### B7 — Error engañoso al reintentar una reserva · **bajo**
 

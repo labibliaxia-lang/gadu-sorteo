@@ -293,8 +293,10 @@ exporta las variables en el proceso (`preflight.mjs` + `correr-live.mjs`).
    el tope de premios vivía en tres lugares y se unificó en `lib/plans.ts`
    (`maxPrizesPerRaffle` + `canUsePrizes`, contrato en `lib/plans.test.ts`). Gates 236/236
    (`evidencia/2026-11-05-plan-limites/`).
-6. Quedan de menor riesgo: **B4** (modal antes de comprar), **B6** (verificador «automático» que
-   necesita un clic), **B8** (`raffle_visits` con 403, la analítica no registra), **B9** (selección
-   muerta en la grilla) y **B10** (`is_listed` para sorteos internos).
+6. Quedan de menor riesgo: **B9** (selección muerta en la grilla) y **B10** (`is_listed` para sorteos
+   internos). **B12** (sorteo publicado sin datos de cobro) quedó mitigado del lado del comprador:
+   `NumbersGrid` avisa arriba de la grilla y no deja reservar, en vez de fallar al final. **B6**
+   (verificador «automático») ya corre solo. Los dos verificados en la web
+   (`evidencia/2026-11-05-b6-b12-verificado/`).
 7. Darle al equipo un entorno de prueba real: es la razón por la que esta corrida terminó escribiendo
    en producción.

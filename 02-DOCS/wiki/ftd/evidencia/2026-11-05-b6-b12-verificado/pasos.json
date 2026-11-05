@@ -1,0 +1,70 @@
+﻿[
+    {
+        "paso":  "B12-aviso-visible",
+        "rol":  "comprador",
+        "inicio":  "2026-11-05T02:46:31.5350718-03:00",
+        "nota":  null,
+        "esperado":  "un sorteo sin WhatsApp avisa antes de que el comprador elija",
+        "evidencia":  [
+                          "b12-sorteo-sin-cobro.png",
+                          "verificacion.json"
+                      ],
+        "observado":  "el sorteo \u0027amoladora\u0027 (whatsapp_contact NULL) muestra el aviso \u0027Este sorteo todavia no se puede comprar\u0027 arriba de la grilla",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:46:31.5350718-03:00"
+    },
+    {
+        "paso":  "B12-reservar-deshabilitado",
+        "rol":  "comprador",
+        "inicio":  "2026-11-05T02:46:31.5350718-03:00",
+        "nota":  null,
+        "esperado":  "no se puede llegar al callejon sin salida",
+        "evidencia":  [
+                          "verificacion.json"
+                      ],
+        "observado":  "el boton \u0027Reservar y enviar comprobante\u0027 no se renderiza habilitado",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:46:31.5350718-03:00"
+    },
+    {
+        "paso":  "B6-corre-sin-click",
+        "rol":  "verificador",
+        "inicio":  "2026-11-05T02:46:31.5350718-03:00",
+        "nota":  "sorteo temporal creado con hashes calculados por el propio script; borrado al final",
+        "esperado":  "el verificador automatico verifica solo",
+        "evidencia":  [
+                          "b6-verificador-automatico.png",
+                          "verificacion.json"
+                      ],
+        "observado":  "sobre un sorteo sorteado temporal, la pagina muestra \u0027Verificado\u0027 y los 4 checks sin apretar Comprobar; ganador calculado 10",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:46:31.5350718-03:00"
+    },
+    {
+        "paso":  "B6-delata-listado-alterado",
+        "rol":  "verificador",
+        "inicio":  "2026-11-05T02:46:31.5350718-03:00",
+        "nota":  null,
+        "esperado":  "el verificador no es decorativo",
+        "evidencia":  [
+                          "b6-verificador-delata-manipulacion.png",
+                          "verificacion.json"
+                      ],
+        "observado":  "pegando \u00273, 7, 99\u0027 en vez del listado oficial avisa que no coincide",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:46:31.5350718-03:00"
+    },
+    {
+        "paso":  "B6B12-limpieza",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T02:46:31.5350718-03:00",
+        "nota":  null,
+        "esperado":  "no dejar sorteos temporales",
+        "evidencia":  [
+                          "verificacion.json"
+                      ],
+        "observado":  "sorteos temporales restantes=0",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:46:31.5350718-03:00"
+    }
+]

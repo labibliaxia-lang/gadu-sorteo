@@ -1,0 +1,35 @@
+{
+  "pasos": [
+    {
+      "paso": "B12-aviso-visible",
+      "resultado": "ok",
+      "detalle": "«amoladora» muestra el aviso arriba de la grilla"
+    },
+    {
+      "paso": "B12-reservar-deshabilitado",
+      "resultado": "ok",
+      "detalle": "no hay botón de reservar"
+    },
+    {
+      "paso": "B6-corre-sin-click",
+      "resultado": "ok",
+      "detalle": "el verificador muestra «Verificado» sin apretar Comprobar"
+    },
+    {
+      "paso": "B6-delata-listado-alterado",
+      "resultado": "ok",
+      "detalle": "con 99 en vez de 10 avisa que no coincide"
+    }
+  ],
+  "hashes": {
+    "commitment": "e8833b434623bd842a373783766c8ed2ab821c67ec1c7a2bc12078430d716a75",
+    "numbersHash": "2e2114940a25e4820dfa6943a1be8c150e48dcd2bac2177231b4771b6c1bc5df",
+    "resultHash": "002ba47585068c0d78fc9f203dff9e59eae283b8dc73074cadc9f1ed55a37803",
+    "ganador": 10
+  },
+  "vendidos": [
+    3,
+    7,
+    10
+  ]
+}
