@@ -1,0 +1,28 @@
+﻿Verificacion de que la 0074 quedo aplicada en la base
+=====================================================
+
+No alcanza con el "Success. No rows returned" del SQL Editor: eso dice que no
+hubo error, no que la funcion vigente sea la nueva.
+
+Prueba por comportamiento
+-------------------------
+Se creo una cuenta admin temporal y un sorteo en estado 'drawn' del que era
+duena. Con esa sesion se llamo a organizer_mark_reserved_sold(raffle, [1]).
+
+  Mensaje obtenido:
+    "El sorteo ya fue sorteado: no se pueden confirmar pagos de reservas"
+
+Discriminador:
+  - funcion NUEVA (0074): corta antes del UPDATE  -> mensaje de arriba
+  - funcion VIEJA (0029): seguia de largo          -> "Algunos numeros ya no
+                                                      estaban reservados"
+
+Son mensajes distintos e inequivocos. El obtenido es el de la version nueva.
+
+Limpieza al terminar
+--------------------
+  sorteo temporal borrado ......... si
+  cuenta temporal borrada ......... si
+  sorteos en la base .............. 11 (10 active, 1 closed)
+  sorteos de prueba ............... 0
+  usuarios @gadu.test ............. 0

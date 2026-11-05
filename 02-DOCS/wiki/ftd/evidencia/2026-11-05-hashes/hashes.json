@@ -1,0 +1,47 @@
+{
+  "sorteo": "11111111-1111-4111-8111-111111111111",
+  "semilla": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "recalculadoPor": "verify-hash.mjs (node:crypto, implementación propia)",
+  "escenarios": [
+    {
+      "escenario": "chico-10",
+      "numbersHash": "56e07db75d445f043d6b0ee9bbb565c1d9d991a9be67712f949a89d018943648",
+      "ganador": 2,
+      "resultHash": "7fa665bb29421e8ff1315f5d837288560c89f471c1fa484f00363263f0a0d72d",
+      "ms": 2.4,
+      "ok": true
+    },
+    {
+      "escenario": "grande-10000",
+      "numbersHash": "3654f20aecf715870c8744faf3943e0419e4b3df4550980c278b112e17f9ce16",
+      "ganador": 7691,
+      "resultHash": "2c677f22dd3e2f9aa5724d2fa01ac56c00b2233a440f0e84cca69bf9ec8c5dbb",
+      "ms": 4,
+      "ok": true
+    },
+    {
+      "escenario": "un-participante",
+      "numbersHash": "8e99d0ae2e7d6bf35b0818677705280543cc2151f308d2a0c6040036df3b5d57",
+      "ganador": 7,
+      "resultHash": "8b15336352d4f3f297ce7b259e0e82d997ddb292cb205ef69038ddfe19ba8d95",
+      "ok": true
+    },
+    {
+      "escenario": "multipremio-50",
+      "ganadores": 50,
+      "unicos": true,
+      "resultsHash": "b4e410eb4f717df7c5b8f603e48c8ffcacaba7b920551c1cd15fe56cfee0414f",
+      "ms": 1.9,
+      "ok": true
+    },
+    {
+      "escenario": "manipulado",
+      "ok": true
+    },
+    {
+      "escenario": "multipremio-vector",
+      "ok": true
+    }
+  ],
+  "pendiente": "la mitad UI del escenario D requiere un sorteo drawn real"
+}

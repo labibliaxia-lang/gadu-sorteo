@@ -1,0 +1,106 @@
+﻿=== C1: sin .env.test.local (debe BLOQUEAR) ===
+BLOQUEO: no existe .env.test.local en C:\Users\Usuario\Desktop\sorteos herramientas. No se ejecuta nada sin proyecto de prueba.
+exit=1 (esperado 1)
+
+=== C2: con URL de PRODUCCION (debe BLOQUEAR) ===
+BLOQUEO: https://mjgcoeikcyzwojbqtuah.supabase.co es la base de PRODUCCIÓN (ref mjgcoeikcyzwojbqtuah). No se escribe ahí.
+exit=1 (esperado 1)
+
+=== C3: con URL de prueba pero objetivo Vercel (debe BLOQUEAR) ===
+BLOQUEO: el objetivo https://gadu-sorteo-doci.vercel.app es el deploy público.
+exit=1 (esperado 1)
+
+=== C4: entorno de prueba valido (debe PASAR) ===
+OK entorno de prueba
+  supabase: https://abcdefghijklmnopqrst.supabase.co
+  objetivo: http://localhost:3000
+exit=0 (esperado 0)
+
+=== C5: migrate.mjs contra URI de produccion (debe BLOQUEAR) ===
+FALLA: getaddrinfo ENOTFOUND db.mjgcoeikcyzwojbqtuaf.supabase.co
+exit=1
+(nota: la URI tiene un typo a proposito; igual debe cortar por el chequeo de prod si matchea)
+
+=== .env.test.local eliminado al terminar: True ===
+
+=== C5 bis: URI de POOLER de produccion (debe BLOQUEAR sin conectar) ===
+FALLA: BLOQUEO: DATABASE_URL apunta a producción. No se migra ahí.
+exit=1 (esperado 1, con BLOQUEO y sin intentar conectar)
+
+=== C6: migrate.mjs --dry-run con URI de prueba ===
+se aplicarían 73 migraciones a db.abcdefghijklmnopqrst.supabase.co:5432
+0001_init.sql
+0002_google_auth_trigger.sql
+0003_set_admin_role.sql
+0004_add_max_numbers.sql
+0005_prize_second_image.sql
+0006_fix_rpc_and_delete.sql
+0007_referrals.sql
+0008_profile_public_fields.sql
+0009_role_request.sql
+0010_fix_role_security.sql
+0011_profile_email_status.sql
+0012_audit_logs.sql
+0013_admin_request_status.sql
+0014_superadmin_role.sql
+0015_raffle_payment_methods.sql
+0016_organizer_number_management.sql
+0017_organizer_verification.sql
+0018_organizer_request_message.sql
+0019_robust_user_sync.sql
+0020_notification_messages.sql
+0021_organizer_invitations.sql
+0022_license_codes.sql
+0023_plan_limits.sql
+0024_plan_limits_100.sql
+0025_harden_profiles_and_metrics.sql
+0026_raffle_visits.sql
+0027_raffle_visits_hardening.sql
+0028_migration_ledger.sql
+0029_manual_prepaid_sales.sql
+0030_fix_rls_and_access.sql
+0031_harden_draws_and_profiles.sql
+0032_plan_prices_and_expiry.sql
+0033_draw_hashes.sql
+0034_draw_seed_commitment.sql
+0035_organizer_slug.sql
+0036_email_consent.sql
+0037_support_ban.sql
+0038_plan_orders.sql
+0039_plan_reminders.sql
+0040_rate_limits.sql
+0041_rls_close.sql
+0042_live_draw.sql
+0043_draw_sandbox.sql
+0044_raffle_landing.sql
+0045_organizer_reviews.sql
+0046_raffle_questions.sql
+0047_draw_date_guard.sql
+0048_auto_draw.sql
+0049_manual_draw_notice.sql
+0050_terms_acceptance.sql
+0051_sandbox_two_phase.sql
+0052_fix_sandbox_ambiguity.sql
+0053_profile_details.sql
+0054_kyc_required.sql
+0055_sandbox_multi_prize.sql
+0056_sandbox_numbers_limit.sql
+0057_raffle_minimums.sql
+0058_multi_prize_engine.sql
+0059_superadmin_prize_limit.sql
+0060_delivery_address.sql
+0061_bucket_mime.sql
+0062_public_views_privacy.sql
+0063_raffle_cancellation_refunds.sql
+0064_page_views_and_audit.sql
+0065_reassert_admin_write_policies.sql
+0066_featured_raffles.sql
+0067_harden_raffle_result_and_profile_insert.sql
+0068_keep_pending_payment_reservations.sql
+0069_reserve_numbers_returns_only_new.sql
+0070_refunds_and_chargebacks.sql
+0071_no_early_draw_no_late_sales.sql
+0072_no_direct_number_inserts.sql
+0073_buyer_contact_view.sql
+
+=== .env.test.local eliminado: True ===

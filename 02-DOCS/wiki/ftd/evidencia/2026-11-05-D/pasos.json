@@ -1,0 +1,44 @@
+[
+  {
+    "paso": "D1-verificacion-limpia",
+    "rol": "diego",
+    "inicio": "2026-11-05T04:33:38.984Z",
+    "fin": "2026-11-05T04:33:38.985Z",
+    "duracionMs": 1,
+    "esperado": "con los datos reales los 4 checks dan verde",
+    "observado": "4/4 coinciden",
+    "resultado": "ok",
+    "evidencia": [
+      "hashes.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "D2-manipulacion-detectada",
+    "rol": "diego",
+    "inicio": "2026-11-05T04:33:38.986Z",
+    "fin": "2026-11-05T04:33:38.986Z",
+    "duracionMs": 0,
+    "esperado": "cambiar un número vendido rompe numbersHash y el ganador recalculado",
+    "observado": "numbersHash difiere; ganador 7 → 1003 (cambia)",
+    "resultado": "ok",
+    "evidencia": [
+      "hashes.json"
+    ],
+    "nota": "laboratorio: listado alterado sólo en memoria del verificador, la base de prueba no se toca"
+  },
+  {
+    "paso": "D3-semilla-alterada",
+    "rol": "diego",
+    "inicio": "2026-11-05T04:33:38.988Z",
+    "fin": "2026-11-05T04:33:38.989Z",
+    "duracionMs": 1,
+    "esperado": "cambiar la semilla rompe el compromiso publicado",
+    "observado": "compromiso publicado 1a051338f3d5… vs recalculado con otra semilla bd80df830bd7… → difiere",
+    "resultado": "ok",
+    "evidencia": [
+      "hashes.json"
+    ],
+    "nota": null
+  }
+]

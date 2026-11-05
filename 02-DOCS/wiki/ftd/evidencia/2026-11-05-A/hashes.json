@@ -1,0 +1,10 @@
+{
+  "sorteo": "569d0470-c6ed-40da-84a9-abb2a3352b48",
+  "semilla": "3a9c5cb3b1be422c8171b18c57cb5a4657aa7fe01a2545c2bf3e904c12edb317",
+  "commitment": "1a051338f3d5ea1576b5f0f11ba082a35101879b96f8450f04d935a253adbb1c",
+  "numbersHash": "e59cdbb2a186e30e685f85e9ead64cf42d5a196953af5f381c5fb4caf0b1c66e",
+  "winner": 7,
+  "resultHash": "05f11f42cdac2addac686edb2e3b9a093fa5e3431687c43458e072c4b2cd73ac",
+  "recalculadoPor": "verify-hash.mjs (node:crypto)",
+  "coincide": true
+}

@@ -1,0 +1,22 @@
+chico-10 (10 números)
+{
+  "commitment": "7ccb844285ecad2e97d871d451a2be62bf65d656db7bbc5e2eed0d98f6861eca",
+  "numbersHash": "56e07db75d445f043d6b0ee9bbb565c1d9d991a9be67712f949a89d018943648",
+  "pick": "72def4c2b96d4b3e049c1c53fe5b78175439c154387b4af46b633e2c1cbf69f8",
+  "index": 1,
+  "winner": 2,
+  "resultHash": "7fa665bb29421e8ff1315f5d837288560c89f471c1fa484f00363263f0a0d72d",
+  "list": "1,2,3,4,5,6,7,8,9,10",
+  "sorted": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ]
+}

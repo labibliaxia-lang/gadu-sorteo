@@ -1,0 +1,116 @@
+﻿[
+    {
+        "paso":  "A3-estado-base",
+        "rol":  "ana",
+        "inicio":  "2026-11-05T04:29:16.915Z",
+        "fin":  "2026-11-05T04:29:17.362Z",
+        "duracionMs":  447,
+        "esperado":  "en raffle_numbers los 2 nÃºmeros estÃ¡n reserved con reserved_until futuro",
+        "observado":  "3:reserved:vence 2026-11-07T04:28:42.647259+00:00 | 7:reserved:vence 2026-11-07T04:28:42.647259+00:00",
+        "resultado":  "ok",
+        "evidencia":  [
+                          "hashes-no-aplica"
+                      ],
+        "nota":  "lectura por service_role; es inspecciÃ³n, no acciÃ³n de usuario"
+    },
+    {
+        "paso":  "A1-abrir-sorteo",
+        "rol":  "ana",
+        "inicio":  "2026-11-05T04:29:28.831Z",
+        "fin":  "2026-11-05T04:29:32.939Z",
+        "duracionMs":  4108,
+        "esperado":  "el sorteo abre sin sesiÃ³n, muestra precio, fecha y grilla",
+        "observado":  "status 200 en 3623 ms. Modal de direcciÃ³n al entrar: false. Texto: Saltar al contenido Â· Inicio Â· Sorteos Â· Ganadores Â· CÃ³mo funciona Â· Planes Â· Solicitar ser Organizador Â· A Â· PREMIO EN JUEGO Â· ACTIVO Â· MANUAL Â· RESULTADO VERIFICABLE Â· SORTEO VERIFICABLE Â· PRUEBA INTERNA â€” NO PARTICIPAR Â· ACTIVO Â· Compartir Â· Denunciar este sorteo Â· Sorteo de prueba del simu",
+        "resultado":  "ok",
+        "evidencia":  [
+                          "capturas/A1-grilla.png"
+                      ],
+        "nota":  null
+    },
+    {
+        "paso":  "A1-abrir-sorteo",
+        "rol":  "ana",
+        "inicio":  "2026-11-05T04:30:04.268Z",
+        "fin":  "2026-11-05T04:30:10.283Z",
+        "duracionMs":  6015,
+        "esperado":  "el sorteo abre sin sesiÃ³n, muestra precio, fecha y grilla",
+        "observado":  "status 200 en 5509 ms. Modal de direcciÃ³n al entrar: false. Texto: Saltar al contenido Â· Inicio Â· Sorteos Â· Ganadores Â· CÃ³mo funciona Â· Planes Â· Solicitar ser Organizador Â· A Â· PREMIO EN JUEGO Â· ACTIVO Â· MANUAL Â· RESULTADO VERIFICABLE Â· SORTEO VERIFICABLE Â· PRUEBA INTERNA â€” NO PARTICIPAR Â· ACTIVO Â· Compartir Â· Denunciar este sorteo Â· Sorteo de prueba del simu",
+        "resultado":  "ok",
+        "evidencia":  [
+                          "capturas/A1-grilla.png"
+                      ],
+        "nota":  null
+    },
+    {
+        "paso":  "A2-reservar",
+        "rol":  "ana",
+        "inicio":  "2026-11-05T04:30:10.284Z",
+        "fin":  "2026-11-05T04:30:11.277Z",
+        "duracionMs":  993,
+        "esperado":  "los nÃºmeros 3 y 7 quedan reserved y el modal muestra el total",
+        "observado":  "modal en 401 ms. Enlace WhatsApp: presente",
+        "resultado":  "ok",
+        "evidencia":  [
+                          "capturas/A2-reserva-confirmada.png"
+                      ],
+        "nota":  null
+    },
+    {
+        "paso":  "A3-estado-base",
+        "rol":  "ana",
+        "inicio":  "2026-11-05T04:30:41.301Z",
+        "fin":  "2026-11-05T04:30:41.827Z",
+        "duracionMs":  526,
+        "esperado":  "en raffle_numbers los 2 nÃºmeros estÃ¡n reserved con reserved_until futuro",
+        "observado":  "3:reserved:vence 2026-11-07T04:30:11.221107+00:00 | 7:reserved:vence 2026-11-07T04:30:11.221107+00:00",
+        "resultado":  "ok",
+        "evidencia":  [
+                          "hashes-no-aplica"
+                      ],
+        "nota":  "lectura por service_role; es inspecciÃ³n, no acciÃ³n de usuario"
+    },
+    {
+        "paso":  "A4-confirmar-pago",
+        "rol":  "carla",
+        "inicio":  "2026-11-05T04:30:43.067Z",
+        "fin":  "2026-11-05T04:30:51.507Z",
+        "duracionMs":  8440,
+        "esperado":  "el organizador tilda Â«Comprobante recibidoÂ» y marca pagado; pasan a sold",
+        "observado":  "panel presente: true. En base: 3:sold | 7:sold",
+        "resultado":  "ok",
+        "evidencia":  [
+                          "capturas/A4-antes-de-marcar.png",
+                          "capturas/A4-despues-de-marcar.png"
+                      ],
+        "nota":  null
+    },
+    {
+        "paso":  "A5-compromiso-y-sorteo",
+        "rol":  "carla",
+        "inicio":  "2026-11-05T04:30:51.513Z",
+        "fin":  "2026-11-05T04:31:02.442Z",
+        "duracionMs":  10929,
+        "esperado":  "compromiso publicado y sorteo ejecutado con semilla revelada",
+        "observado":  "botÃ³n sortear visible: true. Estado: drawn. Ganador: 7",
+        "resultado":  "ok",
+        "evidencia":  [
+                          "capturas/A5-compromiso.png",
+                          "capturas/A5-sorteo.png"
+                      ],
+        "nota":  null
+    },
+    {
+        "paso":  "A6-verificar-independiente",
+        "rol":  "diego",
+        "inicio":  "2026-11-05T04:31:02.443Z",
+        "fin":  "2026-11-05T04:31:07.831Z",
+        "duracionMs":  5388,
+        "esperado":  "mi recÃ¡lculo coincide con lo publicado por la web",
+        "observado":  "4/4 checks coinciden. Pantalla con seÃ±ales de verificaciÃ³n: false. Listado vendido: 2 nÃºmeros",
+        "resultado":  "ok",
+        "evidencia":  [
+                          "capturas/A6-verificador.png"
+                      ],
+        "nota":  null
+    }
+]

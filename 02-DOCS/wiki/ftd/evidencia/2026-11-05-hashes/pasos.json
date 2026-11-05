@@ -1,0 +1,86 @@
+[
+  {
+    "paso": "D-chico-10",
+    "rol": "diego",
+    "inicio": "2026-11-05T04:00:05.367Z",
+    "fin": "2026-11-05T04:00:05.372Z",
+    "duracionMs": 5,
+    "esperado": "10 números: numbersHash 56e07db7…, ganador 2, resultHash 7fa665bb…",
+    "observado": "reproduce los 3 literales del repo: true. 2.4 ms",
+    "resultado": "ok",
+    "evidencia": [
+      "offline/chico-10.txt"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "D-grande-10000",
+    "rol": "diego",
+    "inicio": "2026-11-05T04:00:05.374Z",
+    "fin": "2026-11-05T04:00:05.381Z",
+    "duracionMs": 7,
+    "esperado": "10.000 números: numbersHash 3654f20a…, ganador 7691, resultHash 2c677f22…",
+    "observado": "reproduce los 3 literales de la FTD. 4.0 ms para 10.000 números",
+    "resultado": "ok",
+    "evidencia": [
+      "offline/grande-10000.txt"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "D-un-participante",
+    "rol": "diego",
+    "inicio": "2026-11-05T04:00:05.382Z",
+    "fin": "2026-11-05T04:00:05.383Z",
+    "duracionMs": 1,
+    "esperado": "un solo número vendido: el ganador es ese número, índice 0",
+    "observado": "ganador 7, índice 0",
+    "resultado": "ok",
+    "evidencia": [
+      "offline/un-participante.txt"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "D-multipremio-50",
+    "rol": "diego",
+    "inicio": "2026-11-05T04:00:05.385Z",
+    "fin": "2026-11-05T04:00:05.389Z",
+    "duracionMs": 4,
+    "esperado": "100 números y 50 premios: 50 ganadores distintos, sin repetir",
+    "observado": "50 ganadores, todos distintos: true, posiciones 1..50: true. 1.9 ms",
+    "resultado": "ok",
+    "evidencia": [
+      "offline/multipremio-50.txt"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "D-manipulado",
+    "rol": "diego",
+    "inicio": "2026-11-05T04:00:05.391Z",
+    "fin": "2026-11-05T04:00:05.392Z",
+    "duracionMs": 1,
+    "esperado": "cambiar un número del listado rompe numbersHash y resultHash",
+    "observado": "numbersHash difiere; ganador 2 vs 1",
+    "resultado": "ok",
+    "evidencia": [
+      "offline/manipulado.txt"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "D-multipremio-vector-repo",
+    "rol": "diego",
+    "inicio": "2026-11-05T04:00:05.394Z",
+    "fin": "2026-11-05T04:00:05.395Z",
+    "duracionMs": 1,
+    "esperado": "3 premios sobre 1..10: ganadores 2, 9, 7 y resultsHash a48cf567…",
+    "observado": "ganadores 2, 9, 7 y resultsHash a48cf5671940… → coincide con el vector del repo",
+    "resultado": "ok",
+    "evidencia": [
+      "offline/multipremio-vector-repo.txt"
+    ],
+    "nota": null
+  }
+]

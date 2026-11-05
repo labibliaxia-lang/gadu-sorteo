@@ -1,0 +1,67 @@
+﻿[
+    {
+        "paso":  "PL1-numeros-por-sorteo",
+        "rol":  "auditor",
+        "inicio":  "2026-11-05T02:14:03.7252430-03:00",
+        "nota":  "sin bug",
+        "esperado":  "contrastar wizard contra la base",
+        "evidencia":  [
+                          "hallazgos.txt"
+                      ],
+        "observado":  "coinciden: organico 100 / premium 10000, minimo 10 en ambos; el Math.min(1000) del wizard es valor por defecto, no tope",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:14:03.7252430-03:00"
+    },
+    {
+        "paso":  "PL2-sorteos-activos",
+        "rol":  "auditor",
+        "inicio":  "2026-11-05T02:14:03.7252430-03:00",
+        "nota":  "sin bug",
+        "esperado":  "contrastar el conteo de activos",
+        "evidencia":  [
+                          "hallazgos.txt"
+                      ],
+        "observado":  "wizard cuenta status=active del creador; enforce_plan_raffle_limit cuenta lo mismo y exceptua superadmin; coinciden",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:14:03.7252430-03:00"
+    },
+    {
+        "paso":  "PL3-premios-por-plan",
+        "rol":  "auditor",
+        "inicio":  "2026-11-05T02:14:03.7252430-03:00",
+        "nota":  "hallazgo debil: no rompia el flujo, pero permitia que las tres copias se separaran",
+        "esperado":  "contrastar el tope de premios",
+        "evidencia":  [
+                          "hallazgos.txt"
+                      ],
+        "observado":  "la base lo limita en 0059 (organizador 3, premium 30) y el JSX lo mostraba bien, pero hardcodeado dos veces y sin guarda en el submit: la regla no estaba en lib/plans.ts",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:14:03.7252430-03:00"
+    },
+    {
+        "paso":  "PL4-regla-unificada",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:14:03.7252430-03:00",
+        "nota":  null,
+        "esperado":  "un solo origen para el tope de premios",
+        "evidencia":  [
+                          "tests.txt"
+                      ],
+        "observado":  "PLAN_LIMITS.maxPrizesPerRaffle (3 / 30) + canUsePrizes(); el wizard usa prizesLimit y valida antes de enviar; lib/plans.test.ts fija el contrato",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:14:03.7252430-03:00"
+    },
+    {
+        "paso":  "PL5-gates",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:14:03.7252430-03:00",
+        "nota":  null,
+        "esperado":  "typecheck, lint y suite en verde",
+        "evidencia":  [
+                          "tests.txt"
+                      ],
+        "observado":  "typecheck exit 0; lint limpio; 236/236 tests en 23 archivos",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:14:03.7252430-03:00"
+    }
+]

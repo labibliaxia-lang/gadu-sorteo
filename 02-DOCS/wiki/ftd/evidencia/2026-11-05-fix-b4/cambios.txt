@@ -1,0 +1,37 @@
+﻿B4 — el modal de direccion antes de comprar
+===========================================
+
+Antes
+  app/layout.tsx:180-190 monta ProfileCompletionGate para todo usuario logueado.
+  El componente bloqueaba CUALQUIER ruta salvo una lista blanca
+  (/perfil, /login, /terminos, /admin/verificacion...). La pagina del sorteo
+  no estaba: el comprador veia un formulario de direccion antes de poder
+  elegir un numero. Visto en vivo en la simulacion (paso A1).
+
+Despues
+  components/DeliveryAddressForm.tsx  formulario unico (ids gate-* conservados)
+  lib/direccion.ts                    direccionEntregaCompleta() = espejo de
+                                      deliverySchema (app/perfil/actions.ts)
+  ProfileCompletionGate               bloquea solo /admin/* salvo /admin/verificacion
+  NumbersGrid                         consulta el perfil; al reservar sin direccion
+                                      abre el dialogo; al guardar sigue la reserva
+                                      y vuelve a llamar a handleReservePrepaid
+
+  Si la consulta del perfil falla (null) NO se frena la compra: el dato se puede
+  completar despues desde /perfil y no vale perder la venta por un timeout.
+
+Por que el dialogo y no el modal global
+  El comprador ya eligio sus numeros cuando se le pide la direccion. Pedirla al
+  entrar es pedirle la direccion a alguien que todavia no decidio comprar.
+
+Gates
+  typecheck 0 | lint limpio | 243/243 tests en 24 archivos | next build exit 0
+
+  Nota sobre el build: con NODE_OPTIONS=--max-old-space-size=16384 aborta.
+  La maquina tiene 7.7 GB con 2 GB libres; un heap mayor que la RAM fisica
+  garantiza el crash. Con 3072 compila.
+
+Pendiente
+  No verificado en navegador: la web desplegada corre el codigo anterior.
+  Verificarlo requiere deploy, o correr next dev local contra produccion
+  (que dispara la red de seguridad de reservas). No se hizo sin permiso.

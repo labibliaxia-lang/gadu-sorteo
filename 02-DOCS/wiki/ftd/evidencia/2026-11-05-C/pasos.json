@@ -1,0 +1,30 @@
+[
+  {
+    "paso": "C1-reservar-y-abandonar",
+    "rol": "bruno",
+    "inicio": "2026-11-05T04:33:25.684Z",
+    "fin": "2026-11-05T04:33:31.920Z",
+    "duracionMs": 6236,
+    "esperado": "reserva creada, comprador cierra la pestaña sin mandar comprobante",
+    "observado": "estado reserved, vence en 48 h (2026-11-07T04:33:31.593227+00:00)",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/C1-reserva-antes-de-abandonar.png"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "C2-liberacion-automatica",
+    "rol": "sistema",
+    "inicio": "2026-11-05T04:33:31.938Z",
+    "fin": "2026-11-05T04:33:32.648Z",
+    "duracionMs": 710,
+    "esperado": "pasado el hold, el número vuelve a available sin intervención",
+    "observado": "tras vencer la fila y llamar a release_expired_reservations: estado available. RPC devolvió: 1",
+    "resultado": "ok",
+    "evidencia": [
+      "hashes-no-aplica"
+    ],
+    "nota": "laboratorio: reserved_until se forzó al pasado; llamada directa a la RPC que usa el cron"
+  }
+]

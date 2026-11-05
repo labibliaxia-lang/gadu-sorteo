@@ -1,0 +1,36 @@
+﻿Auditoria: pares de limites cliente/base
+========================================
+
+Se revisaron los tres pares donde el cliente y la base imponen el mismo tope.
+
+1) Numeros por sorteo — SIN BUG
+   lib/plans.ts ......... organizador 100 | premium 10000
+   base 0024:70-73 ...... 10 .. plan_max_numbers(plan)   -> 100 / 10000
+   wizard P317 .......... max_numbers > numbersLimit -> error
+   El Math.min(1000, ...) de la linea 195 es el VALOR POR DEFECTO del campo,
+   no un tope: se habia leido mal en la primera pasada.
+
+2) Sorteos activos — SIN BUG
+   wizard P217-220 ...... activeRafflesCount >= maxActiveRaffles
+   base 0024:121-129 .... count(status='active', created_by) >= plan_max_active_raffles
+   Ambos 2 / 20 y ambos exceptuan al superadmin.
+
+3) Premios por sorteo — HALLAZGO DEBIL
+   base 0059:33-52 ...... organizador 3 | premium 30 | superadmin 30
+   JSX (antes) .......... ternario hardcodeado 30 : 3, repetido en max y en el texto
+   lib/plans.ts (antes) . no tenia el dato
+   zod .................. max 30 sin mirar el plan
+
+   No rompia el flujo (el input tenia max y el texto avisando bien), pero:
+   - la regla vivia en tres lugares y solo dos estaban coordinados
+   - no habia guarda en el submit: dependia del max del navegador
+   - si cambia el plan de premios, hay que tocar JSX, no solo la matriz
+
+   Arreglo
+     PLAN_LIMITS.maxPrizesPerRaffle ... 3 / 30
+     canUsePrizes(context, prizes) .... 1..30 y tope del plan; superadmin 30
+     wizard ........................... prizesLimit + guarda antes de enviar
+     lib/plans.test.ts ................ 6 casos, incluido "nadie pasa de 30"
+
+Gates
+  typecheck exit 0 | lint limpio | 236/236 tests en 23 archivos

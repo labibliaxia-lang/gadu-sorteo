@@ -1,0 +1,32 @@
+﻿Diagnostico corregido de B5
+===========================
+
+Lo que dije primero (y estaba mal)
+  "El modal guarda la direccion en un lugar y el trigger la valida en otro."
+
+Lo que hay en el codigo
+  saveDeliveryAddress (app/perfil/actions.ts:181-191) actualiza:
+    phone, address_line, city, province, postal_code, country
+  sobre la tabla profiles. Es decir: YA escribe donde el trigger mira.
+  El diagnostico se cayo al ir a implementar el arreglo.
+
+El problema real: dos definiciones de "datos completos"
+  wizard    app/admin/sorteos/nuevo/page.tsx:183-190   -> 4 campos
+  helper    app/admin/verificacion/actions.ts:117-129  -> 9 campos
+  trigger   supabase/migrations/0060:57-67             -> los mismos 9
+
+  El wizard pedia un subconjunto. Se podia completar los 3 pasos y recibir
+  "KYC incompleto" recien al apretar Crear sorteo, sin saber que faltaba.
+
+Arreglo
+  lib/kyc.ts            regla unica: CAMPOS_KYC (9), datosPersonalesFaltantes,
+                        datosPersonalesCompletos
+  wizard                setKycDataComplete(datosPersonalesCompletos(data))
+                        + select ampliado a los 9 campos
+  verificacion/actions  missingPersonalData delega en datosPersonalesFaltantes
+  lib/kyc.test.ts       5 casos; fija el contrato contra el trigger
+
+Gates
+  typecheck  exit 0
+  lint       sin advertencias
+  tests      218/218 en 20 archivos

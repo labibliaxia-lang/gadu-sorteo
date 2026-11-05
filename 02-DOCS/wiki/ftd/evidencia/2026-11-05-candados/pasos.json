@@ -1,0 +1,80 @@
+﻿[
+    {
+        "paso":  "C1-sin-env",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T00:59:13.3487882-03:00",
+        "nota":  null,
+        "esperado":  "sin .env.test.local no se ejecuta nada",
+        "evidencia":  [
+                          "candados.txt"
+                      ],
+        "observado":  "BLOQUEO: no existe .env.test.local; exit 1",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T00:59:13.3487882-03:00"
+    },
+    {
+        "paso":  "C2-url-produccion",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T00:59:13.3487882-03:00",
+        "nota":  null,
+        "esperado":  "URL igual a la base viva aborta",
+        "evidencia":  [
+                          "candados.txt"
+                      ],
+        "observado":  "BLOQUEO por ref mjgcoeikcyzwojbqtuah; exit 1",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T00:59:13.3487882-03:00"
+    },
+    {
+        "paso":  "C3-objetivo-vercel",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T00:59:13.3487882-03:00",
+        "nota":  null,
+        "esperado":  "objetivo igual al deploy publico aborta",
+        "evidencia":  [
+                          "candados.txt"
+                      ],
+        "observado":  "BLOQUEO: el objetivo es el deploy publico; exit 1",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T00:59:13.3487882-03:00"
+    },
+    {
+        "paso":  "C4-entorno-valido",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T00:59:13.3487882-03:00",
+        "nota":  null,
+        "esperado":  "un entorno de prueba valido pasa",
+        "evidencia":  [
+                          "candados.txt"
+                      ],
+        "observado":  "OK entorno de prueba; exit 0",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T00:59:13.3487882-03:00"
+    },
+    {
+        "paso":  "C5-migrate-uri-produccion",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T00:59:13.3487882-03:00",
+        "nota":  "defecto encontrado y corregido en la propia herramienta",
+        "esperado":  "migrate.mjs corta ante cualquier URI de produccion, incluida la del pooler",
+        "evidencia":  [
+                          "candados.txt"
+                      ],
+        "observado":  "Primera version solo matcheaba el host directo y dejo pasar una URI de pooler; corregido a buscar la ref en toda la URI. C5 bis bloquea sin intentar conectar",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T00:59:13.3487882-03:00"
+    },
+    {
+        "paso":  "C6-migrate-dry-run",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T00:59:13.3487882-03:00",
+        "nota":  null,
+        "esperado":  "el migrador lista las 73 migraciones",
+        "evidencia":  [
+                          "candados.txt"
+                      ],
+        "observado":  "se aplicarian 73 migraciones a un host de prueba",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T00:59:13.3487882-03:00"
+    }
+]

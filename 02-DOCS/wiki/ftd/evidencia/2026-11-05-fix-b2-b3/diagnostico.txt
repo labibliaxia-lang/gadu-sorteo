@@ -1,0 +1,38 @@
+﻿B2 y B3 — cron de reservas
+==========================
+
+B2: el codigo decia una cosa y la config otra
+  vercel.json:5 ......................... "0 0 * * *"   (diario)
+  app/api/cron/release-reservations:8 .... "cada 5 minutos"
+  README.md:342 ......................... documentaba "*/5 * * * *"
+  README.md:35 .......................... "el cron (cada 5 min)"
+
+  El motivo del diario no era un olvido:
+  app/api/cron/auto-draw/route.ts:11-12 dice "Vercel Hobby solo permite cron diario".
+  Cambiar a */5 habria roto el deploy. NO se cambio.
+
+  Arreglo sin plan pago
+    lib/release-expired.ts libera vencidas al abrir la pagina publica,
+    con gate de 60 s por instancia. Mismo patron que maybeAutoDrawRaffle
+    (auto-draw.ts:304), que existe por la misma razon.
+    Costo: un UPDATE por minuto por instancia, sobre el indice parcial
+    raffle_numbers_reserved_until_idx.
+    README reescrito para contar la restriccion y los dos caminos.
+
+B3: sin CRON_SECRET, el cron moria en silencio
+  antes: !!cronSecret && header === `Bearer ${cronSecret}` -> 401 siempre.
+  Ese 401 se lee como "alguien golpeando la puerta", no como "falta una variable".
+  Con la variable vacia quedaban sin correr: liberacion de reservas,
+  vencimiento de planes, recordatorios, limpieza de rate limits y sorteos automaticos.
+
+  ahora (lib/cron-auth.ts):
+    falta CRON_SECRET ....... 500 + console.error nombrando la variable
+    header invalido ......... 401
+  Contrato en lib/cron-auth.test.ts (6 casos).
+
+Pendiente del lado humano
+  CRON_SECRET sigue vacio en .env.local. Hay que cargarlo en Vercel para que
+  el cron diario funcione. Mientras falte, el log ahora lo dice.
+
+Gates
+  typecheck exit 0 | lint limpio | 230/230 tests en 22 archivos

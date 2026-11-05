@@ -1,0 +1,67 @@
+﻿[
+    {
+        "paso":  "P1-sin-env",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T01:01:20.4771405-03:00",
+        "nota":  null,
+        "esperado":  "sin .env.test.local el preflight corta",
+        "evidencia":  [
+                          "preflight.txt"
+                      ],
+        "observado":  "BLOQUEO; exit 1",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T01:01:20.4771405-03:00"
+    },
+    {
+        "paso":  "P2-sin-exportar-al-proceso",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T01:01:20.4771405-03:00",
+        "nota":  "este es el caso que habria escrito en produccion",
+        "esperado":  "detectar que next dev usaria .env.local (produccion)",
+        "evidencia":  [
+                          "preflight.txt"
+                      ],
+        "observado":  "FALLA override-proceso; 3/5 listos; exit 1",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T01:01:20.4771405-03:00"
+    },
+    {
+        "paso":  "P3-exportado-sin-database-url",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T01:01:20.4771405-03:00",
+        "nota":  null,
+        "esperado":  "pasar el override y bloquear por migraciones",
+        "evidencia":  [
+                          "preflight.txt"
+                      ],
+        "observado":  "4/5 listos; BLOQUEADO por migraciones; exit 1",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T01:01:20.4771405-03:00"
+    },
+    {
+        "paso":  "P4-proceso-apunta-a-produccion",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T01:01:20.4771405-03:00",
+        "nota":  null,
+        "esperado":  "detectar variables del proceso contra produccion",
+        "evidencia":  [
+                          "preflight.txt"
+                      ],
+        "observado":  "FALLA override-proceso: apunta a PRODUCCION; exit 1",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T01:01:20.4771405-03:00"
+    },
+    {
+        "paso":  "P0-sintaxis",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T01:01:20.4771405-03:00",
+        "nota":  null,
+        "esperado":  "preflight.mjs y correr-live.mjs parsean",
+        "evidencia":  [
+                          "preflight.txt"
+                      ],
+        "observado":  "node --check exit 0 en ambos",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T01:01:20.4771405-03:00"
+    }
+]

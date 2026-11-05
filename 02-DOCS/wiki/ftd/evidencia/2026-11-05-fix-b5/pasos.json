@@ -1,0 +1,54 @@
+﻿[
+    {
+        "paso":  "B5-diagnostico-corregido",
+        "rol":  "auditor",
+        "inicio":  "2026-11-05T02:01:49.1261850-03:00",
+        "nota":  "se detecto al ir a implementar el arreglo; se corrige el informe",
+        "esperado":  "confirmar donde escribe el modal y donde lee el trigger",
+        "evidencia":  [
+                          "diagnostico.txt"
+                      ],
+        "observado":  "saveDeliveryAddress (app/perfil/actions.ts:181-191) YA escribe en profiles: el diagnostico previo (\u0027dos fuentes de verdad\u0027) era falso",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:01:49.1261850-03:00"
+    },
+    {
+        "paso":  "B5-regla-unificada",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:01:49.1261850-03:00",
+        "nota":  null,
+        "esperado":  "una sola definicion de datos personales completos",
+        "evidencia":  [
+                          "diagnostico.txt"
+                      ],
+        "observado":  "lib/kyc.ts con CAMPOS_KYC (9 campos), datosPersonalesFaltantes y datosPersonalesCompletos; el wizard y missingPersonalData la usan",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:01:49.1261850-03:00"
+    },
+    {
+        "paso":  "B5-test-contrato",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:01:49.1261850-03:00",
+        "nota":  null,
+        "esperado":  "un test que falle si el trigger y el cliente se separan",
+        "evidencia":  [
+                          "tests.txt"
+                      ],
+        "observado":  "lib/kyc.test.ts: 5 casos, incluido \u0027con solo los 4 del wizard viejo todavia falta\u0027",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:01:49.1261850-03:00"
+    },
+    {
+        "paso":  "B5-gates",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:01:49.1261850-03:00",
+        "nota":  null,
+        "esperado":  "typecheck, lint y suite en verde",
+        "evidencia":  [
+                          "tests.txt"
+                      ],
+        "observado":  "typecheck exit 0; lint limpio; 218/218 tests en 20 archivos",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:01:49.1261850-03:00"
+    }
+]

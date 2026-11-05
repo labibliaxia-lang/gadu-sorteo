@@ -1,0 +1,10 @@
+﻿
+ Test Files  20 passed (20)
+      Tests  218 passed (218)
+   Start at  02:01:19
+   Duration  10.11s (transform 924ms, setup 0ms, collect 3.14s, tests 632ms, environment 13ms, prepare 10.99s)
+
+> tsc --noEmit
+
+
+✔ No ESLint warnings or errors

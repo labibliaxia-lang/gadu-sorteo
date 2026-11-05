@@ -1,0 +1,93 @@
+﻿[
+    {
+        "paso":  "B4-alcance-del-gate",
+        "rol":  "auditor",
+        "inicio":  "2026-11-05T02:22:41.1983519-03:00",
+        "nota":  "el comprador no podia elegir numeros sin cargar direccion completa",
+        "esperado":  "saber donde bloquea el modal",
+        "evidencia":  [
+                          "cambios.txt"
+                      ],
+        "observado":  "app/layout.tsx:180-190 lo monta global; bloqueaba toda ruta salvo una lista blanca, incluida la pagina del sorteo",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:22:41.1983519-03:00"
+    },
+    {
+        "paso":  "B4-formulario-compartido",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:22:41.1983519-03:00",
+        "nota":  "ids gate-* conservados",
+        "esperado":  "no duplicar los campos de direccion",
+        "evidencia":  [
+                          "cambios.txt"
+                      ],
+        "observado":  "components/DeliveryAddressForm.tsx extraido del gate; lo usan el modal bloqueante y el dialogo de reserva",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:22:41.1983519-03:00"
+    },
+    {
+        "paso":  "B4-regla-de-direccion",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:22:41.1983519-03:00",
+        "nota":  null,
+        "esperado":  "una sola definicion de direccion completa",
+        "evidencia":  [
+                          "tests.txt"
+                      ],
+        "observado":  "lib/direccion.ts direccionEntregaCompleta espeja deliverySchema de app/perfil/actions.ts; 5 casos en lib/direccion.test.ts",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:22:41.1983519-03:00"
+    },
+    {
+        "paso":  "B4-bloqueo-acotado",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:22:41.1983519-03:00",
+        "nota":  null,
+        "esperado":  "el modal solo bloquea donde la direccion es imprescindible",
+        "evidencia":  [
+                          "cambios.txt"
+                      ],
+        "observado":  "ProfileCompletionGate bloquea solo rutas /admin/* excepto /admin/verificacion; en el resto no aparece",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:22:41.1983519-03:00"
+    },
+    {
+        "paso":  "B4-direccion-al-reservar",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:22:41.1983519-03:00",
+        "nota":  null,
+        "esperado":  "pedir la direccion cuando la persona ya eligio numeros",
+        "evidencia":  [
+                          "cambios.txt"
+                      ],
+        "observado":  "NumbersGrid consulta el perfil, y al reservar sin direccion abre un dialogo; al guardar continua la reserva; si la consulta falla (null) no frena la compra",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:22:41.1983519-03:00"
+    },
+    {
+        "paso":  "B4-gates",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:22:41.1983519-03:00",
+        "nota":  "con 16384 el build aborta: la maquina tiene 7.7 GB y 2 GB libres",
+        "esperado":  "typecheck, lint, tests y build",
+        "evidencia":  [
+                          "tests.txt"
+                      ],
+        "observado":  "typecheck 0; lint limpio; 243/243 tests en 24 archivos; next build exit 0 con NODE_OPTIONS=3072",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:22:41.1983519-03:00"
+    },
+    {
+        "paso":  "B4-verificado-en-navegador",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T02:22:41.1983519-03:00",
+        "nota":  "requiere deploy, o correr next dev local contra produccion (escribe por la red de seguridad de reservas) y eso no se hizo sin permiso",
+        "esperado":  "ver el modal nuevo en la web",
+        "evidencia":  [
+
+                      ],
+        "observado":  "no verificado: la web desplegada corre el codigo anterior",
+        "resultado":  "pendiente",
+        "fin":  "2026-11-05T02:22:41.1983519-03:00"
+    }
+]

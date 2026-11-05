@@ -1,0 +1,54 @@
+﻿[
+    {
+        "paso":  "F1-migracion-0074",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T01:41:01.5818304-03:00",
+        "nota":  null,
+        "esperado":  "una definicion nueva de organizer_mark_reserved_sold con guard drawn",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "0074_no_prepaid_sales_after_draw.sql redefinida; ultima definicion en el orden de archivos; 0029 no tenia el guard",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T01:41:01.5818304-03:00"
+    },
+    {
+        "paso":  "F2-test-regresion",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T01:41:01.5818304-03:00",
+        "nota":  null,
+        "esperado":  "un test que falle si se vuelve al cuerpo viejo",
+        "evidencia":  [
+                          "gates-fix-b1.txt"
+                      ],
+        "observado":  "security-invariants.test.ts suma el caso; busca v_status=\u0027drawn\u0027, \u0027ya fue sorteado\u0027 y el todo-o-nada v_count\u003c\u003ev_expected",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T01:41:01.5818304-03:00"
+    },
+    {
+        "paso":  "F3-gates",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T01:41:01.5818304-03:00",
+        "nota":  null,
+        "esperado":  "typecheck, lint y tests en verde con el cambio",
+        "evidencia":  [
+                          "gates-fix-b1.txt"
+                      ],
+        "observado":  "typecheck exit 0; lint exit 0; 213/213 tests en 19 archivos",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T01:41:01.5818304-03:00"
+    },
+    {
+        "paso":  "F4-aplicada-en-la-base",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T01:47:26.5966568-03:00",
+        "fin":  "2026-11-05T01:47:26.5966568-03:00",
+        "esperado":  "la funcion vigente en la base corta con el sorteo ya sorteado",
+        "observado":  "mensaje devuelto: \u0027El sorteo ya fue sorteado: no se pueden confirmar pagos de reservas\u0027. El cuerpo viejo de 0029 devolvia \u0027Algunos numeros ya no estaban reservados\u0027, asi que el mensaje identifica la version desplegada",
+        "resultado":  "ok",
+        "evidencia":  [
+                          "verificacion-0074.txt"
+                      ],
+        "nota":  "prueba por comportamiento: admin temporal + sorteo drawn temporal, ambos borrados"
+    }
+]

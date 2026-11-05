@@ -1,0 +1,54 @@
+[
+  {
+    "paso": "G1-gate-typecheck",
+    "rol": "repo",
+    "inicio": "2026-11-05T03:58:18.570Z",
+    "fin": "2026-11-05T03:58:18.570Z",
+    "esperado": "tsc --noEmit sin errores",
+    "observado": "tsc corrió y no emitió errores",
+    "resultado": "ok",
+    "evidencia": [
+      "typecheck.txt"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "G2-gate-lint",
+    "rol": "repo",
+    "inicio": "2026-11-05T03:58:18.570Z",
+    "fin": "2026-11-05T03:58:18.571Z",
+    "esperado": "next lint sin advertencias ni errores",
+    "observado": "No ESLint warnings or errors",
+    "resultado": "ok",
+    "evidencia": [
+      "lint.txt"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "G3-gate-test",
+    "rol": "repo",
+    "inicio": "2026-11-05T03:58:18.570Z",
+    "fin": "2026-11-05T03:58:18.571Z",
+    "esperado": "la suite completa pasa",
+    "observado": "Test Files  17 passed (17) / Tests  198 passed (198)",
+    "resultado": "ok",
+    "evidencia": [
+      "test.txt"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "G4-gate-build",
+    "rol": "repo",
+    "inicio": "2026-11-05T03:58:18.570Z",
+    "fin": "2026-11-05T03:58:18.572Z",
+    "esperado": "next build termina con exit 0 y compila las rutas",
+    "observado": "compiló; 52 líneas de ruta en el resumen",
+    "resultado": "ok",
+    "evidencia": [
+      "build.txt"
+    ],
+    "nota": null
+  }
+]

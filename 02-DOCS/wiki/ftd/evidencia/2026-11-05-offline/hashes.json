@@ -1,0 +1,17 @@
+{
+  "sorteo": "11111111-1111-4111-8111-111111111111",
+  "semilla": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "escenario": "chico-10 (offline, sin base)",
+  "commitment": "7ccb844285ecad2e97d871d451a2be62bf65d656db7bbc5e2eed0d98f6861eca",
+  "numbersHash": "56e07db75d445f043d6b0ee9bbb565c1d9d991a9be67712f949a89d018943648",
+  "winner": 2,
+  "resultHash": "7fa665bb29421e8ff1315f5d837288560c89f471c1fa484f00363263f0a0d72d",
+  "recalculadoPor": "01-TOOLS/SIMULADOR/verify-hash.mjs (node:crypto, implementación propia)",
+  "vectorCanonicoCoincide": true,
+  "manipulacion": {
+    "probada": true,
+    "listado": "cambiar 4 por 99 rompe numbersHash, resultHash y cambia el ganador de 2 a 1",
+    "semilla": "cambiar la semilla rompe commitment; numbersHash queda intacto"
+  },
+  "pendiente": "no observado en la web: requiere proyecto Supabase de prueba"
+}

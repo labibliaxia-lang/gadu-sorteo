@@ -1,0 +1,58 @@
+[
+  {
+    "paso": "verificar-implementacion-propia",
+    "rol": "diego",
+    "inicio": "2026-11-05T02:59:25.371Z",
+    "fin": "2026-11-05T02:59:25.374Z",
+    "duracionMs": 3,
+    "esperado": "mi recálculo con node:crypto reproduce los 4 vectores canónicos del repo",
+    "observado": "commitment 7ccb844285ec… numbersHash ddc1ff15e29b… winner 8 resultHash ed4a7e966c9f… — 4/4 coinciden",
+    "resultado": "ok",
+    "evidencia": [
+      "offline/verificacion-vectores.txt"
+    ],
+    "nota": "implementación escrita de cero sin importar lib/draw-verify.ts"
+  },
+  {
+    "paso": "detectar-listado-manipulado",
+    "rol": "diego",
+    "inicio": "2026-11-05T02:59:25.375Z",
+    "fin": "2026-11-05T02:59:25.377Z",
+    "duracionMs": 2,
+    "esperado": "cambiar el número 4 por 99 altera numbersHash y resultHash",
+    "observado": "numbersHash cambia: true; resultHash cambia: true; commitment intacto: true (correcto: depende sólo de la semilla). Ganador real 2 vs manipulado 1",
+    "resultado": "ok",
+    "evidencia": [
+      "offline/manipulacion-listado.txt"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "detectar-semilla-alterada",
+    "rol": "diego",
+    "inicio": "2026-11-05T02:59:25.379Z",
+    "fin": "2026-11-05T02:59:25.380Z",
+    "duracionMs": 1,
+    "esperado": "cambiar la semilla rompe el compromiso publicado",
+    "observado": "commitment real 7ccb844285ec… vs semilla alterada a2dc1a749362… → difiere. numbersHash igual (true), como corresponde.",
+    "resultado": "ok",
+    "evidencia": [
+      "offline/manipulacion-semilla.txt"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "suite-formula-del-repo",
+    "rol": "diego",
+    "inicio": "2026-11-05T02:59:25.382Z",
+    "fin": "2026-11-05T02:59:25.382Z",
+    "duracionMs": 0,
+    "esperado": "los tests de fórmula y simulación del repo pasan",
+    "observado": "log presente. Tests  20 passed (20)",
+    "resultado": "ok",
+    "evidencia": [
+      "offline/vitest-draw-verify.txt"
+    ],
+    "nota": "ejecutado localmente desde la raíz del repo; no toca ninguna base"
+  }
+]

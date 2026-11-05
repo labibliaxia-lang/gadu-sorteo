@@ -1,0 +1,67 @@
+﻿[
+    {
+        "paso":  "B2-diagnostico",
+        "rol":  "auditor",
+        "inicio":  "2026-11-05T02:07:22.5681283-03:00",
+        "nota":  "cambiar a */5 habria roto el deploy en Hobby: no se hizo",
+        "esperado":  "saber por que el cron es diario",
+        "evidencia":  [
+                          "diagnostico.txt"
+                      ],
+        "observado":  "vercel.json decia 0 0 * * *, el route y el README decian cada 5 min; auto-draw/route.ts:11-12 explica que Vercel Hobby solo permite cron diario",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:07:22.5681283-03:00"
+    },
+    {
+        "paso":  "B2-fallback-perezoso",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:07:22.5681283-03:00",
+        "nota":  "un UPDATE acotado por minuto sobre indice reserved_until",
+        "esperado":  "que las reservas vencidas se liberen sin cron frecuente",
+        "evidencia":  [
+                          "tests.txt"
+                      ],
+        "observado":  "lib/release-expired.ts libera al abrir la pagina publica con gate de 60s por instancia, mismo patron que maybeAutoDrawRaffle",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:07:22.5681283-03:00"
+    },
+    {
+        "paso":  "B2-docs-coherentes",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:07:22.5681283-03:00",
+        "nota":  null,
+        "esperado":  "que README y comentarios digan la verdad",
+        "evidencia":  [
+                          "diagnostico.txt"
+                      ],
+        "observado":  "README explica la restriccion de Vercel Hobby y los dos caminos; route y vercel.json quedan coherentes",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:07:22.5681283-03:00"
+    },
+    {
+        "paso":  "B3-fail-loud",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:07:22.5681283-03:00",
+        "nota":  "CRON_SECRET sigue vacio en .env.local: hay que cargarlo en Vercel",
+        "esperado":  "distinguir configuracion faltante de credencial invalida",
+        "evidencia":  [
+                          "tests.txt"
+                      ],
+        "observado":  "lib/cron-auth.ts: sin CRON_SECRET responde 500 + console.error; header invalido sigue 401; 6 casos en lib/cron-auth.test.ts",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:07:22.5681283-03:00"
+    },
+    {
+        "paso":  "B2B3-gates",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T02:07:22.5681283-03:00",
+        "nota":  null,
+        "esperado":  "typecheck, lint y suite en verde",
+        "evidencia":  [
+                          "tests.txt"
+                      ],
+        "observado":  "typecheck exit 0; lint limpio; 230/230 tests en 22 archivos",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:07:22.5681283-03:00"
+    }
+]

@@ -1,0 +1,42 @@
+﻿=== sintaxis ===
+node --check preflight.mjs: exit=0
+node --check correr-live.mjs: exit=0
+
+=== P1: sin .env.test.local (debe bloquear) ===
+FALLA: BLOQUEO: no existe .env.test.local en C:\Users\Usuario\Desktop\sorteos herramientas. No se ejecuta nada sin proyecto de prueba.
+exit=1
+
+=== P2: con entorno de prueba pero SIN exportar al proceso (el caso peligroso) ===
+ok   entorno-prueba — https://abcdefghijklmnopqrst.supabase.co · objetivo http://localhost:3000
+FALLA override-proceso — NEXT_PUBLIC_SUPABASE_URL no está exportada en el proceso: `next dev` usaría .env.local (producción)
+ok   env-local-presente — existe y apunta a producción: por eso hay que exportar las variables antes de `next dev`
+FALLA migraciones — falta DATABASE_URL en .env.test.local
+ok   servidor-habla-con-prueba — salteado (falta --server)
+
+3/5 listos
+BLOQUEADO por: override-proceso, migraciones
+exit=1
+
+=== P3: con variables exportadas y DATABASE_URL ausente ===
+ok   entorno-prueba — https://abcdefghijklmnopqrst.supabase.co · objetivo http://localhost:3000
+ok   override-proceso — el proceso ya lleva las variables de prueba
+ok   env-local-presente — existe y apunta a producción: por eso hay que exportar las variables antes de `next dev`
+FALLA migraciones — falta DATABASE_URL en .env.test.local
+ok   servidor-habla-con-prueba — salteado (falta --server)
+
+4/5 listos
+BLOQUEADO por: migraciones
+exit=1
+
+=== P4: variables del proceso apuntando a PRODUCCION (debe bloquear) ===
+ok   entorno-prueba — https://abcdefghijklmnopqrst.supabase.co · objetivo http://localhost:3000
+FALLA override-proceso — la variable del proceso apunta a PRODUCCIÓN
+ok   env-local-presente — existe y apunta a producción: por eso hay que exportar las variables antes de `next dev`
+FALLA migraciones — falta DATABASE_URL en .env.test.local
+ok   servidor-habla-con-prueba — salteado (falta --server)
+
+3/5 listos
+BLOQUEADO por: override-proceso, migraciones
+exit=1
+
+=== limpieza: .env.test.local eliminado = True ===

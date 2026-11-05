@@ -1,0 +1,37 @@
+{
+  "escenario": "B",
+  "inicio": "2026-11-05T04:32:25.136Z",
+  "fin": "2026-11-05T04:33:01.952Z",
+  "resumen": {
+    "total": 1,
+    "ok": 1
+  },
+  "salida": {
+    "intentos": [
+      {
+        "persona": "ana",
+        "gano": true,
+        "captura": "capturas/B1-ana.png",
+        "texto": "Saltar al contenido\nInicio\nSorteos\nGanadores\nCómo funciona\nPlanes\nSolicitar ser Organizador\nA\nPREMIO EN JUEGO\nACTIVO\nMANUAL\nRESULTADO VERIFICABLE\nSORTEO VERIFICABLE\nPRUEBA INTERNA 2 — CONCURRENCIA — NO PARTICIPAR\nACTIVO\nCompartir\nDenunciar este sorteo\nSorteo de prueba del simulador automático. Se borra al terminar la corrida. No comprar números.\nFECHA DEL SORTEO\n4 nov 2026, 4:31 a. m.\nPRECIO POR NÚMERO\n$ 100\nSorteo manual: el organizador lo ejecuta a la fecha y hora programadas; el resultado se "
+      },
+      {
+        "persona": "bruno",
+        "gano": false,
+        "captura": "capturas/B1-bruno.png",
+        "texto": "Saltar al contenido\nInicio\nSorteos\nGanadores\nCómo funciona\nPlanes\nSolicitar ser Organizador\nB\nPREMIO EN JUEGO\nACTIVO\nMANUAL\nRESULTADO VERIFICABLE\nSORTEO VERIFICABLE\nPRUEBA INTERNA 2 — CONCURRENCIA — NO PARTICIPAR\nACTIVO\nCompartir\nDenunciar este sorteo\nSorteo de prueba del simulador automático. Se borra al terminar la corrida. No comprar números.\nFECHA DEL SORTEO\n4 nov 2026, 4:31 a. m.\nPRECIO POR NÚMERO\n$ 100\nSorteo manual: el organizador lo ejecuta a la fecha y hora programadas; el resultado se "
+      },
+      {
+        "persona": "eva",
+        "gano": false,
+        "captura": "capturas/B1-eva.png",
+        "texto": "Saltar al contenido\nInicio\nSorteos\nGanadores\nCómo funciona\nPlanes\nSolicitar ser Organizador\nE\nPREMIO EN JUEGO\nACTIVO\nMANUAL\nRESULTADO VERIFICABLE\nSORTEO VERIFICABLE\nPRUEBA INTERNA 2 — CONCURRENCIA — NO PARTICIPAR\nACTIVO\nCompartir\nDenunciar este sorteo\nSorteo de prueba del simulador automático. Se borra al terminar la corrida. No comprar números.\nFECHA DEL SORTEO\n4 nov 2026, 4:31 a. m.\nPRECIO POR NÚMERO\n$ 100\nSorteo manual: el organizador lo ejecuta a la fecha y hora programadas; el resultado se "
+      }
+    ],
+    "filaFinal": {
+      "number": 5,
+      "status": "reserved",
+      "reserved_by": "2c89b76e-48a3-445f-88ff-178cc9337ff4"
+    },
+    "ms": 20757
+  }
+}

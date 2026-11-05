@@ -1,0 +1,16 @@
+﻿typecheck exit=0
+lint exit=0
+
+✔ No ESLint warnings or errors
+
+
+test exit=0
+ ✓ lib/ratelimit.test.ts (5 tests) 9ms
+ ✓ lib/terms.test.ts (4 tests) 8ms
+
+ Test Files  19 passed (19)
+      Tests  213 passed (213)
+   Start at  01:40:41
+   Duration  11.00s (transform 1.55s, setup 0ms, collect 4.84s, tests 512ms, environment 7ms, prepare 9.79s)
+
+

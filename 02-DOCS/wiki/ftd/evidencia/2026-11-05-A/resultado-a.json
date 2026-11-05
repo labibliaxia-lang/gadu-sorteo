@@ -1,0 +1,100 @@
+{
+  "escenario": "A",
+  "inicio": "2026-11-05T04:30:03.329Z",
+  "fin": "2026-11-05T04:31:07.994Z",
+  "resumen": {
+    "total": 11,
+    "ok": 11
+  },
+  "salida": {
+    "cargaMs": 5509,
+    "reserva": {
+      "ms": 401,
+      "textoModal": "Reserva confirmada\n\n2 números reservados en PRUEBA INTERNA — NO PARTICIPAR.\n\n03\n07\n\nTotal a pagar: $ 200\n\nEl contador de arriba es solo para elegir. La reserva queda guardada 48 h hasta que el organizador confirme el pago.\n\nDatos para transferir\n\nAlias\nprueba.simulador\nCopiar\nCBU\n0000003100010000000001\nCopiar\nBanco\nBanco de Prueba\nCopiar\n\nTransferí el total y después enviá el comprobante por WhatsApp.\n\nEnviar comprobante por WhatsApp\n\nGuardamos tus números 48 h. Cuando el organizador reciba el comprobante, los marca como pagados. Podés seguir tus números desde «Mis números».\n\nCerrar",
+      "whatsappHref": "https://wa.me/5491155550103?text=Hola!%20Quiero%20participar%20en%20%22PRUEBA%20INTERNA%20%E2%80%94%20NO%20PARTICIPAR%22%20con%20los%20n%C3%BAmeros%3A%203%2C%207.%20Total%3A%20%24%C2%A0200"
+    },
+    "baseTrasReserva": [
+      {
+        "number": 3,
+        "status": "reserved",
+        "reserved_until": "2026-11-07T04:30:11.221107+00:00",
+        "reserved_by": "2c89b76e-48a3-445f-88ff-178cc9337ff4"
+      },
+      {
+        "number": 7,
+        "status": "reserved",
+        "reserved_until": "2026-11-07T04:30:11.221107+00:00",
+        "reserved_by": "2c89b76e-48a3-445f-88ff-178cc9337ff4"
+      }
+    ],
+    "baseTrasPago": [
+      {
+        "number": 3,
+        "status": "sold",
+        "sold_to": "2c89b76e-48a3-445f-88ff-178cc9337ff4"
+      },
+      {
+        "number": 7,
+        "status": "sold",
+        "sold_to": "2c89b76e-48a3-445f-88ff-178cc9337ff4"
+      }
+    ],
+    "cargaAdminMs": 4493,
+    "sorteo": {
+      "status": "drawn",
+      "draw_commitment": "1a051338f3d5ea1576b5f0f11ba082a35101879b96f8450f04d935a253adbb1c",
+      "draw_seed": "3a9c5cb3b1be422c8171b18c57cb5a4657aa7fe01a2545c2bf3e904c12edb317",
+      "numbers_hash": "e59cdbb2a186e30e685f85e9ead64cf42d5a196953af5f381c5fb4caf0b1c66e",
+      "result_hash": "05f11f42cdac2addac686edb2e3b9a093fa5e3431687c43458e072c4b2cd73ac",
+      "winner_number": 7,
+      "drawn_at": "2026-11-05T04:30:56.93634+00:00"
+    },
+    "hashes": {
+      "recalculado": {
+        "commitment": "1a051338f3d5ea1576b5f0f11ba082a35101879b96f8450f04d935a253adbb1c",
+        "numbersHash": "e59cdbb2a186e30e685f85e9ead64cf42d5a196953af5f381c5fb4caf0b1c66e",
+        "pick": "455b47e5da1fdaded77d5f0a8eab1e71e0d3d66cc9068c15c14b714f33445b55",
+        "index": 1,
+        "winner": 7,
+        "resultHash": "05f11f42cdac2addac686edb2e3b9a093fa5e3431687c43458e072c4b2cd73ac",
+        "list": "3,7",
+        "sorted": [
+          3,
+          7
+        ]
+      },
+      "publicado": {
+        "commitment": "1a051338f3d5ea1576b5f0f11ba082a35101879b96f8450f04d935a253adbb1c",
+        "numbersHash": "e59cdbb2a186e30e685f85e9ead64cf42d5a196953af5f381c5fb4caf0b1c66e",
+        "winner": 7,
+        "resultHash": "05f11f42cdac2addac686edb2e3b9a093fa5e3431687c43458e072c4b2cd73ac"
+      },
+      "checks": [
+        {
+          "campo": "commitment",
+          "recalculado": "1a051338f3d5ea1576b5f0f11ba082a35101879b96f8450f04d935a253adbb1c",
+          "publicado": "1a051338f3d5ea1576b5f0f11ba082a35101879b96f8450f04d935a253adbb1c",
+          "coincide": true
+        },
+        {
+          "campo": "numbersHash",
+          "recalculado": "e59cdbb2a186e30e685f85e9ead64cf42d5a196953af5f381c5fb4caf0b1c66e",
+          "publicado": "e59cdbb2a186e30e685f85e9ead64cf42d5a196953af5f381c5fb4caf0b1c66e",
+          "coincide": true
+        },
+        {
+          "campo": "winner",
+          "recalculado": 7,
+          "publicado": 7,
+          "coincide": true
+        },
+        {
+          "campo": "resultHash",
+          "recalculado": "05f11f42cdac2addac686edb2e3b9a093fa5e3431687c43458e072c4b2cd73ac",
+          "publicado": "05f11f42cdac2addac686edb2e3b9a093fa5e3431687c43458e072c4b2cd73ac",
+          "coincide": true
+        }
+      ]
+    }
+  }
+}

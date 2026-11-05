@@ -1,0 +1,5 @@
+
+> sorteo-herramientas@1.0.0 lint
+> next lint
+
+✔ No ESLint warnings or errors

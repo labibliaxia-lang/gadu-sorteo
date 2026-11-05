@@ -1,0 +1,85 @@
+
+> sorteo-herramientas@1.0.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · instrumentationHook
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/38) ...
+   Generating static pages (9/38) 
+   Generating static pages (18/38) 
+   Generating static pages (28/38) 
+ ✓ Generating static pages (38/38)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ƒ /                                    6.83 kB         246 kB
+├ ƒ /_not-found                          884 B           150 kB
+├ ƒ /admin                               6.94 kB         245 kB
+├ ƒ /admin/design                        157 B           149 kB
+├ ƒ /admin/perfil                        4.26 kB         255 kB
+├ ƒ /admin/resenas                       582 B           183 kB
+├ ƒ /admin/sorteos                       208 B           158 kB
+├ ƒ /admin/sorteos/[id]                  6.03 kB         244 kB
+├ ƒ /admin/sorteos/[id]/analitica        208 B           158 kB
+├ ƒ /admin/sorteos/[id]/editar           6.43 kB         257 kB
+├ ƒ /admin/sorteos/[id]/landing          6.08 kB         254 kB
+├ ƒ /admin/sorteos/[id]/numeros          3.04 kB         247 kB
+├ ƒ /admin/sorteos/[id]/preguntas        1.16 kB         169 kB
+├ ƒ /admin/sorteos/[id]/premios          5.24 kB         236 kB
+├ ƒ /admin/sorteos/nuevo                 9.77 kB         269 kB
+├ ƒ /admin/super                         134 kB          298 kB
+├ ƒ /admin/super/sandbox                 3.96 kB         243 kB
+├ ƒ /admin/super/usuarios/[id]           4.67 kB         169 kB
+├ ƒ /admin/super/usuarios/[id]/panel     208 B           158 kB
+├ ƒ /admin/verificacion                  7.44 kB         233 kB
+├ ƒ /admin/verify                        3.96 kB         168 kB
+├ ƒ /api/admin/analytics                 0 B                0 B
+├ ƒ /api/checkout                        0 B                0 B
+├ ƒ /api/cron/auto-draw                  0 B                0 B
+├ ƒ /api/cron/release-reservations       0 B                0 B
+├ ƒ /api/mock-payment                    0 B                0 B
+├ ƒ /api/track-visit                     0 B                0 B
+├ ƒ /api/webhooks/mercadopago            0 B                0 B
+├ ○ /apple-icon.png                      0 B                0 B
+├ ƒ /auth/callback                       0 B                0 B
+├ ƒ /ayuda                               208 B           158 kB
+├ ƒ /como-funciona                       208 B           158 kB
+├ ƒ /ganadores                           192 B           163 kB
+├ ○ /icon.png                            0 B                0 B
+├ ƒ /login                               214 B           257 kB
+├ ƒ /mis-numeros                         4.76 kB         256 kB
+├ ƒ /mis-pagos                           4.59 kB         239 kB
+├ ƒ /organizador/[slug]                  593 B           188 kB
+├ ƒ /pago/exitoso                        208 B           158 kB
+├ ƒ /pago/fallido                        208 B           158 kB
+├ ƒ /pago/pendiente                      208 B           158 kB
+├ ƒ /perfil                              7.87 kB         261 kB
+├ ƒ /planes                              3.26 kB         168 kB
+├ ƒ /privacidad                          157 B           149 kB
+├ ƒ /register                            208 B           252 kB
+├ ○ /robots.txt                          0 B                0 B
+├ ƒ /seguridad                           6.21 kB         240 kB
+├ ○ /sitemap.xml                         0 B                0 B
+├ ƒ /sorteos/[id]                        13.6 kB         280 kB
+├ ƒ /sorteos/[id]/en-vivo                3.6 kB          238 kB
+├ ƒ /sorteos/[id]/verificar              586 B           170 kB
+└ ƒ /terminos                            157 B           149 kB
++ First Load JS shared by all            149 kB
+  ├ chunks/5342-8986ba7c03065d9e.js      91.6 kB
+  ├ chunks/fd9d1056-991f90301c9f2899.js  53.6 kB
+  └ other shared chunks (total)          3.73 kB
+
+
+ƒ Middleware                             143 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

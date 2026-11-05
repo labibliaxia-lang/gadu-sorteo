@@ -1,0 +1,18 @@
+[
+  {
+    "paso": "B1-reserva-concurrente",
+    "rol": "ana+bruno+eva",
+    "inicio": "2026-11-05T04:32:25.295Z",
+    "fin": "2026-11-05T04:33:01.808Z",
+    "duracionMs": 36513,
+    "esperado": "uno solo se queda con el número 5; los otros reciben rechazo claro",
+    "observado": "1 de 3 vieron «Reserva confirmada» en 20757 ms. Fila final: reserved reservado por 2c89b76e-48a3-445f-88ff-178cc9337ff4",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/B1-ana.png",
+      "capturas/B1-bruno.png",
+      "capturas/B1-eva.png"
+    ],
+    "nota": null
+  }
+]

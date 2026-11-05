@@ -1,0 +1,13 @@
+﻿ ✓ lib/cron-auth.test.ts (6 tests) 9ms
+ ✓ lib/release-expired.test.ts (6 tests) 9ms
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  02:07:11
+   Duration  1.50s (transform 144ms, setup 0ms, collect 197ms, tests 18ms, environment 0ms, prepare 1.78s)
+
+ Test Files  22 passed (22)
+      Tests  230 passed (230)
+   Start at  02:07:15
+   Duration  6.84s (transform 651ms, setup 0ms, collect 1.95s, tests 485ms, environment 9ms, prepare 7.69s)
+

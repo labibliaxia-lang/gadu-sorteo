@@ -1,0 +1,13 @@
+un participante
+{
+  "commitment": "7ccb844285ecad2e97d871d451a2be62bf65d656db7bbc5e2eed0d98f6861eca",
+  "numbersHash": "8e99d0ae2e7d6bf35b0818677705280543cc2151f308d2a0c6040036df3b5d57",
+  "pick": "286a7d0d9c7e8a7a5d11bd003bb8255835fc09b8781f8d51c3a8e5ef5c22b2a9",
+  "index": 0,
+  "winner": 7,
+  "resultHash": "8b15336352d4f3f297ce7b259e0e82d997ddb292cb205ef69038ddfe19ba8d95",
+  "list": "7",
+  "sorted": [
+    7
+  ]
+}

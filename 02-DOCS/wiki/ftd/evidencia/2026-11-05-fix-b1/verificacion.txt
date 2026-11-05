@@ -1,0 +1,21 @@
+﻿Prueba de que el arreglo apunta a la definicion correcta
+========================================================
+
+Definiciones de organizer_mark_reserved_sold en las migraciones:
+  - 0029_manual_prepaid_sales.sql
+  - 0074_no_prepaid_sales_after_draw.sql
+
+La ULTIMA en el orden de archivos es 0074 (es la que gana en Postgres).
+
+  contiene el guard drawn (v_status = 'drawn') ....... true
+  falla cerrado con mensaje ("ya fue sorteado") ...... true
+  la definicion vieja 0029 tenia el guard ............ false
+
+El test `organizer_mark_reserved_sold rechaza confirmar pagos tras sortear`
+toma la ultima definicion, igual que el resto de security-invariants.test.ts.
+Si alguien vuelve a pegar el cuerpo de 0029 en una migracion posterior, falla.
+
+Gates despues del cambio:
+  typecheck  exit 0
+  lint       exit 0
+  test       213/213 en 19 archivos

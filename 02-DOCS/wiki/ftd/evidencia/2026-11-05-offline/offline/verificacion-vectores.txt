@@ -1,0 +1,75 @@
+Recálculo propio (node:crypto) vs vectores canónicos de lib/draw-verify.test.ts:21-33
+{
+  "entrada": {
+    "raffleId": "11111111-1111-4111-8111-111111111111",
+    "seed": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "numbers": [
+      1,
+      2,
+      3,
+      5,
+      8,
+      13,
+      21,
+      34,
+      55,
+      89
+    ]
+  },
+  "recalculado": {
+    "commitment": "7ccb844285ecad2e97d871d451a2be62bf65d656db7bbc5e2eed0d98f6861eca",
+    "numbersHash": "ddc1ff15e29b1cba46f6073b7d68c01b6af6d362d0366cb4b327c24e33610561",
+    "pick": "1134485f18e6270b63c7a81ef7d5d261e38416abc39c607a9654c78b5faccda0",
+    "index": 4,
+    "winner": 8,
+    "resultHash": "ed4a7e966c9f80e1f35ae7d15d8d32010925b4d5902293dd52b4ab671dccfe53",
+    "list": "1,2,3,5,8,13,21,34,55,89",
+    "sorted": [
+      1,
+      2,
+      3,
+      5,
+      8,
+      13,
+      21,
+      34,
+      55,
+      89
+    ]
+  },
+  "publicado": {
+    "commitment": "7ccb844285ecad2e97d871d451a2be62bf65d656db7bbc5e2eed0d98f6861eca",
+    "numbersHash": "ddc1ff15e29b1cba46f6073b7d68c01b6af6d362d0366cb4b327c24e33610561",
+    "winner": 8,
+    "resultHash": "ed4a7e966c9f80e1f35ae7d15d8d32010925b4d5902293dd52b4ab671dccfe53"
+  },
+  "comparacion": {
+    "checks": [
+      {
+        "campo": "commitment",
+        "recalculado": "7ccb844285ecad2e97d871d451a2be62bf65d656db7bbc5e2eed0d98f6861eca",
+        "publicado": "7ccb844285ecad2e97d871d451a2be62bf65d656db7bbc5e2eed0d98f6861eca",
+        "coincide": true
+      },
+      {
+        "campo": "numbersHash",
+        "recalculado": "ddc1ff15e29b1cba46f6073b7d68c01b6af6d362d0366cb4b327c24e33610561",
+        "publicado": "ddc1ff15e29b1cba46f6073b7d68c01b6af6d362d0366cb4b327c24e33610561",
+        "coincide": true
+      },
+      {
+        "campo": "winner",
+        "recalculado": 8,
+        "publicado": 8,
+        "coincide": true
+      },
+      {
+        "campo": "resultHash",
+        "recalculado": "ed4a7e966c9f80e1f35ae7d15d8d32010925b4d5902293dd52b4ab671dccfe53",
+        "publicado": "ed4a7e966c9f80e1f35ae7d15d8d32010925b4d5902293dd52b4ab671dccfe53",
+        "coincide": true
+      }
+    ],
+    "todosCoinciden": true
+  }
+}

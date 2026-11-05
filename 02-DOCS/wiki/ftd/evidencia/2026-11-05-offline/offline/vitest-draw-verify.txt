@@ -1,0 +1,19 @@
+node.exe : [33mThe CJS build of Vite's Node API is deprecated. See 
+https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([33mThe CJS bu...e details.[39m:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+ RUN  v2.1.9 C:/Users/Usuario/Desktop/sorteos herramientas
+
+ ✓ lib/draw-verify.test.ts (8 tests) 22ms
+ ✓ lib/draw-verify.simulacion.test.ts (12 tests) 69ms
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  23:58:50
+   Duration  1.13s (transform 152ms, setup 0ms, collect 235ms, tests 91ms, environment 1ms, prepare 507ms)
+

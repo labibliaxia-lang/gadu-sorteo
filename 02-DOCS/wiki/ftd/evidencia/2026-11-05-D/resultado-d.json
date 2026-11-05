@@ -1,0 +1,45 @@
+{
+  "escenario": "D",
+  "inicio": "2026-11-05T04:33:38.400Z",
+  "fin": "2026-11-05T04:33:38.993Z",
+  "resumen": {
+    "total": 3,
+    "ok": 3
+  },
+  "salida": {
+    "limpio": {
+      "commitment": "1a051338f3d5ea1576b5f0f11ba082a35101879b96f8450f04d935a253adbb1c",
+      "numbersHash": "e59cdbb2a186e30e685f85e9ead64cf42d5a196953af5f381c5fb4caf0b1c66e",
+      "pick": "455b47e5da1fdaded77d5f0a8eab1e71e0d3d66cc9068c15c14b714f33445b55",
+      "index": 1,
+      "winner": 7,
+      "resultHash": "05f11f42cdac2addac686edb2e3b9a093fa5e3431687c43458e072c4b2cd73ac",
+      "list": "3,7",
+      "sorted": [
+        3,
+        7
+      ]
+    },
+    "manipulado": {
+      "alterado": [
+        1003,
+        7
+      ],
+      "r": {
+        "commitment": "1a051338f3d5ea1576b5f0f11ba082a35101879b96f8450f04d935a253adbb1c",
+        "numbersHash": "13a1410e58265599bab62e1ad8c0c6b1e40ace4d3ae0ec9b90b43d9befbd161b",
+        "pick": "bf32790e64d4abfcfe45911a6b0f033f1d43f4b1dc93c13aa573f6853aee38c4",
+        "index": 1,
+        "winner": 1003,
+        "resultHash": "598631dafbaac86ea396994b6beffc5e4fc01e463e1c082d7de682bed4dd7582",
+        "list": "7,1003",
+        "sorted": [
+          7,
+          1003
+        ]
+      },
+      "cambia": true,
+      "ganadorCambia": true
+    }
+  }
+}

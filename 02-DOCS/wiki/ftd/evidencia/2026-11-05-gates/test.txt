@@ -1,0 +1,41 @@
+
+> sorteo-herramientas@1.0.0 test
+> vitest run
+
+node.exe : [33mThe CJS build of Vite's Node API is deprecated. See 
+https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([33mThe CJS bu...e details.[39m:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+ RUN  v2.1.9 C:/Users/Usuario/Desktop/sorteos herramientas
+
+ ✓ lib/impersonation.test.ts (20 tests) 23ms
+ ✓ lib/security-invariants.test.ts (16 tests) 46ms
+ ✓ lib/draw-verify.simulacion.test.ts (12 tests) 104ms
+ ✓ lib/reports.test.ts (21 tests) 16ms
+ ✓ lib/page-views.test.ts (16 tests) 21ms
+ ✓ lib/migrations.test.ts (6 tests) 97ms
+ ✓ lib/draw-verify.test.ts (8 tests) 41ms
+ ✓ lib/payments.test.ts (21 tests) 14ms
+ ✓ lib/landing.test.ts (12 tests) 19ms
+ ✓ lib/superadmin.test.ts (17 tests) 15ms
+stderr | lib/mercadopago.test.ts > verifyWebhookSignature > falla cerrado cuando no hay secreto configurado
+MP_WEBHOOK_SECRET no está configurado
+
+ ✓ lib/mercadopago.test.ts (6 tests) 26ms
+ ✓ lib/raffle-numbers.test.ts (6 tests) 18ms
+ ✓ lib/featured.test.ts (8 tests) 40ms
+ ✓ lib/jump-number.test.ts (12 tests) 14ms
+ ✓ lib/address.test.ts (7 tests) 12ms
+ ✓ lib/mfa.test.ts (5 tests) 6ms
+ ✓ lib/ratelimit.test.ts (5 tests) 10ms
+
+ Test Files  17 passed (17)
+      Tests  198 passed (198)
+   Start at  00:55:12
+   Duration  6.41s (transform 691ms, setup 0ms, collect 2.33s, tests 521ms, environment 6ms, prepare 4.38s)
+
