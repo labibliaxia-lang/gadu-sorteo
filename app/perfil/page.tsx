@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { setEmailPreference } from "@/app/perfil/actions";
 import { acceptTerms } from "@/app/actions/terms";
 import { ProfileEditor } from "@/components/ProfileEditor";
+import { AccountDeletionPanel } from "@/components/AccountDeletionPanel";
 import { TERMS_VERSION } from "@/lib/terms";
 import { formatDateTime } from "@/lib/utils";
 
@@ -388,6 +389,8 @@ export default function PerfilPage() {
           </Link>
         )}
       </div>
+
+      <AccountDeletionPanel />
     </div>
   );
 }

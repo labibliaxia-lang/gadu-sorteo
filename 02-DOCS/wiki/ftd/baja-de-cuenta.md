@@ -92,8 +92,33 @@ el pendiente y volver a pedirla.
 
 ## Evidencia
 
-Pendiente: feature sin implementar. El diagnóstico que la origina está en
-`02-DOCS/wiki/handoff-2026-11-04.md` y en el commit `252e6ae` (purga del dorso de KYC).
+- **Esquema y validaciones — verificado (2026-11-05).** `verificar_0082.sql`: 6/6 (tabla con RLS,
+  índice único de pendientes, `payments`/`refunds` con `SET NULL`, los cuatro motivos detectados y
+  el pago sobreviviendo al borrado de la cuenta).
+- **UI — implementada, sin prueba en navegador todavía.**
+  - `/perfil`: `components/AccountDeletionPanel.tsx` (pedir con confirmación explícita, ver estado y
+    cancelar). Las acciones viven en `app/perfil/deletion-actions.ts`.
+  - Superadmin: página **`/admin/super/bajas`** (`page.tsx` + `BajasList.tsx` + `actions.ts`) con el
+    detalle de cada solicitud, los bloqueos que la frenan y los botones de aprobar/rechazar.
+- **Gates:** typecheck 0, lint 0 warnings, 260 tests, build 39 páginas.
+
+### Desvíos respecto de la spec
+
+1. **Página en vez de pestaña.** Se sumó `/admin/super/bajas` como ruta propia en lugar de una
+   pestaña dentro del panel: el panel tiene 700+ líneas y una pestaña más era más riesgo que valor.
+   Falta el enlace desde `/admin/super`.
+2. **La anonimización se reduce a purgar KYC.** Borrar la cuenta de Auth elimina la fila de
+   `profiles` en cascada, así que no queda perfil que anonimizar. Lo que sobrevive —y era el punto—
+   son `payments` y `refunds` con `user_id` en null, más los documentos KYC purgados antes.
+3. **La solicitud también desaparece** al borrar la cuenta (`user_id` referencia `profiles` con
+   cascade). La evidencia durable es la fila `DELETE_USER` de `admin_audit_logs`.
+
+### Pendiente
+
+- Endurecer `deleteUsers` del panel con las mismas validaciones (checklist 9).
+- Enlazar `/admin/super/bajas` desde el panel.
+- Actualizar la Política de Privacidad con el camino y el plazo (checklist 10).
+- Probar el flujo completo en un navegador con una cuenta de prueba.
 
 ## Next
 
