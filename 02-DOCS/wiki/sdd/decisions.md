@@ -287,13 +287,13 @@ Evidence   — `lib/countdown.ts` + 12 tests; `RaffleCountdown`; contrato en `se
 Decision   — `reserve_numbers` (camino Mercado Pago) pasa a validar cuenta suspendida, tope de 20 reservas por hora, máximo 100 números por compra y rango 1..10000. La clave del limitador es la misma que usa `reserve_numbers_prepaid` (`reserve:<uid>`), así que los dos caminos comparten el presupuesto.
 Why        — el ban de Auth no invalida un access token ya emitido por hasta una hora: un suspendido podía seguir barriendo números. Y sin tope, una sola cuenta podía inmovilizar el inventario en bucle hasta que venciera cada TTL.
 Qué no cambia — la firma, los permisos, el patrón CTE + `returning` que mata el doble cobro (0069) y la liberación de reservas propias vencidas.
-Evidence   — `supabase/migrations/0076_reserve_numbers_same_guards.sql` (escrita, sin aplicar), `verificar_0076.sql` y el contrato en `security-invariants.test.ts`.
+Evidence   — `supabase/migrations/0076_reserve_numbers_same_guards.sql` (aplicada y verificada el 2026-11-05: 4/4), `verificar_0076.sql` y el contrato en `security-invariants.test.ts`.
 
 ## 2026-11-05 — «Destacado» lo decide el superadmin, no el organizador  (feature: auditoria-seguridad)
 Decision   — dos triggers sobre `raffles`: en UPDATE de `is_featured`/`featured_at` abortan si la conexión es de cliente (`authenticated`/`anon`) y no es superadmin; en INSERT fuerzan `is_featured = false`. El SQL Editor y `service_role` quedan exceptuados, igual que en 0067.
 Why        — el `grant update` de 0065 es de tabla, no de columnas, así que cualquier organizador podía poner su sorteo en «Destacado» con un PATCH, sin panel ni auditoría. El destacado es una herramienta comercial del dueño del producto.
 Qué no cambia — la Server Action del superadmin escribe con service role (lo dice 0066), así que sigue funcionando; el organizador sigue editando el resto de su sorteo.
-Evidence   — `supabase/migrations/0077_guard_featured_flag.sql` (escrita, sin aplicar), `verificar_0077.sql` y el contrato en `security-invariants.test.ts`.
+Evidence   — `supabase/migrations/0077_guard_featured_flag.sql` (aplicada y verificada el 2026-11-05: 4/4), `verificar_0077.sql` y el contrato en `security-invariants.test.ts`.
 
 ## 2026-11-05 — El compromiso de la semilla solo se publica con la venta abierta  (feature: auditoria-seguridad)
 Decision   — `commit_draw_seed` exige `status = 'active'` y `draw_date > now()`. Antes aceptaba también `closed`, así que el organizador podía cerrar la venta, mirar el listado vendido y recién ahí comprometer la semilla.
