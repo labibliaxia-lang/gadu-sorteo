@@ -1,0 +1,34 @@
+﻿Casilla "No publicar en el listado" (0079) — estado
+===================================================
+
+Verificado
+  - La casilla existe en el paso 3 del wizard desplegado,
+    input[name="is_listed"], y se puede marcar.
+  - El paso 3 se alcanza: dropzone de portada + casilla presentes.
+
+No verificado (declarado)
+  - Que marcarla cree el sorteo con is_listed = false. No logre un alta
+    completa con la casilla marcada: el boton se deshabilita y se desmonta
+    durante el submit ("element is not enabled" / "detached from the DOM"),
+    y el clic de automatizacion se desincroniza. El cuerpo del POST a
+    /rest/v1/raffles nunca llego a capturarse.
+  - El codigo mapea is_listed: values.is_listed ?? true. Es lectura, no
+    evidencia de ejecucion.
+
+Hallazgo nuevo (B13)
+  Durante estas pruebas aparecieron dos sorteos ("PRUEBA WIZARD 4" y "5")
+  sin haber apretado "Crear sorteo": dos clics en "Continuar" bastaron.
+  El propio codigo lo advierte en page.tsx:253:
+    "El boton «Continuar» y el «Crear sorteo» son el mismo nodo del DOM"
+  Con automatizacion el efecto es sistematico; con una persona, un doble
+  clic rapido puede crear el sorteo sin pasar por la revision ni la portada.
+
+Por que me detuve
+  Cada intento de verificacion puede crear un sorteo publico en produccion.
+  Hoy cree cuatro sin querer (todos borrados). Seguir insistiendo con el mismo
+  metodo no es razonable: el proximo intento seria con un script que espere el
+  estado del DOM en vez de un tiempo fijo.
+
+Limpieza
+  11 sorteos, 0 deslistados, 0 de prueba. 0 cuentas @gadu.test.
+  Home sin menciones a sorteos de prueba.

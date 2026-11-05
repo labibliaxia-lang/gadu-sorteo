@@ -1,0 +1,67 @@
+﻿[
+    {
+        "paso":  "C1-deploy",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T09:51:55.3066022-03:00",
+        "nota":  null,
+        "esperado":  "el wizard desplegado tiene la casilla",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "en el paso 3 del wizard aparece input[name=is_listed]; verificado dos veces contando el nodo y marcandolo",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T09:51:55.3066022-03:00"
+    },
+    {
+        "paso":  "C2-casilla-marcable",
+        "rol":  "organizador",
+        "inicio":  "2026-11-05T09:51:55.3066022-03:00",
+        "nota":  null,
+        "esperado":  "se puede marcar",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "check() deja el input en estado marcado (isChecked=true)",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T09:51:55.3066022-03:00"
+    },
+    {
+        "paso":  "C3-binding-a-la-base",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T09:51:55.3066022-03:00",
+        "nota":  "el cuerpo del POST nunca se capturo; el codigo mapea is_listed: values.is_listed ?? true",
+        "esperado":  "marcar la casilla crea el sorteo con is_listed=false",
+        "evidencia":  [
+
+                      ],
+        "observado":  "NO OBSERVADO: no logre un alta completa con la casilla marcada. El boton se deshabilita y se desmonta durante el submit, y el clic de automatizacion se desincroniza",
+        "resultado":  "pendiente",
+        "fin":  "2026-11-05T09:51:55.3066022-03:00"
+    },
+    {
+        "paso":  "C4-hallazgo-continuar",
+        "rol":  "auditor",
+        "inicio":  "2026-11-05T09:51:55.3066022-03:00",
+        "nota":  "nuevo hallazgo B13; en automatizacion es peor, pero un doble clic humano puede dispararlo",
+        "esperado":  "entender por que aparecieron sorteos sin apretar Crear sorteo",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "dos sorteos \u0027PRUEBA WIZARD 4 y 5\u0027 se crearon con solo dos clics en Continuar: el boton es el mismo nodo para avanzar y para enviar (comentario en page.tsx:253)",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T09:51:55.3066022-03:00"
+    },
+    {
+        "paso":  "C5-limpieza",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T09:51:55.3066022-03:00",
+        "nota":  null,
+        "esperado":  "no dejar rastros",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "sorteos de prueba borrados; 11 sorteos, 0 deslistados, 0 de prueba; 0 cuentas @gadu.test; home sin menciones",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T09:51:55.3066022-03:00"
+    }
+]

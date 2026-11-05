@@ -392,6 +392,30 @@ de 30, cero, negativos y decimales). Gates 236/236.
 lados) y sorteos activos (2 / 20, mismo conteo y misma excepción de superadmin). El `Math.min(1000, …)`
 del wizard que había marcado como sospechoso es el **valor por defecto** del campo, no un tope.
 
+### B13 — «Continuar» puede crear el sorteo sin pasar por la revisión · **medio — encontrado al verificar**
+
+Durante la verificación de la casilla de listado aparecieron **dos sorteos creados sin haber apretado
+«Crear sorteo»**: dos clics en «Continuar» bastaron.
+
+El propio código lo advierte en `sorteos/nuevo/page.tsx:253`:
+
+> «El botón «Continuar» y el «Crear sorteo» son el mismo nodo del DOM»
+
+El mismo elemento cambia de handler según el paso. Si el clic se resuelve justo cuando React cambia el
+handler, en vez de avanzar **envía el formulario**. Con automatización pasa sistemáticamente; con una
+persona, un doble clic rápido o un Enter en el momento justo puede crear el sorteo sin portada y sin que
+nadie haya visto el paso de revisión.
+
+Consecuencia práctica: queda un sorteo publicado —visible en la home— que el organizador no quería
+crear todavía. Es exactamente el escenario que sufrí cuatro veces mientras probaba, con el agravante de
+que estaban en la web real.
+
+**Arreglo sugerido:** botones separados para avanzar y crear (dos nodos distintos, no dos handlers sobre
+el mismo), y `disabled` mientras `loading`. Es más simple que cualquier artilugio sobre el handler.
+
+**No está arreglado:** lo dejo documentado para que decidas, porque cambia la estructura del pie del
+wizard y no quería tocar eso sin tu visto bueno.
+
 ---
 
 ## 3. Fricciones de UX/UI
