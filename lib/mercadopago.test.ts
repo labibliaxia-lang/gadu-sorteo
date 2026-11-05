@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { verifyWebhookSignature } from "./mercadopago";
+import { verifyWebhookSignature, resolveWebhookPaymentId } from "./mercadopago";
 
 const SECRET = "test-secret";
 const TS = "1704908010";
@@ -93,5 +93,39 @@ describe("verifyWebhookSignature", () => {
     });
 
     expect(result).toEqual({ ok: false, reason: "MissingSecret" });
+  });
+});
+
+describe("resolveWebhookPaymentId (hallazgo #10)", () => {
+  it("procesa el id firmado del query cuando el cuerpo trae otro", () => {
+    // El cuerpo no está firmado: un JSON cambiado no puede redirigir el pago.
+    expect(resolveWebhookPaymentId("111", 222)).toEqual({
+      id: 111,
+      fromBody: false,
+      mismatch: true,
+    });
+  });
+
+  it("usa el id firmado cuando ambos coinciden", () => {
+    expect(resolveWebhookPaymentId("111", "111")).toEqual({
+      id: 111,
+      fromBody: false,
+      mismatch: false,
+    });
+  });
+
+  it("cae al id del cuerpo solo si el query no trae ninguno", () => {
+    expect(resolveWebhookPaymentId(null, 222)).toEqual({
+      id: 222,
+      fromBody: true,
+      mismatch: false,
+    });
+  });
+
+  it("no acepta ids inválidos", () => {
+    expect(resolveWebhookPaymentId(null, null)).toBeNull();
+    expect(resolveWebhookPaymentId("", undefined)).toBeNull();
+    expect(resolveWebhookPaymentId("abc", "0")).toBeNull();
+    expect(resolveWebhookPaymentId("-5", 1.5)).toBeNull();
   });
 });

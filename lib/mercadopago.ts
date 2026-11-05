@@ -98,6 +98,43 @@ export type WebhookVerification =
   | { ok: false; reason: string };
 
 /**
+ * Elige qué pago procesar (hallazgo #10).
+ *
+ * La firma de Mercado Pago cubre el `data.id` del **query string**, no el del
+ * cuerpo. Antes el cuerpo tenía prioridad, así que una notificación con firma
+ * válida podía hacer procesar otro pago cambiando solo el JSON. Ahora manda el
+ * firmado; el del cuerpo se usa únicamente si el query no trae ninguno
+ * (notificaciones viejas).
+ */
+export function resolveWebhookPaymentId(
+  queryDataId: string | null,
+  bodyDataId: unknown,
+): { id: number; fromBody: boolean; mismatch: boolean } | null {
+  const toPositiveInt = (value: unknown): number | null => {
+    if (value === null || value === undefined || value === "") return null;
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  };
+
+  const fromQuery = toPositiveInt(queryDataId);
+  const fromBody = toPositiveInt(bodyDataId);
+
+  if (fromQuery !== null) {
+    return {
+      id: fromQuery,
+      fromBody: false,
+      mismatch: fromBody !== null && fromBody !== fromQuery,
+    };
+  }
+
+  if (fromBody !== null) {
+    return { id: fromBody, fromBody: true, mismatch: false };
+  }
+
+  return null;
+}
+
+/**
  * Verifica la firma HMAC del webhook de Mercado Pago con el validador oficial
  * del SDK (`WebhookSignatureValidator`, `mercadopago >= 2.13.0`).
  *

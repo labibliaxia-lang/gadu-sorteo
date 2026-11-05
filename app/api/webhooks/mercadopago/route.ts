@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   getMercadoPagoPayment,
+  resolveWebhookPaymentId,
   verifyWebhookSignature,
   type MercadoPagoPaymentResult,
 } from "@/lib/mercadopago";
@@ -102,12 +103,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   }
 
-  // `data.id` puede venir en el body o solo en el query de la notificación.
-  const rawId = payload.data?.id ?? dataIdFromQuery;
-  const paymentId = typeof rawId === "number" ? rawId : Number(rawId);
-  if (!rawId || Number.isNaN(paymentId)) {
+  // El `data.id` firmado es el del query; el del cuerpo NO está firmado. Se usa
+  // el firmado y solo se cae al del cuerpo si el query no lo trae (hallazgo #10).
+  const resolved = resolveWebhookPaymentId(dataIdFromQuery, payload.data?.id);
+  if (!resolved) {
     return NextResponse.json({ error: "Sin payment id" }, { status: 400 });
   }
+  if (resolved.mismatch) {
+    console.warn(
+      "Webhook MP: el data.id del cuerpo no coincide con el firmado; se procesa el firmado",
+    );
+  }
+  const paymentId = resolved.id;
 
   // Consulta el pago a la API de MP (fuente de verdad). El tipo compartido
   // incluye importe y moneda, que hacen falta para conciliar (hallazgo #9).

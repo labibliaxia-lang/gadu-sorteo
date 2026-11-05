@@ -299,4 +299,10 @@ Evidence   — `supabase/migrations/0077_guard_featured_flag.sql` (aplicada y ve
 Decision   — `commit_draw_seed` exige `status = 'active'` y `draw_date > now()`. Antes aceptaba también `closed`, así que el organizador podía cerrar la venta, mirar el listado vendido y recién ahí comprometer la semilla.
 Why        — la promesa pública es que la semilla estaba fijada ANTES del sorteo. Si el compromiso puede nacer después del cierre, el verificador no prueba nada y la confianza es decorativa.
 Qué no cambia — la firma, los grants, el formato del hash ni la regla de una sola publicación por sorteo. El motor no llama a esta función.
-Evidence   — `supabase/migrations/0078_commit_seed_only_while_selling.sql` (escrita, sin aplicar), `verificar_0078.sql` y el contrato en `security-invariants.test.ts`.
+Evidence   — `supabase/migrations/0078_commit_seed_only_while_selling.sql` (aplicada y verificada el 2026-11-05: 3/3), `verificar_0078.sql` y el contrato en `security-invariants.test.ts`.
+
+## 2026-11-05 — El webhook procesa el data.id firmado, no el del cuerpo  (feature: auditoria-seguridad)
+Decision   — `resolveWebhookPaymentId` prefiere el `data.id` del query (el que cubre la firma de Mercado Pago); el del cuerpo solo se usa si el query no trae ninguno, y una discrepancia queda en el log.
+Why        — el cuerpo no está firmado: con prioridad del cuerpo, una notificación auténtica podía hacer procesar otro pago cambiando solo el JSON.
+Qué no cambia — la verificación con el validador del SDK, la consulta del pago a la API (fuente de verdad) y la idempotencia. La falta de ventana de tolerancia al `ts` es deliberada: MP reintenta cada 15 minutos y rechazar por antigüedad rompería entregas legítimas.
+Evidence   — `lib/mercadopago.ts` (helper nuevo) + 4 tests (10/10 en el archivo) y el webhook usándolo.
