@@ -178,6 +178,13 @@ describe("blindaje: resultado del sorteo", () => {
     expect(file("0077")).toMatch(/before update of is_featured, featured_at/i);
   });
 
+  it("el compromiso se publica antes de la fecha, no después (hallazgo #17)", () => {
+    const cuerpo = lastDefinition("commit_draw_seed");
+
+    expect(cuerpo).toMatch(/draw_date\s*>\s*now\(\)/i);
+    expect(cuerpo).toMatch(/status\s*=\s*'active'/i);
+  });
+
   it("payments admite los estados de devolución (hallazgo #8)", () => {
     expect(file("0070")).toMatch(/'refunded'\s*,\s*'charged_back'/);
   });
