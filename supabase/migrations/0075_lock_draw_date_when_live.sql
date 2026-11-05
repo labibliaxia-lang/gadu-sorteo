@@ -29,7 +29,7 @@ begin
      and coalesce(current_user, '') not in ('service_role', 'supabase_admin')
      and not public.is_superadmin() then
     raise exception
-      'La fecha del sorteo (% ) no se puede cambiar con el sorteo en venta. Cerrá el sorteo, corregí la fecha y volvé a publicarlo.',
+      'La fecha del sorteo (%) no se puede cambiar con el sorteo en venta. Cerrá el sorteo, corregí la fecha y volvé a publicarlo.',
       to_char(old.draw_date at time zone 'America/Argentina/Buenos_Aires', 'DD/MM/YYYY HH24:MI')
       using errcode = 'check_violation';
   end if;
@@ -59,7 +59,7 @@ end;
 $$;
 
 -- =====================================================================
--- Verificación (prueba completa: supabase/tests/verificar_0074.sql)
+-- Verificación (prueba completa: supabase/tests/verificar_0075.sql)
 -- =====================================================================
 -- Rollback:
 --   drop trigger if exists lock_draw_date_when_live on public.raffles;

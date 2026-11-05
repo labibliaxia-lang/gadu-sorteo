@@ -1,11 +1,11 @@
-﻿-- =====================================================================
--- Verificador 0075 â€” la fecha del sorteo no se mueve con el sorteo en venta
+-- =====================================================================
+-- Verificador 0075 — la fecha del sorteo no se mueve con el sorteo en venta
 -- =====================================================================
 -- Reglas de la casa:
---   Â· nunca muere a mitad de camino: reporta FALTA y sigue
---   Â· el control va antes del ataque
---   Â· no cuenta filas que el propio script ensuciÃ³
---   Â· termina en rollback
+--   · nunca muere a mitad de camino: reporta FALTA y sigue
+--   · el control va antes del ataque
+--   · no cuenta filas que el propio script ensució
+--   · termina en rollback
 -- =====================================================================
 
 begin;
@@ -58,7 +58,7 @@ begin
 
   update public._v0075 set resultado = 'OK' where n = 2;
 
-  -- Ataque: extender la venta un dÃ­a con el sorteo en venta.
+  -- Ataque: extender la venta un día con el sorteo en venta.
   begin
     update public.raffles
        set draw_date = v_fecha + interval '1 day'
