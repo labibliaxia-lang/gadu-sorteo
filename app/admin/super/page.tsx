@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Ticket,
   TrendingUp,
+  UserX,
   Users,
   Wrench,
 } from "lucide-react";
@@ -1239,13 +1240,22 @@ export default async function SuperAdminPage({
             denuncias y auditoría.
           </p>
         </div>
-        <Link
-          href="/admin/super/sandbox"
-          className={buttonVariants({ variant: "outline", size: "sm" })}
-        >
-          <FlaskConical className="mr-1.5 h-4 w-4" aria-hidden="true" />
-          Simulador de sorteo
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/super/bajas"
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <UserX className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Bajas de cuenta
+          </Link>
+          <Link
+            href="/admin/super/sandbox"
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <FlaskConical className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Simulador de sorteo
+          </Link>
+        </div>
       </header>
 
       {/* Avisos de datos que no se pudieron leer */}

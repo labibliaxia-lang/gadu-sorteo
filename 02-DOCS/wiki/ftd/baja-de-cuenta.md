@@ -115,10 +115,15 @@ el pendiente y volver a pedirla.
 
 ### Pendiente
 
-- Endurecer `deleteUsers` del panel con las mismas validaciones (checklist 9).
-- Enlazar `/admin/super/bajas` desde el panel.
-- Actualizar la Política de Privacidad con el camino y el plazo (checklist 10).
+- Endurecer `deleteUsers` del panel con las mismas validaciones (checklist 9). **Decisión de
+  producto:** bloquearía también el borrado manual de cuentas con actividad.
 - Probar el flujo completo en un navegador con una cuenta de prueba.
+
+### Hecho después de la primera versión
+
+- **Enlace en el panel:** `/admin/super` tiene el botón «Bajas de cuenta» junto al del simulador.
+- **Política de Privacidad actualizada:** el derecho de cancelación remite al perfil, con el plazo
+  de 10 días hábiles, qué se elimina, qué se conserva sin nombre y por qué se bloquea.
 
 ## Next
 

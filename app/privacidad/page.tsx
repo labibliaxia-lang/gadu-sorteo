@@ -110,15 +110,28 @@ export default function PrivacidadPage() {
             · Rectificar tus datos si están desactualizados o son incorrectos.
           </li>
           <li>
-            · Cancelar (eliminar) tu cuenta y tus datos personales, siempre que no
-            haya transacciones pendientes.
+            · Cancelar (eliminar) tu cuenta y tus datos personales. Podés pedirlo
+            vos mismo desde tu perfil, en «Baja de cuenta», y se resuelve en
+            hasta 10 días hábiles.
           </li>
           <li>
             · Oponerse al tratamiento de tus datos para fines de marketing.
           </li>
         </ul>
         <p className="text-sm text-muted-foreground">
-          Para ejercer estos derechos, envía un correo a:{" "}
+          Cuando la baja se aprueba, eliminamos tus datos personales y los
+          documentos de identidad que hayas subido para verificarte. Los
+          registros de pagos y devoluciones se conservan sin tu nombre, porque
+          son obligación contable.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          La baja se bloquea mientras tengas sorteos abiertos, un pago en curso,
+          una devolución pendiente o números en sorteos que no terminaron. El
+          motivo se muestra en tu perfil y podés resolverlo y volver a pedirla.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Para ejercer los demás derechos, o si no podés ingresar a tu cuenta,
+          escribí a:{" "}
           <a
             href="mailto:francofsm84@gmail.com"
             className="underline underline-offset-4"
