@@ -196,7 +196,7 @@ export function NumbersGrid({
       reserved_by?: string | null;
       reserved_until: string | null;
       sold_to?: string | null;
-      payment_id: string | null;
+      payment_id?: string | null;
       sold_at: string | null;
     }
 
@@ -219,7 +219,7 @@ export function NumbersGrid({
           : await supabase
               .from("raffle_numbers")
               .select(
-                "id, raffle_id, number, status, reserved_until, payment_id, sold_at",
+                "id, raffle_id, number, status, reserved_until, sold_at",
               )
               .eq("raffle_id", raffleId)
               .order("number", { ascending: true })
@@ -238,7 +238,7 @@ export function NumbersGrid({
             reserved_by: n.reserved_by ?? null,
             reserved_until: n.reserved_until,
             sold_to: n.sold_to ?? null,
-            payment_id: n.payment_id,
+            payment_id: n.payment_id ?? null,
             sold_at: n.sold_at,
           }),
         );
