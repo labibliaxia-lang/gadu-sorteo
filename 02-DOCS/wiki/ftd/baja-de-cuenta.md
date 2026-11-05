@@ -86,7 +86,7 @@ el pendiente y volver a pedirla.
 | 6 | Pagos y devoluciones sobreviven | Fila con importe y fecha, `user_id` null |
 | 7 | Cuenta de Auth eliminada | El login falla; no queda fila en `profiles` |
 | 8 | Auditoría | Fila `DELETE_USER` con el detalle |
-| 9 | `deleteUsers` endurecido | Rechaza los mismos casos que la baja self-service |
+| 9 | `deleteUsers` endurecido | ✅ 2026-11-05: bloquea con las mismas cuatro validaciones; el escape existe con motivo escrito y `forced: true` en la auditoría |
 | 10 | Política actualizada | Texto con camino y plazo |
 | 11 | Gates verdes | typecheck, lint, tests, build |
 
@@ -115,8 +115,6 @@ el pendiente y volver a pedirla.
 
 ### Pendiente
 
-- Endurecer `deleteUsers` del panel con las mismas validaciones (checklist 9). **Decisión de
-  producto:** bloquearía también el borrado manual de cuentas con actividad.
 - Probar el flujo completo en un navegador con una cuenta de prueba.
 
 ### Hecho después de la primera versión
@@ -124,6 +122,10 @@ el pendiente y volver a pedirla.
 - **Enlace en el panel:** `/admin/super` tiene el botón «Bajas de cuenta» junto al del simulador.
 - **Política de Privacidad actualizada:** el derecho de cancelación remite al perfil, con el plazo
   de 10 días hábiles, qué se elimina, qué se conserva sin nombre y por qué se bloquea.
+- **`deleteUsers` endurecido (decisión: bloquear con escape forzado).** El borrado manual del
+  panel corre las mismas cuatro validaciones. Si hay actividad, responde con el detalle y no borra;
+  el superadmin puede forzarlo indicando un motivo de 10+ caracteres, que queda en
+  `admin_audit_logs` con `forced: true`, `forceReason` y la lista de bloqueos.
 
 ## Next
 

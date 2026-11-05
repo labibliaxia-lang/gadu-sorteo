@@ -846,7 +846,10 @@ export async function blockUsers(userIds: string[]): Promise<ActionResult> {
 }
 
 /** Eliminación (lote) de usuarios de auth (cascadea el perfil). */
-export async function deleteUsers(userIds: string[]): Promise<ActionResult> {
+export async function deleteUsers(
+  userIds: string[],
+  options: { force?: boolean; reason?: string } = {},
+): Promise<ActionResult> {
   const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
 
@@ -854,6 +857,35 @@ export async function deleteUsers(userIds: string[]): Promise<ActionResult> {
   if (!loaded.ok) return loaded;
 
   const admin = createAdminClient();
+
+  // Mismas validaciones que la baja desde el perfil (spec baja-de-cuenta).
+  const bloqueadas: string[] = [];
+  for (const t of loaded.targets) {
+    const { data: motivos } = await admin.rpc("account_deletion_blockers", {
+      p_user: t.id,
+    });
+    const lista = (motivos ?? []) as string[];
+    if (lista.length > 0) {
+      bloqueadas.push(`${t.email ?? t.id}: ${lista.join(", ")}`);
+    }
+  }
+
+  const motivoForzado = (options.reason ?? "").trim();
+
+  if (bloqueadas.length > 0 && !options.force) {
+    return {
+      ok: false,
+      error: `No se puede borrar: hay cuentas con actividad (${bloqueadas.join(" | ")}). Resolvé esos pendientes o forzá el borrado con un motivo.`,
+    };
+  }
+
+  if (bloqueadas.length > 0 && options.force && motivoForzado.length < 10) {
+    return {
+      ok: false,
+      error:
+        "Para forzar el borrado escribí un motivo de al menos 10 caracteres. Queda en la auditoría.",
+    };
+  }
   let count = 0;
   let lastError: string | null = null;
 
@@ -902,6 +934,9 @@ export async function deleteUsers(userIds: string[]): Promise<ActionResult> {
         role: t.role,
         kycFiles: files.length,
         kycPurged,
+        forced: Boolean(options.force) && bloqueadas.length > 0,
+        forceReason: motivoForzado || null,
+        blockers: bloqueadas,
       },
     });
   }

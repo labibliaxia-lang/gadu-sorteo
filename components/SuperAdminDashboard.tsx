@@ -238,6 +238,60 @@ export function SuperAdminDashboard({
     await refreshAll();
   }
 
+  async function handleDeleteBatch() {
+    if (selected.size === 0) return;
+    if (
+      !window.confirm(
+        `¿Eliminar ${selected.size} usuario(s)? Esta acción es irreversible.`,
+      )
+    ) {
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+
+    let res = await deleteUsers(Array.from(selected));
+
+    if (!res.ok) {
+      // El servidor bloquea si hay actividad pendiente. El escape existe, pero
+      // exige un motivo escrito que queda en la auditoría.
+      const forzar = window.confirm(
+        `${res.error ?? "No se pudo eliminar"}\n\n¿Forzar el borrado igual?`,
+      );
+      if (!forzar) {
+        setError(res.error ?? "La operación falló");
+        setBusy(false);
+        return;
+      }
+
+      const motivo = window.prompt(
+        "Motivo del borrado forzado (mínimo 10 caracteres, queda en la auditoría):",
+      );
+      if (!motivo || motivo.trim().length < 10) {
+        setError(
+          "El motivo del forzado es obligatorio y debe tener al menos 10 caracteres.",
+        );
+        setBusy(false);
+        return;
+      }
+
+      res = await deleteUsers(Array.from(selected), {
+        force: true,
+        reason: motivo,
+      });
+    }
+
+    if (!res.ok) setError(res.error ?? "La operación falló");
+    else {
+      setNotice(`Eliminados: ${res.count ?? 0}.`);
+      setSelected(new Set());
+    }
+    setBusy(false);
+    await refreshAll();
+  }
+
   async function handleCreate() {
     if (!newOrgInput.trim()) return;
     setBusy(true);
@@ -683,13 +737,7 @@ export function SuperAdminDashboard({
           <Button
             size="sm"
             variant="destructive"
-            onClick={() =>
-              void runBatch(
-                deleteUsers,
-                `¿Eliminar ${selected.size} usuario(s)? Esta acción es irreversible.`,
-                (count) => `Eliminados: ${count}.`,
-              )
-            }
+            onClick={() => void handleDeleteBatch()}
             disabled={busy}
           >
             <Trash2 className="mr-1.5 h-4 w-4" />
