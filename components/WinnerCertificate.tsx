@@ -155,11 +155,15 @@ export function WinnerCertificate({
 
   return (
     <div className="space-y-2">
-      <Button onClick={download} disabled={busy}>
+      <Button
+        onClick={download}
+        disabled={busy}
+        className="h-auto w-full whitespace-normal py-2 text-center sm:w-auto"
+      >
         {busy ? (
-          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+          <Loader2 className="mr-1.5 h-4 w-4 shrink-0 animate-spin" />
         ) : (
-          <Download className="mr-1.5 h-4 w-4" />
+          <Download className="mr-1.5 h-4 w-4 shrink-0" />
         )}
         Descargar certificado{prizeLabel ? ` · ${prizeLabel}` : " (PNG)"}
       </Button>

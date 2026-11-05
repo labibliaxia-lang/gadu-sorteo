@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import {
   KeyRound,
   Lock,
+  Minus,
   Play,
+  Plus,
   RotateCcw,
   ShieldCheck,
   Trophy,
@@ -15,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { MultiPrizeVerifier } from "@/components/MultiPrizeVerifier";
 import { Input } from "@/components/ui/input";
 import { WinnerCertificate } from "@/components/WinnerCertificate";
+import { cn } from "@/lib/utils";
 
 interface SandboxCommitment {
   run_id: string;
@@ -47,6 +50,10 @@ interface SandboxResult {
 const MAX_NUMBERS = 10000;
 const MAX_PRIZES = 50;
 const VISIBLE_NUMBERS = 500;
+
+/** Atajos para armar el escenario con un toque en el celular. */
+const NUMBER_PRESETS = [100, 500, 1000, 5000, 10000];
+const PRIZE_PRESETS = [1, 2, 3, 5, 10];
 
 /**
  * Simulador en dos fases, igual al flujo real:
@@ -84,6 +91,13 @@ export function SandboxDraw({
     },
     [],
   );
+
+  // Si baja la cantidad de números, los premios no pueden superarla.
+  useEffect(() => {
+    setPrizeCount((current) =>
+      Math.min(current, Math.max(1, Math.min(MAX_PRIZES, numberCount))),
+    );
+  }, [numberCount]);
 
   const safeNumbers = Math.max(1, Math.min(MAX_NUMBERS, numberCount || 1));
   const safePrizes = Math.max(
@@ -202,14 +216,19 @@ export function SandboxDraw({
       <div className="space-y-3 rounded-xl border bg-muted/20 p-4">
         <p className="text-sm font-semibold">Escenario de la simulación</p>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1">
-            <label htmlFor="sandbox-numbers" className="text-xs text-muted-foreground">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Números */}
+          <div className="space-y-2">
+            <label
+              htmlFor="sandbox-numbers"
+              className="text-xs font-medium text-muted-foreground"
+            >
               Cantidad de números (1 a 10.000)
             </label>
             <Input
               id="sandbox-numbers"
               type="number"
+              inputMode="numeric"
               min={1}
               max={MAX_NUMBERS}
               value={numberCount}
@@ -217,23 +236,94 @@ export function SandboxDraw({
               onChange={(event) =>
                 setNumberCount(Number(event.target.value) || 1)
               }
+              className="text-center font-mono"
             />
+            <div className="flex flex-wrap gap-1.5">
+              {NUMBER_PRESETS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  disabled={phase !== "idle"}
+                  onClick={() => setNumberCount(preset)}
+                  className={cn(
+                    "rounded-md border px-2.5 py-1 font-mono text-[11px] tabular-nums transition-colors disabled:opacity-40",
+                    numberCount === preset
+                      ? "border-brand-500 bg-brand-500/10 text-fg"
+                      : "border-hairline text-muted-foreground hover:text-fg",
+                  )}
+                >
+                  {preset.toLocaleString("es-AR")}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="space-y-1">
-            <label htmlFor="sandbox-prizes" className="text-xs text-muted-foreground">
+
+          {/* Premios: stepper + atajos, sin pelear con el teclado */}
+          <div className="space-y-2">
+            <label
+              htmlFor="sandbox-prizes"
+              className="text-xs font-medium text-muted-foreground"
+            >
               Cantidad de premios (1 a 50, sin repetir ganador)
             </label>
-            <Input
-              id="sandbox-prizes"
-              type="number"
-              min={1}
-              max={Math.min(MAX_PRIZES, safeNumbers)}
-              value={prizeCount}
-              disabled={phase !== "idle"}
-              onChange={(event) =>
-                setPrizeCount(Number(event.target.value) || 1)
-              }
-            />
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                aria-label="Un premio menos"
+                disabled={phase !== "idle" || prizeCount <= 1}
+                onClick={() => setPrizeCount((current) => Math.max(1, current - 1))}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <Input
+                id="sandbox-prizes"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={Math.min(MAX_PRIZES, safeNumbers)}
+                value={prizeCount}
+                disabled={phase !== "idle"}
+                onChange={(event) =>
+                  setPrizeCount(Number(event.target.value) || 1)
+                }
+                className="text-center font-mono"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                aria-label="Un premio más"
+                disabled={
+                  phase !== "idle" ||
+                  prizeCount >= Math.min(MAX_PRIZES, safeNumbers)
+                }
+                onClick={() => setPrizeCount((current) => current + 1)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {PRIZE_PRESETS.filter(
+                (preset) => preset <= Math.min(MAX_PRIZES, safeNumbers),
+              ).map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  disabled={phase !== "idle"}
+                  onClick={() => setPrizeCount(preset)}
+                  className={cn(
+                    "rounded-md border px-2.5 py-1 font-mono text-[11px] tabular-nums transition-colors disabled:opacity-40",
+                    prizeCount === preset
+                      ? "border-brand-500 bg-brand-500/10 text-fg"
+                      : "border-hairline text-muted-foreground hover:text-fg",
+                  )}
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -292,7 +382,7 @@ export function SandboxDraw({
           {phase === "committed" && (
             <Button onClick={() => void executeDraw()} disabled={busy}>
               <Play className="mr-2 h-4 w-4" />
-              {busy ? "Sorteando…" : "2. Ejecutar sorteo simulado"}
+              {busy ? "Sorteando…" : "2. Ejecutar sorteo"}
             </Button>
           )}
           {phase === "done" && (
@@ -415,18 +505,32 @@ export function SandboxDraw({
 
           <div className="space-y-3">
             <p className="text-sm font-semibold">Certificados por premio</p>
-            {result.winners.map((winner) => (
-              <WinnerCertificate
-                key={winner.position}
-                raffleTitle={`Simulación de ${result.numbers_count} números`}
-                prizeLabel={prizeLabel(winner.position)}
-                winnerName="Participante simulado"
-                winnerNumber={winner.number}
-                drawnAt={new Date().toLocaleString("es-AR")}
-                verificationHash={winner.hash}
-                verifyUrl={verifyUrl}
-              />
-            ))}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {result.winners.map((winner) => (
+                <div
+                  key={winner.position}
+                  className="flex flex-col gap-2 rounded-lg border border-hairline bg-panel-2/40 p-3"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {prizeLabel(winner.position)}
+                    </p>
+                    <p className="font-mono text-lg font-bold tabular-nums">
+                      {String(winner.number).padStart(4, "0")}
+                    </p>
+                  </div>
+                  <WinnerCertificate
+                    raffleTitle={`Simulación de ${result.numbers_count} números`}
+                    prizeLabel={prizeLabel(winner.position)}
+                    winnerName="Participante simulado"
+                    winnerNumber={winner.number}
+                    drawnAt={new Date().toLocaleString("es-AR")}
+                    verificationHash={winner.hash}
+                    verifyUrl={verifyUrl}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
