@@ -60,6 +60,9 @@ const schema = z.object({
   transfer_cbu: z.string().optional(),
   transfer_bank: z.string().optional(),
   whatsapp_contact: z.string().optional(),
+  // 0079: un sorteo puede existir sin figurar en los listados públicos. Se abre
+  // igual por enlace, así que sirve para probarlo sin anunciarlo.
+  is_listed: z.boolean(),
 }).superRefine((data, ctx) => {
   if (data.min_tickets_required > data.max_numbers) {
     ctx.addIssue({
@@ -140,6 +143,7 @@ export default function NuevoSorteoPage() {
       min_tickets_required: 0,
       if_not_met: "extend_date",
       winners_count: 1,
+      is_listed: true,
     },
   });
 
@@ -391,6 +395,7 @@ export default function NuevoSorteoPage() {
         transfer_cbu: values.transfer_cbu || null,
         transfer_bank: values.transfer_bank || null,
         whatsapp_contact: values.whatsapp_contact || null,
+      is_listed: values.is_listed ?? true,
         min_tickets_required: values.min_tickets_required,
         if_not_met: values.if_not_met,
         winners_count: values.winners_count,
@@ -900,6 +905,29 @@ export default function NuevoSorteoPage() {
                 Al crear se generan los números automáticamente. Los premios y
                 el compromiso del sorteo se cargan después.
               </p>
+            </div>
+
+            {/* 0079: visible u oculto de los listados. No es privacidad: el
+                enlace sigue funcionando, así se puede probar sin anunciarlo. */}
+            <div className="rounded-xl border bg-muted/30 p-4">
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-amber-600"
+                  {...register("is_listed")}
+                />
+                <span>
+                  <span className="font-medium">
+                    No publicar en el listado
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    No aparece en la home, en Ganadores ni en buscadores, pero se
+                    abre igual con el enlace. Sirve para probarlo antes de
+                    anunciarlo. Para publicarlo después, hay que activarlo desde
+                    el panel.
+                  </span>
+                </span>
+              </label>
             </div>
             {/* Dropzone */}
             <div className="space-y-2">
