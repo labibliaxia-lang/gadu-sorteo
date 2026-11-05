@@ -162,24 +162,34 @@ export default async function AdminRaffleDetailPage({
     ),
   );
 
+  // Contacto del comprador para validar la transferencia. Sale de la vista
+  // `raffle_buyers` (0073): nombre y teléfono y nada más. La política anterior
+  // le daba al organizador la fila entera del perfil (email, DNI, domicilio).
   const buyersResult = reservedBuyerIds.length
     ? await supabase
-        .from("profiles")
-        .select("id, full_name, phone")
-        .in("id", reservedBuyerIds)
+        .from("raffle_buyers")
+        .select("buyer_id, full_name, phone")
+        .eq("raffle_id", params.id)
+        .eq("kind", "reserved")
     : {
         data: [] as {
-          id: string;
+          buyer_id: string;
           full_name: string | null;
           phone: string | null;
         }[],
       };
 
-  const buyers = (buyersResult.data ?? []) as {
-    id: string;
-    full_name: string | null;
-    phone: string | null;
-  }[];
+  const buyers = (
+    (buyersResult.data ?? []) as {
+      buyer_id: string;
+      full_name: string | null;
+      phone: string | null;
+    }[]
+  ).map((row) => ({
+    id: row.buyer_id,
+    full_name: row.full_name,
+    phone: row.phone,
+  }));
   const buyerById = new Map(buyers.map((buyer) => [buyer.id, buyer]));
 
   const reservedGroups = reservedBuyerIds

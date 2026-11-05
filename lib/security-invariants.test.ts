@@ -149,6 +149,27 @@ describe("blindaje: resultado del sorteo", () => {
       /drop\s+policy\s+if\s+exists\s+"raffle_numbers_insert_owner"/i,
     );
   });
+
+  it("el organizador ve el contacto del comprador, no su perfil (hallazgo #15)", () => {
+    const sql = file("0073");
+    const vista =
+      /create or replace view public\.raffle_buyers[\s\S]*?\);\s*\n/i.exec(sql)?.[0] ??
+      "";
+
+    // La vista corre con privilegios del dueño: el WHERE es la única barrera.
+    expect(vista).toMatch(/security_invoker\s*=\s*false/i);
+    expect(vista).toMatch(/r\.created_by\s*=\s*auth\.uid\(\)/i);
+    expect(vista).toMatch(/is_superadmin\(\)/i);
+
+    // Y expone nombre y teléfono, nada más.
+    expect(vista).toMatch(/buyer\.full_name/i);
+    expect(vista).toMatch(/buyer\.phone/i);
+    expect(vista).not.toMatch(/email|dni_number|address_line|city|province/i);
+
+    expect(sql).toMatch(
+      /drop policy if exists "profiles_select_own_raffle_buyers"/i,
+    );
+  });
 });
 
 describe("blindaje: código que acompaña a las migraciones", () => {

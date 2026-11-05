@@ -54,6 +54,21 @@ Pendiente de prueba directa: la transición `status='drawn'` **por el trigger de
 
 Y `supabase/tests/verificar_0069.sql`, también **7/7 OK** tras aplicar la migración: la línea 4 pasó de `CRÍTICO — sigue devolviendo [1,2]` a `OK — el segundo checkout devuelve VACÍO`. El doble cobro queda cerrado con evidencia, no por lectura de código.
 
+`verificar_0070.sql` **7/7 OK** (contracargos), `verificar_0071.sql` **7/7 OK** (la 3 rechaza adelantar el sorteo, la 4 permite el legítimo) y `verificar_0072.sql` **5/5 OK**: el `revoke` del INSERT en `raffle_numbers` no rompió la creación del grid (línea 4 del verificador).
+
+`0073` aplicado. Prueba directa del estado de `pg_policies` sobre `profiles`:
+
+| policyname | cmd | qual |
+|---|---|---|
+| `profiles_update_own` | UPDATE | `(auth.uid() = id)` |
+| `profiles_insert_own` | INSERT | `with check (auth.uid() = id)` |
+| `profiles_select_own` | SELECT | `(auth.uid() = id)` |
+| `profiles_select_superadmin` | SELECT | `is_superadmin()` |
+
+Solo dos políticas de lectura: la propia fila y el superadmin. **`profiles_select_own_raffle_buyers` ya no existe**, así que un organizador no puede leer la fila del comprador (ni email, ni DNI, ni domicilio) y el panel usa la vista `raffle_buyers`, que expone nombre y teléfono.
+
+Dos notas de esa misma tabla: el `qual = NULL` de la política de INSERT es normal (para INSERT la expresión vive en `with_check`), y el rol no queda libre porque lo fija el trigger `force_profile_role_on_insert` de `0067`. Además no hay política ni grant de DELETE, así que tampoco se puede borrar el perfil y recrearlo con otro rol.
+
 ## Hallazgos
 
 ### Críticos
@@ -84,7 +99,7 @@ Y `supabase/tests/verificar_0069.sql`, también **7/7 OK** tras aplicar la migra
 | 11 | `checkout/route.ts:156-166` | Reserva parcial devuelve 409 **sin liberar** los números reservados ni borrar el pago. |
 | 12 | `0001:201` vs `0037:97-103` | `reserve_numbers` no valida `is_banned` ni el tope de 20/h que sí tiene `reserve_numbers_prepaid`. |
 | 13 | `0063:167` | La devolución se calcula con el precio vigente al cancelar, no con lo cobrado en `payments.amount`. |
-| 15 | `0030:183` | El organizador ve la fila **completa** del comprador (email, teléfono, DNI, dirección). |
+| 15 | `0030:183` | El organizador ve la fila **completa** del comprador (email, teléfono, DNI, dirección). Corregido en `0073`: ahora lee la vista `raffle_buyers`, que expone nombre y teléfono. |
 | 16 | `0065:147-149` | `SELECT` público de `raffle_numbers` expone `reserved_by`/`sold_to` (UUID de usuarios). |
 | 17 | `0034:88` | `commit_draw_seed` se puede publicar después del cierre: la promesa "la semilla estaba fijada antes" no es comprobable desde afuera. |
 | 18 | `cron/auto-draw:26` + `cron/release-reservations:16` | Secreto comparado con `===` (no tiempo constante) y duplicado en dos rutas. |
@@ -115,7 +130,8 @@ Y `supabase/tests/verificar_0069.sql`, también **7/7 OK** tras aplicar la migra
 | `supabase/migrations/0071_no_early_draw_no_late_sales.sql` | **Escrita, sin aplicar.** `enforce_draw_date` compara también la fecha ANTERIOR (mata la evasión de bajar `draw_date` en el mismo UPDATE); `sell_numbers` no vende si el sorteo está `drawn` (protege el `numbers_hash`); `organizer_mark_sold` rechaza lo mismo con un error visible. No toca el motor del sorteo. |
 | `app/api/webhooks/mercadopago/route.ts` + `lib/payments.ts` | **Conciliación de importe y moneda (hallazgo #9).** Antes de entregar números, el webhook compara `transaction_amount` y `currency_id` contra `payments.amount` (ARS). Si no coinciden, no entrega: registra el incidente y deja el pago para revisión. Si Mercado Pago no informa el importe, se sigue: bloquear todo aprobado por un campo faltante sería peor. 6 tests nuevos para `amountMatches`. |
 | `lib/security-invariants.test.ts` + `02-DOCS/wiki/ftd/blindaje-invariantes.md` | **Blindaje.** 15 contratos en `npm test` que leen la ÚLTIMA definición de cada función en las migraciones y fallan si alguien reescribe una y borra el freno. Cubre las 13 invariantes y verifica que ningún verificador SQL confirme cambios. |
-| `supabase/migrations/0072_no_direct_number_inserts.sql` | **Escrita, sin aplicar.** Revoca `insert on raffle_numbers` a `authenticated` y borra la política `raffle_numbers_insert_owner`: el grid lo crea `create_raffle_numbers`, que es `security definer` y no necesita ese permiso. Cierra el #14 (inventar números vendidos). |
+| `supabase/migrations/0072_no_direct_number_inserts.sql` | **Aplicada y verificada** (`verificar_0072.sql`: 5/5 OK). Revoca `insert on raffle_numbers` a `authenticated` y borra la política `raffle_numbers_insert_owner`: el grid lo crea `create_raffle_numbers`, que es `security definer`. Cierra el #14 (inventar números vendidos). El control de la línea 4 confirmó que la creación de sorteos sigue funcionando. |
+| `supabase/migrations/0073_buyer_contact_view.sql` + `app/admin/sorteos/[id]/page.tsx` | **Escrita, sin aplicar.** Vista `raffle_buyers` (nombre y teléfono, filtrada por dueño del sorteo o superadmin) y se quita la política que le daba al organizador la fila completa del comprador. Cierra el #15. |
 
 Verificado con `typecheck`, `lint`, `test` (158) y `build`.
 
