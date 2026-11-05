@@ -50,7 +50,11 @@ qué evidencia, y en qué orden se arregla.
 | 10 | OK | La transición a `drawn` desde el camino privilegiado rebota por 0047 (fecha futura): correcto, y confirma que 0047 está viva. |
 | 11-12 | OK | El alta por cliente queda en `role='user'`; el alta del servidor conserva el rol. Hallazgo #4 cerrado. |
 
-Pendiente de prueba directa: la transición `status='drawn'` **por el trigger de 0067** (los dos intentos rebotaron antes en 0047). Se puede forzar creando un sorteo de prueba con `draw_date` en el pasado.
+**Cerrado el 2026-11-05.** `supabase/tests/verificar_0067_drawn.sql` elige un sorteo activo con
+fecha **ya pasada** —así 0047 no rebota primero— y prueba las tres caras: el dueño edita su sorteo
+(OK), el dueño **no** puede pasarlo a `drawn` (*«Un sorteo solo lo cierra el motor de sorteo, no el
+panel»*) y el camino privilegiado sí puede (OK). Resultado: 4/4 OK. El hallazgo #1 queda cerrado con
+evidencia en los dos caminos.
 
 Y `supabase/tests/verificar_0069.sql`, también **7/7 OK** tras aplicar la migración: la línea 4 pasó de `CRÍTICO — sigue devolviendo [1,2]` a `OK — el segundo checkout devuelve VACÍO`. El doble cobro queda cerrado con evidencia, no por lectura de código.
 
