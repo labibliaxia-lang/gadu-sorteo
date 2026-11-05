@@ -80,3 +80,6 @@ supabase/.temp/
 .dsh/skills/verify
 .dsh/skills/worktrees
 .dsh/skills/.rsc-state.json
+
+# Log de diagnostico del helper de credenciales (local)
+gcm-diagnose.log
