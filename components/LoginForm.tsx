@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
+import { PasskeyLoginButton } from "@/components/PasskeyLoginButton";
 import { PRIVACY_PATH, TERMS_PATH } from "@/lib/terms";
 
 export function LoginForm({ next }: { next: string | null }) {
@@ -42,6 +43,10 @@ export function LoginForm({ next }: { next: string | null }) {
       </label>
 
       <GoogleAuthButton next={next} termsAccepted={accepted} />
+
+      {/* Se dibuja entero o no se dibuja: sin el flag o sin WebAuthn en el
+          navegador, este bloque no aparece. */}
+      <PasskeyLoginButton next={next} termsAccepted={accepted} />
 
       {!accepted && (
         <p className="text-xs text-muted-foreground">

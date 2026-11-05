@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { adminMfaRequired } from "@/lib/flags";
+import { evaluateAdminMfaGate } from "@/lib/mfa";
 
 /**
  * Helpers de sesión para el panel de administración.
@@ -45,6 +47,19 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   // Una cuenta suspendida no puede operar el panel aunque su access token
   // siga vivo hasta una hora después del ban de Auth.
   if (profile?.is_banned) return null;
+
+  // El layout del panel ya exige esto, pero las Server Actions se pueden
+  // invocar sin pasar por una página: la comprobación tiene que repetirse acá.
+  if (adminMfaRequired()) {
+    const { data: assurance } =
+      await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    const gate = evaluateAdminMfaGate({
+      required: true,
+      currentLevel: assurance?.currentLevel,
+      nextLevel: assurance?.nextLevel,
+    });
+    if (gate !== "ok") return null;
+  }
 
   return {
     id: user.id,

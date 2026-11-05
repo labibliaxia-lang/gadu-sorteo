@@ -375,6 +375,13 @@ export default function PerfilPage() {
           <Ticket className="mr-1.5 h-4 w-4" />
           Mis números
         </Link>
+        <Link
+          href="/seguridad"
+          className={buttonVariants({ variant: "outline" })}
+        >
+          <ShieldCheck className="mr-1.5 h-4 w-4" />
+          Seguridad
+        </Link>
         {isAdmin && (
           <Link href="/admin" className={buttonVariants()}>
             Panel admin

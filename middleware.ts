@@ -145,6 +145,10 @@ function redirectKeepingCookies(
   }
 
   const redirectResponse = NextResponse.redirect(url);
+  // Un redirect que depende de la sesión no debe quedar en ninguna caché
+  // intermedia: si el CDN guardara el 307, otro visitante heredaría el destino
+  // de una sesión ajena (envenenamiento de caché).
+  redirectResponse.headers.set("Cache-Control", "no-store, must-revalidate");
   supabaseResponse.cookies.getAll().forEach((cookie) => {
     redirectResponse.cookies.set(cookie);
   });

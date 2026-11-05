@@ -8,10 +8,10 @@ export const metadata: Metadata = {
 
 /**
  * Texto provisto por el titular (2 de noviembre de 2026), ajustado a lo que el
- * sistema realmente hace: el acceso es con Google (no hay contraseña propia),
- * los comprobantes viajan por WhatsApp y no se almacenan, y los registros
- * técnicos quedan en el proveedor de alojamiento. Identificación del
- * responsable: jacinto.cards.
+ * sistema realmente hace: el acceso es con Google o con una llave de acceso
+ * (no hay contraseña propia), los comprobantes viajan por WhatsApp y no se
+ * almacenan, y los registros técnicos quedan en el proveedor de alojamiento.
+ * Identificación del responsable: jacinto.cards.
  */
 export default function PrivacidadPage() {
   return (
@@ -39,8 +39,10 @@ export default function PrivacidadPage() {
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li>
             · <strong>Datos de Registro:</strong> nombre completo y correo
-            electrónico. El acceso es con tu cuenta de Google; la Plataforma no
-            almacena ni gestiona contraseñas propias.
+            electrónico. El acceso es con tu cuenta de Google o con una llave de
+            acceso (passkey) que queda guardada en tu propio dispositivo; la
+            Plataforma no almacena contraseñas ni datos biométricos, solo la
+            clave pública de esa llave.
           </li>
           <li>
             · <strong>Datos de Contacto:</strong> número de teléfono, utilizado

@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { LoginForm } from "@/components/LoginForm";
+import { PASSKEYS_ENABLED } from "@/lib/flags";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,13 @@ export default function LoginPage({
         <p className="mt-4 text-xs text-muted-foreground">
           ¿No tenés cuenta? Se crea automáticamente con Google.
         </p>
+
+        {PASSKEYS_ENABLED && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Si ya registraste una llave de acceso, también podés entrar con la
+            huella o la cara de este dispositivo.
+          </p>
+        )}
       </div>
     </div>
   );
