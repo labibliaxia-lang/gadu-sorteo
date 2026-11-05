@@ -168,6 +168,16 @@ describe("blindaje: resultado del sorteo", () => {
     expect(cuerpo).toMatch(/service_role/i);
   });
 
+  it("el organizador no se destaca su propio sorteo (hallazgo #20)", () => {
+    const cuerpo = lastDefinition("guard_featured_flag");
+
+    expect(cuerpo).toMatch(/is_superadmin\(\)/i);
+    expect(cuerpo).toMatch(/authenticated/i);
+    // En el alta se ignora el valor pedido; en el update se aborta.
+    expect(cuerpo).toMatch(/new\.is_featured\s*:=\s*false/i);
+    expect(file("0077")).toMatch(/before update of is_featured, featured_at/i);
+  });
+
   it("payments admite los estados de devolución (hallazgo #8)", () => {
     expect(file("0070")).toMatch(/'refunded'\s*,\s*'charged_back'/);
   });
