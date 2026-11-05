@@ -181,7 +181,7 @@ módulo. Contrato fijado en `lib/cron-auth.test.ts` (6 casos).
 **Sigue pendiente de tu lado:** `CRON_SECRET` está vacío en `.env.local`. En Vercel hay que cargarlo
 para que el cron diario funcione. Mientras falte, ahora el log lo dice en vez de callarlo.
 
-### B4 — El comprador queda bloqueado por un modal de dirección · **alto — ✅ arreglado en el repo, falta desplegar**
+### B4 — El comprador queda bloqueado por un modal de dirección · **alto — ✅ arreglado, desplegado y verificado**
 
 `app/layout.tsx:180-190` monta `ProfileCompletionGate` para todo usuario logueado, y el componente
 bloqueaba **cualquier ruta** salvo una lista blanca (`/perfil`, `/login`, `/terminos`,
@@ -209,8 +209,26 @@ Si la consulta del perfil falla, **no se frena la compra** — el dato se puede 
 `lib/direccion.test.ts` fija la regla (5 casos). Gates: typecheck 0, lint 0, **243/243 tests**, build
 exit 0.
 
-**Pendiente:** verificar en el navegador. La web desplegada corre el código anterior; hace falta el
-deploy.
+**Verificado en la web desplegada** (commit `5d31eb4`, deploy detectado a los ~2 minutos):
+
+| Comprobación | Resultado |
+|---|---|
+| Cuenta logueada **sin** dirección | ✅ perfil con los 6 campos en `null` |
+| Abrir el sorteo | ✅ **no** aparece el modal bloqueante; la grilla se ve completa |
+| Elegir un número | ✅ aceptado, contador y total actualizados |
+| Apretar «Reservar» | ✅ aparece «¿A dónde te mandamos el premio?» con los 6 campos |
+| ¿Reservó algo? | ✅ **no**: el número 1 del sorteo siguió en `available` |
+| «Ahora no» | ✅ cierra el diálogo |
+
+Evidencia: `evidencia/2026-11-05-b4-verificado/` (2 capturas + `verificacion.json` + `pasos.json`).
+
+**Hallazgo que apareció al verificar (B12).** La primera corrida dio un falso negativo contra el sorteo
+«amoladora», que tiene `whatsapp_contact` en `NULL`. `NumbersGrid` corta antes con «El organizador
+todavía no cargó un WhatsApp de contacto». O sea: **un sorteo se puede publicar sin datos de cobro y el
+comprador lo descubre recién al intentar reservar**. El wizard tiene `transfer_alias`, `transfer_cbu`,
+`transfer_bank` y `whatsapp_contact` como opcionales (`sorteos/nuevo/page.tsx:59-62`). En producción hay
+al menos tres sorteos activos en esa situación. No está arreglado: falta decidir si el wizard debe
+exigirlos al publicar.
 
 ### B5 — El wizard pedía 4 datos y la base exigía 9 · **alto — ✅ arreglado**
 

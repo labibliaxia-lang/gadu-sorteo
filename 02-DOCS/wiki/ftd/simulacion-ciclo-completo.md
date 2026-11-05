@@ -278,11 +278,11 @@ exporta las variables en el proceso (`preflight.mjs` + `correr-live.mjs`).
    completaba todo y la base le rechazaba el alta al final. La regla quedó en `lib/kyc.ts`, compartida por
    el wizard y el KYC, con contrato en `lib/kyc.test.ts`. Gates 218/218
    (`evidencia/2026-11-05-fix-b5/`).
-3. ~~Mover el modal de dirección a después de elegir los números (**B4**)~~ — **hecho en el repo,
-   falta desplegar**. El gate global ahora sólo bloquea `/admin/*`; la dirección se pide en
-   `NumbersGrid` al reservar, con formulario compartido (`DeliveryAddressForm`) y regla única en
-   `lib/direccion.ts`. Gates 243/243 y build exit 0 (`evidencia/2026-11-05-fix-b4/`). **No verificado
-   en navegador**: la web corre el código anterior.
+3. ~~Mover el modal de dirección a después de elegir los números (**B4**)~~ — **hecho, desplegado y
+   verificado en la web** (commit `5d31eb4`). El gate global sólo bloquea `/admin/*`; la dirección se
+   pide en `NumbersGrid` al reservar, con formulario compartido (`DeliveryAddressForm`) y regla única en
+   `lib/direccion.ts`. Verificado con una cuenta sin dirección: la grilla abre sin modal, el diálogo
+   aparece al reservar y no se escribió nada (`evidencia/2026-11-05-b4-verificado/`, 6/6 ok).
 4. ~~Corregir el `schedule` del cron (**B2**) y fallar cerrado sin `CRON_SECRET` (**B3**)~~ — **hecho,
    pero no como estaba planeado.** El `*/5` habría roto el deploy: Vercel Hobby sólo permite cron
    diario (`auto-draw/route.ts:11-12`). Se resolvió con un fallback perezoso

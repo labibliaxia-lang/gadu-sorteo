@@ -1,0 +1,108 @@
+﻿[
+    {
+        "paso":  "B4-1-precondicion",
+        "rol":  "verificador",
+        "inicio":  "2026-11-05T02:35:53.7584288-03:00",
+        "nota":  "cuenta temporal b4verif@gadu.test, borrada al final",
+        "esperado":  "usuario logueado sin direccion",
+        "evidencia":  [
+                          "verificacion.json"
+                      ],
+        "observado":  "perfil con phone/address_line/city/province/postal_code en null",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:35:53.7584288-03:00"
+    },
+    {
+        "paso":  "B4-2-grilla-sin-modal",
+        "rol":  "comprador",
+        "inicio":  "2026-11-05T02:35:53.7584288-03:00",
+        "nota":  "antes bloqueaba toda ruta salvo la lista blanca",
+        "esperado":  "el modal de direccion ya no tapa la pagina del sorteo",
+        "evidencia":  [
+                          "capturas/b4-1-grilla-sin-modal.png",
+                          "verificacion.json"
+                      ],
+        "observado":  "#delivery-gate-title ausente al entrar; la grilla y el resumen se ven completos",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:35:53.7584288-03:00"
+    },
+    {
+        "paso":  "B4-3-grilla-clicable",
+        "rol":  "comprador",
+        "inicio":  "2026-11-05T02:35:53.7584288-03:00",
+        "nota":  null,
+        "esperado":  "se puede elegir un numero sin cargar direccion",
+        "evidencia":  [
+                          "capturas/b4-2-pide-direccion-al-reservar.png"
+                      ],
+        "observado":  "clic en 0001 aceptado; contador muestra 1 numero y total .500",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:35:53.7584288-03:00"
+    },
+    {
+        "paso":  "B4-4-dialogo-al-reservar",
+        "rol":  "comprador",
+        "inicio":  "2026-11-05T02:35:53.7584288-03:00",
+        "nota":  null,
+        "esperado":  "al reservar sin direccion se pide la direccion en ese momento",
+        "evidencia":  [
+                          "capturas/b4-2-pide-direccion-al-reservar.png",
+                          "verificacion.json"
+                      ],
+        "observado":  "aparece el dialogo \u0027A donde te mandamos el premio?\u0027 con los 6 campos, \u0027Guardar y reservar\u0027 y \u0027Ahora no\u0027",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:35:53.7584288-03:00"
+    },
+    {
+        "paso":  "B4-5-sin-escritura",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T02:35:53.7584288-03:00",
+        "nota":  null,
+        "esperado":  "la verificacion no reserva nada",
+        "evidencia":  [
+                          "verificacion.json"
+                      ],
+        "observado":  "el numero 1 del sorteo navidad sigue en available",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:35:53.7584288-03:00"
+    },
+    {
+        "paso":  "B4-6-se-puede-descartar",
+        "rol":  "comprador",
+        "inicio":  "2026-11-05T02:35:53.7584288-03:00",
+        "nota":  null,
+        "esperado":  "se puede cerrar sin cargar nada",
+        "evidencia":  [
+                          "verificacion.json"
+                      ],
+        "observado":  "\u0027Ahora no\u0027 cierra el dialogo",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:35:53.7584288-03:00"
+    },
+    {
+        "paso":  "B4-7-deploy",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T02:35:53.7584288-03:00",
+        "nota":  "ademas CRON_SECRET esta configurado en Vercel: responde 401 y no 500",
+        "esperado":  "el codigo nuevo esta en la web",
+        "evidencia":  [
+                          "verificacion.json"
+                      ],
+        "observado":  "el cron responde con el campo detalle, que el codigo anterior no tenia; aparece a los ~2 min del push 5d31eb4",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:35:53.7584288-03:00"
+    },
+    {
+        "paso":  "B4-8-falso-negativo",
+        "rol":  "auditor",
+        "inicio":  "2026-11-05T02:35:53.7584288-03:00",
+        "nota":  "hallazgo nuevo: un sorteo se puede publicar sin datos de cobro y el comprador lo descubre al reservar",
+        "esperado":  "detectar por que la primera corrida fallo",
+        "evidencia":  [
+                          "verificacion.json"
+                      ],
+        "observado":  "se probo primero contra \u0027amoladora\u0027, que tiene whatsapp_contact NULL: NumbersGrid corta antes del chequeo de direccion. Repetido contra \u0027navidad\u0027 dio todo ok",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T02:35:53.7584288-03:00"
+    }
+]

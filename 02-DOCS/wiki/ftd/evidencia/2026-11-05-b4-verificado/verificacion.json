@@ -1,0 +1,37 @@
+{
+  "pasos": [
+    {
+      "paso": "precondicion-sin-direccion",
+      "resultado": "ok",
+      "detalle": "{\"phone\":null,\"address_line\":null,\"city\":null,\"province\":null,\"postal_code\":null}"
+    },
+    {
+      "paso": "grilla-sin-modal-bloqueante",
+      "resultado": "ok",
+      "detalle": "el modal de dirección ya no tapa la página del sorteo"
+    },
+    {
+      "paso": "grilla-clicable",
+      "resultado": "ok",
+      "detalle": "se puede elegir un número"
+    },
+    {
+      "paso": "pide-direccion-al-reservar",
+      "resultado": "ok",
+      "detalle": "aparece el diálogo ¿A dónde te mandamos el premio? antes de reservar"
+    },
+    {
+      "paso": "no-escribio-en-el-sorteo",
+      "resultado": "ok",
+      "detalle": "el número 1 sigue en available"
+    },
+    {
+      "paso": "se-puede-descartar",
+      "resultado": "ok",
+      "detalle": "«Ahora no» cierra el diálogo"
+    }
+  ],
+  "limpieza": {
+    "cuentaBorrada": true
+  }
+}
