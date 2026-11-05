@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   Eye,
   Hash,
+  Play,
   ShieldCheck,
   Ticket,
   Trophy,
@@ -11,6 +12,7 @@ import {
 
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DrawSimulator } from "@/components/DrawSimulator";
 
 export const metadata: Metadata = {
   title: "Cómo funciona | Gadu Sorteos",
@@ -203,6 +205,73 @@ export default function ComoFuncionaPage() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section
+        id="demo"
+        className="scroll-mt-24 rounded-xl border border-hairline bg-panel-1 p-6 sm:p-8"
+        aria-labelledby="demo-title"
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-panel-3 text-brand-accent ring-1 ring-hairline">
+            <Play className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <h2
+            id="demo-title"
+            className="font-display text-xl font-semibold tracking-tight"
+          >
+            Probalo vos mismo: Simulador de Sorteo
+          </h2>
+        </div>
+
+        <p className="mt-4 text-[13px] leading-relaxed text-fg-subtle">
+          Este es un entorno de pruebas educativo. No se juegan premios reales.
+          El objetivo es que veas cómo nuestro motor selecciona un ganador y cómo
+          se genera el código Hash que garantiza la transparencia.
+        </p>
+
+        <ol className="mt-5 grid gap-3 sm:grid-cols-3">
+          {[
+            {
+              n: "1",
+              title: "Elegí números",
+              text: "Tocá 3 de los 10 números de la grilla.",
+            },
+            {
+              n: "2",
+              title: "Hacé clic en sortear",
+              text: "El motor elige uno al azar entre los que marcaste.",
+            },
+            {
+              n: "3",
+              title: "Verificá el resultado y el Hash",
+              text: "Compará el ganador con la huella que se muestra.",
+            },
+          ].map((step) => (
+            <li
+              key={step.n}
+              className="rounded-lg border border-hairline bg-panel-2 p-3"
+            >
+              <p className="font-mono text-[11px] tracking-[0.18em] text-brand-accent">
+                {step.n}
+              </p>
+              <p className="mt-1 text-[13px] font-semibold text-fg">
+                {step.title}
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-fg-subtle">
+                {step.text}
+              </p>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-6 rounded-lg border border-hairline bg-panel-2 p-4 sm:p-5">
+          <DrawSimulator />
+        </div>
+
+        <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-subtle">
+          Sin registro · sin premios reales · 100% en tu navegador
+        </p>
       </section>
     </div>
   );

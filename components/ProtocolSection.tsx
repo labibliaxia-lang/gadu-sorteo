@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -9,8 +6,6 @@ import {
   MousePointerClick,
   Truck,
 } from "lucide-react";
-
-import { DrawSimulatorModal } from "@/components/DrawSimulatorModal";
 
 const STEPS = [
   {
@@ -57,8 +52,6 @@ const GUARANTEES = [
  * en desktop se mantiene la grilla de tres pasos y el botón del demo debajo.
  */
 export function ProtocolSection() {
-  const [demoOpen, setDemoOpen] = useState(false);
-
   return (
     <section className="space-y-6 sm:space-y-8" aria-labelledby="protocolo">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -128,14 +121,13 @@ export function ProtocolSection() {
       </ul>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <button
-          type="button"
-          onClick={() => setDemoOpen(true)}
+        <Link
+          href="/como-funciona#demo"
           className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-hairline-strong bg-panel-2 px-4 text-[13px] font-medium text-fg transition-colors hover:border-brand-500/60 hover:text-brand-accent"
         >
           <span aria-hidden="true">🎲</span>
           Probar el motor (Demo)
-        </button>
+        </Link>
 
         <Link
           href="/como-funciona"
@@ -144,11 +136,6 @@ export function ProtocolSection() {
           Ver protocolo completo
         </Link>
       </div>
-
-      <DrawSimulatorModal
-        open={demoOpen}
-        onClose={() => setDemoOpen(false)}
-      />
     </section>
   );
 }
