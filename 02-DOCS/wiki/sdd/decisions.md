@@ -294,3 +294,9 @@ Decision   — dos triggers sobre `raffles`: en UPDATE de `is_featured`/`feature
 Why        — el `grant update` de 0065 es de tabla, no de columnas, así que cualquier organizador podía poner su sorteo en «Destacado» con un PATCH, sin panel ni auditoría. El destacado es una herramienta comercial del dueño del producto.
 Qué no cambia — la Server Action del superadmin escribe con service role (lo dice 0066), así que sigue funcionando; el organizador sigue editando el resto de su sorteo.
 Evidence   — `supabase/migrations/0077_guard_featured_flag.sql` (escrita, sin aplicar), `verificar_0077.sql` y el contrato en `security-invariants.test.ts`.
+
+## 2026-11-05 — El compromiso de la semilla solo se publica con la venta abierta  (feature: auditoria-seguridad)
+Decision   — `commit_draw_seed` exige `status = 'active'` y `draw_date > now()`. Antes aceptaba también `closed`, así que el organizador podía cerrar la venta, mirar el listado vendido y recién ahí comprometer la semilla.
+Why        — la promesa pública es que la semilla estaba fijada ANTES del sorteo. Si el compromiso puede nacer después del cierre, el verificador no prueba nada y la confianza es decorativa.
+Qué no cambia — la firma, los grants, el formato del hash ni la regla de una sola publicación por sorteo. El motor no llama a esta función.
+Evidence   — `supabase/migrations/0078_commit_seed_only_while_selling.sql` (escrita, sin aplicar), `verificar_0078.sql` y el contrato en `security-invariants.test.ts`.

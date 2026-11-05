@@ -105,7 +105,7 @@ Dos notas de esa misma tabla: el `qual = NULL` de la política de INSERT es norm
 | 13 | `0063:167` | La devolución se calcula con el precio vigente al cancelar, no con lo cobrado en `payments.amount`. |
 | 15 | `0030:183` | El organizador ve la fila **completa** del comprador (email, teléfono, DNI, dirección). Corregido en `0073`: ahora lee la vista `raffle_buyers`, que expone nombre y teléfono. |
 | 16 | `0065:147-149` | `SELECT` público de `raffle_numbers` expone `reserved_by`/`sold_to` (UUID de usuarios). |
-| 17 | `0034:88` | `commit_draw_seed` se puede publicar después del cierre: la promesa "la semilla estaba fijada antes" no es comprobable desde afuera. |
+| 17 | `0034:88` | `commit_draw_seed` se puede publicar después del cierre: la promesa "la semilla estaba fijada antes" no es comprobable desde afuera. **Corregido en `0078`** (solo con el sorteo activo y fecha futura). |
 | 18 | `cron/auto-draw:26` + `cron/release-reservations:16` | Secreto comparado con `===` (no tiempo constante) y duplicado en dos rutas. |
 | 19 | `vercel.json:2` | El único cron declarado corre una vez al día; `auto-draw` no está programado en el repo. `a verificar` en el despliegue. |
 
@@ -113,7 +113,7 @@ Dos notas de esa misma tabla: el `qual = NULL` de la política de INSERT es norm
 
 | # | Archivo:línea | Problema |
 |---|---|---|
-| 20 | `0066:8` | `is_featured` escribible por el organizador (migración de otra sesión; revisar al integrarla). **Corregido en `0077`** (solo superadmin; el alta del cliente nace sin destacar). |
+| 20 | `0066:8` | `is_featured` escribible por el organizador (migración de otra sesión; revisar al integrarla). **Corregido en `0077` y verificado el 2026-11-05** (4/4: triggers, control privilegiado, ataque bloqueado y edición normal). |
 | 21 | `lib/auto-draw.ts:41` | `logRun` no desestructura `{ error }` de supabase-js: un fallo al registrar el intento se pierde. |
 
 ## Corregido en esta sesión
