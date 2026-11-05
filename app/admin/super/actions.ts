@@ -2106,7 +2106,11 @@ export async function pauseReportedRaffle(
 
   const { data: updated, error: updateError } = await admin
     .from("raffles")
-    .update({ status: "closed" })
+    // Cerrar la venta no alcanza: la home lista todos los sorteos sin mirar el
+    // estado, así que el denunciado seguía en cartelera. Deslistarlo (0079) lo
+    // saca del listado y de los buscadores, y lo deja accesible por enlace para
+    // que el superadmin y el denunciante puedan revisarlo.
+    .update({ status: "closed", is_listed: false })
     .eq("id", raffle.id)
     .eq("status", "active")
     .select("id");
@@ -2130,6 +2134,7 @@ export async function pauseReportedRaffle(
       raffle_id: raffle.id,
       from: "active",
       to: "closed",
+      unlisted: true,
     },
   });
 
