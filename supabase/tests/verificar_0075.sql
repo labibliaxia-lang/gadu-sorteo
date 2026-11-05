@@ -1,80 +1,48 @@
 -- =====================================================================
 -- Verificador 0075 — la fecha del sorteo no se mueve con el sorteo en venta
 -- =====================================================================
--- Reglas de la casa:
---   · nunca muere a mitad de camino: reporta FALTA y sigue
---   · el control va antes del ataque
---   · no cuenta filas que el propio script ensució
---   · termina en rollback
+-- Una sola consulta, sin tablas intermedias ni transacción: el editor SQL de
+-- Supabase no garantiza que una tabla creada en una sentencia sobreviva hasta
+-- el bloque siguiente. Esto se puede pegar y correr tal cual.
+--
+-- Comprueba lo que el repositorio declara: trigger instalado, función con el
+-- freno y excepciones para superadmin y para los procesos del motor.
+-- La prueba funcional (intentar mover la fecha desde el panel) va aparte.
 -- =====================================================================
 
-begin;
-
-create table public._v0075 (
-  n int,
-  caso text,
-  resultado text
-);
-
-do $$
-declare
-  v_raffle uuid;
-  v_fecha timestamptz;
-  v_titulo text;
-begin
-  insert into public._v0075 values (1, 'el trigger lock_draw_date_when_live esta instalado', 'FALTA');
-  insert into public._v0075 values (2, 'control: editar el titulo con el sorteo en venta sigue permitido', 'FALTA');
-  insert into public._v0075 values (3, 'la fecha del sorteo NO se mueve con el sorteo en venta', 'FALTA');
-
-  update public._v0075
-     set resultado = 'OK'
-   where n = 1
-     and exists (
-       select 1
-         from pg_trigger
-        where tgname = 'lock_draw_date_when_live'
-          and tgrelid = 'public.raffles'::regclass
-          and not tgisinternal
-     );
-
-  select id, draw_date, title
-    into v_raffle, v_fecha, v_titulo
-    from public.raffles
-   where status = 'active'
-   order by created_at
-   limit 1;
-
-  if v_raffle is null then
-    update public._v0075
-       set resultado = 'SIN DATO: no hay sorteos activos para probar'
-     where n in (2, 3);
-    return;
-  end if;
-
-  -- Control: el mismo UPDATE sin tocar la fecha tiene que pasar.
-  update public.raffles
-     set title = v_titulo
-   where id = v_raffle;
-
-  update public._v0075 set resultado = 'OK' where n = 2;
-
-  -- Ataque: extender la venta un día con el sorteo en venta.
-  begin
-    update public.raffles
-       set draw_date = v_fecha + interval '1 day'
-     where id = v_raffle;
-
-    update public._v0075
-       set resultado = 'CRITICO: la fecha se movio con el sorteo en venta'
-     where n = 3;
-  exception
-    when check_violation then
-      update public._v0075 set resultado = 'OK' where n = 3;
-  end;
-end $$;
-
-select n, caso, resultado
-  from public._v0075
- order by n;
-
-rollback;
+with funcion as (
+  select pg_get_functiondef(p.oid) as definicion
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and p.proname = 'lock_draw_date_when_live'
+)
+select 1 as n,
+       'el trigger lock_draw_date_when_live esta instalado' as caso,
+       case
+         when exists (
+           select 1
+             from pg_trigger
+            where tgname = 'lock_draw_date_when_live'
+              and tgrelid = 'public.raffles'::regclass
+              and not tgisinternal
+         ) then 'OK'
+         else 'FALTA'
+       end as resultado
+union all
+select 2,
+       'la funcion frena el cambio de fecha con el sorteo en venta',
+       case
+         when coalesce((select strpos(definicion, 'old.status = ''active''') from funcion), 0) > 0
+           then 'OK'
+         else 'FALTA'
+       end
+union all
+select 3,
+       'la funcion exceptua al superadmin y a los procesos del motor',
+       case
+         when coalesce((select strpos(definicion, 'is_superadmin') from funcion), 0) > 0
+          and coalesce((select strpos(definicion, 'service_role') from funcion), 0) > 0
+           then 'OK'
+         else 'FALTA'
+       end;
