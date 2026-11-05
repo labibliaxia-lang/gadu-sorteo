@@ -318,7 +318,7 @@ Evidence   — `.github/workflows/crons.yml` y el comentario actualizado en la r
 Decision   — `cancel_raffle` calcula el importe de cada número vendido desde `payments.amount`: cada pago se reparte entre los números vendidos que cubre (`amount / cantidad`), así la suma coincide con lo cobrado. Los números del camino manual (transferencia, sin `payment_id`) siguen usando `price_per_number` como estimación.
 Why        — con el precio vigente, cambiar el precio después de vender hacía que la devolución no coincidiera con lo pagado: podía devolver de menos, que es el peor error posible en dinero ajeno.
 Qué no cambia — la firma, los permisos, el estado del sorteo, la liberación de reservas y la regla de una devolución por comprador.
-Evidence   — `supabase/migrations/0079_refunds_use_paid_amount.sql` (escrita, sin aplicar), `verificar_0079.sql` (escenario con pago y con manual) y el contrato en `security-invariants.test.ts`.
+Evidence   — `supabase/migrations/0079_refunds_use_paid_amount.sql` (aplicada y verificada el 2026-11-05: 4/4, devuelve 1999 donde el precio daba 2000), `verificar_0079.sql` (escenario con pago y con manual) y el contrato en `security-invariants.test.ts`.
 
 ## 2026-11-05 — Cerrar el #16 y de paso el desajuste de fechas  (feature: auditoria-seguridad)
 Decision 16 — `anon` pierde `reserved_by`/`sold_to` en `raffle_numbers`: 0080 revocó el grant directo y 0081 soltó también `PUBLIC` (que era el que lo heredaba). `authenticated` y `service_role` conservan el acceso.
