@@ -107,7 +107,7 @@ Dos notas de esa misma tabla: el `qual = NULL` de la política de INSERT es norm
 | 16 | `0065:147-149` | `SELECT` público de `raffle_numbers` expone `reserved_by`/`sold_to` (UUID de usuarios). |
 | 17 | `0034:88` | `commit_draw_seed` se puede publicar después del cierre: la promesa "la semilla estaba fijada antes" no es comprobable desde afuera. **Corregido en `0078` y verificado el 2026-11-05** (3/3: ventana, control y ataque). |
 | 18 | `cron/auto-draw:26` + `cron/release-reservations:16` | Secreto comparado con `===` (no tiempo constante) y duplicado en dos rutas. |
-| 19 | `vercel.json:2` | El único cron declarado corre una vez al día; `auto-draw` no está programado en el repo. `a verificar` en el despliegue. |
+| 19 | `vercel.json:2` | El único cron declarado corre una vez al día; `auto-draw` no está programado en el repo. `a verificar` en el despliegue. **Corregido el 2026-11-05:** `.github/workflows/crons.yml` dispara los dos endpoints cada 5 minutos; el cron diario de Vercel queda como respaldo. Falta cargar `CRON_SECRET` en los secretos de GitHub. |
 
 ### Bajos
 

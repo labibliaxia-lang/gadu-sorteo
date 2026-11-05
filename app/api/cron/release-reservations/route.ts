@@ -6,8 +6,9 @@ import { sendPlanReminderEmails } from "@/lib/plan-reminders";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Libera reservas expiradas. Lo invoca Vercel Cron cada 5 minutos
- * (`vercel.json`), protegido con CRON_SECRET.
+ * Libera reservas expiradas. Lo invoca el workflow `crons.yml` cada 5 minutos
+ * (GitHub Actions), protegido con CRON_SECRET. `vercel.json` deja un cron
+ * diario como respaldo: el plan Hobby no permite cadencias menores.
  *
  * Si falta `CRON_SECRET` responde **500**, no 401: mientras la variable no esté,
  * este cron no libera nada, y un 401 haría parecer que alguien está golpeando la

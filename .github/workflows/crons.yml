@@ -1,0 +1,61 @@
+name: crons
+
+# Disparador de los dos crons de la app cada 5 minutos.
+#
+# POR QUÉ EXISTE
+# `vercel.json` solo declara un cron diario (el plan Hobby no permite más), así
+# que en producción las reservas vencidas se liberaban una vez al día y los
+# sorteos automáticos dependían del fallback perezoso de la página pública.
+# GitHub Actions es gratis y permite `*/5`, que es la cadencia que el código
+# espera. El cron diario de Vercel queda como respaldo.
+#
+# ANTES DE CONFIAR EN ESTO
+#   1. Cargar `CRON_SECRET` en GitHub → Settings → Secrets and variables →
+#      Actions → New repository secret, con el MISMO valor que en Vercel.
+#   2. Un workflow programado se desactiva solo tras 60 días sin actividad en
+#      el repositorio; GitHub manda un mail y hay que reactivarlo.
+#
+# Si falta el secreto, las rutas responden 500 a propósito (configuración rota,
+# distinta de credencial inválida) y el job falla a la vista.
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: crons
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Liberar reservas vencidas
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "Falta el secreto CRON_SECRET en GitHub Actions."
+            exit 1
+          fi
+          code=$(curl -sS -o /tmp/release.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            --max-time 60 \
+            https://gadu-sorteo-doci.vercel.app/api/cron/release-reservations)
+          echo "release-reservations -> $code"
+          cat /tmp/release.json || true
+          test "$code" = "200"
+
+      - name: Ejecutar sorteos automáticos vencidos
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          code=$(curl -sS -o /tmp/autodraw.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            --max-time 60 \
+            https://gadu-sorteo-doci.vercel.app/api/cron/auto-draw)
+          echo "auto-draw -> $code"
+          cat /tmp/autodraw.json || true
+          test "$code" = "200"

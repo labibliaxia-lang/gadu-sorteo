@@ -306,3 +306,10 @@ Decision   — `resolveWebhookPaymentId` prefiere el `data.id` del query (el que
 Why        — el cuerpo no está firmado: con prioridad del cuerpo, una notificación auténtica podía hacer procesar otro pago cambiando solo el JSON.
 Qué no cambia — la verificación con el validador del SDK, la consulta del pago a la API (fuente de verdad) y la idempotencia. La falta de ventana de tolerancia al `ts` es deliberada: MP reintenta cada 15 minutos y rechazar por antigüedad rompería entregas legítimas.
 Evidence   — `lib/mercadopago.ts` (helper nuevo) + 4 tests (10/10 en el archivo) y el webhook usándolo.
+
+## 2026-11-05 — Los crons corren cada 5 minutos desde GitHub Actions  (feature: auditoria-seguridad)
+Decision   — `.github/workflows/crons.yml` llama a `/api/cron/release-reservations` y `/api/cron/auto-draw` cada 5 minutos con el `CRON_SECRET` de los secretos del repositorio. El cron diario de `vercel.json` queda como respaldo.
+Why        — el plan Hobby de Vercel solo permite un cron diario: las reservas vencidas se liberaban una vez al día y los sorteos automáticos dependían del fallback perezoso de la página pública. La cadencia que el código asume es de minutos.
+Qué no cambia — el código de las rutas ni el secreto: el workflow usa el mismo header `Authorization: Bearer`. Si falta el secreto, las rutas responden 500 a propósito y el job falla a la vista.
+Pendiente humano — cargar `CRON_SECRET` en GitHub → Settings → Secrets and variables → Actions. Un workflow programado se desactiva solo tras 60 días sin actividad en el repo.
+Evidence   — `.github/workflows/crons.yml` y el comentario actualizado en la ruta de reservas.
