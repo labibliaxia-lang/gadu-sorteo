@@ -1,16 +1,16 @@
--- =====================================================================
--- Verificador 0074 — la fecha del sorteo no se mueve con el sorteo en venta
+﻿-- =====================================================================
+-- Verificador 0075 â€” la fecha del sorteo no se mueve con el sorteo en venta
 -- =====================================================================
 -- Reglas de la casa:
---   · nunca muere a mitad de camino: reporta FALTA y sigue
---   · el control va antes del ataque
---   · no cuenta filas que el propio script ensució
---   · termina en rollback
+--   Â· nunca muere a mitad de camino: reporta FALTA y sigue
+--   Â· el control va antes del ataque
+--   Â· no cuenta filas que el propio script ensuciÃ³
+--   Â· termina en rollback
 -- =====================================================================
 
 begin;
 
-create table public._v0074 (
+create table public._v0075 (
   n int,
   caso text,
   resultado text
@@ -22,11 +22,11 @@ declare
   v_fecha timestamptz;
   v_titulo text;
 begin
-  insert into public._v0074 values (1, 'el trigger lock_draw_date_when_live esta instalado', 'FALTA');
-  insert into public._v0074 values (2, 'control: editar el titulo con el sorteo en venta sigue permitido', 'FALTA');
-  insert into public._v0074 values (3, 'la fecha del sorteo NO se mueve con el sorteo en venta', 'FALTA');
+  insert into public._v0075 values (1, 'el trigger lock_draw_date_when_live esta instalado', 'FALTA');
+  insert into public._v0075 values (2, 'control: editar el titulo con el sorteo en venta sigue permitido', 'FALTA');
+  insert into public._v0075 values (3, 'la fecha del sorteo NO se mueve con el sorteo en venta', 'FALTA');
 
-  update public._v0074
+  update public._v0075
      set resultado = 'OK'
    where n = 1
      and exists (
@@ -45,7 +45,7 @@ begin
    limit 1;
 
   if v_raffle is null then
-    update public._v0074
+    update public._v0075
        set resultado = 'SIN DATO: no hay sorteos activos para probar'
      where n in (2, 3);
     return;
@@ -56,25 +56,25 @@ begin
      set title = v_titulo
    where id = v_raffle;
 
-  update public._v0074 set resultado = 'OK' where n = 2;
+  update public._v0075 set resultado = 'OK' where n = 2;
 
-  -- Ataque: extender la venta un día con el sorteo en venta.
+  -- Ataque: extender la venta un dÃ­a con el sorteo en venta.
   begin
     update public.raffles
        set draw_date = v_fecha + interval '1 day'
      where id = v_raffle;
 
-    update public._v0074
+    update public._v0075
        set resultado = 'CRITICO: la fecha se movio con el sorteo en venta'
      where n = 3;
   exception
     when check_violation then
-      update public._v0074 set resultado = 'OK' where n = 3;
+      update public._v0075 set resultado = 'OK' where n = 3;
   end;
 end $$;
 
 select n, caso, resultado
-  from public._v0074
+  from public._v0075
  order by n;
 
 rollback;

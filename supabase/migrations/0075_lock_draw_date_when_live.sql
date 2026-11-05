@@ -1,5 +1,5 @@
 -- =====================================================================
--- 0074 — La fecha del sorteo es una promesa: no se mueve con el sorteo en venta
+-- 0075 — La fecha del sorteo es una promesa: no se mueve con el sorteo en venta
 -- =====================================================================
 -- Motivo:
 --   La cuenta regresiva pública solo vale si la fecha no se estira. Hoy el
@@ -52,7 +52,7 @@ do $$
 begin
   if to_regclass('public._applied_migrations') is not null then
     insert into public._applied_migrations (version, note)
-    values ('0074', 'la fecha del sorteo no se mueve con el sorteo en venta')
+    values ('0075', 'la fecha del sorteo no se mueve con el sorteo en venta')
     on conflict (version) do nothing;
   end if;
 end;
