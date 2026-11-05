@@ -328,3 +328,10 @@ Decision fechas — `formatDateTime` fija `America/Argentina/Buenos_Aires`. Sin 
 Why        — además del error de consola, el tiempo mostrado antes de hidratar era el de otra zona.
 Pendiente — `authenticated` todavía puede leer UUID ajenos; cerrarlo exige RPC para las consultas de `mis-numeros`/`mis-pagos`.
 Evidence   — 0080, 0081, `verificar_0081.sql`, `lib/utils.test.ts` (2 casos), gates y prueba de navegador.
+
+## 2026-11-05 — Baja de cuenta: anonimizar la plata y bloquear lo pendiente  (feature: baja-de-cuenta)
+Decision   — la baja se pide desde `/perfil` y la aprueba el superadmin después de cuatro validaciones automáticas: sin sorteos propios abiertos, sin pagos en vuelo, sin devoluciones pendientes y sin números en sorteos abiertos. Al aprobar: perfil anonimizado, KYC purgado, cuenta de Auth eliminada, y `payments`/`refunds` conservados con `user_id` null.
+Why        — el borrado actual destruye registros contables (`on delete cascade`) y deja sorteos sin dueño (`created_by` → null). La Política de Privacidad ya promete el derecho a eliminar la cuenta, pero el único camino era un mail.
+Plazo      — 10 días hábiles, publicado en la política.
+Out        — transferir sorteos a otra cuenta; borrar `admin_audit_logs`; devoluciones automáticas.
+Evidence   — `02-DOCS/wiki/ftd/baja-de-cuenta.md` (spec con checklist y decisiones; sin implementar).
