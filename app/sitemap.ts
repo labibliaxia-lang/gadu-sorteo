@@ -34,6 +34,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       supabase
         .from("raffles")
         .select("id, created_at")
+        // Los sorteos internos no van al sitemap: no queremos que Google los
+        // indexe aunque existan (0079).
+        .eq("is_listed", true)
         .order("created_at", { ascending: false })
         .limit(500),
       supabase

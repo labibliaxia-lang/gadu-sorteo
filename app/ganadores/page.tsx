@@ -51,6 +51,8 @@ export default async function GanadoresPage() {
       "id, title, cover_image_url, winner_number, winner_name, drawn_at, numbers_hash",
     )
     .eq("status", "drawn")
+    // Los sorteos internos no se publicitan ni siquiera cuando se sortean (0079).
+    .eq("is_listed", true)
     .order("drawn_at", { ascending: false })
     .limit(60);
 
