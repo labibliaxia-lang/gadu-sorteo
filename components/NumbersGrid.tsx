@@ -118,6 +118,9 @@ export function NumbersGrid({
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  // Hasta saber si hay sesión no se puede elegir qué columnas pedir: `anon` no
+  // tiene privilegio sobre reserved_by/sold_to (migración 0080).
+  const [authReady, setAuthReady] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deadline, setDeadline] = useState<number | null>(null);
@@ -177,7 +180,25 @@ export function NumbersGrid({
 
   // 1) Carga inicial en páginas de 1000 filas (límite de PostgREST).
   useEffect(() => {
+    // Sin saber si hay sesión no se puede armar el SELECT: anon no puede leer
+    // reserved_by/sold_to, así que pedirlas sin sesión devolvería 42501.
+    if (!authReady) return;
+
     let cancelled = false;
+
+    // `anon` no puede leer reserved_by/sold_to (migración 0080): sin sesión se
+    // piden solo las columnas públicas y las dos se normalizan a null.
+    interface FilaNumeros {
+      id: string;
+      raffle_id: string;
+      number: number;
+      status: string;
+      reserved_by?: string | null;
+      reserved_until: string | null;
+      sold_to?: string | null;
+      payment_id: string | null;
+      sold_at: string | null;
+    }
 
     async function load() {
       setLoading(true);
@@ -186,18 +207,41 @@ export function NumbersGrid({
       let from = 0;
 
       while (true) {
-        const { data, error: fetchError } = await supabase
-          .from("raffle_numbers")
-          .select(
-            "id, raffle_id, number, status, reserved_by, reserved_until, sold_to, sold_at",
-          )
-          .eq("raffle_id", raffleId)
-          .order("number", { ascending: true })
-          .range(from, from + pageSize - 1);
+        const resultado = userId
+          ? await supabase
+              .from("raffle_numbers")
+              .select(
+                "id, raffle_id, number, status, reserved_by, reserved_until, sold_to, payment_id, sold_at",
+              )
+              .eq("raffle_id", raffleId)
+              .order("number", { ascending: true })
+              .range(from, from + pageSize - 1)
+          : await supabase
+              .from("raffle_numbers")
+              .select(
+                "id, raffle_id, number, status, reserved_until, payment_id, sold_at",
+              )
+              .eq("raffle_id", raffleId)
+              .order("number", { ascending: true })
+              .range(from, from + pageSize - 1);
 
+        const data = resultado.data as FilaNumeros[] | null;
+        const fetchError = resultado.error;
         if (fetchError || !data || data.length === 0) break;
 
-        data.forEach((n) => map.set(n.number, n as RaffleNumber));
+        data.forEach((n) =>
+          map.set(n.number, {
+            id: n.id,
+            raffle_id: n.raffle_id,
+            number: n.number,
+            status: n.status as RaffleNumber["status"],
+            reserved_by: n.reserved_by ?? null,
+            reserved_until: n.reserved_until,
+            sold_to: n.sold_to ?? null,
+            payment_id: n.payment_id,
+            sold_at: n.sold_at,
+          }),
+        );
         if (data.length < pageSize) break;
         from += pageSize;
       }
@@ -213,15 +257,17 @@ export function NumbersGrid({
     return () => {
       cancelled = true;
     };
-  }, [supabase, raffleId]);
+  }, [supabase, raffleId, authReady, userId]);
 
   // 2) Sesión del usuario.
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id ?? null);
+      setAuthReady(true);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserId(session?.user.id ?? null);
+      setAuthReady(true);
     });
     return () => sub.subscription.unsubscribe();
   }, [supabase]);
