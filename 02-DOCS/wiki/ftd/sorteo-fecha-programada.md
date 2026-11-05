@@ -73,7 +73,7 @@ pública del sorteo.
 - `components/RaffleMiniCard.tsx`: versión corta («Cierra en …») en las tarjetas.
 - `supabase/migrations/0075_lock_draw_date_when_live.sql`: con el sorteo `active`, cambiar
   `draw_date` aborta. Superadmin y `service_role` quedan exceptuados. Para moverla: cerrar y
-  republicar. **Escrita, sin aplicar.**
+  republicar. **Aplicada y verificada el 2026-11-05:** el verificador dio las tres filas en `OK`.
 - `app/admin/sorteos/[id]/editar/EditarSorteoForm.tsx`: con el sorteo activo la fecha se muestra
   fija, con la explicación.
 - `supabase/tests/verificar_0075.sql`: control (editar el título sigue permitido) antes del ataque

@@ -278,7 +278,7 @@ Evidence   — `lib/terms.ts` (`termsCookieAccepted`) + `lib/terms.test.ts`; `Lo
 
 ## 2026-11-05 — La cuenta regresiva es pública y la fecha no se mueve con el sorteo en venta  (feature: sorteo-fecha-programada)
 Decision   — el contador se muestra siempre, sin interruptor: `draw_date` es obligatoria en `raffles`, así que todo sorteo tiene fecha y esconderla sería ocultar un dato que ya está en la base.
-Guard      — mientras el sorteo está `active`, cambiar `draw_date` aborta (0075, escrita sin aplicar). Superadmin y `service_role` exceptuados; para moverla hay que cerrar y republicar.
+Guard      — mientras el sorteo está `active`, cambiar `draw_date` aborta (0075, aplicada y verificada el 2026-11-05). Superadmin y `service_role` exceptuados; para moverla hay que cerrar y republicar.
 Why        — un contador que se reinicia entrena a los compradores a ignorarlo. La urgencia solo vale si la fecha es una promesa.
 Behaviour  — al llegar a cero muestra «Fecha alcanzada · sorteo pendiente» en vez de negativos o reinicio (el sorteo manual puede demorarse).
 Evidence   — `lib/countdown.ts` + 12 tests; `RaffleCountdown`; contrato en `security-invariants.test.ts`; `verificar_0075.sql`.
