@@ -319,3 +319,12 @@ Decision   — `cancel_raffle` calcula el importe de cada número vendido desde 
 Why        — con el precio vigente, cambiar el precio después de vender hacía que la devolución no coincidiera con lo pagado: podía devolver de menos, que es el peor error posible en dinero ajeno.
 Qué no cambia — la firma, los permisos, el estado del sorteo, la liberación de reservas y la regla de una devolución por comprador.
 Evidence   — `supabase/migrations/0079_refunds_use_paid_amount.sql` (escrita, sin aplicar), `verificar_0079.sql` (escenario con pago y con manual) y el contrato en `security-invariants.test.ts`.
+
+## 2026-11-05 — Cerrar el #16 y de paso el desajuste de fechas  (feature: auditoria-seguridad)
+Decision 16 — `anon` pierde `reserved_by`/`sold_to` en `raffle_numbers`: 0080 revocó el grant directo y 0081 soltó también `PUBLIC` (que era el que lo heredaba). `authenticated` y `service_role` conservan el acceso.
+Why        — con la anon key cualquiera podía listar UUID de compradores y correlacionarlos entre sorteos. El grid usa esas columnas solo para marcar lo propio de una cuenta con sesión.
+Verificación — `has_column_privilege` (privilegio efectivo, no `information_schema`), más prueba de navegador contra producción: anon 401 en ambas columnas, 180 celdas visibles y WebSocket de Realtime abierto.
+Decision fechas — `formatDateTime` fija `America/Argentina/Buenos_Aires`. Sin `timeZone`, el servidor (UTC) y el navegador (Argentina) formateaban distinto: el HTML salía en UTC y React reportaba #425 en la home y en la ficha.
+Why        — además del error de consola, el tiempo mostrado antes de hidratar era el de otra zona.
+Pendiente — `authenticated` todavía puede leer UUID ajenos; cerrarlo exige RPC para las consultas de `mis-numeros`/`mis-pagos`.
+Evidence   — 0080, 0081, `verificar_0081.sql`, `lib/utils.test.ts` (2 casos), gates y prueba de navegador.
