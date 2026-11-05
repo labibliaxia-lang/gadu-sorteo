@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
 import { processAutoDraws, processManualDrawReminders } from "@/lib/auto-draw";
+import { evaluarCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -20,13 +21,19 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization") ?? "";
-  const cronSecret = process.env.CRON_SECRET;
 
-  const authorized =
-    !!cronSecret && authHeader === `Bearer ${cronSecret}`;
+  // Mismo helper que el cron de reservas: 500 si falta CRON_SECRET, 401 si el
+  // header no cierra, y comparación en tiempo constante (hallazgo #18).
+  const auth = evaluarCronAuth(process.env.CRON_SECRET, authHeader);
 
-  if (!authorized) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  if (!auth.ok) {
+    if (auth.status === 500) {
+      console.error(`Cron auto-draw: ${auth.detalle}`);
+    }
+    return NextResponse.json(
+      { error: auth.error, detalle: auth.detalle },
+      { status: auth.status },
+    );
   }
 
   try {
