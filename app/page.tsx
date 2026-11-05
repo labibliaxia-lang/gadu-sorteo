@@ -11,7 +11,7 @@ import {
 
 import { createClient } from "@/lib/supabase/server";
 import { pickFeatured, sortFeaturedFirst } from "@/lib/featured";
-import { HowItWorks } from "@/components/HowItWorks";
+import { ProtocolSection } from "@/components/ProtocolSection";
 import { LiveFomo } from "@/components/LiveFomo";
 import { PageViewTracker } from "@/components/PageViewTracker";
 import { RafflesList } from "@/components/RafflesList";
@@ -152,6 +152,9 @@ export default async function HomePage() {
   const { data: raffles } = await supabase
     .from("raffles")
     .select("*")
+    // `is_listed = false` es para sorteos internos: existen y se pueden abrir
+    // por enlace, pero no se publicitan (0079).
+    .eq("is_listed", true)
     .order("created_at", { ascending: false });
 
   const raffleList = (raffles ?? []) as Raffle[];
@@ -226,7 +229,7 @@ export default async function HomePage() {
           aria-hidden="true"
           className="hairline-grid pointer-events-none absolute inset-0"
         />
-        <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:pb-24">
+        <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6 sm:pb-20 sm:pt-16 lg:pb-24">
           <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="min-w-0 max-w-2xl">
               <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -237,18 +240,18 @@ export default async function HomePage() {
                 </span>
               </p>
 
-              <h1 className="mt-5 text-balance font-display text-[2.7rem] font-semibold leading-[0.98] tracking-[-0.035em] sm:text-6xl lg:text-[4.2rem]">
+              <h1 className="mt-4 text-balance font-display text-[2.7rem] font-semibold leading-[0.98] tracking-[-0.035em] sm:mt-5 sm:text-6xl lg:text-[4.2rem]">
                 Sorteos que se pueden{" "}
                 <span className="text-brand-accent">verificar.</span>
               </h1>
 
-              <p className="mt-6 max-w-lg text-[15px] leading-relaxed text-fg-muted sm:text-base">
+              <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-fg-muted sm:mt-6 sm:text-base">
                 Elegí tus números, pagá por transferencia y seguí el sorteo en
                 vivo. Cada resultado queda con su hash: nadie puede cambiarlo
                 después.
               </p>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center">
                 <Link
                   href="/#sorteos"
                   className={cn(buttonVariants({ size: "lg" }), "group")}
@@ -277,7 +280,7 @@ export default async function HomePage() {
               {featured && (
                 <Link
                   href={`/sorteos/${featured.id}`}
-                  className="group mt-8 block overflow-hidden rounded-xl border border-hairline bg-panel-1 transition-colors hover:border-hairline-strong lg:hidden"
+                  className="group mt-6 block overflow-hidden rounded-xl border border-hairline bg-panel-1 transition-colors hover:border-hairline-strong lg:hidden"
                 >
                   <div className="flex items-center justify-between gap-2 border-b border-hairline px-4 py-2">
                     <span className="eyebrow-gold">Sorteo destacado</span>
@@ -344,7 +347,7 @@ export default async function HomePage() {
                 </Link>
               )}
 
-              <p className="mt-4 text-[13px] text-fg-subtle">
+              <p className="mt-3 text-[13px] text-fg-subtle sm:mt-4">
                 {user ? (
                   <Link
                     href="/mis-numeros"
@@ -386,26 +389,26 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <div className="space-y-20 pt-10 sm:space-y-24 sm:pt-12">
+      <div className="space-y-12 pt-8 sm:space-y-24 sm:pt-12">
         {/* ============ ESTADO DE LA PLATAFORMA ============ */}
         <section
           aria-label="Estado de la plataforma"
-          className="grid divide-y divide-hairline border-y border-hairline sm:grid-cols-3 sm:divide-x sm:divide-y-0"
+          className="grid grid-cols-3 divide-x divide-hairline border-y border-hairline"
         >
           {platformStats.map((stat) => (
             <div
               key={stat.label}
-              className="flex items-baseline gap-4 px-1 py-6 sm:px-6"
+              className="flex flex-col gap-1 px-2 py-3 sm:flex-row sm:items-baseline sm:gap-4 sm:px-6 sm:py-6"
             >
               <stat.icon
-                className="h-4 w-4 shrink-0 translate-y-0.5 text-fg-subtle"
+                className="h-3.5 w-3.5 shrink-0 text-fg-subtle sm:h-4 sm:w-4 sm:translate-y-0.5"
                 aria-hidden="true"
               />
-              <div className="flex flex-wrap items-baseline gap-x-3">
-                <p className="font-mono text-2xl font-medium tracking-tight text-fg">
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-3">
+                <p className="font-mono text-lg font-medium tracking-tight text-fg sm:text-2xl">
                   {stat.value}
                 </p>
-                <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
+                <p className="font-mono text-[9px] uppercase tracking-[0.06em] text-fg-subtle sm:text-[11px] sm:tracking-[0.1em]">
                   {stat.label}
                 </p>
               </div>
@@ -413,14 +416,14 @@ export default async function HomePage() {
           ))}
         </section>
 
-        {/* ============ PROTOCOLO ============ */}
-        <HowItWorks />
-
-        {/* ============ CARTELERA ============ */}
+        {/* ============ CARTELERA (primero: prioridad en móvil) ============ */}
         <RafflesList
           raffles={listedRaffles}
           stats={raffleStats}
         />
+
+        {/* ============ PROTOCOLO + DEMO DEL MOTOR ============ */}
+        <ProtocolSection />
       </div>
 
       {/* Avisos de compras recientes (solo título del sorteo y cantidad). */}
