@@ -57,7 +57,12 @@ const VISIBLE_NUMBERS = 500;
  * calculan sobre los números restantes, sin repetir ganadores. Cada premio
  * tiene su hash y se guarda un results_hash combinado.
  */
-export function SandboxDraw() {
+export function SandboxDraw({
+  verifyUrl = "/admin/super/sandbox",
+}: {
+  /** URL que se imprime en los certificados descargables. */
+  verifyUrl?: string;
+} = {}) {
   const supabase = useRef(createClient()).current;
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -234,8 +239,8 @@ export function SandboxDraw() {
 
         <p className="text-xs text-muted-foreground">
           Escenario aislado: {activeNumbers.toLocaleString("es-AR")} números y{" "}
-          {activePrizes} premio{activePrizes === 1 ? "" : "s"}. No aparece en la
-          web pública ni toca sorteos reales.
+          {activePrizes} premio{activePrizes === 1 ? "" : "s"}. No toca sorteos
+          reales ni números en venta.
         </p>
 
         {visibleNumbers < activeNumbers && (
@@ -419,7 +424,7 @@ export function SandboxDraw() {
                 winnerNumber={winner.number}
                 drawnAt={new Date().toLocaleString("es-AR")}
                 verificationHash={winner.hash}
-                verifyUrl="/admin/super/sandbox"
+                verifyUrl={verifyUrl}
               />
             ))}
           </div>

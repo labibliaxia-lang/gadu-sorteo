@@ -12,7 +12,7 @@ import {
 
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DrawSimulator } from "@/components/DrawSimulator";
+import { SandboxDraw } from "@/components/SandboxDraw";
 
 export const metadata: Metadata = {
   title: "Cómo funciona | Gadu Sorteos",
@@ -227,25 +227,28 @@ export default function ComoFuncionaPage() {
         <p className="mt-4 text-[13px] leading-relaxed text-fg-subtle">
           Este es un entorno de pruebas educativo. No se juegan premios reales.
           El objetivo es que veas cómo nuestro motor selecciona un ganador y cómo
-          se genera el código Hash que garantiza la transparencia.
+          se genera el código Hash que garantiza la transparencia. Es el mismo
+          simulador del panel de administración: podés ver los resultados,
+          verificar el hash de cada premio y descargar el certificado en PNG con
+          todos los datos.
         </p>
 
         <ol className="mt-5 grid gap-3 sm:grid-cols-3">
           {[
             {
               n: "1",
-              title: "Elegí números",
-              text: "Tocá 3 de los 10 números de la grilla.",
+              title: "Elegí el escenario",
+              text: "Cuántos números (1 a 10.000) y cuántos premios (1 a 50) sortear.",
             },
             {
               n: "2",
-              title: "Hacé clic en sortear",
-              text: "El motor elige uno al azar entre los que marcaste.",
+              title: "Publicá el compromiso y sorteá",
+              text: "Primero queda fijo el hash de la semilla; después se ejecuta el sorteo.",
             },
             {
               n: "3",
-              title: "Verificá el resultado y el Hash",
-              text: "Compará el ganador con la huella que se muestra.",
+              title: "Verificá y descargá",
+              text: "Recalculá los hashes en tu navegador y bajá el certificado PNG de cada premio.",
             },
           ].map((step) => (
             <li
@@ -266,11 +269,11 @@ export default function ComoFuncionaPage() {
         </ol>
 
         <div className="mt-6 rounded-lg border border-hairline bg-panel-2 p-4 sm:p-5">
-          <DrawSimulator />
+          <SandboxDraw verifyUrl="/como-funciona#demo" />
         </div>
 
         <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-subtle">
-          Sin registro · sin premios reales · 100% en tu navegador
+          Sin registro · entorno aislado · mismo motor que los sorteos reales
         </p>
       </section>
     </div>
