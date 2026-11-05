@@ -276,16 +276,32 @@ Un verificador que parece corrido y no lo está es peor que uno que pide el clic
 `NumbersGrid.tsx:392-400` interpreta siempre el primero: «Estos números ya no están disponibles».
 Si la respuesta se perdió por red, el comprador ve eso sobre números que **sí** tiene.
 
-### B8 — El contador de visitas falla con 403 en la consola · **bajo [visto en vivo]**
+### B8 — `raffle_visits` con 403 · **falso positivo — no es un bug**
 
-En las tres pantallas del escenario A apareció:
+> **Corrección.** Reporté que la analítica de visitas no registraba nada porque vi en la consola, tres
+> veces, `new row violates row-level security policy for table "raffle_visits"`. **Me equivoqué.**
 
+La política `raffle_visits_insert_public` (`0027`) exige que el sorteo esté `active`:
+
+```sql
+with check ( ... and r.status = 'active' )
 ```
-[visits] no se pudo registrar: new row violates row-level security policy for table "raffle_visits"
-```
 
-La analítica de visitas no registra nada para el comprador común. Falla silenciosa: no rompe la
-compra, pero las métricas del organizador no están midiendo lo que dicen medir.
+Los 403 los generó Diego, que en A6 abrió el sorteo **después de que se sorteó**. Para un sorteo
+`drawn`, que el insert falle es el comportamiento correcto: es justamente el endurecimiento que
+introdujo `0027` para que un anónimo no pueda inflar contadores.
+
+**Comprobado en la web desplegada:** sobre un sorteo activo, una visita anónima registrada de punta a
+punta, sin un solo error de consola.
+
+| Medición | Antes | Después |
+|---|---|---|
+| Filas en `raffle_visits` (sorteo «amoladora») | 14 | **16** |
+| Errores de consola | — | **ninguno** |
+
+Lo que sí queda como fricción real, aunque menor: el tracker escribe `console.error` en el navegador en
+vez de bajar el tono a `warn` o ignorarlo cuando la política rechaza por estado. Un 403 esperado no
+debería ensuciar la consola de producción.
 
 ### B9 — La grilla deja el número tomado en la selección · **bajo [visto en vivo]**
 

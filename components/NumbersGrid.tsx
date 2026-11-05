@@ -358,6 +358,15 @@ export function NumbersGrid({
   const isTransfer = paymentType === "transferencia";
   const whatsappContact = transferInfo?.whatsapp ?? null;
 
+  /**
+   * Un sorteo sin WhatsApp de contacto no se puede comprar: el comprobante viaja
+   * por ahí y `buildWhatsAppHref` devuelve null. Antes el comprador elegía sus
+   * números y recién al apretar «Reservar» se enteraba. En producción hay
+   * sorteos activos así (creados antes de que el wizard lo exigiera), y el
+   * wizard lo exige desde `superRefine` para los nuevos.
+   */
+  const sinDatosDeCobro = !whatsappContact;
+
   function buildWhatsAppHref(nums: number[], total: number): string | null {
     const raw = whatsappContact;
     if (!raw) return null;
@@ -694,7 +703,9 @@ export function NumbersGrid({
           {userId ? (
             <Button
               onClick={handleReservePrepaid}
-              disabled={selected.size === 0 || reserving || !isActive}
+              disabled={
+                selected.size === 0 || reserving || !isActive || sinDatosDeCobro
+              }
             >
               <MessageCircle className="mr-1.5 h-4 w-4" />
               {reserving ? "Reservando…" : "Reservar y enviar comprobante"}
@@ -751,6 +762,17 @@ export function NumbersGrid({
       )}
 
       <div className="space-y-2">
+        {sinDatosDeCobro && (
+          <p
+            role="status"
+            className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200"
+          >
+            <strong>Este sorteo todavía no se puede comprar.</strong> El
+            organizador no cargó los datos para recibir el pago ni un WhatsApp de
+            contacto, así que no hay forma de reservar ni de enviar el
+            comprobante. Probá más tarde o contactá al organizador.
+          </p>
+        )}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-medium">
             Tocá un número para elegirlo

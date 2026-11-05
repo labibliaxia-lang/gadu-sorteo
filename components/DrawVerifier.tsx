@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -50,58 +50,80 @@ export function DrawVerifier({
     winner: number;
   } | null>(null);
 
-  async function verify() {
-    setBusy(true);
-    setError(null);
-    setChecks(null);
-    setComputed(null);
+  const verificarLista = useCallback(
+    async (texto: string) => {
+      setBusy(true);
+      setError(null);
+      setChecks(null);
+      setComputed(null);
 
-    try {
-      const numbers = parseNumberList(listText);
-      if (numbers.length === 0) {
-        setError("Pegá el listado de números vendidos (separados por coma).");
-        return;
+      try {
+        const numbers = parseNumberList(texto);
+        if (numbers.length === 0) {
+          setError("Pegá el listado de números vendidos (separados por coma).");
+          return;
+        }
+
+        const computedDraw = await computeDrawVerification({
+          raffleId,
+          seed,
+          numbers,
+        });
+
+        setComputed({
+          commitment: computedDraw.commitment,
+          numbersHash: computedDraw.numbersHash,
+          resultHash: computedDraw.resultHash,
+          winner: computedDraw.winner ?? 0,
+        });
+
+        setChecks([
+          {
+            label:
+              "La semilla coincide con el compromiso publicado (existía antes del sorteo)",
+            ok: computedDraw.commitment === commitment,
+          },
+          {
+            label: "El listado coincide con la huella del listado vendido",
+            ok: computedDraw.numbersHash === numbersHash,
+          },
+          {
+            label: "El resultado coincide con la huella del resultado",
+            ok: computedDraw.resultHash === resultHash,
+          },
+          {
+            label: "El ganador calculado coincide con el ganador publicado",
+            ok: computedDraw.winner === winnerNumber,
+          },
+        ]);
+      } catch {
+        setError(
+          "No se pudo calcular el hash en este navegador. Probá desde una conexión segura (https).",
+        );
+      } finally {
+        setBusy(false);
       }
+    },
+    [raffleId, seed, commitment, numbersHash, resultHash, winnerNumber],
+  );
 
-      const computedDraw = await computeDrawVerification({
-        raffleId,
-        seed,
-        numbers,
-      });
+  /**
+   * Se llama «Verificador automático» y hasta ahora no verificaba nada hasta
+   * apretar «Comprobar»: el visitante veía cuatro huellas y ningún resultado,
+   * que es justo lo contrario de lo que la sección promete. Ahora corre solo al
+   * abrir, con el listado oficial ya cargado. El botón queda para reejecutar
+   * después de pegar otro listado.
+   */
+  const yaVerifico = useRef(false);
+  useEffect(() => {
+    if (yaVerifico.current) return;
+    if (soldNumbers.length === 0) return;
+    yaVerifico.current = true;
+    void verificarLista(soldNumbers.join(", "));
+  }, [verificarLista, soldNumbers]);
 
-      setComputed({
-        commitment: computedDraw.commitment,
-        numbersHash: computedDraw.numbersHash,
-        resultHash: computedDraw.resultHash,
-        winner: computedDraw.winner ?? 0,
-      });
-
-      setChecks([
-        {
-          label:
-            "La semilla coincide con el compromiso publicado (existía antes del sorteo)",
-          ok: computedDraw.commitment === commitment,
-        },
-        {
-          label: "El listado coincide con la huella del listado vendido",
-          ok: computedDraw.numbersHash === numbersHash,
-        },
-        {
-          label: "El resultado coincide con la huella del resultado",
-          ok: computedDraw.resultHash === resultHash,
-        },
-        {
-          label: "El ganador calculado coincide con el ganador publicado",
-          ok: computedDraw.winner === winnerNumber,
-        },
-      ]);
-    } catch {
-      setError(
-        "No se pudo calcular el hash en este navegador. Probá desde una conexión segura (https).",
-      );
-    } finally {
-      setBusy(false);
-    }
+  function verify() {
+    void verificarLista(listText);
   }
 
   const allOk = checks?.every((check) => check.ok) ?? false;
