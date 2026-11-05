@@ -62,7 +62,9 @@ const schema = z.object({
   whatsapp_contact: z.string().optional(),
   // 0079: un sorteo puede existir sin figurar en los listados públicos. Se abre
   // igual por enlace, así que sirve para probarlo sin anunciarlo.
-  is_listed: z.boolean(),
+  // El campo se llama por lo que la persona marca («no listar»), no por la
+  // columna: al revés, una casilla tildada terminaba publicando el sorteo.
+  no_listado: z.boolean(),
 }).superRefine((data, ctx) => {
   if (data.min_tickets_required > data.max_numbers) {
     ctx.addIssue({
@@ -143,7 +145,7 @@ export default function NuevoSorteoPage() {
       min_tickets_required: 0,
       if_not_met: "extend_date",
       winners_count: 1,
-      is_listed: true,
+      no_listado: false,
     },
   });
 
@@ -399,7 +401,8 @@ export default function NuevoSorteoPage() {
         transfer_cbu: values.transfer_cbu || null,
         transfer_bank: values.transfer_bank || null,
         whatsapp_contact: values.whatsapp_contact || null,
-      is_listed: values.is_listed ?? true,
+      // La casilla dice «no publicar»; la columna dice lo contrario.
+      is_listed: !values.no_listado,
         min_tickets_required: values.min_tickets_required,
         if_not_met: values.if_not_met,
         winners_count: values.winners_count,
@@ -918,7 +921,7 @@ export default function NuevoSorteoPage() {
                 <input
                   type="checkbox"
                   className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-amber-600"
-                  {...register("is_listed")}
+                  {...register("no_listado")}
                 />
                 <span>
                   <span className="font-medium">
