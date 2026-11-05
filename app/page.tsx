@@ -274,9 +274,8 @@ export default async function HomePage() {
                 Transferencia · comprobante por WhatsApp · resultado con hash
               </p>
 
-              {/* Versión compacta del destacado en móvil: el mismo ticket,
-                  recomprimido. La fecha no puede caer bajo el fold: es el dato
-                  que dispara la urgencia. */}
+              {/* Versión móvil del destacado: tarjeta vertical con la imagen
+                  a todo el ancho y un CTA grande para tocar con el dedo. */}
               {featured && (
                 <Link
                   href={`/sorteos/${featured.id}`}
@@ -290,58 +289,69 @@ export default async function HomePage() {
                         : "Verificable"}
                     </span>
                   </div>
-                  <div className="flex gap-3 p-3 pb-2">
-                    <div className="relative h-[84px] w-[68px] shrink-0 overflow-hidden rounded-lg border border-hairline bg-panel-2">
-                      {featured.cover_image_url ? (
-                        <Image
-                          src={featured.cover_image_url}
-                          alt={featured.title}
-                          fill
-                          sizes="68px"
-                          className="object-cover"
+
+                  {/* Imagen grande, 100% del ancho. */}
+                  <div className="relative aspect-[4/3] w-full overflow-hidden border-b border-hairline bg-panel-2">
+                    {featured.cover_image_url ? (
+                      <Image
+                        src={featured.cover_image_url}
+                        alt={featured.title}
+                        fill
+                        sizes="100vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                      />
+                    ) : (
+                      <div className="flex h-full flex-col items-center justify-center gap-1">
+                        <Gift
+                          className="h-8 w-8 text-fg-subtle"
+                          aria-hidden="true"
                         />
-                      ) : (
-                        <span className="flex h-full items-center justify-center">
-                          <Gift className="h-5 w-5 text-fg-subtle" />
-                        </span>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1 space-y-1.5">
-                      <p className="truncate text-sm font-medium">
+                        <span className="eyebrow">Premio en juego</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Contenido debajo de la imagen. */}
+                  <div className="space-y-3 p-4">
+                    <div className="space-y-1">
+                      <h2 className="font-display text-xl font-semibold tracking-tight">
                         {featured.title}
-                      </p>
-                      <p className="flex items-center gap-1.5 font-mono text-[11px] text-fg-subtle">
+                      </h2>
+                      <p className="flex items-center gap-1.5 font-mono text-[12px] text-fg-subtle">
                         <CalendarDays
-                          className="h-3 w-3 shrink-0"
+                          className="h-3.5 w-3.5 shrink-0"
                           aria-hidden="true"
                         />
                         {formatDateTime(featured.draw_date)}
                       </p>
-                      <p className="font-mono text-[11px] text-fg-subtle">
+                    </div>
+
+                    <div className="flex items-end justify-between gap-2">
+                      <div>
+                        <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-fg-subtle">
+                          Por número
+                        </p>
+                        <p className="font-mono text-xl text-fg">
+                          {formatPrice(Number(featured.price_per_number))}
+                        </p>
+                      </div>
+                      <p className="text-right font-mono text-[11px] leading-tight text-fg-subtle">
                         {featuredStats
                           ? `${featuredStats.sold.toLocaleString("es-AR")} de ${featuredStats.total.toLocaleString("es-AR")} · ${featuredPercent}%`
                           : "Sorteo activo"}
                       </p>
-                      <div className="h-1 overflow-hidden rounded-full bg-hairline-strong">
-                        <div
-                          className="h-full rounded-full bg-brand-500"
-                          style={{ width: `${featuredPercent}%` }}
-                        />
-                      </div>
                     </div>
-                  </div>
-                  <div className="ticket-stub -mx-0 flex items-center justify-between gap-2 px-3 pt-2.5 pb-3">
-                    <span className="flex items-baseline gap-1.5">
-                      <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-fg-subtle">
-                        Por número
-                      </span>
-                      <span className="font-mono text-[13px] text-fg">
-                        {formatPrice(Number(featured.price_per_number))}
-                      </span>
-                    </span>
-                    <span className="flex items-center gap-1 rounded-md border border-hairline bg-panel-1 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-muted transition-colors group-hover:border-brand-500/50 group-hover:text-brand-accent">
-                      Elegir
-                      <ArrowRight className="h-3 w-3" aria-hidden="true" />
+
+                    <div className="h-1 overflow-hidden rounded-full bg-hairline-strong">
+                      <div
+                        className="h-full rounded-full bg-brand-500"
+                        style={{ width: `${featuredPercent}%` }}
+                      />
+                    </div>
+
+                    <span className="flex h-12 w-full items-center justify-center gap-1.5 rounded-lg bg-primary text-[15px] font-medium text-primary-foreground transition-colors group-hover:bg-primary-hover">
+                      Elegir mis números
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
                     </span>
                   </div>
                 </Link>

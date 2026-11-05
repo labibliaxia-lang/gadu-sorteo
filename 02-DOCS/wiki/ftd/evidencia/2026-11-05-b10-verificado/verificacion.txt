@@ -1,0 +1,28 @@
+﻿Verificacion de is_listed (B10)
+===============================
+
+Orden respetado
+  La migracion 0079 se aplico ANTES del deploy. Al reves, la home habria
+  quedado vacia: el codigo nuevo pregunta por una columna que no existia.
+
+Comprobado en la web desplegada
+  sorteo temporal "PRUEBA DESLISTADA" con is_listed = false
+
+  home .......................... no aparece
+  sorteos normales .............. siguen apareciendo (amoladora, navidad, usado)
+  sitemap.xml ................... su id no figura
+  enlace directo /sorteos/<id> .. HTTP 200 y muestra el titulo
+
+  Esa ultima linea es la que define el comportamiento: deslistado no es
+  escondido. Sirve para que el organizador lo pruebe sin publicitarlo.
+
+No ejercitado
+  /ganadores no se probo con un deslistado sorteado. El cambio es el mismo
+  .eq("is_listed", true) en la misma consulta; queda declarado como pendiente
+  en vez de darlo por hecho.
+
+Limpieza
+  11 sorteos, 0 deslistados, 0 sorteos de prueba.
+
+Gates
+  typecheck 0 | lint limpio | 246/246 tests

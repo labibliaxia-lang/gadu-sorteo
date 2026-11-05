@@ -1,0 +1,93 @@
+﻿[
+    {
+        "paso":  "B10-migracion-aplicada",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T09:29:21.0765249-03:00",
+        "nota":  "aplicada por el dueno antes del deploy, para no dejar la home vacia en el medio",
+        "esperado":  "la columna is_listed existe en la base",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "select sobre raffles devuelve is_listed; 11 sorteos, todos listados (default true)",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T09:29:21.0765249-03:00"
+    },
+    {
+        "paso":  "B10-deslistado-oculto",
+        "rol":  "comprador",
+        "inicio":  "2026-11-05T09:29:21.0765249-03:00",
+        "nota":  null,
+        "esperado":  "un sorteo con is_listed=false no aparece en la home",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "sorteo temporal \u0027PRUEBA DESLISTADA\u0027 creado con is_listed=false: ausente del HTML de la home",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T09:29:21.0765249-03:00"
+    },
+    {
+        "paso":  "B10-sin-regresion",
+        "rol":  "comprador",
+        "inicio":  "2026-11-05T09:29:21.0765249-03:00",
+        "nota":  null,
+        "esperado":  "los sorteos normales siguen listados",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "la home sigue mostrando amoladora, navidad y usado",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T09:29:21.0765249-03:00"
+    },
+    {
+        "paso":  "B10-enlace-directo",
+        "rol":  "comprador",
+        "inicio":  "2026-11-05T09:29:21.0765249-03:00",
+        "nota":  "es la diferencia entre deslistar y esconder",
+        "esperado":  "el deslistado sigue abriendose por enlace",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "GET /sorteos/\u003cid\u003e responde 200 con el titulo",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T09:29:21.0765249-03:00"
+    },
+    {
+        "paso":  "B10-sitemap",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T09:29:21.0765249-03:00",
+        "nota":  null,
+        "esperado":  "el deslistado no va al sitemap",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "el id no aparece en sitemap.xml",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T09:29:21.0765249-03:00"
+    },
+    {
+        "paso":  "B10-limpieza",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T09:29:21.0765249-03:00",
+        "nota":  null,
+        "esperado":  "no dejar sorteos de prueba",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "sorteo temporal borrado; 11 sorteos, 0 deslistados, 0 de prueba",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T09:29:21.0765249-03:00"
+    },
+    {
+        "paso":  "B10-ganadores-no-probado",
+        "rol":  "verificador",
+        "inicio":  "2026-11-05T09:29:21.0765249-03:00",
+        "nota":  "el cambio es el mismo .eq aplicado en el mismo lugar; queda declarado",
+        "esperado":  "comprobar el filtro en /ganadores",
+        "evidencia":  [
+
+                      ],
+        "observado":  "no ejercitado: el sorteo temporal no estaba sorteado",
+        "resultado":  "pendiente",
+        "fin":  "2026-11-05T09:29:21.0765249-03:00"
+    }
+]

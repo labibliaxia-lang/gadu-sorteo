@@ -332,12 +332,41 @@ debería ensuciar la consola de producción.
 En B1, el perdedor vio la grilla con el 05 marcado como «Reservado» y su propia selección todavía
 pintada, con el total en `$ 0`. El mensaje es correcto, pero no limpia la selección muerta.
 
-### B10 — No hay forma de ocultar un sorteo · **medio**
+### B10 — No hay forma de ocultar un sorteo · **medio — ✅ arreglado, desplegado y verificado**
 
-`app/page.tsx:152-155` lista todos los sorteos sin filtro y la política es `using (true)`
-(`0041_rls_close.sql:43-45`). No existe `is_listed` ni `is_test`. Cualquier sorteo que se cree —de
-prueba o no— **aparece en la home al instante**. Lo comprobé: los dos sorteos de prueba estuvieron
-visibles mientras duró la corrida.
+`app/page.tsx:152-155` listaba todos los sorteos sin filtro y la política es `using (true)`
+(`0041_rls_close.sql:43-45`). No existía `is_listed` ni `is_test`. Cualquier sorteo que se creara —de
+prueba o no— **aparecía en la home al instante**. Lo comprobé: los dos sorteos de prueba de esta
+simulación estuvieron visibles mientras duró la corrida.
+
+**Arreglo aplicado.** Migración `0079` agrega `raffles.is_listed boolean not null default true`, y los
+tres listados públicos la respetan: home, ganadores y sitemap. El panel del organizador **no** filtra,
+porque tiene que poder operar sus sorteos internos.
+
+Decisiones que importan:
+
+- **Default `true`:** nada cambia para los 11 sorteos existentes.
+- **No es control de acceso:** el deslistado sigue abriéndose por enlace directo. Es justo lo que hace
+  falta para probar un sorteo sin publicitarlo.
+- **Sin guard, a diferencia de `is_featured` (0077):** destacar es herramienta comercial del dueño;
+  deslistar es decisión del organizador sobre su propio sorteo, y la RLS de UPDATE ya lo limita a sus
+  filas.
+
+**Verificado en la web desplegada** con un sorteo temporal `is_listed = false`:
+
+| Comprobación | Resultado |
+|---|---|
+| Home | ✅ no aparece |
+| Sorteos normales | ✅ siguen apareciendo («amoladora», «navidad», «usado») |
+| `sitemap.xml` | ✅ no incluye su id |
+| Enlace directo `/sorteos/<id>` | ✅ HTTP 200, muestra el título |
+| Limpieza | ✅ 11 sorteos, 0 deslistados, 0 de prueba |
+
+**No ejercitado:** el filtro en `/ganadores` (el sorteo temporal no estaba sorteado). Queda declarado
+como pendiente, no como hecho. Evidencia: `evidencia/2026-11-05-b10-verificado/`.
+
+**Orden que hubo que respetar:** la migración se aplicó **antes** del deploy. Al revés, la home habría
+quedado vacía: el código nuevo pregunta por una columna que todavía no existía.
 
 ### B11 — El tope de premios vivía en tres lugares · **bajo — ✅ resuelto**
 
