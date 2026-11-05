@@ -47,7 +47,12 @@ export interface PreferenceResult {
 
 export interface MercadoPagoPaymentResult {
   status?: string;
+  status_detail?: string;
   external_reference?: string | null;
+  /** Importe cobrado, para conciliar contra `payments.amount` (hallazgo #9). */
+  transaction_amount?: number | string | null;
+  /** Moneda del cobro: tiene que ser ARS. */
+  currency_id?: string | null;
 }
 
 export async function createPreference(

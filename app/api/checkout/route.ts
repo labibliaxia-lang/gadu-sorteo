@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPreference } from "@/lib/mercadopago";
-import { computeAmount } from "@/lib/payments";
+import { computeAmount, sameNumberSet } from "@/lib/payments";
 import { limitCheckout, retryAfterSeconds } from "@/lib/ratelimit";
 
 const checkoutSchema = z.object({
@@ -153,64 +153,144 @@ export async function POST(request: NextRequest) {
 
   const reservedNumbers: number[] = (reserved as number[]) ?? [];
 
+  // 3b) El usuario puede reenviar el mismo carrito (doble clic, recarga, vuelta
+  // desde Mercado Pago). El RPC devuelve solo lo que reservó AHORA, así que el
+  // segundo intento no encuentra nada. Antes de responder 409 se busca un pago
+  // pendiente con exactamente los mismos números y se reutiliza: el camino
+  // anterior devolvía las reservas viejas y creaba un segundo pago con los
+  // mismos números (doble cobro, hallazgo #2).
+  let reusedPaymentId: string | null = null;
+  let heldNumbers = reservedNumbers;
+
   if (reservedNumbers.length !== uniqueNumbers.length) {
-    const reservedSet = new Set(reservedNumbers);
-    const unavailable = uniqueNumbers.filter((n) => !reservedSet.has(n));
-    return NextResponse.json(
-      {
-        error: "Algunos números ya no están disponibles.",
-        unavailable,
-      },
-      { status: 409 },
+    const { data: held } = await supabase
+      .from("raffle_numbers")
+      .select("number")
+      .eq("raffle_id", raffleId)
+      .eq("status", "reserved")
+      .eq("reserved_by", user.id)
+      .gt("reserved_until", new Date().toISOString())
+      .in("number", uniqueNumbers);
+
+    const heldSet = new Set(
+      ((held ?? []) as { number: number }[]).map((row) => Number(row.number)),
     );
+    const holdsAll = uniqueNumbers.every((n) => heldSet.has(n));
+
+    // Solo se reutiliza si los números siguen en su mano: un pago viejo cuyos
+    // números ya liberó el cron no debe revivir (sería cobrar sin entregar).
+    if (holdsAll) {
+      const { data: pendings } = await supabase
+        .from("payments")
+        .select("id, numbers")
+        .eq("user_id", user.id)
+        .eq("raffle_id", raffleId)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const match = ((pendings ?? []) as {
+        id: string;
+        numbers: number[] | null;
+      }[]).find((row) => sameNumberSet(row.numbers ?? [], uniqueNumbers));
+
+      if (match) {
+        reusedPaymentId = match.id;
+        heldNumbers = (match.numbers ?? uniqueNumbers).map((n) => Number(n));
+      }
+    }
+
+    if (!reusedPaymentId) {
+      // Reserva parcial sin pago que la respalde: liberarla evita números
+      // huérfanos tomados por un intento que nunca se cobró (hallazgo #11).
+      if (reservedNumbers.length > 0) {
+        await createAdminClient().rpc("release_numbers", {
+          p_raffle_id: raffleId,
+          p_numbers: reservedNumbers,
+          p_user_id: user.id,
+        });
+      }
+
+      const reservedSet = new Set(reservedNumbers);
+      const unavailable = uniqueNumbers.filter((n) => !reservedSet.has(n));
+      return NextResponse.json(
+        {
+          error: "Algunos números ya no están disponibles.",
+          unavailable,
+        },
+        { status: 409 },
+      );
+    }
   }
 
-  // 4) Registro del pago en estado "pending"
-  const amount = computeAmount(reservedNumbers.length, pricePerNumber);
+  // 4) Registro del pago en estado "pending" (nuevo o reutilizado)
+  const amount = computeAmount(heldNumbers.length, pricePerNumber);
 
-  const { data: payment, error: paymentError } = await supabase
-    .from("payments")
-    .insert({
-      user_id: user.id,
-      raffle_id: raffleId,
-      numbers: reservedNumbers,
-      amount,
-      status: "pending",
-    })
-    .select()
-    .single();
+  let paymentId: string;
 
-  if (paymentError || !payment) {
-    // Rollback: liberar lo reservado si no se pudo registrar el pago.
-    await createAdminClient().rpc("release_numbers", {
-      p_raffle_id: raffleId,
-      p_numbers: reservedNumbers,
-      p_user_id: user.id,
-    });
-    return NextResponse.json(
-      { error: "No se pudo registrar el pago" },
-      { status: 500 },
-    );
+  if (reusedPaymentId) {
+    paymentId = reusedPaymentId;
+  } else {
+    const { data: payment, error: paymentError } = await supabase
+      .from("payments")
+      .insert({
+        user_id: user.id,
+        raffle_id: raffleId,
+        numbers: heldNumbers,
+        amount,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+
+    if (paymentError || !payment) {
+      // Rollback: liberar lo reservado si no se pudo registrar el pago.
+      await createAdminClient().rpc("release_numbers", {
+        p_raffle_id: raffleId,
+        p_numbers: heldNumbers,
+        p_user_id: user.id,
+      });
+      return NextResponse.json(
+        { error: "No se pudo registrar el pago" },
+        { status: 500 },
+      );
+    }
+
+    paymentId = payment.id;
   }
 
   // 4b) Modo mock: solo en desarrollo y sin credenciales, aprueba localmente.
   if (mockMode) {
     const admin = createAdminClient();
-    const { error: sellError } = await admin.rpc("sell_numbers", {
-      p_raffle_id: raffleId,
-      p_user_id: user.id,
-      p_numbers: reservedNumbers,
-      p_payment_id: payment.id,
-    });
+    const { data: mockSold, error: sellError } = await admin.rpc(
+      "sell_numbers",
+      {
+        p_raffle_id: raffleId,
+        p_user_id: user.id,
+        p_numbers: heldNumbers,
+        p_payment_id: paymentId,
+      },
+    );
 
-    if (sellError) {
-      console.error("Checkout mock: error vendiendo números", sellError);
+    // Mismo control que el webhook real: si no se vendieron todos, no se marca
+    // el pago como aprobado (el modo mock no debe esconder esa diferencia).
+    const mockDelivered = Number(mockSold ?? 0);
+
+    if (sellError || mockDelivered !== heldNumbers.length) {
+      console.error("Checkout mock: números sin vender", {
+        sellError,
+        esperados: heldNumbers.length,
+        entregados: mockDelivered,
+      });
       await admin.rpc("release_numbers", {
         p_raffle_id: raffleId,
-        p_numbers: reservedNumbers,
+        p_numbers: heldNumbers,
         p_user_id: user.id,
       });
-      await admin.from("payments").delete().eq("id", payment.id);
+      // Un pago reutilizado no se borra: ya existía antes de este intento.
+      if (!reusedPaymentId) {
+        await admin.from("payments").delete().eq("id", paymentId);
+      }
       return NextResponse.json(
         { error: "Error interno procesando la solicitud" },
         { status: 500 },
@@ -220,7 +300,7 @@ export async function POST(request: NextRequest) {
     await admin
       .from("payments")
       .update({ status: "approved", mp_preference_id: "mock" })
-      .eq("id", payment.id);
+      .eq("id", paymentId);
 
     return NextResponse.json({
       mock: true,
@@ -234,15 +314,19 @@ export async function POST(request: NextRequest) {
     console.error(
       "Checkout: NEXT_PUBLIC_URL no configurada; se cancela la creación de la preferencia.",
     );
-    await createAdminClient().rpc("release_numbers", {
-      p_raffle_id: raffleId,
-      p_numbers: reservedNumbers,
-      p_user_id: user.id,
-    });
-    await createAdminClient()
-      .from("payments")
-      .update({ status: "cancelled" })
-      .eq("id", payment.id);
+    // Con un pago reutilizado no se toca nada: sus números y su estado son de
+    // un intento anterior que sigue vivo.
+    if (!reusedPaymentId) {
+      await createAdminClient().rpc("release_numbers", {
+        p_raffle_id: raffleId,
+        p_numbers: heldNumbers,
+        p_user_id: user.id,
+      });
+      await createAdminClient()
+        .from("payments")
+        .update({ status: "cancelled" })
+        .eq("id", paymentId);
+    }
     return NextResponse.json(
       { error: "El cobro no está disponible en este momento." },
       { status: 503 },
@@ -256,13 +340,13 @@ export async function POST(request: NextRequest) {
       items: [
         {
           id: raffle.id,
-          title: `${raffle.title} — ${reservedNumbers.length} número(s)`,
+          title: `${raffle.title} — ${heldNumbers.length} número(s)`,
           quantity: 1,
           unit_price: amount,
           currency_id: "ARS",
         },
       ],
-      externalReference: payment.id,
+      externalReference: paymentId,
       payerEmail: user.email ?? "",
       backUrls: {
         success: `${baseUrl}/pago/exitoso`,
@@ -276,23 +360,26 @@ export async function POST(request: NextRequest) {
     await createAdminClient()
       .from("payments")
       .update({ mp_preference_id: preference.id })
-      .eq("id", payment.id);
+      .eq("id", paymentId);
 
     return NextResponse.json({
       init_point: preference.init_point ?? preference.sandbox_init_point,
     });
   } catch (e) {
     console.error("Error creando preferencia MP:", e);
-    // Liberar reservas si falla la creación de la preferencia.
-    await createAdminClient().rpc("release_numbers", {
-      p_raffle_id: raffleId,
-      p_numbers: reservedNumbers,
-      p_user_id: user.id,
-    });
-    await createAdminClient()
-      .from("payments")
-      .update({ status: "cancelled" })
-      .eq("id", payment.id);
+    // Liberar reservas si falla la creación de la preferencia (solo si este
+    // intento las creó: las de un pago reutilizado no son nuestras).
+    if (!reusedPaymentId) {
+      await createAdminClient().rpc("release_numbers", {
+        p_raffle_id: raffleId,
+        p_numbers: heldNumbers,
+        p_user_id: user.id,
+      });
+      await createAdminClient()
+        .from("payments")
+        .update({ status: "cancelled" })
+        .eq("id", paymentId);
+    }
 
     return NextResponse.json(
       { error: "No se pudo iniciar el pago. Intentá de nuevo." },

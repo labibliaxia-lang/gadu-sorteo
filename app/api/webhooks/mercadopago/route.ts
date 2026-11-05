@@ -4,8 +4,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   getMercadoPagoPayment,
   verifyWebhookSignature,
+  type MercadoPagoPaymentResult,
 } from "@/lib/mercadopago";
 import {
+  amountMatches,
+  isReversalStatus,
   isTerminalPaymentStatus,
   mapMpFailureStatus,
 } from "@/lib/payments";
@@ -106,14 +109,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sin payment id" }, { status: 400 });
   }
 
-  // Consulta el pago a la API de MP (fuente de verdad).
-  let mpPayment: {
-    status?: string;
-    external_reference?: string | null;
-  };
+  // Consulta el pago a la API de MP (fuente de verdad). El tipo compartido
+  // incluye importe y moneda, que hacen falta para conciliar (hallazgo #9).
+  let mpPayment: MercadoPagoPaymentResult;
   try {
-    const res = await getMercadoPagoPayment(paymentId);
-    mpPayment = res as typeof mpPayment;
+    mpPayment = await getMercadoPagoPayment(paymentId);
   } catch (e) {
     console.error("Webhook MP: error consultando pago", e);
     return NextResponse.json(
@@ -143,29 +143,170 @@ export async function POST(request: NextRequest) {
 
   const mpStatus = mpPayment.status ?? "pending";
 
-  // Idempotencia: si ya está en estado terminal, no repetir acciones.
+  // Devolución o contracargo: el dinero vuelve al comprador.
+  const isReversal = isReversalStatus(mpStatus);
+
+  // Idempotencia: si el pago ya está en un estado final no se repite nada. La
+  // única excepción es `approved` con devolución o contracargo, que tiene que
+  // bajar de estado: si no, quien paga con una tarjeta robada se queda con los
+  // números gratis cuando le revierten el cargo.
   if (isTerminalPaymentStatus(payment.status)) {
-    return NextResponse.json({ received: true });
+    if (!(payment.status === "approved" && isReversal)) {
+      return NextResponse.json({ received: true });
+    }
+  }
+
+  // 1) Baja de estado por devolución/contracargo de un pago ya aprobado.
+  if (payment.status === "approved" && isReversal) {
+    await admin
+      .from("payments")
+      .update({ status: mpStatus, mp_payment_id: String(paymentId) })
+      .eq("id", payment.id);
+
+    const { data: raffle } = await admin
+      .from("raffles")
+      .select("status")
+      .eq("id", payment.raffle_id)
+      .maybeSingle();
+
+    // Los números se dan de baja solo si el sorteo sigue vendiendo. Después del
+    // cierre el listado ya está comprometido por los hashes: se deja como está
+    // y el caso queda para revisión manual.
+    if (raffle?.status === "active") {
+      const { data: voided, error: voidError } = await admin.rpc(
+        "void_sold_numbers",
+        {
+          p_raffle_id: payment.raffle_id,
+          p_user_id: payment.user_id,
+          p_numbers: payment.numbers,
+          p_payment_id: payment.id,
+        },
+      );
+
+      if (voidError) {
+        console.error(
+          "Webhook MP: no se pudieron dar de baja los números del contracargo",
+          voidError,
+        );
+      } else {
+        console.warn("Webhook MP: devolución/contracargo procesado", {
+          externalReference,
+          mpPaymentId: paymentId,
+          mpStatus,
+          numerosLiberados: Number(voided ?? 0),
+        });
+      }
+    } else {
+      console.error(
+        "Webhook MP: devolución/contracargo con el sorteo ya cerrado — requiere revisión manual",
+        {
+          externalReference,
+          mpPaymentId: paymentId,
+          mpStatus,
+          estadoSorteo: raffle?.status ?? "desconocido",
+        },
+      );
+    }
+
+    return NextResponse.json({ received: true, reversal: mpStatus });
   }
 
   // null cuando el pago sigue en curso: en ese caso no se tocan los números.
   const failureStatus = mapMpFailureStatus(mpStatus);
 
   if (mpStatus === "approved") {
+    // Antes de entregar: ¿Mercado Pago cobró lo que había que cobrar?
+    //
+    // `transaction_amount` puede venir ausente según cómo responda la API. En
+    // ese caso no se puede conciliar y se sigue: bloquear todo aprobado por un
+    // campo faltante sería peor que el agujero que se cierra acá.
+    const currencyMismatch =
+      typeof mpPayment.currency_id === "string" &&
+      mpPayment.currency_id !== "ARS";
+
+    const cobrado = mpPayment.transaction_amount;
+    const amountMismatch =
+      cobrado !== null &&
+      cobrado !== undefined &&
+      !amountMatches(payment.amount, cobrado);
+
+    if (currencyMismatch || amountMismatch) {
+      console.error(
+        "Webhook MP: importe o moneda no coinciden con el registro — requiere conciliación manual",
+        {
+          externalReference,
+          mpPaymentId: paymentId,
+          esperado: payment.amount,
+          cobrado: cobrado ?? null,
+          moneda: mpPayment.currency_id ?? null,
+        },
+      );
+
+      // Se guarda el id para poder buscarlo y decidir: entregar o reembolsar.
+      await admin
+        .from("payments")
+        .update({ mp_payment_id: String(paymentId) })
+        .eq("id", payment.id);
+
+      return NextResponse.json(
+        { received: true, reconciled: false, reason: "amount_mismatch" },
+        { status: 200 },
+      );
+    }
+
     // Transición atómica reserved -> sold. Es idempotente: si ya se vendieron,
     // el UPDATE no afecta filas (devuelve 0) y no hay doble venta.
-    const { error: sellError } = await admin.rpc("sell_numbers", {
-      p_raffle_id: payment.raffle_id,
-      p_user_id: payment.user_id,
-      p_numbers: payment.numbers,
-      p_payment_id: payment.id,
-    });
+    const { data: soldRows, error: sellError } = await admin.rpc(
+      "sell_numbers",
+      {
+        p_raffle_id: payment.raffle_id,
+        p_user_id: payment.user_id,
+        p_numbers: payment.numbers,
+        p_payment_id: payment.id,
+      },
+    );
 
     if (sellError) {
       console.error("Webhook MP: error al vender números", sellError);
       return NextResponse.json(
         { error: "Error interno procesando la solicitud" },
         { status: 500 },
+      );
+    }
+
+    // El cobro puede confirmarse DESPUÉS de que el cron libere la reserva (10
+    // minutos) o de que el número se venda a otra persona. Si se ignora el
+    // conteo, el pago queda "approved" sin un solo número entregado y nadie se
+    // entera: plata cobrada, premio inexistente.
+    const expected = Array.isArray(payment.numbers) ? payment.numbers.length : 0;
+    const delivered = Number(soldRows ?? 0);
+
+    if (delivered !== expected) {
+      console.error(
+        "Webhook MP: pago aprobado sin números entregados — requiere conciliación manual",
+        {
+          externalReference,
+          mpPaymentId: paymentId,
+          esperados: expected,
+          entregados: delivered,
+        },
+      );
+
+      // Se guarda el id de Mercado Pago para poder buscarlo y reembolsar. El
+      // estado queda en `pending` a propósito: significa «cobrado, sin
+      // entregar» y tiene que verlo una persona.
+      await admin
+        .from("payments")
+        .update({ mp_payment_id: String(paymentId) })
+        .eq("id", payment.id);
+
+      return NextResponse.json(
+        {
+          received: true,
+          reconciled: false,
+          reason: "payment_without_numbers",
+        },
+        { status: 200 },
       );
     }
 

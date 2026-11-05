@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { parseLandingContent } from "@/lib/landing";
+import { collectSoldNumbers } from "@/lib/raffle-numbers";
 import { sortFeaturedFirst } from "@/lib/featured";
 import { averageRating, formatRating } from "@/lib/reviews";
 import type { PublicQuestion } from "@/lib/questions";
@@ -208,19 +209,22 @@ export default async function RafflePage({
   );
 
   // Listado vendido para el verificador: es público por RLS (solo números).
-  const { data: soldNumbersData } =
+  // Paginado: un `select` sin paginar devuelve como máximo `max_rows` (1000) y
+  // el verificador recalcularía el hash con una lista incompleta.
+  const soldNumbers =
     raffle.status === "drawn" && raffle.draw_seed
-      ? await supabase
-          .from("raffle_numbers")
-          .select("number")
-          .eq("raffle_id", raffle.id)
-          .eq("status", "sold")
-          .order("number", { ascending: true })
-      : { data: null };
+      ? await collectSoldNumbers(async (from, to) => {
+          const { data, error } = await supabase
+            .from("raffle_numbers")
+            .select("number")
+            .eq("raffle_id", raffle.id)
+            .eq("status", "sold")
+            .order("number", { ascending: true })
+            .range(from, to);
 
-  const soldNumbers = ((soldNumbersData ?? []) as { number: number }[]).map(
-    (row) => row.number,
-  );
+          return { data: (data as { number: number }[] | null) ?? null, error };
+        })
+      : [];
 
   const landingBlocks = parseLandingContent(raffle.landing_content);
 

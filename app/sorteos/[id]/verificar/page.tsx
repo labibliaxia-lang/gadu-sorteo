@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { MultiPrizeVerifier } from "@/components/MultiPrizeVerifier";
 import { WinnerCertificate } from "@/components/WinnerCertificate";
+import { collectSoldNumbers } from "@/lib/raffle-numbers";
 import { formatDateTime } from "@/lib/utils";
 import type { Raffle, RaffleWinner } from "@/lib/types";
 
@@ -54,17 +55,20 @@ export default async function VerifyPage({
 
   if (!raffle) notFound();
 
-  const { data: soldData } = await supabase
-    .from("raffle_numbers")
-    .select("number")
-    .eq("raffle_id", params.id)
-    .eq("status", "sold")
-    .order("number")
-    .limit(5000);
+  // Listado completo: PostgREST corta en 1000 filas por respuesta, así que se
+  // pagina. Con la lista truncada el verificador recalcula el hash con menos
+  // números y acusa un fraude que no existe.
+  const soldNumbers = await collectSoldNumbers(async (from, to) => {
+    const { data, error } = await supabase
+      .from("raffle_numbers")
+      .select("number")
+      .eq("raffle_id", params.id)
+      .eq("status", "sold")
+      .order("number", { ascending: true })
+      .range(from, to);
 
-  const soldNumbers = ((soldData ?? []) as { number: number }[]).map(
-    (row) => row.number,
-  );
+    return { data: (data as { number: number }[] | null) ?? null, error };
+  });
 
   const { data: winnerRows } =
     raffle.status === "drawn"
