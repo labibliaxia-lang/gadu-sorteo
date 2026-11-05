@@ -95,3 +95,20 @@ queda listo para cualquier alta por email/contraseña que se agregue después.
 
 Aplicar 0050 y probar: cuenta existente, cuenta nueva con Google tildando el checkbox, y una cuenta
 Google sin aceptación que debe quedar bloqueada por el modal.
+
+## Enmienda 2026-11-05 — el consentimiento se pide una vez
+
+**Motivo.** El checklist se mostraba en **cada** inicio de sesión, para todos los usuarios —jugadores
+y organizadores—. La evidencia legal ya estaba completa en `profiles` (fecha y versión), así que
+repetirlo no agregaba nada y ponía fricción en el paso inmediatamente anterior a la compra.
+
+**Cambio.** La cookie `gadu_terms_accepted` pasa a guardar la **versión aceptada** (antes era el flag
+`1`) y dura **un año**. `/login` y `/register` la leen y le pasan `termsAcceptedByCookie` a
+`LoginForm`: si cubre la versión vigente, el checklist no se dibuja y el botón arranca habilitado.
+`acceptTerms` y el callback de OAuth escriben la cookie larga.
+
+**Qué NO cambia.** Cuenta nueva o navegador limpio siguen viendo el checkbox antes de crear la
+cuenta; si se sube `TERMS_VERSION`, todos vuelven a aceptar; el modal de `TermsGate` sigue siendo la
+red para cuentas OAuth sin aceptación registrada.
+
+**Evidencia.** `lib/terms.test.ts` (4 casos, incluido el formato viejo `1`), gates verdes.

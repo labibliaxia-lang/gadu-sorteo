@@ -1,7 +1,9 @@
 import Image from "next/image";
+import { cookies } from "next/headers";
 
 import { LoginForm } from "@/components/LoginForm";
 import { PASSKEYS_ENABLED } from "@/lib/flags";
+import { TERMS_COOKIE, termsCookieAccepted } from "@/lib/terms";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +57,12 @@ export default function LoginPage({
         )}
 
         <div className="mt-6">
-          <LoginForm next={searchParams.next ?? null} />
+          <LoginForm
+            next={searchParams.next ?? null}
+            termsAcceptedByCookie={termsCookieAccepted(
+              cookies().get(TERMS_COOKIE)?.value,
+            )}
+          />
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">

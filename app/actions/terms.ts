@@ -1,9 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
-import { TERMS_VERSION, termsVersionSchema } from "@/lib/terms";
+import {
+  TERMS_COOKIE,
+  TERMS_COOKIE_MAX_AGE_SECONDS,
+  TERMS_VERSION,
+  termsVersionSchema,
+} from "@/lib/terms";
 
 export type AcceptTermsResult =
   | { ok: true }
@@ -37,6 +43,14 @@ export async function acceptTerms(
     .eq("id", user.id);
 
   if (error) return { ok: false, error: error.message };
+
+  // El consentimiento queda recordado en el navegador por un año: el login no
+  // vuelve a pedir el checkbox mientras la versión vigente no cambie.
+  cookies().set(TERMS_COOKIE, parsed.data, {
+    path: "/",
+    maxAge: TERMS_COOKIE_MAX_AGE_SECONDS,
+    sameSite: "lax",
+  });
 
   revalidatePath("/", "layout");
   return { ok: true };

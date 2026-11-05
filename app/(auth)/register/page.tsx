@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import { LoginForm } from "@/components/LoginForm";
+import { TERMS_COOKIE, termsCookieAccepted } from "@/lib/terms";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +30,12 @@ export default function RegisterPage() {
         </p>
 
         <div className="mt-6 text-left">
-          <LoginForm next={null} />
+          <LoginForm
+            next={null}
+            termsAcceptedByCookie={termsCookieAccepted(
+              cookies().get(TERMS_COOKIE)?.value,
+            )}
+          />
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">

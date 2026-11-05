@@ -5,7 +5,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { checkLoginRateLimit } from "@/app/(auth)/login/actions";
 import { Button } from "@/components/ui/button";
-import { TERMS_COOKIE } from "@/lib/terms";
+import { TERMS_COOKIE, TERMS_VERSION } from "@/lib/terms";
 
 /** Cookie corta para volver al sorteo después del login con Google. */
 const NEXT_COOKIE = "gadu_next";
@@ -48,8 +48,11 @@ export function GoogleAuthButton({
       document.cookie = `${NEXT_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
     }
 
-    // Evidencia de que tildó el checkbox; el callback la guarda en el perfil.
-    document.cookie = `${TERMS_COOKIE}=1; Path=/; Max-Age=600; SameSite=Lax`;
+    // Evidencia de que tildó el checkbox; el callback la guarda en el perfil y
+    // deja la cookie de un año para no volver a pedirlo mientras no cambie la versión.
+    document.cookie = `${TERMS_COOKIE}=${encodeURIComponent(
+      TERMS_VERSION,
+    )}; Path=/; Max-Age=600; SameSite=Lax`;
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",

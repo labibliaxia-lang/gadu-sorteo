@@ -269,3 +269,9 @@ Repro      — Paso 3 → «Continuar» (deja el foco en ese botón) → click e
 Cause      — React reutiliza el mismo nodo <Button> al pasar de «Continuar» (type=button) a «Crear sorteo» (type=submit) y conserva el foco. El Enter que confirma el diálogo de archivo activa el submit: el alta corre mientras la subida sigue en vuelo. Evidencia: sorteo creado 17:44:44 UTC, objeto en storage 17:44:47 (3,6 s después), portada null; y el intento 17:43:54 se creó sin subida.
 Fix        — `blur()` del botón al cambiar de paso y antes de abrir el diálogo; submit bloqueado y deshabilitado mientras `uploading`; aviso «Click para cambiar la imagen» cuando ya hay portada.
 Why missed — el alta se probó sin una subida en curso; el botón de submit seguía activo durante los segundos de upload.
+
+## 2026-11-05 — Los Términos se aceptan una vez por versión, no en cada login  (feature: terminos-aceptacion)
+Decision   — el consentimiento se registra en `profiles` (fecha + versión) y se recuerda en una cookie de un año (`gadu_terms_accepted` = versión vigente). El checklist del login solo se muestra cuando no hay cookie o quedó vieja.
+Why        — pedirlo en cada autenticación no agrega evidencia legal (la fila del perfil ya la tiene) y pone fricción en el paso inmediatamente anterior a la compra, para el 100% de los usuarios.
+Trade-off  — un navegador limpio o un cambio de `TERMS_VERSION` vuelven a pedir el checkbox; el modal `TermsGate` sigue siendo la red para cuentas OAuth sin aceptación registrada.
+Evidence   — `lib/terms.ts` (`termsCookieAccepted`) + `lib/terms.test.ts`; `LoginForm`, `GoogleAuthButton`, `app/auth/callback/route.ts` y `app/actions/terms.ts`. Gates: typecheck 0, lint 0 warnings, tests y build verdes.

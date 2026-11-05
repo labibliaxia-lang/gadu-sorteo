@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
-import { TERMS_COOKIE, TERMS_VERSION } from "@/lib/terms";
+import {
+  TERMS_COOKIE,
+  TERMS_COOKIE_MAX_AGE_SECONDS,
+  TERMS_VERSION,
+  termsCookieAccepted,
+} from "@/lib/terms";
 
 /**
  * Callback de OAuth.
@@ -36,9 +41,11 @@ export async function GET(request: NextRequest) {
 
     if (!error) {
       // Evidencia legal: si tildó el checkbox antes de ir a Google, se guarda
-      // la fecha y versión en el perfil. Si no, queda null y TermsGate lo
-      // bloquea hasta que acepte.
-      const termsAccepted = request.cookies.get(TERMS_COOKIE)?.value === "1";
+      // la fecha y versión en el perfil y queda la cookie de un año. Si no,
+      // el perfil sigue sin aceptación y TermsGate lo bloquea hasta que acepte.
+      const termsAccepted = termsCookieAccepted(
+        request.cookies.get(TERMS_COOKIE)?.value,
+      );
 
       if (termsAccepted) {
         const {
@@ -65,9 +72,19 @@ export async function GET(request: NextRequest) {
       }
 
       const response = NextResponse.redirect(destination);
-      // Las cookies de retorno y consentimiento son de un solo uso.
+      // La cookie de retorno es de un solo uso.
       response.cookies.set("gadu_next", "", { path: "/", maxAge: 0 });
-      response.cookies.set(TERMS_COOKIE, "", { path: "/", maxAge: 0 });
+      if (termsAccepted) {
+        // Consentimiento recordado: mientras no cambie la versión, el login no
+        // vuelve a pedir el checkbox.
+        response.cookies.set(TERMS_COOKIE, TERMS_VERSION, {
+          path: "/",
+          maxAge: TERMS_COOKIE_MAX_AGE_SECONDS,
+          sameSite: "lax",
+        });
+      } else {
+        response.cookies.set(TERMS_COOKIE, "", { path: "/", maxAge: 0 });
+      }
       return response;
     }
   }
