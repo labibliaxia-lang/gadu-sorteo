@@ -101,7 +101,7 @@ Dos notas de esa misma tabla: el `qual = NULL` de la política de INSERT es norm
 | 9 | `webhook:154` | Nunca compara `transaction_amount`/`currency_id` con `payments.amount`. |
 | 10 | `webhook:103` + `lib/mercadopago.ts:107` | El `data.id` del cuerpo tiene prioridad sobre el firmado y no está firmado; sin tolerancia de timestamp la firma es reutilizable. Sin ganancia real para un atacante (Mercado Pago es la fuente de verdad), pero es superficie de más. |
 | 11 | `checkout/route.ts:156-166` | Reserva parcial devuelve 409 **sin liberar** los números reservados ni borrar el pago. |
-| 12 | `0001:201` vs `0037:97-103` | `reserve_numbers` no valida `is_banned` ni el tope de 20/h que sí tiene `reserve_numbers_prepaid`. |
+| 12 | `0001:201` vs `0037:97-103` | `reserve_numbers` no valida `is_banned` ni el tope de 20/h que sí tiene `reserve_numbers_prepaid`. **Corregido en `0076`** (alinea suspensión, tope 20/h, máximo 100 números y rango 1..10000). |
 | 13 | `0063:167` | La devolución se calcula con el precio vigente al cancelar, no con lo cobrado en `payments.amount`. |
 | 15 | `0030:183` | El organizador ve la fila **completa** del comprador (email, teléfono, DNI, dirección). Corregido en `0073`: ahora lee la vista `raffle_buyers`, que expone nombre y teléfono. |
 | 16 | `0065:147-149` | `SELECT` público de `raffle_numbers` expone `reserved_by`/`sold_to` (UUID de usuarios). |

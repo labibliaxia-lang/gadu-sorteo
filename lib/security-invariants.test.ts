@@ -75,6 +75,14 @@ describe("blindaje: reserva y dinero", () => {
     expect(cuerpo).toMatch(/reserved_until\s*<\s*now\(\)/i);
   });
 
+  it("reserve_numbers valida suspendidos y tope por hora (hallazgo #12)", () => {
+    const cuerpo = lastDefinition("reserve_numbers");
+
+    expect(cuerpo).toMatch(/is_banned/i);
+    expect(cuerpo).toMatch(/check_rate_limit/i);
+    expect(cuerpo).toMatch(/100/);
+  });
+
   it("release_expired_reservations respeta un pago en curso (hallazgo #3)", () => {
     const cuerpo = lastDefinition("release_expired_reservations");
 

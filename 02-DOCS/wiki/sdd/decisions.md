@@ -282,3 +282,9 @@ Guard      — mientras el sorteo está `active`, cambiar `draw_date` aborta (00
 Why        — un contador que se reinicia entrena a los compradores a ignorarlo. La urgencia solo vale si la fecha es una promesa.
 Behaviour  — al llegar a cero muestra «Fecha alcanzada · sorteo pendiente» en vez de negativos o reinicio (el sorteo manual puede demorarse).
 Evidence   — `lib/countdown.ts` + 12 tests; `RaffleCountdown`; contrato en `security-invariants.test.ts`; `verificar_0075.sql`.
+
+## 2026-11-05 — reserve_numbers usa los mismos frenos que el prepago  (feature: auditoria-seguridad)
+Decision   — `reserve_numbers` (camino Mercado Pago) pasa a validar cuenta suspendida, tope de 20 reservas por hora, máximo 100 números por compra y rango 1..10000. La clave del limitador es la misma que usa `reserve_numbers_prepaid` (`reserve:<uid>`), así que los dos caminos comparten el presupuesto.
+Why        — el ban de Auth no invalida un access token ya emitido por hasta una hora: un suspendido podía seguir barriendo números. Y sin tope, una sola cuenta podía inmovilizar el inventario en bucle hasta que venciera cada TTL.
+Qué no cambia — la firma, los permisos, el patrón CTE + `returning` que mata el doble cobro (0069) y la liberación de reservas propias vencidas.
+Evidence   — `supabase/migrations/0076_reserve_numbers_same_guards.sql` (escrita, sin aplicar), `verificar_0076.sql` y el contrato en `security-invariants.test.ts`.
