@@ -20,11 +20,19 @@ export function formatPrice(value: number): string {
   }).format(value);
 }
 
-/** Formatea una fecha legible en es-AR. */
+/**
+ * Zona del producto. Tiene que estar fija: si se formatea con la zona de quien
+ * ejecuta, el servidor (UTC en Vercel) y el navegador (Argentina) producen
+ * textos distintos y React lo marca como desajuste de hidratación (#425).
+ */
+const AR_TZ = "America/Argentina/Buenos_Aires";
+
+/** Formatea una fecha legible en es-AR, siempre en hora argentina. */
 export function formatDateTime(value: string | Date): string {
   return new Intl.DateTimeFormat("es-AR", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: AR_TZ,
   }).format(new Date(value));
 }
 
