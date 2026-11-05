@@ -32,7 +32,8 @@ Mercado Pago (Checkout Pro), panel de administración y sorteo de ganador.
 3. El webhook de MP **verifica la firma HMAC**, consulta el pago a la API de MP
    y, si está `approved`, llama a `sell_numbers` (solo `service_role`) para pasar
    `reserved → sold` de forma atómica e idempotente.
-4. Si no se paga, el cron (cada 5 min) libera las reservas expiradas.
+4. Si no se paga, las reservas expiradas se liberan: al abrir la página del sorteo (gate de un
+   minuto) y por el cron diario. Ver «Configurar el cron» para el porqué de la frecuencia.
 
 > ⚠️ Los números **nunca** pasan a `sold` desde el cliente: no existe política de
 > `UPDATE` en `raffle_numbers` y `sell_numbers` solo lo ejecuta `service_role`.
@@ -336,15 +337,27 @@ console.log('body:', body);
 
 ### Configurar el cron
 
-`vercel.json` ya define el cron:
+`vercel.json` define hoy **un cron diario**:
 
 ```json
-{ "crons": [{ "path": "/api/cron/release-reservations", "schedule": "*/5 * * * *" }] }
+{ "crons": [{ "path": "/api/cron/release-reservations", "schedule": "0 0 * * *" }] }
 ```
 
-- El cron llama a `GET /api/cron/release-reservations`.
+**Por qué diario y no cada 5 minutos.** Vercel Hobby sólo permite cron diario. La reserva dura 48 h y
+el producto necesita liberar los vencidos en minutos, no en un día, así que hay dos caminos:
+
+1. **Sin plan pago (lo que corre hoy):** la página pública del sorteo libera los vencidos al abrirse,
+   con gate de un minuto por instancia (`lib/release-expired.ts`). Basta para que un número trabado
+   vuelva a estar disponible en minutos.
+2. **Plan pago o scheduler externo:** cambiar el `schedule` a `"*/5 * * * *"` (Vercel Pro), o dejar el
+   diario y apuntar un cron externo (cron-job.org, GitHub Actions) a
+   `GET /api/cron/release-reservations`.
+
+- El endpoint es `GET /api/cron/release-reservations` (también acepta `POST`).
 - Configurá `CRON_SECRET` en Vercel. Vercel envía automáticamente
-  `Authorization: Bearer <CRON_SECRET>` en cada ejecución del cron.
+  `Authorization: Bearer <CRON_SECRET>` en cada ejecución.
+- **Sin `CRON_SECRET` el endpoint responde 500, no 401**, y lo dice en el log: sin la variable no libera
+  nada, y un 401 hacía parecer un intento de acceso no autorizado en vez de configuración faltante.
 - Para probar manualmente:
   `curl -H "Authorization: Bearer TU_CRON_SECRET" "https://tu-app.vercel.app/api/cron/release-reservations"`.
   El secreto ya no se acepta por query string.

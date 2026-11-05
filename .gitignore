@@ -84,3 +84,9 @@ supabase/.temp/
 
 # Log de diagnostico del helper de credenciales (local)
 gcm-diagnose.log
+# Simulador: dependencias y secretos de laboratorio
+01-TOOLS/SIMULADOR/node_modules/
+01-TOOLS/SIMULADOR/*.png
+.mfa-secrets.json
+.sim-password.tmp
+.env.prod-sim.local

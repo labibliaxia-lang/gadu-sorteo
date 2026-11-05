@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PremiumGate } from "@/components/admin/PremiumGate";
 import { getPlanContext } from "@/lib/plans";
+import { datosPersonalesCompletos } from "@/lib/kyc";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 
 const schema = z.object({
@@ -163,7 +164,7 @@ export default function NuevoSorteoPage() {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "verification_status, plan, role, full_name, phone, location, dni_number",
+          "verification_status, plan, role, full_name, phone, location, dni_number, dni_address, address_line, city, province, postal_code",
         )
         .eq("id", user.id)
         .single();
@@ -180,14 +181,10 @@ export default function NuevoSorteoPage() {
         const ctx = getPlanContext({ plan: userPlan, role: userRole });
 
         setVerificationStatus(data?.verification_status ?? "pending");
-        setKycDataComplete(
-          Boolean(
-            data?.full_name?.trim() &&
-              data?.phone?.trim() &&
-              data?.location?.trim() &&
-              data?.dni_number?.trim(),
-          ),
-        );
+        // Misma regla que el trigger `enforce_organizer_kyc` (0060). Antes acá
+        // se pedían 4 campos y la base 9: el organizador completaba los tres
+        // pasos y recibía «KYC incompleto» recién al crear.
+        setKycDataComplete(Boolean(data) && datosPersonalesCompletos(data));
         setPlan(userPlan);
         setRole(userRole);
         setActiveRafflesCount(count ?? 0);
@@ -214,6 +211,9 @@ export default function NuevoSorteoPage() {
   const numbersLimit = planContext.isSuperadmin
     ? 10000
     : planContext.limits.maxNumbersPerRaffle;
+  const prizesLimit = planContext.isSuperadmin
+    ? 30
+    : planContext.limits.maxPrizesPerRaffle;
   const canUseMercadoPago = planContext.limits.paymentMethods.includes(
     "mercadopago",
   );
@@ -320,6 +320,16 @@ export default function NuevoSorteoPage() {
       if (values.max_numbers > numbersLimit) {
         setError(
           `Tu plan ${planContext.limits.label} permite hasta ${numbersLimit} números por sorteo.`,
+        );
+        setLoading(false);
+        return;
+      }
+      // El esquema acepta hasta 30 premios, pero la base limita por plan
+      // (`enforce_raffle_rules`, 0059:33-52). Sin este chequeo el organizador
+      // completaba el wizard y la base le rechazaba el alta al final.
+      if (values.winners_count > prizesLimit) {
+        setError(
+          `Tu plan ${planContext.limits.label} permite hasta ${prizesLimit} premio(s) por sorteo.`,
         );
         setLoading(false);
         return;
@@ -664,16 +674,13 @@ export default function NuevoSorteoPage() {
                     id="winners_count"
                     type="number"
                     min={1}
-                    max={
-                      planContext.isPremium || planContext.isSuperadmin ? 30 : 3
-                    }
+                    max={prizesLimit}
                     step={1}
                     {...register("winners_count")}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Tu plan permite hasta{" "}
-                    {planContext.isPremium || planContext.isSuperadmin ? 30 : 3}{" "}
-                    premios.
+                    Tu plan permite hasta {prizesLimit}{" "}
+                    {prizesLimit === 1 ? "premio" : "premios"}.
                   </p>
                   {errors.winners_count && (
                     <p className="text-sm text-destructive">

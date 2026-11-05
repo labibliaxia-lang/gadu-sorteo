@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireAdminSession, requireSuperadminSession } from "@/lib/auth";
+import { datosPersonalesFaltantes } from "@/lib/kyc";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -113,19 +114,15 @@ function profileErrorMessage(message: string): string {
   return message;
 }
 
-/** Devuelve la lista de datos personales que faltan cargar. */
+/**
+ * Devuelve la lista de datos personales que faltan cargar.
+ *
+ * La regla vive en `lib/kyc.ts` para que el wizard de creación de sorteos use
+ * exactamente la misma: si acá se exige más que ahí, el organizador completa
+ * todo y la base le rechaza el alta al final.
+ */
 function missingPersonalData(profile: ProfileKycData): string[] {
-  const missing: string[] = [];
-  if (!profile.full_name?.trim()) missing.push("nombre completo");
-  if (!profile.phone?.trim()) missing.push("teléfono");
-  if (!profile.location?.trim()) missing.push("ubicación");
-  if (!profile.dni_number?.trim()) missing.push("número de DNI");
-  if (!profile.dni_address?.trim()) missing.push("dirección del DNI");
-  if (!profile.address_line?.trim()) missing.push("dirección de entrega");
-  if (!profile.city?.trim()) missing.push("ciudad");
-  if (!profile.province?.trim()) missing.push("provincia");
-  if (!profile.postal_code?.trim()) missing.push("código postal");
-  return missing;
+  return datosPersonalesFaltantes(profile);
 }
 
 /** Devuelve las imágenes del KYC que faltan según el perfil. */

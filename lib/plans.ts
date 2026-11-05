@@ -16,6 +16,15 @@ export interface PlanLimits {
   maxActiveRaffles: number;
   /** Tope de números por sorteo. */
   maxNumbersPerRaffle: number;
+  /**
+   * Tope de premios por sorteo.
+   *
+   * La base lo impone en `enforce_raffle_rules` (0059:33-52): organizador 3,
+   * premium 30, superadmin 30. Si acá dijera otra cosa, el organizador podría
+   * configurar 10 premios, completar el wizard y que la base le rechace el alta
+   * al final.
+   */
+  maxPrizesPerRaffle: number;
   /** Panel de analíticas avanzadas. */
   analytics: boolean;
   /** Funciones exclusivas premium (marketing, branding, etc.). */
@@ -31,6 +40,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     description: "Plan base para publicar tus primeros sorteos.",
     maxActiveRaffles: 2,
     maxNumbersPerRaffle: 100,
+    maxPrizesPerRaffle: 3,
     analytics: false,
     exclusiveFeatures: false,
     paymentMethods: ["transferencia"],
@@ -42,6 +52,7 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
       "Límites ampliados, analíticas y todas las herramientas de crecimiento.",
     maxActiveRaffles: 20,
     maxNumbersPerRaffle: 10_000,
+    maxPrizesPerRaffle: 30,
     analytics: true,
     exclusiveFeatures: true,
     paymentMethods: ["transferencia", "mercadopago"],
@@ -123,6 +134,17 @@ export function canUseNumbers(
     numbers >= 10 &&
     numbers <= context.limits.maxNumbersPerRaffle
   );
+}
+
+/**
+ * ¿Puede configurar esta cantidad de premios?
+ *
+ * Espeja `enforce_raffle_rules` (0059): 1..30 siempre, y además el tope del plan
+ * (organizador 3, premium 30). El superadmin no tiene tope distinto de 30.
+ */
+export function canUsePrizes(context: PlanContext, prizes: number): boolean {
+  if (!Number.isInteger(prizes) || prizes < 1 || prizes > 30) return false;
+  return context.isSuperadmin || prizes <= context.limits.maxPrizesPerRaffle;
 }
 
 /** ¿Tiene habilitadas las analíticas avanzadas? (superadmin siempre). */

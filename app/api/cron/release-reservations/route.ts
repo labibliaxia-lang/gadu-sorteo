@@ -1,22 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { processAutoDraws, processManualDrawReminders } from "@/lib/auto-draw";
+import { evaluarCronAuth } from "@/lib/cron-auth";
 import { sendPlanReminderEmails } from "@/lib/plan-reminders";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Libera reservas expiradas. Lo invoca Vercel Cron cada 5 minutos.
- * Protegido con CRON_SECRET (Vercel envía el header Authorization).
+ * Libera reservas expiradas. Lo invoca Vercel Cron cada 5 minutos
+ * (`vercel.json`), protegido con CRON_SECRET.
+ *
+ * Si falta `CRON_SECRET` responde **500**, no 401: mientras la variable no esté,
+ * este cron no libera nada, y un 401 haría parecer que alguien está golpeando la
+ * puerta en vez de que falta configuración.
  */
 async function handle(request: NextRequest) {
   const authHeader = request.headers.get("authorization") ?? "";
-  const cronSecret = process.env.CRON_SECRET;
 
-  const authorized =
-    !!cronSecret && authHeader === `Bearer ${cronSecret}`;
+  const auth = evaluarCronAuth(process.env.CRON_SECRET, authHeader);
 
-  if (!authorized) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  if (!auth.ok) {
+    if (auth.status === 500) {
+      console.error(`Cron: ${auth.detalle}`);
+    }
+    return NextResponse.json(
+      { error: auth.error, detalle: auth.detalle },
+      { status: auth.status },
+    );
   }
 
   const admin = createAdminClient();

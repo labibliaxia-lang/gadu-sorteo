@@ -14,6 +14,8 @@ import {
 } from "@/lib/jump-number";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DeliveryAddressForm } from "@/components/DeliveryAddressForm";
+import { direccionEntregaCompleta } from "@/lib/direccion";
 import { notifyReservation } from "@/app/sorteos/actions";
 import type { RaffleNumber } from "@/lib/types";
 import { useFocusTrap } from "@/lib/use-focus-trap";
@@ -124,6 +126,11 @@ export function NumbersGrid({
   const [loginRequired, setLoginRequired] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [reserving, setReserving] = useState(false);
+  // Dirección de entrega: null = todavía no consulté, true/false = resultado.
+  // Se usa un ref y no un estado porque el valor se lee dentro del handler de
+  // reserva, que corre antes de que un setState se propague.
+  const direccionOk = useRef<boolean | null>(null);
+  const [pideDireccion, setPideDireccion] = useState(false);
   const [jumpValue, setJumpValue] = useState("");
   // Número que la grilla acaba de ubicar: se resalta unos segundos para que el
   // comprador lo vea aunque la página haya cambiado. `seq` fuerza el efecto
@@ -219,7 +226,30 @@ export function NumbersGrid({
     return () => sub.subscription.unsubscribe();
   }, [supabase]);
 
-  // 2b) Countdown visual de 10 minutos para la selección (solo frontend).
+  // 2b) Dirección de entrega: se consulta una vez por sesión y se usa como
+  // portón al reservar (no al entrar). `null` = todavía no sé, y en ese caso no
+  // frenamos la compra: el dato se puede pedir igual desde /perfil.
+  useEffect(() => {
+    if (!userId) {
+      direccionOk.current = null;
+      return;
+    }
+    let cancelado = false;
+    supabase
+      .from("profiles")
+      .select("phone,address_line,city,province,postal_code,country")
+      .eq("id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelado) return;
+        direccionOk.current = direccionEntregaCompleta(data);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [supabase, userId]);
+
+  // 2c) Countdown visual de 10 minutos para la selección (solo frontend).
   useEffect(() => {
     if (selected.size > 0) {
       if (deadline === null) {
@@ -364,6 +394,15 @@ export function NumbersGrid({
       setError(
         "El organizador todavía no cargó un WhatsApp de contacto. Probá más tarde.",
       );
+      return;
+    }
+
+    // Sin dirección no se reserva: si el número gana, no habría a dónde mandar
+    // el premio. Se pide acá, con los números ya elegidos, y no al entrar al
+    // sorteo. Si la consulta falló (null) no frenamos: el dato se puede
+    // completar después desde /perfil y no vale la pena perder una venta.
+    if (direccionOk.current === false) {
+      setPideDireccion(true);
       return;
     }
 
@@ -1083,6 +1122,43 @@ export function NumbersGrid({
               onClick={() => setSummary(null)}
             >
               Cerrar
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* La dirección se pide acá, al reservar, y no al entrar al sorteo: pedirla
+          antes frena la compra de alguien que todavía no eligió. */}
+      {pideDireccion && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/70 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="direccion-reserva-title"
+        >
+          <div className="w-full max-w-lg rounded-2xl border bg-card p-6 shadow-2xl">
+            <h2 id="direccion-reserva-title" className="text-lg font-semibold">
+              ¿A dónde te mandamos el premio?
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Necesitamos una dirección antes de reservar. Es privada: no se
+              muestra en tu perfil público. Después de guardarla seguimos con la
+              reserva de tus números.
+            </p>
+            <DeliveryAddressForm
+              submitLabel="Guardar y reservar"
+              onSaved={() => {
+                direccionOk.current = true;
+                setPideDireccion(false);
+                void handleReservePrepaid();
+              }}
+            />
+            <Button
+              variant="outline"
+              className="mt-2 w-full"
+              onClick={() => setPideDireccion(false)}
+            >
+              Ahora no
             </Button>
           </div>
         </div>

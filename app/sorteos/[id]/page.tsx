@@ -19,6 +19,7 @@ import { sortFeaturedFirst } from "@/lib/featured";
 import { averageRating, formatRating } from "@/lib/reviews";
 import type { PublicQuestion } from "@/lib/questions";
 import { maybeAutoDrawRaffle, maybeNotifyManualDraw } from "@/lib/auto-draw";
+import { maybeReleaseExpiredReservations } from "@/lib/release-expired";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { DrawVerifier } from "@/components/DrawVerifier";
@@ -111,6 +112,16 @@ export default async function RafflePage({
     .single();
 
   if (!raffle) notFound();
+
+  // Red de seguridad de reservas vencidas: en Vercel Hobby el cron sólo corre
+  // una vez por día, así que un hold vencido puede quedar tomado 24 h. Se
+  // libera al abrir el sorteo, con gate de un minuto por instancia. Tiene que
+  // ir ANTES de leer los números para que la grilla los muestre disponibles.
+  try {
+    await maybeReleaseExpiredReservations();
+  } catch (error) {
+    console.error("[reservas] red de seguridad en página pública:", error);
+  }
 
   // Fallback perezoso del sorteo automático: si la hora ya pasó y nadie lo
   // ejecutó (cron caído, deploy, etc.), se resuelve al abrir la página.
