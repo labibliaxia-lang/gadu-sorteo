@@ -1,0 +1,34 @@
+﻿Moderacion: pausar un sorteo denunciado
+=======================================
+
+Lo que ya existia
+  components/ReportRaffleButton.tsx .... boton "Denunciar este sorteo" en la pagina publica
+  supabase/migrations/0064:181-194 ..... tabla raffle_reports, una por usuario y sorteo
+  app/admin/super/actions.ts ........... resolveReport, pauseReportedRaffle, deleteReport
+  app/admin/super/actions.ts ........... banUser, unbanUser, blockUsers, deleteUsers
+  0063 + 0070 .......................... cancelacion con devoluciones manuales (tabla refunds)
+
+El agujero
+  pauseReportedRaffle hacia active -> closed. Eso frena la venta pero NO baja el
+  sorteo de la home: el listado solo filtra por is_listed.
+  Comprobado con un sorteo closed real ("sorteo navidad") presente en el HTML.
+
+El arreglo
+  update({ status: "closed", is_listed: false })
+  Cierra la venta y lo saca del listado y de los buscadores. Sigue accesible por
+  enlace para que el superadmin y el denunciante lo revisen.
+
+Medido en la web desplegada
+  1) sorteo creado activo y listado ............. aparece en la home: true
+  2) pausado (closed + is_listed=false)
+  3) despues de pausar ......................... aparece en la home: false
+  4) enlace directo ............................ HTTP 200, muestra el titulo
+  5) limpieza .................................. 11 sorteos, 0 deslistados, 1 cerrado
+
+Gates
+  typecheck 0 | lint limpio | 260/260 tests en 27 archivos | build 0
+
+No ejercitado
+  La accion real desde el panel de superadmin: /admin/super exige el codigo
+  maestro (cookie admin_verified) y no lo tengo. Lo verificado es el UPDATE
+  exacto que la accion ejecuta, mas el contrato del codigo en el test.

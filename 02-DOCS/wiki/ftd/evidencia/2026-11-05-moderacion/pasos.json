@@ -1,0 +1,67 @@
+﻿[
+    {
+        "paso":  "M1-estado-previo",
+        "rol":  "auditor",
+        "inicio":  "2026-11-05T10:31:25.0877081-03:00",
+        "nota":  "verificado ademas con \u0027sorteo navidad\u0027 (closed) presente en el HTML de la home",
+        "esperado":  "saber si pausar saca el sorteo de la home",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "pauseReportedRaffle hacia active-\u003eclosed y la home solo filtra por is_listed: el denunciado seguia en cartelera",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T10:31:25.0877081-03:00"
+    },
+    {
+        "paso":  "M2-accion-corregida",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T10:31:25.0877081-03:00",
+        "nota":  null,
+        "esperado":  "pausar tambien deslista",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "update({ status: closed, is_listed: false }) y auditoria con unlisted: true",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T10:31:25.0877081-03:00"
+    },
+    {
+        "paso":  "M3-test-contrato",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T10:31:25.0877081-03:00",
+        "nota":  "mismo estilo que migrations.test.ts, que audita el SQL leyendolo",
+        "esperado":  "que nadie lo revierta sin darse cuenta",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "lib/moderacion.test.ts lee la accion y exige is_listed: false, la guarda .eq(status, active) y la auditoria; 3 casos",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T10:31:25.0877081-03:00"
+    },
+    {
+        "paso":  "M4-efecto-en-la-web",
+        "rol":  "comprador",
+        "inicio":  "2026-11-05T10:31:25.0877081-03:00",
+        "nota":  null,
+        "esperado":  "el pausado desaparece de la home y sigue por enlace",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "creado activo y listado -\u003e aparece en la home = true; tras pausar -\u003e aparece = false; GET /sorteos/\u003cid\u003e = 200 con el titulo",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T10:31:25.0877081-03:00"
+    },
+    {
+        "paso":  "M5-limpieza",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T10:31:25.0877081-03:00",
+        "nota":  null,
+        "esperado":  "no dejar rastros",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "sorteo borrado; 11 sorteos, 0 deslistados, 1 cerrado (el preexistente)",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T10:31:25.0877081-03:00"
+    }
+]

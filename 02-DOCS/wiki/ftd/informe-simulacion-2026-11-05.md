@@ -438,6 +438,47 @@ la clase entera de error.
 **Verificado en la web:** con la casilla marcada, el `POST` lleva `is_listed: false`, la fila queda
 `is_listed = false` y `status = active`, **no aparece en la home** y el enlace directo responde 200.
 
+### B15 — Pausar un sorteo denunciado no lo sacaba de la home · **alto (moderación) — ✅ arreglado**
+
+La moderación ya existía y estaba bastante completa:
+
+| Pieza | Dónde |
+|---|---|
+| Botón «Denunciar este sorteo» | `components/ReportRaffleButton.tsx` |
+| Tabla de denuncias, una por usuario y sorteo | `0064:181-194` |
+| Pausar / resolver / borrar la denuncia | `super/actions.ts:2066` y siguientes |
+| Banear, bloquear, borrar usuarios | `super/actions.ts` |
+| Cancelar con devoluciones manuales | `0063` + `0070` (`refunds`) |
+
+El problema: `pauseReportedRaffle` hacía `active → closed`. Eso frena la venta, **pero la home lista
+todos los sorteos sin mirar el estado** — sólo filtra por `is_listed`. Así que el sorteo denunciado
+seguía en cartelera, con su texto y su WhatsApp, para que la gente entrara y lo contactara por fuera.
+
+Comprobado con un sorteo `closed` real («sorteo navidad»): aparecía en el HTML de la home.
+
+**Arreglo aplicado:** `update({ status: "closed", is_listed: false })`, más `unlisted: true` en la
+auditoría. El sorteo sale del listado y de los buscadores, y sigue accesible por enlace para que el
+superadmin y el denunciante lo revisen.
+
+**Verificado en la web desplegada:**
+
+| Paso | Resultado |
+|---|---|
+| Sorteo creado activo y listado | aparece en la home: **sí** |
+| Pausado (`closed` + `is_listed = false`) | aparece en la home: **no** |
+| Enlace directo | HTTP 200, muestra el título |
+| Limpieza | 11 sorteos, 0 deslistados, 1 cerrado (el preexistente) |
+
+`lib/moderacion.test.ts` fija el contrato leyendo la acción —mismo criterio que `migrations.test.ts`
+con el SQL—: si alguien la deja sólo con `status: "closed"`, el test falla.
+
+**No ejercitado:** la acción real desde el panel, porque `/admin/super` exige el código maestro. Lo
+verificado es el `UPDATE` exacto que la acción ejecuta.
+
+**Sigue pendiente de decisión** (no son bugs, son producto): un estado «en revisión» visible para el
+comprador, impedir que el organizador reabra por API un sorteo pausado, y revisión previa para
+organizadores nuevos.
+
 ---
 
 ## 3. Fricciones de UX/UI
