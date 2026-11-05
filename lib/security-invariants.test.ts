@@ -185,6 +185,15 @@ describe("blindaje: resultado del sorteo", () => {
     expect(cuerpo).toMatch(/status\s*=\s*'active'/i);
   });
 
+  it("la devolución usa lo cobrado, no el precio vigente (hallazgo #13)", () => {
+    const cuerpo = lastDefinition("cancel_raffle");
+
+    expect(cuerpo).toMatch(/payments/i);
+    expect(cuerpo).toMatch(/pay\.amount/i);
+    // El camino manual (sin pago) mantiene el precio como estimación.
+    expect(cuerpo).toMatch(/payment_id\s+is\s+null/i);
+  });
+
   it("payments admite los estados de devolución (hallazgo #8)", () => {
     expect(file("0070")).toMatch(/'refunded'\s*,\s*'charged_back'/);
   });

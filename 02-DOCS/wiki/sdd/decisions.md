@@ -313,3 +313,9 @@ Why        — el plan Hobby de Vercel solo permite un cron diario: las reservas
 Qué no cambia — el código de las rutas ni el secreto: el workflow usa el mismo header `Authorization: Bearer`. Si falta el secreto, las rutas responden 500 a propósito y el job falla a la vista.
 Pendiente humano — cargar `CRON_SECRET` en GitHub → Settings → Secrets and variables → Actions. Un workflow programado se desactiva solo tras 60 días sin actividad en el repo.
 Evidence   — `.github/workflows/crons.yml` y el comentario actualizado en la ruta de reservas.
+
+## 2026-11-05 — Las devoluciones usan lo cobrado, no el precio de hoy  (feature: auditoria-seguridad)
+Decision   — `cancel_raffle` calcula el importe de cada número vendido desde `payments.amount`: cada pago se reparte entre los números vendidos que cubre (`amount / cantidad`), así la suma coincide con lo cobrado. Los números del camino manual (transferencia, sin `payment_id`) siguen usando `price_per_number` como estimación.
+Why        — con el precio vigente, cambiar el precio después de vender hacía que la devolución no coincidiera con lo pagado: podía devolver de menos, que es el peor error posible en dinero ajeno.
+Qué no cambia — la firma, los permisos, el estado del sorteo, la liberación de reservas y la regla de una devolución por comprador.
+Evidence   — `supabase/migrations/0079_refunds_use_paid_amount.sql` (escrita, sin aplicar), `verificar_0079.sql` (escenario con pago y con manual) y el contrato en `security-invariants.test.ts`.

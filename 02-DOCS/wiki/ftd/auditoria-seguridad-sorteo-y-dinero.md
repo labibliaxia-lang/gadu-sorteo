@@ -102,12 +102,12 @@ Dos notas de esa misma tabla: el `qual = NULL` de la política de INSERT es norm
 | 10 | `webhook:103` + `lib/mercadopago.ts:107` | El `data.id` del cuerpo tiene prioridad sobre el firmado y no está firmado; sin tolerancia de timestamp la firma es reutilizable. Sin ganancia real para un atacante (Mercado Pago es la fuente de verdad), pero es superficie de más. **Corregido el id el 2026-11-05** (`resolveWebhookPaymentId`: manda el firmado; el del cuerpo solo si el query no trae). La tolerancia se deja fuera a propósito: MP reintenta cada 15 min y rechazar por antigüedad rompería entregas legítimas; la idempotencia cubre el reuso. |
 | 11 | `checkout/route.ts:156-166` | Reserva parcial devuelve 409 **sin liberar** los números reservados ni borrar el pago. |
 | 12 | `0001:201` vs `0037:97-103` | `reserve_numbers` no valida `is_banned` ni el tope de 20/h que sí tiene `reserve_numbers_prepaid`. **Corregido en `0076` y verificado el 2026-11-05** (4/4: suspensión, 101 números, reserva 21 de la hora y declaración). |
-| 13 | `0063:167` | La devolución se calcula con el precio vigente al cancelar, no con lo cobrado en `payments.amount`. |
+| 13 | `0063:167` | La devolución se calcula con el precio vigente al cancelar, no con lo cobrado en `payments.amount`. **Corregido en `0079`** (reparte cada pago entre sus números vendidos; el camino manual mantiene el precio como estimación). |
 | 15 | `0030:183` | El organizador ve la fila **completa** del comprador (email, teléfono, DNI, dirección). Corregido en `0073`: ahora lee la vista `raffle_buyers`, que expone nombre y teléfono. |
 | 16 | `0065:147-149` | `SELECT` público de `raffle_numbers` expone `reserved_by`/`sold_to` (UUID de usuarios). |
 | 17 | `0034:88` | `commit_draw_seed` se puede publicar después del cierre: la promesa "la semilla estaba fijada antes" no es comprobable desde afuera. **Corregido en `0078` y verificado el 2026-11-05** (3/3: ventana, control y ataque). |
 | 18 | `cron/auto-draw:26` + `cron/release-reservations:16` | Secreto comparado con `===` (no tiempo constante) y duplicado en dos rutas. |
-| 19 | `vercel.json:2` | El único cron declarado corre una vez al día; `auto-draw` no está programado en el repo. `a verificar` en el despliegue. **Corregido el 2026-11-05:** `.github/workflows/crons.yml` dispara los dos endpoints cada 5 minutos; el cron diario de Vercel queda como respaldo. Falta cargar `CRON_SECRET` en los secretos de GitHub. |
+| 19 | `vercel.json:2` | El único cron declarado corre una vez al día; `auto-draw` no está programado en el repo. `a verificar` en el despliegue. **Corregido y verificado el 2026-11-05:** `.github/workflows/crons.yml` dispara los dos endpoints cada 5 minutos; ejecución manual con `CRON_SECRET` cargado: ambos `-> 200`. El cron diario de Vercel queda como respaldo. |
 
 ### Bajos
 
