@@ -1,5 +1,6 @@
 # Dependencias
-/node_modules
+# Sin barra inicial: cubre tambien las de las herramientas de 01-TOOLS/
+node_modules
 
 # Build de Next.js
 /.next
