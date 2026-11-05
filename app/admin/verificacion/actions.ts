@@ -3,13 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import {
-  requireAdminSession,
-  requireSuperadminSession,
-} from "@/lib/auth";
+import { requireAdminSession, requireSuperadminSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { addressMatches } from "@/lib/address";
 
 const kycDataSchema = z.object({
   full_name: z
@@ -289,13 +285,10 @@ export async function submitKyc(formData: FormData) {
     };
   }
 
-  if (!addressMatches(profile, profile.dni_address)) {
-    return {
-      ok: false,
-      error:
-        "La dirección del DNI no coincide con tu dirección de entrega. Corregila antes de enviar el KYC.",
-    };
-  }
+  // La dirección del DNI no se compara con la de entrega: son datos distintos
+  // (una es legal, la otra es logística) y exigir que coincidan bloqueaba el
+  // KYC de cualquier persona que reciba en un domicilio diferente al del DNI.
+  // El superadmin las ve juntas al revisar y decide.
 
   const paths: Partial<Record<KycSlot, string>> = {};
   for (const slot of KYC_SLOTS) {
@@ -342,14 +335,6 @@ export async function approveVerification(userId: string) {
     return {
       ok: false,
       error: `No se puede aprobar: faltan datos personales (${missingData.join(", ")}).`,
-    };
-  }
-
-  if (!addressMatches(profile, profile.dni_address)) {
-    return {
-      ok: false,
-      error:
-        "No se puede aprobar: la dirección del DNI no coincide con la dirección de entrega del perfil.",
     };
   }
 

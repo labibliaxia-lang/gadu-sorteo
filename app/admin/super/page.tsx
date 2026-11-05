@@ -38,6 +38,7 @@ import { SuperAdminDashboard } from "@/components/SuperAdminDashboard";
 import { LicenseCodesPanel } from "@/components/LicenseCodesPanel";
 import { PlanPricesPanel } from "@/components/PlanPricesPanel";
 import { VerificationActions } from "@/components/VerificationActions";
+import { addressMatches, composeDeliveryAddress } from "@/lib/address";
 import { TrafficChart } from "@/components/admin/TrafficChart";
 import {
   MetricBarChart,
@@ -431,14 +432,20 @@ interface PendingKycRow {
   dni_front_url: string | null;
   dni_back_url: string | null;
   face_url: string | null;
+  /** Dirección impresa en el DNI y dirección de entrega: se muestran juntas. */
+  dni_address: string | null;
+  address_line: string | null;
+  city: string | null;
+  province: string | null;
+  postal_code: string | null;
 }
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
 const KYC_SELECT =
-  "id, full_name, email, created_at, dni_front_url, dni_back_url, face_url";
+  "id, full_name, email, created_at, dni_front_url, dni_back_url, face_url, dni_address, address_line, city, province, postal_code";
 const KYC_SELECT_LEGACY =
-  "id, full_name, email, created_at, dni_front_url, face_url";
+  "id, full_name, email, created_at, dni_front_url, face_url, dni_address, address_line, city, province, postal_code";
 // La solicitud es "revisable" cuando subió al menos una imagen: el valor por
 // defecto de verification_status es 'pending' para TODOS los perfiles, así que
 // sin este filtro la lista se llenaría de usuarios que nunca pidieron KYC.
@@ -1705,6 +1712,31 @@ export default async function SuperAdminPage({
                                 : "sin fecha"}{" "}
                               · {loadedCount}/3 imágenes
                             </p>
+                            {/* Las dos direcciones juntas: la del DNI es un
+                                dato legal y la de entrega es logística. No
+                                tienen que coincidir; el revisor las compara. */}
+                            <div className="space-y-0.5 text-[11px] text-fg-subtle">
+                              <p>
+                                <span className="font-medium">DNI:</span>{" "}
+                                {pending.dni_address ||
+                                  "sin dirección cargada"}
+                              </p>
+                              <p>
+                                <span className="font-medium">Entrega:</span>{" "}
+                                {composeDeliveryAddress(pending) ||
+                                  "sin dirección de entrega"}
+                              </p>
+                              {pending.dni_address &&
+                                !addressMatches(
+                                  pending,
+                                  pending.dni_address,
+                                ) && (
+                                  <p className="text-amber-700 dark:text-amber-300">
+                                    No coinciden. Es normal: verificá que la
+                                    dirección del DNI se lea bien en la foto.
+                                  </p>
+                                )}
+                            </div>
                           </div>
                           <VerificationActions
                             userId={pending.id}

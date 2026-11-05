@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
-import { addressMatches } from "@/lib/address";
 import { TERMS_VERSION } from "@/lib/terms";
 
 export type EmailPreferenceResult =
@@ -75,23 +74,17 @@ export async function updateProfile(
 
   const { data: current } = await supabase
     .from("profiles")
-    .select("avatar_url, slug, role, dni_address")
+    .select("avatar_url, slug, role")
     .eq("id", user.id)
     .maybeSingle();
 
   const values = parsed.data;
 
-  if (
-    current?.dni_address &&
-    (current.role === "admin" || current.role === "superadmin") &&
-    !addressMatches(values, current.dni_address)
-  ) {
-    return {
-      ok: false,
-      error:
-        "La dirección de entrega debe coincidir con la dirección de tu DNI.",
-    };
-  }
+  // No se exige que la dirección de entrega coincida con la del DNI: son datos
+  // distintos y la igualdad exacta bloqueaba a cualquier organizador que reciba
+  // en otro domicilio (el DNI dice «AV SAN MARTIN 1234, CAPITAL FEDERAL» y la
+  // entrega «Av. San Martín 1234, CABA, C1042»). El superadmin compara las dos
+  // al revisar el KYC.
 
   if (values.avatar_url) {
     const unchanged = values.avatar_url === current?.avatar_url;
@@ -181,21 +174,9 @@ export async function saveDeliveryAddress(
 
   const { data: current } = await supabase
     .from("profiles")
-    .select("role, dni_address")
+    .select("role")
     .eq("id", user.id)
     .maybeSingle();
-
-  if (
-    current?.dni_address &&
-    (current.role === "admin" || current.role === "superadmin") &&
-    !addressMatches(parsed.data, current.dni_address)
-  ) {
-    return {
-      ok: false,
-      error:
-        "La dirección de entrega debe coincidir con la dirección de tu DNI.",
-    };
-  }
 
   const { error } = await supabase
     .from("profiles")

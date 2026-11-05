@@ -19,7 +19,6 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { addressMatches } from "@/lib/address";
 import {
   Card,
   CardContent,
@@ -336,6 +335,12 @@ export default function VerificacionPage() {
     }
   }
 
+  // OJO: la dirección del DNI NO tiene que coincidir con la de entrega. El DNI
+  // es un dato legal y el premio puede recibirse en otro domicilio. Antes se
+  // exigía igualdad exacta entre las dos cadenas normalizadas y el botón
+  // «Guardar datos» quedaba deshabilitado para cualquier persona real: un DNI
+  // dice «AV SAN MARTIN 1234, CAPITAL FEDERAL» y la entrega «Av. San Martín
+  // 1234, CABA, CABA, C1042». Eso era un bloqueo falso, no una validación.
   const dataComplete =
     fullName.trim().length >= 3 &&
     phone.replace(/\D/g, "").length >= 6 &&
@@ -345,17 +350,7 @@ export default function VerificacionPage() {
     deliveryAddress.trim().length >= 3 &&
     deliveryCity.trim().length >= 2 &&
     deliveryProvince.trim().length >= 2 &&
-    deliveryPostalCode.trim().length >= 3 &&
-    addressMatches(
-      {
-        address_line: deliveryAddress,
-        city: deliveryCity,
-        province: deliveryProvince,
-        postal_code: deliveryPostalCode,
-        country: "AR",
-      },
-      dniAddress,
-    );
+    deliveryPostalCode.trim().length >= 3;
 
   const docsReady = Boolean(dniFrontFile && dniBackFile && selfieFile);
 
@@ -530,6 +525,7 @@ export default function VerificacionPage() {
                 id="kyc-location"
                 value={location}
                 maxLength={80}
+                placeholder="Ej: Palermo, CABA"
                 onChange={(event) => setLocation(event.target.value)}
               />
             </div>
@@ -541,24 +537,28 @@ export default function VerificacionPage() {
                 id="kyc-dni-address"
                 value={dniAddress}
                 maxLength={240}
-                placeholder="Calle, número, ciudad, provincia, código postal"
+                placeholder="Ej: Av. San Martín 1234, Capital Federal"
                 onChange={(event) => setDniAddress(event.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Tiene que coincidir con tu dirección de entrega:{" "}
+                Copiala como está impresa en el DNI. <strong>No</strong> hace
+                falta que coincida con tu dirección de entrega: el DNI es un dato
+                legal y podés recibir el premio en otro domicilio.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Tu dirección de entrega actual:{" "}
                 {deliveryAddress ? (
                   <strong>
                     {deliveryAddress}, {deliveryCity}, {deliveryProvince},{" "}
                     {deliveryPostalCode}
                   </strong>
                 ) : (
-                  "todavía no cargaste una dirección de entrega en tu perfil."
+                  "todavía no la cargaste en tu perfil."
                 )}
               </p>
-              {dniAddress.trim().length >= 10 && !dataComplete && (
+              {dniAddress.trim().length > 0 && dniAddress.trim().length < 10 && (
                 <p className="text-xs text-amber-800 dark:text-amber-300">
-                  La dirección del DNI no coincide todavía con la de entrega.
-                  Revisá calle, número, ciudad, provincia y código postal.
+                  Escribí la dirección completa, con calle y número.
                 </p>
               )}
             </div>
@@ -701,14 +701,21 @@ export default function VerificacionPage() {
                   muted
                   className="aspect-[16/10] w-full rounded-lg border bg-black object-cover"
                 />
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" size="sm" onClick={captureSelfie}>
-                    Capturar
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="w-full"
+                    onClick={captureSelfie}
+                  >
+                    <Camera className="mr-2 h-5 w-5" />
+                    Tomar foto
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className="w-full"
                     onClick={stopCamera}
                   >
                     Cancelar
@@ -745,6 +752,13 @@ export default function VerificacionPage() {
                     selectFile(event, "Selfie", setSelfieFile)
                   }
                 />
+                {selfiePreview && (
+                  <p className="flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-2 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    Selfie capturada. Revisala: si no te gusta cómo salió,
+                    repetila antes de enviar.
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
@@ -758,7 +772,7 @@ export default function VerificacionPage() {
                     ) : (
                       <Camera className="mr-1.5 h-4 w-4" />
                     )}
-                    {selfiePreview ? "Volver a capturar" : "Abrir cámara"}
+                    {selfiePreview ? "Repetir foto" : "Tomar foto con la cámara"}
                   </Button>
                   <Button
                     type="button"
