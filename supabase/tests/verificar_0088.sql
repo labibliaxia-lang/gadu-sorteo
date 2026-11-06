@@ -38,7 +38,12 @@ declare
   v_buyer uuid;
   v_id uuid;
 begin
-  select id into v_owner from public.profiles order by created_at limit 1;
+  -- El dueño tiene que poder actualizar: la política exige is_admin() y
+  -- created_by = auth.uid(). Un perfil común recibe 0 filas sin error.
+  select id into v_owner from public.profiles
+   where role in ('admin', 'superadmin')
+   order by (role = 'superadmin') desc, created_at
+   limit 1;
   select id into v_buyer from public.profiles
    where id <> coalesce(v_owner, '00000000-0000-0000-0000-000000000000'::uuid)
    order by created_at limit 1;
@@ -124,9 +129,18 @@ begin
 
   begin
     update public.raffles set status = 'active' where id = v_id;
-    perform pg_temp.anota('2 CRÍTICO  reabrió un sorteo cancelado');
-  exception when check_violation then
-    perform pg_temp.anota('2 OK       cancelado no se reabre: ' || sqlerrm);
+
+    if exists (select 1 from public.raffles where id = v_id and status = 'cancelled') then
+      perform pg_temp.anota('2 OK       cancelado sigue cancelado (el update no cambió nada)');
+    else
+      perform pg_temp.anota('2 CRÍTICO  reabrió un sorteo cancelado');
+    end if;
+  exception when others then
+    if sqlerrm ilike '%cancel%' or sqlerrm ilike '%no se puede cambiar%' then
+      perform pg_temp.anota('2 OK       cancelado no se reabre: ' || sqlerrm);
+    else
+      perform pg_temp.anota('2 OTRO     falló por otro motivo: ' || sqlerrm);
+    end if;
   end;
 end $$;
 
@@ -147,7 +161,12 @@ begin
 
   begin
     update public.raffles set status = 'active' where id = v_id;
-    perform pg_temp.anota('3 CRÍTICO  reabrió un sorteo sorteado');
+
+    if exists (select 1 from public.raffles where id = v_id and status = 'drawn') then
+      perform pg_temp.anota('3 OK       sorteado sigue sorteado (el update no cambió nada)');
+    else
+      perform pg_temp.anota('3 CRÍTICO  reabrió un sorteo sorteado');
+    end if;
   exception when others then
     if sqlerrm ilike '%sorteado%' or sqlerrm ilike '%no se puede cambiar%' then
       perform pg_temp.anota('3 OK       sorteado no se reabre: ' || sqlerrm);
