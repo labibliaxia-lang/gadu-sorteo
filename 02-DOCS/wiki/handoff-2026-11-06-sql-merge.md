@@ -42,6 +42,14 @@ Superseded (no correr como prueba actual): `verificar_0091.sql`, `verificar_0092
 3. **Prueba en navegador** con dos cuentas: campana de reservas, aprobar, registrar pago, devolver
    parcial, enlace de devolución en incógnito y marcar pagada.
 
+## Backup
+
+Hecho el 2026-11-06 14:27 con `01-TOOLS/backup/backup-db.ps1` (pg_dump 17.6 portátil + Session
+pooler). Archivo `C:\Users\Usuario\Desktop\backups\gadu-2026-11-06-1427.dump` (0.92 MB, formato
+custom). Validado con `pg_restore --list`: 903 entradas, 76 bloques de datos, 77 funciones, 52
+políticas y 31 triggers del esquema `public`; todas las tablas críticas tienen datos. Incluye los
+esquemas `auth`/`storage`; **no** incluye los archivos de los buckets.
+
 ## Regla aprendida hoy
 
 **Las migraciones de una línea salen de una sola sesión.** Dos chats escribiendo `create or replace`
