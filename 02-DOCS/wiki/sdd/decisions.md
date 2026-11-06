@@ -350,3 +350,10 @@ Decision 3 — 0088 corta la venta en draw_date: reserve_numbers rechaza con la 
 Decision 4 — el botón Eliminar se oculta cuando hay actividad o compromiso, en vez de ofrecerse y fallar.
 Why        — el compromiso congela la semilla, no el sorteo; lo que limita los botones es la plata, la gente y la fecha. Se podía reabrir un sorteo cancelado con devoluciones ya generadas y vender después de la fecha prometida.
 Evidence   — 0088 y verificar_0088.sql (control de cierre, cancelado/sorteado sin reapertura, reserva antes y después de la fecha); invariantes en security-invariants.test.ts; gates verdes.
+
+## 2026-11-06 — Notificaciones del organizador: bandeja de decisiones  (feature: notificaciones-organizador)
+Decision   — las notificaciones se modelan como tareas con vencimiento en una tabla propia (RLS por organizador, insert solo del servidor), con una notificacion por reserva y no por numero.
+Why        — hoy solo hay email y el panel de numeros no se actualiza solo; la reserva vence en 10 minutos y el comprobante llega por WhatsApp.
+Fases      — 1 bandeja + Realtime + ampliar; 2 comprobante en la app y TTL por sorteo; 3 devolucion por numero; 4 digest y metricas.
+Defaults   — comprobante en la app en fase 2; TTL de 10 min + ampliar en fase 1; liberar un vendido genera devolucion registrada (fase 3).
+Evidence   — 02-DOCS/wiki/ftd/notificaciones-organizador.md (spec; sin implementar).
