@@ -10,7 +10,12 @@
 --   2  la devolución guarda qué números cubre
 --   3  al marcarla pagada, se liberan esos números y solo esos
 --   4  queda auditado como 'refund_number_released'
---   5  con el sorteo sorteado, se marca pagada pero NO se libera
+--   5  con el sorteo sorteado, directamente no se puede registrar la devolución
+--
+-- Nota: la rama del trigger para "pagada con sorteo drawn" es inalcanzable
+-- mientras la función rechace registrar devoluciones en sorteos sorteados.
+-- Permitirlo (solo plata, sin tocar números) es una decisión de producto
+-- pendiente.
 --
 -- Transacción con ROLLBACK.
 -- =====================================================================
@@ -165,14 +170,15 @@ begin
     else 'CRÍTICO  no hay fila refund_number_released' end);
 end $$;
 
--- 5) Sorteo sorteado: paga pero no libera
+-- 5) Sorteo sorteado: no se puede registrar la devolución
 do $$
 declare
   v_owner uuid := nullif(current_setting('test.v94b.owner', true), '')::uuid;
   v_buyer uuid := nullif(current_setting('test.v94b.buyer', true), '')::uuid;
   v_sorteado uuid := nullif(current_setting('test.v94b.sorteado', true), '')::uuid;
   v_estado text;
-  v_motivo text;
+  v_refund int;
+  v_error text;
 begin
   if v_sorteado is null then return; end if;
 
@@ -183,30 +189,25 @@ begin
     perform public.refund_and_release_numbers(
       v_sorteado, array[1], 'devolución en un sorteo ya sorteado'
     );
+    v_error := null;
   exception when others then
-    perform pg_temp.anota('5 CRÍTICO  registrar la devolución falló: ' || sqlerrm);
-    return;
+    v_error := sqlerrm;
   end;
-
-  update public.refunds
-     set status = 'paid', paid_at = now()
-   where raffle_id = v_sorteado and user_id = v_buyer;
 
   select status into v_estado
     from public.raffle_numbers
    where raffle_id = v_sorteado and number = 1;
 
-  select reason into v_motivo
-    from public.raffle_audit
-   where raffle_id = v_sorteado and action = 'refund_number_released'
-   order by created_at desc
-   limit 1;
+  select count(*) into v_refund
+    from public.refunds
+   where raffle_id = v_sorteado and user_id = v_buyer;
 
   perform pg_temp.anota('5 ' || case
-    when v_estado = 'sold' and v_motivo ilike '%drawn%'
-      then 'OK       sorteado: se pagó pero el número NO se liberó (' || v_motivo || ')'
-    else 'CRÍTICO  estado ' || coalesce(v_estado, 'null')
-         || ', motivo ' || coalesce(v_motivo, 'null') end);
+    when v_error is not null and v_error ilike '%drawn%' and v_estado = 'sold' and v_refund = 0
+      then 'OK       sorteado: rechaza la devolución y no toca el número (' || v_error || ')'
+    when v_error is not null
+      then 'OTRO     rechazado por otro motivo: ' || v_error
+    else 'CRÍTICO  registró una devolución en un sorteo sorteado' end);
 end $$;
 
 select current_setting('test.v94b', true) as resultado;
