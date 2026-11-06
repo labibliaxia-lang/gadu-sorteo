@@ -46,6 +46,14 @@ create index if not exists raffle_delivery_photos_raffle_idx
 
 alter table public.raffle_delivery_photos enable row level security;
 
+-- Permisos de tabla. Sin esto la RLS es decorativa: la política dice «sí» pero
+-- el rol no tiene con qué escribir. `anon` sólo lee (las fotos aprobadas son
+-- públicas); escribir, aprobar y borrar es para `authenticated`, y la RLS de
+-- abajo decide el resto.
+grant select on public.raffle_delivery_photos to anon, authenticated;
+grant insert, update, delete on public.raffle_delivery_photos to authenticated;
+grant all on public.raffle_delivery_photos to service_role;
+
 -- ---------------------------------------------------------------------
 -- Quién ve qué
 --   · todos: las aprobadas (es el punto de la feature: prueba pública)
