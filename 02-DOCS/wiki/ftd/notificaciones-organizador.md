@@ -145,6 +145,12 @@ Acciones y su efecto:
   ahora explican qué significan y tienen **Listo** para archivarlas: ninguna queda sin salida. Los
   errores de red ya no dejan botones deshabilitados (try/finally) y cada acción muestra su
   confirmación. Lo urgente se ordena primero y luego por vencimiento.
+- **Rediseño en dos bloques (2026-11-06).** El panel separa **Decisiones** (reservas, devoluciones,
+  post-sorteo) de **Avisos** (informativos), agrupa por sorteo, ordena lo urgente primero y, al
+  resolver una decisión, **avanza a la próxima**. El historial queda colapsado al final. El botón de
+  WhatsApp muestra el destino normalizado y, si el comprador no cargó teléfono, lo dice en vez de
+  abrir un selector vacío. La normalización argentina (`0`, `15`, `549`) está en `lib/whatsapp.ts`
+  con 13 tests.
 - Falta sólo la prueba con dos cuentas reales (campana, aprobar, números vendidos). El resto de la
   fase 1 está cerrado con evidencia.
 

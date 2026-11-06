@@ -6,6 +6,7 @@ import { Loader2, Mail, MessageCircle } from "lucide-react";
 
 import { notifyWinnerManually } from "@/app/admin/sorteos/[id]/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { telefonoLegible, waLink } from "@/lib/whatsapp";
 
 /**
  * Reenvía el aviso de premio al ganador. Si no tiene email, ofrece WhatsApp con
@@ -44,10 +45,12 @@ export function NotifyWinnerButton({ raffleId }: { raffleId: string }) {
   }
 
   const wa = telefono
-    ? `https://wa.me/${telefono.replace(/\D/g, "").startsWith("54") ? telefono.replace(/\D/g, "") : "54" + telefono.replace(/\D/g, "")}?text=${encodeURIComponent(
+    ? waLink(
+        telefono,
         "¡Hola! Saliste ganador del sorteo. Escribime para coordinar la entrega del premio.",
-      )}`
+      )
     : null;
+  const destino = telefonoLegible(telefono);
 
   return (
     <div className="space-y-2">
@@ -73,6 +76,12 @@ export function NotifyWinnerButton({ raffleId }: { raffleId: string }) {
           </a>
         )}
       </div>
+
+      {destino && (
+        <p className="text-[11px] text-fg-subtle">
+          El WhatsApp se abre con {destino}.
+        </p>
+      )}
 
       {mensaje && (
         <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
