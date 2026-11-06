@@ -68,6 +68,11 @@ export default async function SorteoVentasPage({
       })
     : filas;
 
+  const premiosTotal = filas.reduce(
+    (suma, fila) => suma + (fila.numerosPremio ?? []).length,
+    0,
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -99,6 +104,11 @@ export default async function SorteoVentasPage({
         <div className="rounded-xl border bg-card p-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Números vendidos</p>
           <p className="mt-1 text-2xl font-semibold">{resumen.numeros.toLocaleString("es-AR")}</p>
+          {premiosTotal > 0 && (
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              {premiosTotal} de premio (no son ventas)
+            </p>
+          )}
         </div>
         <div className="rounded-xl border bg-card p-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Compradores</p>
@@ -197,6 +207,14 @@ export default async function SorteoVentasPage({
                           {fila.numeros.slice(0, 18).join(", ")}
                           {fila.numeros.length > 18 && ` … +${fila.numeros.length - 18}`}
                         </span>
+                        {(fila.numerosPremio ?? []).length > 0 && (
+                          <span className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-amber-700 dark:text-amber-300">
+                            🎁 Premio:{" "}
+                            <span className="font-mono">
+                              {(fila.numerosPremio ?? []).join(", ")}
+                            </span>
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-2 text-xs">
                         <span

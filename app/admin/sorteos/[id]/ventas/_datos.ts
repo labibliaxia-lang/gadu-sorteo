@@ -74,21 +74,49 @@ export async function cargarVentas(sorteoId: string): Promise<ResultadoVentas> {
 
   if (error) return { ok: false, motivo: "error" };
 
-  const filas: FilaVenta[] = ((data ?? []) as FilaResumen[]).map((fila) => ({
-    compradorId: fila.buyer_id ?? null,
-    nombre: fila.full_name ?? "Sin comprador registrado",
-    telefono: fila.phone ?? null,
-    numeros: (fila.numbers ?? []) as number[],
-    cantidad: Number(fila.quantity ?? 0),
-    total: Number(fila.net ?? 0),
-    cobrado: Number(fila.paid ?? 0),
-    devuelto: Number(fila.refunded ?? 0),
-    neto: Number(fila.net ?? 0),
-    estadoPago: (fila.payment_state ?? "manual") as FilaVenta["estadoPago"],
-    numerosSinPago: (fila.numbers_manual ?? []) as number[],
-    primeraVenta: fila.first_sale_at ?? null,
-    ultimaVenta: fila.last_sale_at ?? null,
-  }));
+  // 0104: los números de premio se muestran aparte y no cuentan como deuda.
+  const { data: premiosData } = await supabase.rpc("raffle_prize_numbers", {
+    p_raffle_id: sorteoId,
+  });
+
+  const premiosPorComprador = new Map<string, number[]>();
+  for (const fila of (premiosData ?? []) as {
+    buyer_id: string | null;
+    numbers: number[] | null;
+  }[]) {
+    if (fila.buyer_id) {
+      premiosPorComprador.set(
+        fila.buyer_id,
+        (fila.numbers ?? []).map(Number),
+      );
+    }
+  }
+
+  const filas: FilaVenta[] = ((data ?? []) as FilaResumen[]).map((fila) => {
+    const premios = fila.buyer_id
+      ? (premiosPorComprador.get(fila.buyer_id) ?? [])
+      : [];
+    const sinPago = ((fila.numbers_manual ?? []) as number[]).filter(
+      (n) => !premios.includes(n),
+    );
+
+    return {
+      compradorId: fila.buyer_id ?? null,
+      nombre: fila.full_name ?? "Sin comprador registrado",
+      telefono: fila.phone ?? null,
+      numeros: (fila.numbers ?? []) as number[],
+      cantidad: Number(fila.quantity ?? 0),
+      total: Number(fila.net ?? 0),
+      cobrado: Number(fila.paid ?? 0),
+      devuelto: Number(fila.refunded ?? 0),
+      neto: Number(fila.net ?? 0),
+      estadoPago: (fila.payment_state ?? "manual") as FilaVenta["estadoPago"],
+      numerosSinPago: sinPago,
+      numerosPremio: premios,
+      primeraVenta: fila.first_sale_at ?? null,
+      ultimaVenta: fila.last_sale_at ?? null,
+    };
+  });
 
   return {
     ok: true,

@@ -39,6 +39,8 @@ export interface FilaVenta {
   estadoPago?: "pagado" | "pendiente" | "manual";
   /** Números vendidos que todavía no tienen un pago asociado. */
   numerosSinPago?: number[];
+  /** Números otorgados como premio (0104): no son ventas. */
+  numerosPremio?: number[];
   primeraVenta: string | null;
   ultimaVenta: string | null;
 }
