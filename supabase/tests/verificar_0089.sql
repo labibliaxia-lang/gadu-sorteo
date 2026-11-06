@@ -99,6 +99,9 @@ begin
     else 'CRÍTICO  el comprador ve ' || v_vistas || ' notificación(es) ajena(s)' end);
 end $$;
 
+-- Se vuelve a postgres para medir: como comprador, RLS ocultaría la fila.
+reset role;
+
 -- 3) Reservar desde la RPC avisa al organizador
 do $$
 declare
