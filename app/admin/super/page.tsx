@@ -4,11 +4,13 @@ import type { LucideIcon } from "lucide-react";
 import {
   AlertTriangle,
   ArrowUpRight,
+  Bell,
   Coins,
   Crown,
   Eye,
   Flag,
   FlaskConical,
+  Gift,
   LayoutDashboard,
   MessageCircle,
   ScrollText,
@@ -68,6 +70,8 @@ const SECTIONS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "usuarios", label: "Usuarios", icon: Users },
   { key: "sorteos", label: "Sorteos", icon: Ticket },
+  { key: "referidos", label: "Referidos", icon: Gift },
+  { key: "notificaciones", label: "Notificaciones", icon: Bell },
   { key: "denuncias", label: "Denuncias", icon: Flag },
   { key: "auditoria", label: "Auditoría", icon: ScrollText },
 ] as const;
@@ -202,6 +206,28 @@ interface RaffleRow {
   created_by: string | null;
   /** Destacado en la home (migración 0066). */
   is_featured?: boolean | null;
+  /** Sorteo exclusivo de premios de referidos (0105). */
+  bonus_raffle_id?: string | null;
+}
+
+/** Top de referentes para la pestaña Referidos. */
+interface ReferidoTopRow {
+  referrerId: string;
+  nombre: string;
+  invitados: number;
+  compraron: number;
+  premios: number;
+}
+
+/** Avisos críticos del superadmin (campana de 0101). */
+interface SuperNotificacion {
+  id: string;
+  type: string;
+  title: string | null;
+  message: string | null;
+  created_at: string;
+  raffle_id: string | null;
+  read_at: string | null;
 }
 
 interface AuditLogRow {
@@ -767,6 +793,12 @@ export default async function SuperAdminPage({
   let reportsNote: string | null = null;
   let reportsPendingCount: number | null = null;
   let logs: AuditLogRow[] = [];
+  let referidosTop: ReferidoTopRow[] = [];
+  let referidosExitosos = 0;
+  let superNotifs: SuperNotificacion[] = [];
+  let bonusDestino = new Map<string, string[]>();
+  let premiosDestino = new Map<string, number>();
+  let tituloSorteo = new Map<string, string>();
 
   // Badge de la pestaña Denuncias. Si la migración 0064 todavía no está
   // aplicada, la tabla no existe: no se muestra badge y el panel sigue igual.
@@ -868,6 +900,13 @@ export default async function SuperAdminPage({
         "La base todavía no tiene dni_back_url: ejecutá la migración 0017_organizer_verification.sql para revisar el dorso del DNI.",
       );
     }
+
+    // 0102: referidos que efectivamente se premiaron.
+    const { count: referidosCount } = await admin
+      .from("referrals")
+      .select("*", { count: "exact", head: true })
+      .eq("rewarded", true);
+    referidosExitosos = referidosCount ?? 0;
   }
 
   if (section === "usuarios") {
@@ -981,6 +1020,127 @@ export default async function SuperAdminPage({
           ),
         );
       }
+    }
+
+    // 0105: `bonus_raffle_id` vive en el principal y apunta al exclusivo.
+    // Se muestran los dos lados de la relación en la columna.
+    const { data: relaciones } = await admin
+      .from("raffles")
+      .select("id, title, bonus_raffle_id")
+      .not("bonus_raffle_id", "is", null);
+
+    for (const fila of relaciones ?? []) {
+      const id = fila.id as string;
+      const titulo = (fila.title as string) ?? "Sorteo";
+      tituloSorteo.set(id, titulo);
+      const destino = fila.bonus_raffle_id as string | null;
+      if (destino) {
+        const lista = bonusDestino.get(destino) ?? [];
+        lista.push(titulo);
+        bonusDestino.set(destino, lista);
+      }
+    }
+
+    if (bonusDestino.size > 0) {
+      const { data: destinos } = await admin
+        .from("raffles")
+        .select("id, title")
+        .in("id", [...bonusDestino.keys()]);
+
+      for (const fila of destinos ?? []) {
+        tituloSorteo.set(fila.id as string, (fila.title as string) ?? "Sorteo");
+      }
+
+      const { data: premios } = await admin
+        .from("raffle_numbers")
+        .select("raffle_id")
+        .eq("origin", "premio")
+        .in("raffle_id", [...bonusDestino.keys()]);
+
+      for (const fila of premios ?? []) {
+        const id = fila.raffle_id as string;
+        premiosDestino.set(id, (premiosDestino.get(id) ?? 0) + 1);
+      }
+    }
+  }
+
+  if (section === "referidos") {
+    const { data: filas, error: referidosError } = await admin
+      .from("referrals")
+      .select("referrer_id, referred_id, rewarded");
+
+    if (referidosError) {
+      issues.push(`referidos: ${referidosError.message}`);
+    } else {
+      const rows = filas ?? [];
+      const referrers = [...new Set(rows.map((r) => r.referrer_id as string))];
+      const referred = [...new Set(rows.map((r) => r.referred_id as string))];
+
+      const { data: perfiles } = await admin
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", referrers);
+
+      const nombrePorId = new Map(
+        (perfiles ?? []).map((p) => [
+          p.id as string,
+          (p.full_name as string) || (p.email as string) || "—",
+        ]),
+      );
+
+      const { data: compras } =
+        referred.length > 0
+          ? await admin
+              .from("raffle_numbers")
+              .select("sold_to")
+              .eq("status", "sold")
+              .in("sold_to", referred)
+          : { data: [] as { sold_to: string | null }[] };
+
+      const compraron = new Set(
+        (compras ?? []).map((c) => c.sold_to as string),
+      );
+
+      const agg = new Map<
+        string,
+        { invitados: number; compraron: number; premios: number }
+      >();
+
+      for (const r of rows) {
+        const id = r.referrer_id as string;
+        const actual = agg.get(id) ?? { invitados: 0, compraron: 0, premios: 0 };
+        actual.invitados += 1;
+        if (compraron.has(r.referred_id as string)) actual.compraron += 1;
+        if (r.rewarded) actual.premios += 1;
+        agg.set(id, actual);
+      }
+
+      referidosTop = [...agg.entries()]
+        .map(([referrerId, a]) => ({
+          referrerId,
+          nombre: nombrePorId.get(referrerId) ?? "—",
+          ...a,
+        }))
+        .sort(
+          (a, b) => b.compraron - a.compraron || b.invitados - a.invitados,
+        )
+        .slice(0, 10);
+    }
+  }
+
+  if (section === "notificaciones") {
+    const { data: notis, error: notisError } = await admin
+      .from("notifications")
+      .select("id, type, title, message, created_at, raffle_id, read_at")
+      .eq("user_id", user.id)
+      .eq("audience", "superadmin")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (notisError) {
+      issues.push(`notificaciones: ${notisError.message}`);
+    } else {
+      superNotifs = (notis ?? []) as SuperNotificacion[];
     }
   }
 
@@ -1216,6 +1376,11 @@ export default async function SuperAdminPage({
       icon: Coins,
       label: "Ventas manuales (importe)",
       value: formatPrice(metrics.manualRevenue),
+    },
+    {
+      icon: Gift,
+      label: "Referidos exitosos",
+      value: nfmt.format(referidosExitosos),
     },
   ];
 
@@ -1905,6 +2070,36 @@ export default async function SuperAdminPage({
                 ),
               },
               {
+                key: "bonus",
+                header: "Bonus por referidos",
+                render: (raffle) => {
+                  const origenes = bonusDestino.get(raffle.id) ?? [];
+                  const destinoTitulo = raffle.bonus_raffle_id
+                    ? tituloSorteo.get(raffle.bonus_raffle_id) ??
+                      "sorteo exclusivo"
+                    : null;
+                  const regalados = premiosDestino.get(raffle.id) ?? 0;
+
+                  if (origenes.length === 0 && !destinoTitulo) {
+                    return <span className="text-fg-subtle">—</span>;
+                  }
+
+                  return (
+                    <div className="space-y-1 text-xs">
+                      {destinoTitulo && (
+                        <Badge variant="info">Entrega en: {destinoTitulo}</Badge>
+                      )}
+                      {origenes.length > 0 && (
+                        <p className="text-fg-muted">
+                          Recibe de: {origenes.join(", ")}
+                        </p>
+                      )}
+                      <p className="text-fg-muted">🎁 {regalados} regalado(s)</p>
+                    </div>
+                  );
+                },
+              },
+              {
                 key: "organizer",
                 header: "Organizador",
                 render: (raffle) => (
@@ -1957,6 +2152,132 @@ export default async function SuperAdminPage({
       )}
 
       {/* ================= DENUNCIAS ================= */}
+      {section === "referidos" && (
+        <section aria-labelledby="referidos-title" className="space-y-4">
+          <div>
+            <h2
+              id="referidos-title"
+              className="font-display text-lg font-semibold"
+            >
+              Referidos
+            </h2>
+            <p className="text-sm text-fg-subtle">
+              Top 10 por invitados que efectivamente compraron. Solo lectura.
+            </p>
+          </div>
+
+          <ResponsiveTable
+            rows={referidosTop}
+            getRowKey={(fila) => fila.referrerId}
+            empty={
+              <EmptyState
+                icon={Gift}
+                title="Sin referidos todavía"
+                description="Cuando un usuario invite a otro, aparece acá con su resultado."
+              />
+            }
+            columns={[
+              {
+                key: "nombre",
+                header: "Referente",
+                render: (fila) => (
+                  <span className="font-medium">{fila.nombre}</span>
+                ),
+              },
+              {
+                key: "invitados",
+                header: "Invitados",
+                render: (fila) => (
+                  <span className="tabular-nums">{fila.invitados}</span>
+                ),
+              },
+              {
+                key: "compraron",
+                header: "Compraron",
+                render: (fila) => (
+                  <Badge variant={fila.compraron > 0 ? "success" : "secondary"}>
+                    {fila.compraron}
+                  </Badge>
+                ),
+              },
+              {
+                key: "premios",
+                header: "Premios",
+                render: (fila) => (
+                  <span className="tabular-nums">{fila.premios}</span>
+                ),
+              },
+              {
+                key: "id",
+                header: "ID",
+                render: (fila) => (
+                  <span className="font-mono text-[11px] text-fg-subtle">
+                    {fila.referrerId.slice(0, 8)}
+                  </span>
+                ),
+              },
+            ]}
+          />
+        </section>
+      )}
+
+      {section === "notificaciones" && (
+        <section aria-labelledby="notis-title" className="space-y-4">
+          <div>
+            <h2
+              id="notis-title"
+              className="font-display text-lg font-semibold"
+            >
+              Notificaciones críticas
+            </h2>
+            <p className="text-sm text-fg-subtle">
+              Denuncias y pedidos de KYC dirigidos al superadmin (últimas 50).
+            </p>
+          </div>
+
+          {superNotifs.length === 0 ? (
+            <EmptyState
+              icon={Bell}
+              title="Sin avisos"
+              description="Cuando entre una denuncia o una solicitud de KYC, aparece acá."
+            />
+          ) : (
+            <ul className="space-y-2">
+              {superNotifs.map((noti) => (
+                <li
+                  key={noti.id}
+                  className="rounded-xl border border-hairline bg-panel-1 p-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-medium">
+                      {noti.title ?? noti.type}
+                    </p>
+                    <span className="text-[11px] text-fg-subtle">
+                      {formatDateTime(noti.created_at)}
+                    </span>
+                  </div>
+                  {noti.message && (
+                    <p className="mt-1 text-sm text-fg-muted">{noti.message}</p>
+                  )}
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-fg-subtle">
+                    <span className="font-mono">{noti.type}</span>
+                    {!noti.read_at && <Badge variant="warning">Sin leer</Badge>}
+                    {noti.raffle_id && (
+                      <Link
+                        href={`/admin/sorteos/${noti.raffle_id}`}
+                        className="font-medium text-brand-700 hover:underline dark:text-brand-300"
+                      >
+                        Ver sorteo
+                      </Link>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
       {section === "denuncias" && (
         <section aria-labelledby="denuncias-title" className="space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-2">

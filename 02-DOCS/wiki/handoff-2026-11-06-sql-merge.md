@@ -79,6 +79,38 @@ real de GitHub Actions, que corría aproximadamente una vez por hora.
 - El email de "pago aprobado" del comprador ya existe (`sendPaymentApprovedEmail`), pero la
   aprobación **manual** de una reserva (`organizer_mark_sold`) no lo dispara.
 
+## Superadmin (mismo día, tarde)
+
+- **Dashboard:** se agregó la tarjeta **Referidos exitosos** (`referrals.rewarded`). Las tarjetas de
+  usuarios, sorteos activos e ingresos, más el gráfico de ingresos por día, ya existían (0064).
+- **Pestaña Referidos:** Top 10 de referentes con invitados, cuántos compraron (números `sold`) y
+  cuántos premios se otorgaron. Solo lectura.
+- **Pestaña Notificaciones:** bandeja de `super_report` y `super_kyc` del superadmin (últimas 50).
+- **Pestaña Sorteos:** columna **Bonus por referidos** con la relación `bonus_raffle_id` (entrega en /
+  recibe de) y la cantidad de números 🎁 regalados.
+- **Impersonación:** ya existía completa (modo editor, cookie httpOnly, auditoría
+  `IMPERSONATE_USER`/`IMPERSONATE_END`). Se agregó **motivo opcional**, que queda en `details` del
+  audit. Sigue sin exponer tokens en la URL.
+- **Sin migración nueva:** son consultas y UI.
+
+### Pendiente manual de referidos
+
+La implementación y la base están verificadas (7/7, 7/7, 6/6, 8/8). Falta el recorrido en la app
+(reserva del invitado → aprobación → bono en el sorteo exclusivo), que requiere clics reales.
+
+### Prueba E2E automatizada: bloqueada
+
+No se agregó Playwright porque hoy no es ejecutable con seguridad:
+
+1. La `SUPABASE_SERVICE_ROLE_KEY` local está revocada (401), así que no se pueden crear usuarios de
+   prueba.
+2. El alta/login es **Google OAuth**: un navegador automatizado no puede completar el registro sin
+   un proveedor de email/contraseña o un bypass de sesión.
+3. No hay un proyecto de staging: correrlo contra producción crearía y borraría cuentas reales.
+
+Ruta sugerida: proyecto Supabase de staging + auth email/password + service role de staging, y recién
+ahí `tests/e2e/referral-flow.spec.ts` con Playwright.
+
 ## Backup
 
 Hecho el 2026-11-06 14:27 y repetido a las 14:46 con `01-TOOLS/backup/backup-db.ps1` (pg_dump 17.6

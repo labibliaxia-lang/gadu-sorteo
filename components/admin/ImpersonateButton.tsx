@@ -46,10 +46,16 @@ export function ImpersonateButton({
     );
     if (!confirmed) return;
 
+    const motivo =
+      window.prompt(
+        "Motivo (opcional, queda registrado en la auditoría):",
+        "",
+      ) ?? "";
+
     setBusy(true);
     setError(null);
 
-    const result = await startImpersonation(userId);
+    const result = await startImpersonation(userId, motivo);
     if (!result.ok) {
       setError(result.error);
       setBusy(false);

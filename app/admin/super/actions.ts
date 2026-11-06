@@ -1593,10 +1593,14 @@ async function signOutQuietly(
  */
 export async function startImpersonation(
   userId: string,
+  motivo?: string,
 ): Promise<ImpersonationStartResult> {
   const adminUser = await requireSuperadminSession();
   if (!adminUser) return { ok: false, error: "No autorizado" };
   if (!UUID_RE.test(userId)) return { ok: false, error: "Usuario inválido" };
+
+  // Motivo opcional: queda en la auditoría para saber por qué se entró.
+  const motivoLimpio = String(motivo ?? "").trim().slice(0, 200);
 
   const admin = createAdminClient();
   const { data: targetData, error: targetError } = await admin
@@ -1717,7 +1721,11 @@ export async function startImpersonation(
     action: "IMPERSONATE_USER",
     targetUserId: target.id,
     targetEmail,
-    details: { target_email: targetEmail, target_role: target.role },
+    details: {
+      target_email: targetEmail,
+      target_role: target.role,
+      motivo: motivoLimpio || null,
+    },
   });
 
   if (!audited) {
