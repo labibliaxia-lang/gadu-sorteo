@@ -475,9 +475,33 @@ con el SQL—: si alguien la deja sólo con `status: "closed"`, el test falla.
 **No ejercitado:** la acción real desde el panel, porque `/admin/super` exige el código maestro. Lo
 verificado es el `UPDATE` exacto que la acción ejecuta.
 
-**Sigue pendiente de decisión** (no son bugs, son producto): un estado «en revisión» visible para el
-comprador, impedir que el organizador reabra por API un sorteo pausado, y revisión previa para
-organizadores nuevos.
+**Ya no puede reabrirse** (migraciones `0083` + `0084`). Un trigger bloquea la vuelta a `active` mientras
+haya una denuncia `pending`:
+
+```
+El sorteo tiene una denuncia pendiente de revisión: no se puede volver a publicar
+```
+
+**Ojo con la primera versión.** La `0083` no frenaba nada: declaraba el trigger `security definer`, y
+dentro de una función `security definer` **`current_user` es el dueño de la función (`postgres`)**, no
+el rol del cliente. La exención se cumplía siempre y el guard salía sin mirar nada. Lo detecté probando
+contra la base, no leyendo.
+
+La `0084` lo parte en dos, cada pieza con el modo correcto: `tiene_denuncia_pendiente()` es `security
+definer` (para ver todas las denuncias sin que la RLS las filtre) y el trigger queda **invoker**.
+`lib/moderacion.test.ts` cubre justamente ese detalle.
+
+**Verificado en la base, los dos sentidos:**
+
+| Caso | Resultado |
+|---|---|
+| Denuncia `pending` → el dueño intenta republicar | ✅ error, estado sigue `closed` |
+| Denuncia resuelta → reintenta | ✅ republicado, estado `active` |
+
+Evidencia: `evidencia/2026-11-05-guard-republicacion/`.
+
+**Sigue pendiente de decisión** (producto, no bugs): un estado «en revisión» visible para el comprador,
+y revisión previa para organizadores nuevos.
 
 ---
 

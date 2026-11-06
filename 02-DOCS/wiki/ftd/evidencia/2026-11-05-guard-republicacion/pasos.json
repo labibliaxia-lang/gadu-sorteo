@@ -1,0 +1,66 @@
+﻿[
+    {
+        "paso":  "G1-0083-no-frenaba",
+        "rol":  "verificador",
+        "inicio":  "2026-11-05T22:39:10.7213658-03:00",
+        "nota":  "causa: trigger security definer -\u003e current_user es el dueno de la funcion (postgres), no authenticated",
+        "esperado":  "con denuncia pendiente, republicar debe fallar",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "el dueno devolvio el sorteo a active SIN error: el guard era decorativo",
+        "resultado":  "falla",
+        "fin":  "2026-11-05T22:39:10.7213658-03:00"
+    },
+    {
+        "paso":  "G2-correccion-0084",
+        "rol":  "repo",
+        "inicio":  "2026-11-05T22:39:10.7213658-03:00",
+        "nota":  null,
+        "esperado":  "separar la consulta de denuncias del chequeo de rol",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "tiene_denuncia_pendiente() security definer (inmune a RLS) + trigger invoker; test cubre que el trigger NO sea definer",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T22:39:10.7213658-03:00"
+    },
+    {
+        "paso":  "G3-bloquea-con-densuncia-pendiente",
+        "rol":  "organizador",
+        "inicio":  "2026-11-05T22:39:10.7213658-03:00",
+        "nota":  "verificado en la base real, con un organizador temporal autenticado por API",
+        "esperado":  "error claro y estado intacto",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "\u0027El sorteo tiene una denuncia pendiente de revision: no se puede volver a publicar\u0027; estado sigue closed",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T22:39:10.7213658-03:00"
+    },
+    {
+        "rol":  "organizador",
+        "inicio":  "2026-11-05T22:39:10.7213658-03:00",
+        "nota":  "control: el guard no traba la operacion normal",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "resuelta la denuncia, la republicacion pasa sin error y el estado queda active",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T22:39:10.7213658-03:00",
+        "paso":  "G4-deja-pasar-sin-denuncias"
+    },
+    {
+        "paso":  "G5-limpieza",
+        "rol":  "sistema",
+        "inicio":  "2026-11-05T22:39:10.7213658-03:00",
+        "nota":  null,
+        "esperado":  "no dejar rastros",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "sorteo, denuncia y cuenta temporal borrados; 11 sorteos, 0 deslistados, 1 cerrado",
+        "resultado":  "ok",
+        "fin":  "2026-11-05T22:39:10.7213658-03:00"
+    }
+]

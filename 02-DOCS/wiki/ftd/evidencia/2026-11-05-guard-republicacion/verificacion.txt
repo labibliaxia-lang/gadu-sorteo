@@ -1,0 +1,39 @@
+﻿Guard de republicacion (0083 -> 0084)
+=====================================
+
+Intento 1 (migracion 0083): NO FUNCIONABA
+  Con denuncia pending y el sorteo pausado, el dueno lo devolvio a active
+  sin ningun error.
+
+  Causa: el trigger estaba declarado security definer. Dentro de una funcion
+  security definer, current_user es el DUENO de la funcion (postgres), no el
+  rol que hace el UPDATE. La exencion
+    if current_user not in ('authenticated','anon') then return new;
+  se cumplia siempre, asi que el guard salia sin mirar nada.
+
+Intento 2 (migracion 0084): FUNCIONA
+  Se partio en dos, cada pieza con el modo correcto:
+    tiene_denuncia_pendiente(uuid) ... security definer, para ver todas las
+                                       denuncias sin que la RLS las filtre
+    guard_reopen_reported_raffle() ... invoker, para que current_user sea
+                                       de verdad authenticated
+
+Medido en la base real, con un organizador temporal autenticado por API:
+
+  1) denuncia PENDIENTE
+     -> "El sorteo tiene una denuncia pendiente de revision: no se puede
+         volver a publicar"
+     -> estado: closed   (no cambio)
+
+  2) denuncia RESUELTA
+     -> sin error
+     -> estado: active   (republicado normalmente)
+
+  Veredicto: funciona en los dos sentidos. Ni decorativo ni traba la operacion.
+
+Limpieza
+  Sorteo, denuncia y cuenta temporal borrados.
+  11 sorteos, 0 deslistados, 1 cerrado (el preexistente).
+
+Gates
+  typecheck 0 | lint limpio | 265/265 tests
