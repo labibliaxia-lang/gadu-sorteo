@@ -1,0 +1,46 @@
+﻿Textos doblemente codificados — verificacion
+============================================
+
+Sintoma que reporto el duenio
+  "Sorteo creado. Tu landing ya estÃ¡ publicada."
+  "NÃºmero ganador" / "AÃºn no se realizÃ³ el sorteo."
+  "Gestionar nÃºmeros" / "Gestionar premios"
+
+Diagnostico
+  No era la fuente ni el navegador: los archivos tenian el texto doblemente
+  codificado (UTF-8 leido como Latin-1 y vuelto a guardar).
+  La prueba esta en el conteo: 'o' con tilde aparecia 65 veces correcta y 33
+  como 'Ã³' DENTRO DEL MISMO ARCHIVO. Por eso unas palabras se veian bien y
+  otras no.
+
+  Archivos afectados (6 detectados, 5 corregidos):
+    app/admin/sorteos/[id]/page.tsx    72 secuencias  <- el panel que se veia
+    lib/types.ts                       18 (comentarios)
+    lib/payments.test.ts                6
+    02-DOCS/.../rediseno-mesa-de-sorteo.md 2
+    02-DOCS/.../evidencia/2026-11-05-A/pasos.json 58
+    (el sexto era el propio script de escaneo)
+
+Correccion
+  Tabla de reemplazo EXACTA, no una conversion del archivo entero: convertir a
+  ciegas habria roto las palabras que ya estaban bien.
+    Ã¡ -> a con tilde      Ã© -> e con tilde     Ã­ -> i con tilde
+    Ã³ -> o con tilde      Ãº -> u con tilde     Ã± -> n con tilde
+    Âº -> ordinal          Â· -> punto medio     Â¡ Â« Â» -> signos
+    â€” -> raya            ðŸŽ‰ -> emoji
+
+Verificado
+  · barrido de 494 archivos: 0 secuencias rotas
+  · build de Next: 0 secuencias rotas
+  · panel en el deploy real: 0 secuencias rotas en pantalla
+      "Gestionar números" ............... ok
+      "Gestionar premios" ............... ok
+      "Número ganador" .................. ok
+      "Aún no se realizó el sorteo" ..... ok
+      "Publicá el compromiso" ........... ok
+  · typecheck 0 | lint 0 | 290/290 tests | build 0
+
+Nota sobre la verificacion
+  El panel del sorteo solo renderiza para el duenio del sorteo, asi que se
+  verifico con un sorteo temporal propio (misma pagina, mismo componente).
+  Cuenta y sorteo borrados: 0 cuentas @gadu.test.

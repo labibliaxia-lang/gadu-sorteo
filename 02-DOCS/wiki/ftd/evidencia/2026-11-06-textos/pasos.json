@@ -1,0 +1,68 @@
+﻿[
+    {
+        "paso":  "T1-diagnostico",
+        "rol":  "auditor",
+        "inicio":  "2026-11-06T02:33:39.8121404-03:00",
+        "nota":  "no era fuente ni navegador: era el archivo",
+        "esperado":  "saber por que se ven \u0027estÃ¡\u0027, \u0027NÃºmero\u0027",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "6 archivos con texto doblemente codificado, 109 ocurrencias detectadas por patron. En el mismo archivo convivian formas correctas y rotas: \u0027o\u0027 con tilde 65 veces bien y 33 como \u0027Ã³\u0027",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T02:33:39.8121404-03:00"
+    },
+    {
+        "paso":  "T2-correccion",
+        "rol":  "repo",
+        "inicio":  "2026-11-06T02:33:39.8121404-03:00",
+        "nota":  "no se convirtio el archivo entero a ciegas",
+        "esperado":  "arreglar sin romper el texto que ya estaba bien",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "tabla de reemplazo exacta (Ã¡ -\u003e a con tilde, Ã³ -\u003e o con tilde, Âº -\u003e ordinal, etc.); 156 secuencias en 5 archivos; el grueso en app/admin/sorteos/[id]/page.tsx (72)",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T02:33:39.8121404-03:00"
+    },
+    {
+        "paso":  "T3-sin-residuos",
+        "rol":  "repo",
+        "inicio":  "2026-11-06T02:33:39.8121404-03:00",
+        "nota":  null,
+        "esperado":  "que no quede ninguna secuencia rota",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "barrido de los 494 archivos: 0 ocurrencias; el build de Next tampoco tiene ninguna",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T02:33:39.8121404-03:00"
+    },
+    {
+        "paso":  "T4-verificado-en-la-web",
+        "rol":  "organizador",
+        "inicio":  "2026-11-06T02:33:39.8121404-03:00",
+        "nota":  "se uso un sorteo temporal propio: el panel solo renderiza para el dueño, y la cuenta real no es accesible",
+        "esperado":  "ver el panel sin caracteres rotos",
+        "evidencia":  [
+                          "panel.png",
+                          "verificacion.txt"
+                      ],
+        "observado":  "panel del sorteo en el deploy: 0 secuencias rotas; \u0027Gestionar números\u0027, \u0027Gestionar premios\u0027, \u0027Número ganador\u0027, \u0027Aún no se realizó el sorteo\u0027, \u0027Publicá el compromiso\u0027 todas correctas",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T02:33:39.8121404-03:00"
+    },
+    {
+        "paso":  "T5-limpieza",
+        "rol":  "sistema",
+        "inicio":  "2026-11-06T02:33:39.8121404-03:00",
+        "nota":  null,
+        "esperado":  "no dejar rastros",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "cuenta y sorteo temporales borrados; 0 cuentas @gadu.test",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T02:33:39.8121404-03:00"
+    }
+]
