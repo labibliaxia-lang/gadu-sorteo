@@ -100,6 +100,8 @@ interface NumbersGridProps {  raffleId: string;
     note?: string | null;
   };
   raffleTitle?: string;
+  /** 0106: quien mira es el organizador dueño; no puede comprar acá. */
+  esDueno?: boolean;
 }
 
 export function NumbersGrid({
@@ -110,6 +112,7 @@ export function NumbersGrid({
   paymentType = "mercadopago",
   transferInfo,
   raffleTitle,
+  esDueno = false,
 }: NumbersGridProps) {
   const supabase = useMemo(() => createClient(), []);
   const cols = useColumnCount();
@@ -387,6 +390,8 @@ export function NumbersGrid({
         setLoginRequired(true);
         return;
       }
+      // 0106: el dueño no compra en su propio sorteo.
+      if (esDueno) return;
       const status = numbers.get(num)?.status ?? "available";
       if (status !== "available") return;
       setSelected((prev) => {
@@ -396,7 +401,7 @@ export function NumbersGrid({
         return next;
       });
     },
-    [numbers, userId],
+    [numbers, userId, esDueno],
   );
 
   const totalPrice = selected.size * pricePerNumber;
@@ -726,6 +731,15 @@ export function NumbersGrid({
 
   return (
     <div className={cn("space-y-4", selected.size > 0 && "pb-28 lg:pb-0")}>
+      {esDueno && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+          <p className="font-semibold">Este es tu sorteo</p>
+          <p className="mt-1">
+            Para probarlo, podés comprar en el sorteo de otro organizador. Acá
+            no podés reservar números.
+          </p>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-[13px] text-fg-subtle">
           <span>
@@ -752,7 +766,11 @@ export function NumbersGrid({
             <Button
               onClick={handleReservePrepaid}
               disabled={
-                selected.size === 0 || reserving || !isActive || sinDatosDeCobro
+                selected.size === 0 ||
+                reserving ||
+                !isActive ||
+                sinDatosDeCobro ||
+                esDueno
               }
             >
               <MessageCircle className="mr-1.5 h-4 w-4" />
@@ -770,7 +788,7 @@ export function NumbersGrid({
               {isDev && (
                 <Button
                   onClick={handleMockPayment}
-                  disabled={selected.size === 0 || checkingOut || !isActive}
+                  disabled={selected.size === 0 || checkingOut || !isActive || esDueno}
                 >
                   {checkingOut
                     ? "Procesando…"
@@ -782,7 +800,7 @@ export function NumbersGrid({
               <Button
                 variant={isDev ? "outline" : "default"}
                 onClick={handleCheckout}
-                disabled={selected.size === 0 || checkingOut || !isActive}
+                disabled={selected.size === 0 || checkingOut || !isActive || esDueno}
               >
                 {checkingOut
                   ? "Preparando pago…"
@@ -1047,7 +1065,7 @@ export function NumbersGrid({
             {userId ? (
               <Button
                 className="shrink-0"
-                disabled={reserving || !isActive}
+                disabled={reserving || !isActive || esDueno}
                 onClick={handleReservePrepaid}
               >
                 <MessageCircle className="mr-1.5 h-4 w-4" />

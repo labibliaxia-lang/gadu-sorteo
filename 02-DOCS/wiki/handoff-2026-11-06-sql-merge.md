@@ -98,9 +98,10 @@ real de GitHub Actions, que corría aproximadamente una vez por hora.
 La implementación y la base están verificadas (7/7, 7/7, 6/6, 8/8). Falta el recorrido en la app
 (reserva del invitado → aprobación → bono en el sorteo exclusivo), que requiere clics reales.
 
-### Prueba E2E automatizada: bloqueada
+### Prueba E2E automatizada: **descartada por ahora**
 
-No se agregó Playwright porque hoy no es ejecutable con seguridad:
+Decisión del 2026-11-06: no se implementa Playwright hasta tener un entorno de staging.
+La prueba **manual del flujo de referidos sigue pendiente y es del dueño del proyecto**.
 
 1. La `SUPABASE_SERVICE_ROLE_KEY` local está revocada (401), así que no se pueden crear usuarios de
    prueba.
@@ -108,8 +109,15 @@ No se agregó Playwright porque hoy no es ejecutable con seguridad:
    un proveedor de email/contraseña o un bypass de sesión.
 3. No hay un proyecto de staging: correrlo contra producción crearía y borraría cuentas reales.
 
-Ruta sugerida: proyecto Supabase de staging + auth email/password + service role de staging, y recién
+Ruta futura: proyecto Supabase de staging + auth email/password + service role de staging, y recién
 ahí `tests/e2e/referral-flow.spec.ts` con Playwright.
+
+### Compra en el propio sorteo (0106)
+
+Los organizadores ya no pueden reservar números en un sorteo que crearon: la RPC lanza
+*"No podés comprar números en tu propio sorteo"* (idéntico para admin, superadmin y user). Comprar
+en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los botones. Verificador
+`verificar_0106.sql`: 5/5.
 
 ## Backup
 

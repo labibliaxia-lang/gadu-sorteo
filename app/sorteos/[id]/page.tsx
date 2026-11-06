@@ -913,6 +913,7 @@ export default async function RafflePage({
             raffleStatus={raffle.status}
             isDev={isDev}
             paymentType={raffle.payment_type}
+            esDueno={Boolean(viewer) && raffle.created_by === viewer?.id}
             transferInfo={{
               alias: raffle.transfer_alias,
               cbu: raffle.transfer_cbu,
