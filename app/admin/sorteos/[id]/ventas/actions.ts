@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdminSession } from "@/lib/auth";
+import { sendRefundIssuedEmail } from "@/lib/email";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export type VentaActionResult =
@@ -29,6 +31,24 @@ export async function refundAndRelease(
   }
 
   const supabase = createClient();
+
+  // Antes de liberar: quiénes son los dueños de esos números. Después de la
+  // RPC el `sold_to` queda en null y ya no hay a quién avisar.
+  const { data: filas } = await supabase
+    .from("raffle_numbers")
+    .select("number, sold_to")
+    .eq("raffle_id", raffleId)
+    .eq("status", "sold")
+    .in("number", numbers);
+
+  const porComprador = new Map<string, number[]>();
+  for (const fila of filas ?? []) {
+    if (!fila.sold_to) continue;
+    const lista = porComprador.get(fila.sold_to) ?? [];
+    lista.push(fila.number as number);
+    porComprador.set(fila.sold_to, lista);
+  }
+
   const { data, error } = await supabase.rpc("refund_and_release_numbers", {
     p_raffle_id: raffleId,
     p_numbers: numbers,
@@ -36,6 +56,36 @@ export async function refundAndRelease(
   });
 
   if (error) return { ok: false, error: error.message };
+
+  // Aviso al comprador: es transaccional y sirve para reclamar si fue un error.
+  // Best-effort: si el email falla, la devolución ya está hecha.
+  try {
+    const admin = createAdminClient();
+    const { data: raffle } = await admin
+      .from("raffles")
+      .select("title")
+      .eq("id", raffleId)
+      .maybeSingle();
+
+    for (const [comprador, numeros] of porComprador) {
+      const { data: perfil } = await admin
+        .from("profiles")
+        .select("email, terms_accepted_at")
+        .eq("id", comprador)
+        .maybeSingle();
+
+      if (!perfil?.email || !perfil.terms_accepted_at) continue;
+
+      await sendRefundIssuedEmail({
+        to: perfil.email as string,
+        raffleTitle: raffle?.title ?? "tu sorteo",
+        raffleId,
+        numbers: numeros.sort((a, b) => a - b),
+      });
+    }
+  } catch (error) {
+    console.error("[email] devolución registrada:", error);
+  }
 
   revalidatePath(`/admin/sorteos/${raffleId}/ventas`);
   revalidatePath(`/admin/sorteos/${raffleId}`);

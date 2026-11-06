@@ -372,3 +372,9 @@ Causa      — la seleccion arrancaba con TODOS los numeros marcados: tocar un n
 Fix        — la seleccion arranca vacia, hay botones Todos/Ninguno, el confirmar se deshabilita sin seleccion y el cartel lista los numeros exactos antes de ejecutar.
 Verificacion — verificar_fix_devolucion.sql 5/5: 6 vendidos, devolver 2 y 4 libera solo esos, deja los otros 4 vendidos, devuelve 200 del pago de 600 y audita solo los elegidos.
 Leccion    — en una accion destructiva, ningun elemento puede venir premarcado: "todo marcado" se lee como "nada elegido". La confirmacion tiene que enumerar el efecto exacto.
+
+## 2026-11-06 — La devolucion avisa al comprador  (feature: panel-ventas)
+Decision   — al registrar una devolucion se manda un email transaccional al comprador con los numeros devueltos y la invitacion a reclamar si no la pidio. No depende de email_opt_in (es transaccional, no marketing); si depende de que tenga email y terminos aceptados.
+Why        — una devolucion es plata que sale del historial del comprador; sin aviso no tiene forma de notar un error ni de reclamarlo.
+Best-effort — si el email falla, la devolucion ya esta registrada: se loguea y sigue.
+Evidence   — sendRefundIssuedEmail en lib/email.ts, llamado desde refundAndRelease; gates verdes.

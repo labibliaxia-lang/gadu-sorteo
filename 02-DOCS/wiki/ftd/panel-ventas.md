@@ -103,6 +103,10 @@ teléfono sale de `raffle_buyers`, que ya respeta la visibilidad por KYC.
   `verificar_fix_devolucion.sql` **5/5**: 6 vendidos, devolver 2 y 4 → libera exactamente 2 y 4,
   deja los otros 4 vendidos, devuelve 200 del pago de 600, audita solo los elegidos y el resumen
   queda en 4 números / 600 / 200 / 400.
+- **Aviso al comprador (2026-11-06).** Al registrar una devolución se envía un email
+  transaccional al comprador con los números devueltos y la invitación a reclamar si no la pidió.
+  Es transaccional, no marketing: no depende de `email_opt_in`, solo de que tenga email y términos
+  aceptados. Best-effort: si el email falla, la devolución ya está hecha y solo queda el log.
 - Pendiente: control visual del disparador (números sin marcar + confirmación con la lista) y la
   reparación de la devolución accidental, si el dueño la pide.
 

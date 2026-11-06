@@ -245,6 +245,42 @@ export async function sendWinnerEmail(params: {
   );
 }
 
+/**
+ * Aviso al comprador de que se registró una devolución sobre sus números.
+ *
+ * Es transaccional, no marketing: sirve para que la persona pueda reclamar si
+ * la devolución fue un error. Por eso no depende de `email_opt_in`, solo de que
+ * haya un email en el perfil.
+ */
+export async function sendRefundIssuedEmail(params: {
+  to: string | null | undefined;
+  raffleTitle: string;
+  raffleId: string;
+  numbers: number[];
+}): Promise<boolean> {
+  const title = escapeHtml(params.raffleTitle);
+  const numeros = escapeHtml(params.numbers.join(", "));
+
+  const html = layout({
+    title: "Se registró una devolución",
+    body:
+      paragraph(
+        `Registramos una devolución sobre <strong>${params.numbers.length}</strong> número(s) del sorteo <strong>${title}</strong>.`,
+      ) +
+      paragraph(`Números: <strong>${numeros}</strong>.`) +
+      paragraph(
+        "Si no pediste esta devolución, escribile al organizador desde la página del sorteo: queda registrada en tu historial y podés reclamarla.",
+      ) +
+      button(raffleUrl(params.raffleId), "Ver el sorteo"),
+  });
+
+  return sendEmail(
+    params.to,
+    `Devolución registrada en ${params.raffleTitle}`,
+    html,
+  );
+}
+
 /** Aviso al organizador: entró una reserva nueva en uno de sus sorteos. */
 export async function sendOrganizerReservationEmail(params: {
   to: string | null | undefined;
