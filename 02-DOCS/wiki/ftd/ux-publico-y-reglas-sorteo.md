@@ -77,8 +77,13 @@ la plata, la gente y la fecha. De ahí salieron cuatro cambios:
 ## Evidencia
 
 - **0087 (eliminar):** verificado 5/5 el 2026-11-06.
-- **0088 (estados y ventana de venta):** escrito, pendiente de aplicar y correr el verificador.
+- **0088 (estados y ventana de venta):** aplicada y **verificada 5/5 el 2026-11-06** —
+  control de cierre, cancelado sin reapertura («su estado no se puede cambiar»), sorteado sin
+  reapertura (guarda de 0088), reserva válida antes de la fecha y rechazo después.
 - **UI:** implementada; falta la prueba visual (grilla, volver, botones de ciclo de vida).
+- **Lección del verificador:** tres corridas fallaron por el mismo patrón — confundir "no hubo
+  error" con "no pasó nada". RLS bloquea con 0 filas, y el script mezclaba la sesión del dueño con
+  la del comprador. Ahora mide el estado resultante y separa las identidades.
 
 ## Next
 
