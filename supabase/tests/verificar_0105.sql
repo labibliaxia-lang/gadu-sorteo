@@ -23,11 +23,30 @@ begin
     coalesce(current_setting('test.v105', true), '') || p_linea || E'\n', true);
 end $$;
 
+-- Obtiene o crea el vínculo; la unique de la 0103 impide insertarlo dos veces.
+create or replace function pg_temp.vinculo(p_ref uuid, p_inv uuid)
+returns uuid language plpgsql as $$
+declare
+  v_id uuid;
+begin
+  insert into public.referrals (referrer_id, referred_id)
+  values (p_ref, p_inv)
+  on conflict (referrer_id, referred_id) do nothing;
+
+  select id into v_id
+    from public.referrals
+   where referrer_id = p_ref and referred_id = p_inv;
+
+  return v_id;
+end $$;
+
 do $$
 declare
   v_owner uuid;
   v_ref uuid;
   v_inv uuid;
+  v_inv2 uuid;
+  v_inv3 uuid;
   v_otro uuid;
   v_main uuid;
   v_bonus uuid;
@@ -47,6 +66,23 @@ begin
    where id not in (
      coalesce(v_owner, '00000000-0000-0000-0000-000000000000'::uuid),
      coalesce(v_ref, '00000000-0000-0000-0000-000000000000'::uuid))
+   order by created_at limit 1;
+
+  -- Pares distintos para los escenarios 6 y 7: si reutilizara el mismo
+  -- vínculo, ya estaría premiado y devolvería null por el motivo equivocado.
+  select id into v_inv2 from public.profiles
+   where id not in (
+     coalesce(v_owner, '00000000-0000-0000-0000-000000000000'::uuid),
+     coalesce(v_ref, '00000000-0000-0000-0000-000000000000'::uuid),
+     coalesce(v_inv, '00000000-0000-0000-0000-000000000000'::uuid))
+   order by created_at limit 1;
+
+  select id into v_inv3 from public.profiles
+   where id not in (
+     coalesce(v_owner, '00000000-0000-0000-0000-000000000000'::uuid),
+     coalesce(v_ref, '00000000-0000-0000-0000-000000000000'::uuid),
+     coalesce(v_inv, '00000000-0000-0000-0000-000000000000'::uuid),
+     coalesce(v_inv2, '00000000-0000-0000-0000-000000000000'::uuid))
    order by created_at limit 1;
   select id into v_otro from public.profiles
    where role in ('admin', 'superadmin')
@@ -77,8 +113,7 @@ begin
      set status='sold', sold_to=v_inv, sold_at=now()
    where raffle_id = v_main and number = 1;
 
-  insert into public.referrals (referrer_id, referred_id)
-  values (v_ref, v_inv) returning id into v_rel;
+  v_rel := pg_temp.vinculo(v_ref, v_inv);
 
   v_num := public.reward_referral(v_rel, v_main);
 
@@ -96,7 +131,7 @@ begin
   values (v_main2, 1, 'available');
 
   update public.raffle_numbers
-     set status='sold', sold_to=v_inv, sold_at=now()
+     set status='sold', sold_to=v_inv2, sold_at=now()
    where raffle_id = v_main2 and number = 1;
 
   -- Escenario con exclusivo ajeno
@@ -117,13 +152,15 @@ begin
     values (v_main3, 1, 'available');
 
     update public.raffle_numbers
-       set status='sold', sold_to=v_inv, sold_at=now()
+       set status='sold', sold_to=v_inv3, sold_at=now()
      where raffle_id = v_main3 and number = 1;
   end if;
 
   perform set_config('test.v105.owner', v_owner::text, true);
   perform set_config('test.v105.ref', v_ref::text, true);
   perform set_config('test.v105.inv', v_inv::text, true);
+  perform set_config('test.v105.inv2', coalesce(v_inv2::text, ''), true);
+  perform set_config('test.v105.inv3', coalesce(v_inv3::text, ''), true);
   perform set_config('test.v105.main', v_main::text, true);
   perform set_config('test.v105.bonus', v_bonus::text, true);
   perform set_config('test.v105.main2', v_main2::text, true);
@@ -251,15 +288,17 @@ end $$;
 do $$
 declare
   v_ref uuid := nullif(current_setting('test.v105.ref', true), '')::uuid;
-  v_inv uuid := nullif(current_setting('test.v105.inv', true), '')::uuid;
+  v_inv uuid := nullif(current_setting('test.v105.inv2', true), '')::uuid;
   v_main2 uuid := nullif(current_setting('test.v105.main2', true), '')::uuid;
   v_rel uuid;
   v_num int;
 begin
-  if v_main2 is null then return; end if;
+  if v_main2 is null or v_inv is null then
+    perform pg_temp.anota('6 AVISO    hacen falta cuatro cuentas');
+    return;
+  end if;
 
-  insert into public.referrals (referrer_id, referred_id)
-  values (v_ref, v_inv) returning id into v_rel;
+  v_rel := pg_temp.vinculo(v_ref, v_inv);
 
   v_num := public.reward_referral(v_rel, v_main2);
 
@@ -272,18 +311,17 @@ end $$;
 do $$
 declare
   v_ref uuid := nullif(current_setting('test.v105.ref', true), '')::uuid;
-  v_inv uuid := nullif(current_setting('test.v105.inv', true), '')::uuid;
+  v_inv uuid := nullif(current_setting('test.v105.inv3', true), '')::uuid;
   v_main3 uuid := nullif(current_setting('test.v105.main3', true), '')::uuid;
   v_rel uuid;
   v_num int;
 begin
-  if v_main3 is null then
+  if v_main3 is null or v_inv is null then
     perform pg_temp.anota('7 AVISO    no hay un segundo organizador para probar');
     return;
   end if;
 
-  insert into public.referrals (referrer_id, referred_id)
-  values (v_ref, v_inv) returning id into v_rel;
+  v_rel := pg_temp.vinculo(v_ref, v_inv);
 
   v_num := public.reward_referral(v_rel, v_main3);
 
