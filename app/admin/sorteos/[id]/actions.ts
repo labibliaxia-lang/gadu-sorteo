@@ -82,18 +82,46 @@ async function notifyWinner(
     const admin = createAdminClient();
     const { data: profile } = await admin
       .from("profiles")
-      .select("email, email_opt_in, terms_accepted_at")
+      .select("email, phone, full_name")
       .eq("id", winnerUserId)
       .maybeSingle();
 
-    if (profile?.email && profile.email_opt_in && profile.terms_accepted_at) {
-      await sendWinnerEmail({
+    // Es transaccional: alcanza con tener email. Antes exigía opt-in y
+    // términos, y si faltaban el aviso se perdía en silencio.
+    let enviado = false;
+    if (profile?.email) {
+      enviado = await sendWinnerEmail({
         to: profile.email as string,
         raffleTitle: title,
         raffleId,
         winnerNumber,
       });
     }
+
+    if (enviado) return;
+
+    // No se pudo avisar: que el organizador lo sepa ahora, no cuando reclame.
+    const { data: raffle } = await admin
+      .from("raffles")
+      .select("created_by, title")
+      .eq("id", raffleId)
+      .maybeSingle();
+
+    if (!raffle?.created_by) return;
+
+    await admin.from("notifications").insert({
+      user_id: raffle.created_by,
+      type: "winner_unreachable",
+      raffle_id: raffleId,
+      subject_user_id: winnerUserId,
+      payload: {
+        winner_name: profile?.full_name ?? "El ganador",
+        winner_number: winnerNumber,
+        buyer_phone: profile?.phone ?? null,
+        reason: profile?.email ? "envio_fallido" : "sin_email",
+      },
+      priority: "urgent",
+    });
   } catch (error) {
     console.error("[email] ganador:", error);
   }

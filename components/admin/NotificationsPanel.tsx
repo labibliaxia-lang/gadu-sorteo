@@ -14,7 +14,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatPrice } from "@/lib/utils";
-import { waHref } from "@/lib/whatsapp";
+import { waHref, waLink } from "@/lib/whatsapp";
 
 export interface NotificationItem {
   id: string;
@@ -25,6 +25,7 @@ export interface NotificationItem {
     count?: number;
     buyer_name?: string;
     buyer_phone?: string | null;
+    winner_number?: number;
     total?: number | string;
     price_per_number?: number | string;
   } | null;
@@ -40,6 +41,7 @@ const TIPO_LABEL: Record<string, string> = {
   reservation_expired: "Reserva vencida y liberada",
   refund_requested: "Pedido de devolución",
   refund_confirmed: "El comprador confirmó que recibió la devolución",
+  winner_unreachable: "El ganador no tiene email: avisale vos",
   draw_ready: "Sorteo listo para sortear",
   report_pending: "Denuncia pendiente",
 };
@@ -232,6 +234,13 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
                         vendidos.
                       </p>
                     )}
+                    {item.type === "winner_unreachable" && (
+                      <p className="max-w-md text-xs text-fg-subtle">
+                        El sorteo tiene ganador pero no se le pudo avisar por
+                        email. Contactalo por WhatsApp o teléfono con el número
+                        ganador a mano.
+                      </p>
+                    )}
                   </div>
 
                   {reloj && esReserva && (
@@ -321,6 +330,23 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
                     >
                       <MessageCircle className="mr-1.5 h-4 w-4" />
                       Pedir comprobante
+                    </a>
+                  )}
+
+                  {item.type === "winner_unreachable" && telefono && item.raffle_id && (
+                    <a
+                      href={waLink(
+                        telefono,
+                        `Hola ${nombre}, saliste ganador del sorteo con el número ${
+                          item.payload?.winner_number ?? ""
+                        }. Escribime para coordinar la entrega del premio.`,
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={buttonVariants({ variant: "ghost", size: "sm" })}
+                    >
+                      <MessageCircle className="mr-1.5 h-4 w-4" />
+                      Avisarle por WhatsApp
                     </a>
                   )}
 

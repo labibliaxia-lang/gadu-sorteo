@@ -10,14 +10,22 @@ export function waHref(
   nombre: string,
   numeros: readonly number[],
 ): string {
-  const digits = (phone ?? "").replace(/\D/g, "");
-  const destino = digits ? (digits.startsWith("54") ? digits : `54${digits}`) : "";
-
-  const texto = encodeURIComponent(
+  return waLink(
+    phone,
     `Hola ${nombre}, recibimos tu reserva de ${numeros.length} número(s) en Gadu. Pasános el comprobante para confirmarla.`,
   );
+}
+
+/** Link de WhatsApp con un texto libre. Sin teléfono, abre el selector. */
+export function waLink(
+  phone: string | null | undefined,
+  texto: string,
+): string {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  const destino = digits ? (digits.startsWith("54") ? digits : `54${digits}`) : "";
+  const cuerpo = encodeURIComponent(texto);
 
   return destino
-    ? `https://wa.me/${destino}?text=${texto}`
-    : `https://wa.me/?text=${texto}`;
+    ? `https://wa.me/${destino}?text=${cuerpo}`
+    : `https://wa.me/?text=${cuerpo}`;
 }

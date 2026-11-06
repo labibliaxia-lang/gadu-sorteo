@@ -62,18 +62,44 @@ async function notifyWinner(
 
     const { data: profile } = await admin
       .from("profiles")
-      .select("email, email_opt_in, terms_accepted_at")
+      .select("email, phone, full_name")
       .eq("id", winnerUserId)
       .maybeSingle();
 
-    if (profile?.email && profile.email_opt_in && profile.terms_accepted_at) {
-      await sendWinnerEmail({
+    // Transaccional: con email alcanza. Antes exigía opt-in y términos.
+    let enviado = false;
+    if (profile?.email) {
+      enviado = await sendWinnerEmail({
         to: profile.email as string,
         raffleTitle: title,
         raffleId,
         winnerNumber: winningNumber,
       });
     }
+
+    if (enviado) return;
+
+    const { data: raffle } = await admin
+      .from("raffles")
+      .select("created_by")
+      .eq("id", raffleId)
+      .maybeSingle();
+
+    if (!raffle?.created_by) return;
+
+    await admin.from("notifications").insert({
+      user_id: raffle.created_by,
+      type: "winner_unreachable",
+      raffle_id: raffleId,
+      subject_user_id: winnerUserId,
+      payload: {
+        winner_name: profile?.full_name ?? "El ganador",
+        winner_number: winningNumber,
+        buyer_phone: profile?.phone ?? null,
+        reason: profile?.email ? "envio_fallido" : "sin_email",
+      },
+      priority: "urgent",
+    });
   } catch (error) {
     console.error("[auto-draw] email al ganador:", error);
   }
