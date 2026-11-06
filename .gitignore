@@ -90,3 +90,6 @@ gcm-diagnose.log
 .mfa-secrets.json
 .sim-password.tmp
 .env.prod-sim.local
+
+# Copias de seguridad: llevan datos personales, nunca al repositorio
+backups/

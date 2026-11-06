@@ -1,0 +1,61 @@
+﻿Quien puede publicar un sorteo — auditoria 2026-11-06
+=====================================================
+
+La cadena, en orden, para que un desconocido publique:
+
+1) Cuenta de Google
+   handle_new_user (0050) crea el perfil.
+   force_profile_role_on_insert (0067) fuerza role='user' en altas del cliente.
+   -> no se puede nacer admin.
+
+2) Rol de organizador  (role in ('admin','superadmin'))
+   prevent_role_self_update (0010): si auth.uid() no es admin, cambiar role aborta.
+   approveRoleRequest (super/actions.ts): requireSuperadminSession.
+   organizer_invitations: politica organizer_invitations_superadmin_all (0021).
+   -> lo da unicamente el superadmin.
+
+3) Verificacion de identidad  (verification_status='approved')
+   prevent_sensitive_self_update (0025): el propio usuario solo puede poner 'pending'.
+   approveVerification (verificacion/actions.ts:317): requireSuperadminSession.
+   -> la aprueba unicamente el superadmin.
+
+4) Alta del sorteo
+   RLS raffles_insert_owner: is_admin() and created_by = auth.uid()  (0041:47-49)
+   trigger enforce_organizer_kyc (0060:57-67): aprobado + 9 campos
+   trigger enforce_plan_raffle_limit (0024:90-129): tope por plan
+   -> el camino normal esta cerrado.
+
+AGUJERO ENCONTRADO
+   enforce_organizer_kyc arranca con:
+       if new.status <> 'active' then return new; end if;      (0060:34-36)
+
+   O sea: solo controla KYC cuando el sorteo se crea ACTIVO. Y la home no filtra
+   por estado, solo por is_listed (app/page.tsx:157).
+
+   Resultado: una cuenta con role='admin' pero SIN KYC aprobado puede insertar un
+   sorteo en estado 'closed' (o cualquier otro no activo), y ese sorteo APARECE EN
+   LA HOME, con su texto, su alias y su WhatsApp.
+
+   En la plataforma no se puede reservar (reserve_numbers_prepaid exige 'active'),
+   pero la pagina es publica y ofrece un WhatsApp: alcanza para pedir
+   transferencias por fuera. Es el vector de estafa clasico.
+
+   Probado dos veces de forma indirecta: un sorteo 'closed' real ("sorteo
+   navidad") aparece hoy en el HTML de la home.
+
+COMO SE LLEGA A role='admin' SIN KYC
+   prevent_role_self_update solo exige is_admin(), no is_superadmin(). Es decir:
+   un organizador ya aprobado (que es admin) puede promover a otro a admin.
+   Ese otro queda con role='admin' y verification_status='pending'.
+   No puede publicar un sorteo activo, pero SI uno 'closed', y verlo en la home.
+
+   No es explotable por un desconocido solo, pero reduce el control a "un
+   organizador de confianza" en vez de "el superadmin".
+
+ARREGLO PROPUESTO (0085)
+   Extender el guard de KYC a cualquier sorteo que pueda quedar visible:
+       if new.status <> 'active' and new.is_listed is not true then return new; end if;
+   Con is_listed por defecto en true, un alta sin KYC solo pasa si se marca como
+   no listado. Un borrador sigue siendo posible; una pagina publica, no.
+
+   A decidir aparte: si un admin debe poder promover a otro a admin (0010).
