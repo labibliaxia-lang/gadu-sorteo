@@ -899,7 +899,9 @@ export default async function RafflePage({
               <p className="mt-1">
                 Reservás tus números y coordinás el pago por transferencia. Si el
                 organizador cancela el sorteo, se devuelve el{" "}
-                <strong>100% del dinero por transferencia</strong>.
+                <strong>100% del dinero por el mismo medio de pago</strong>. No se
+                realizan devoluciones una vez confirmado el pago y realizado el
+                sorteo.
               </p>
             </div>
           )}

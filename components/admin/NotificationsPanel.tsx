@@ -59,7 +59,19 @@ function restante(iso: string | null, now: number): string | null {
   const ms = new Date(iso).getTime() - now;
   if (Number.isNaN(ms)) return null;
   if (ms <= 0) return "vencida";
+
   const s = Math.floor(ms / 1000);
+
+  // 48 h se lee mejor como "2 días" que como "2880:00".
+  if (s >= 24 * 3600) {
+    const dias = Math.floor(s / 86400);
+    return `${dias} día${dias === 1 ? "" : "s"}`;
+  }
+  if (s >= 3600) {
+    const horas = Math.floor(s / 3600);
+    const minutos = Math.floor((s % 3600) / 60);
+    return `${horas} h ${minutos} min`;
+  }
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 

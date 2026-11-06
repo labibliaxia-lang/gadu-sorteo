@@ -797,6 +797,15 @@ export function NumbersGrid({
         </div>
       </div>
 
+      {isTransfer && (
+        <p className="text-[11px] leading-relaxed text-fg-subtle">
+          Si el organizador cancela el sorteo, se devuelve el{" "}
+          <strong>100% del dinero por el mismo medio de pago</strong>. No se
+          realizan devoluciones una vez confirmado el pago y realizado el
+          sorteo.
+        </p>
+      )}
+
       {error && (
         <p className="rounded-md bg-destructive/10 p-3 text-[13px] text-destructive">
           {error}
