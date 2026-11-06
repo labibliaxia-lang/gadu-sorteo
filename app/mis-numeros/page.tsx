@@ -47,6 +47,14 @@ interface RaffleNumbersGroup {
   reserved: { number: number; until: string | null }[];
 }
 
+interface Premio {
+  raffle_id: string;
+  position: number;
+  number: number;
+  prize_title: string | null;
+  raffles: { title: string; whatsapp_contact: string | null } | null;
+}
+
 const STATUS_LABEL: Record<string, string> = {
   active: "Activo",
   closed: "Cerrado",
@@ -74,6 +82,7 @@ export default function MisNumerosPage() {
     new Set(),
   );
   const [reviewTarget, setReviewTarget] = useState<string | null>(null);
+  const [premios, setPremios] = useState<Premio[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -110,6 +119,19 @@ export default function MisNumerosPage() {
           (myReviews ?? []).map((review) => review.raffle_id as string),
         ),
       );
+
+      // Premios ganados: lo que el jugador necesita ver al entrar, sin
+      // depender de un email que puede no tener cargado.
+      const { data: wins } = await supabase
+        .from("raffle_winners")
+        .select(
+          "raffle_id, position, number, prize_title, raffles(title, whatsapp_contact)",
+        )
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      setPremios((wins as unknown as Premio[]) ?? []);
 
       setLoading(false);
     }
@@ -203,6 +225,63 @@ export default function MisNumerosPage() {
           Tus números confirmados y las reservas que están esperando el pago.
         </p>
       </header>
+
+      {premios.length > 0 && (
+        <section className="space-y-3 rounded-xl border border-emerald-600/40 bg-emerald-500/5 p-4">
+          <h2 className="text-lg font-semibold">🏆 ¡Saliste ganador!</h2>
+          <p className="text-sm text-muted-foreground">
+            Escribile al organizador para coordinar la entrega del premio.
+          </p>
+          <ul className="space-y-2">
+            {premios.map((premio) => {
+              const texto = `Hola, salí ganador del sorteo ${
+                premio.raffles?.title ?? ""
+              } con el número ${premio.number}. Te escribo para coordinar la entrega del premio.`;
+              const wa = whatsappHref(
+                premio.raffles?.whatsapp_contact ?? null,
+                texto,
+              );
+
+              return (
+                <li
+                  key={`${premio.raffle_id}-${premio.position}`}
+                  className="rounded-lg border bg-card p-3 text-sm"
+                >
+                  <p className="font-medium">
+                    {premio.raffles?.title ?? "Sorteo"}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {premio.position === 1
+                      ? "1.er premio"
+                      : `${premio.position}º premio`}
+                    {premio.prize_title ? ` · ${premio.prize_title}` : ""} · Nº{" "}
+                    {premio.number}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {wa && (
+                      <a
+                        href={wa}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                      >
+                        <MessageCircle className="mr-1.5 h-4 w-4" />
+                        Escribir al organizador
+                      </a>
+                    )}
+                    <Link
+                      href={`/sorteos/${premio.raffle_id}`}
+                      className={buttonVariants({ variant: "ghost", size: "sm" })}
+                    >
+                      Ver sorteo
+                    </Link>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <MisDevoluciones />
 
