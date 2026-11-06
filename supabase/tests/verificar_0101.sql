@@ -242,10 +242,11 @@ begin
     return;
   end if;
 
+  -- Todo perfil nace en 'pending'; la subida de documentos es la que avisa.
   update public.profiles
-     set verification_status = 'pending'
-   where id = v_buyer
-     and verification_status <> 'pending';
+     set verification_status = 'pending',
+         dni_front_url = 'verificador/kyc-' || extract(epoch from now())::text || '.jpg'
+   where id = v_buyer;
 
   perform pg_temp.anota('9 ' || case when exists (
     select 1 from public.notifications

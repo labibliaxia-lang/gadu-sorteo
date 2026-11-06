@@ -237,8 +237,17 @@ as $$
 declare
   v_admin record;
 begin
-  if new.verification_status <> 'pending'
-     or coalesce(old.verification_status, '') = 'pending' then
+  if new.verification_status <> 'pending' then
+    return new;
+  end if;
+
+  -- Todo perfil nace en 'pending': la transición sola no alcanza. Si el
+  -- usuario sube documentos por primera vez, el estado no cambia pero sí los
+  -- archivos, y el superadmin tiene que enterarse igual.
+  if coalesce(old.verification_status, '') = 'pending'
+     and coalesce(old.dni_front_url, '') = coalesce(new.dni_front_url, '')
+     and coalesce(old.dni_back_url, '') = coalesce(new.dni_back_url, '')
+     and coalesce(old.face_url, '') = coalesce(new.face_url, '') then
     return new;
   end if;
 
