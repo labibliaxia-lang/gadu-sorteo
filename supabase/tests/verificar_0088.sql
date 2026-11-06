@@ -84,8 +84,10 @@ begin
   returning id into v_id;
   perform set_config('test.v88.sorteado', v_id::text, true);
 
+  -- Los pasos 1-3 corren como el dueño: sin eso, RLS bloquea el update con
+  -- 0 filas y el verificador no prueba nada.
   perform set_config('request.jwt.claims',
-    json_build_object('sub', v_buyer, 'role', 'authenticated')::text, true);
+    json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
   perform set_config('test.v88.buyer', v_buyer::text, true);
 end $$;
 
@@ -179,6 +181,14 @@ end $$;
 -- ---------------------------------------------------------------------
 -- 4) Control: reservar antes de la fecha
 -- ---------------------------------------------------------------------
+-- Los pasos 4 y 5 corren como el comprador.
+do $$
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', current_setting('test.v88.buyer', true), 'role', 'authenticated')::text,
+    true);
+end $$;
+
 do $$
 declare
   v_id uuid := nullif(current_setting('test.v88.futuro', true), '')::uuid;
