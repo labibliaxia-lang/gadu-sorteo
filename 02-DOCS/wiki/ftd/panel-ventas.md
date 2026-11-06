@@ -122,7 +122,9 @@ teléfono sale de `raffle_buyers`, que ya respeta la visibilidad por KYC.
   `refunds` guarda `numbers`. La interfaz se adaptó: el botón registra la devolución y avisa que los
   números **siguen vendidos hasta marcarla pagada**. Los verificadores 0091, 0092 y
   `verificar_fix_devolucion` quedan **superseded**; el vigente es
-  `verificar_0094_liberar_al_pagar.sql`.
+  `verificar_0094_liberar_al_pagar.sql`, **verificado 5/5 el 2026-11-06**: registrar no libera,
+  guarda los números, al pagarse libera solo esos, queda auditado y con el sorteo sorteado rechaza
+  el registro.
 - **Choque de numeración (2026-11-06):** dos sesiones crearon 0090, 0091 y 0094 en paralelo. El
   ledger conserva una nota por número aunque se hayan aplicado las dos. Las migraciones de una misma
   línea deben salir de una sola sesión.
