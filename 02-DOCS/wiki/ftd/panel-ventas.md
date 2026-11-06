@@ -117,6 +117,15 @@ teléfono sale de `raffle_buyers`, que ya respeta la visibilidad por KYC.
   **Marcar pagada**. El comprador abre `/devolucion/<token>` sin login y confirma; queda
   `buyer_confirmed_at` y el organizador recibe la notificación `refund_confirmed` con `via: link`.
   El token no expone nombre, teléfono ni email.
+- **Semántica adoptada (0094 del otro chat): la devolución libera al pagarse.** Verificado en la base:
+  el trigger `liberar_numeros_al_pagar_devolucion` existe, la función ya no libera al registrar y
+  `refunds` guarda `numbers`. La interfaz se adaptó: el botón registra la devolución y avisa que los
+  números **siguen vendidos hasta marcarla pagada**. Los verificadores 0091, 0092 y
+  `verificar_fix_devolucion` quedan **superseded**; el vigente es
+  `verificar_0094_liberar_al_pagar.sql`.
+- **Choque de numeración (2026-11-06):** dos sesiones crearon 0090, 0091 y 0094 en paralelo. El
+  ledger conserva una nota por número aunque se hayan aplicado las dos. Las migraciones de una misma
+  línea deben salir de una sola sesión.
 - Pendiente: control visual del disparador (números sin marcar + confirmación con la lista) y la
   reparación de la devolución accidental, si el dueño la pide.
 

@@ -388,3 +388,10 @@ Evidence   — 0093 (columna, tipo de notificacion y RPC confirm_refund_received
 Decision   — cada devolucion tiene un confirmation_token unico; el organizador comparte /devolucion/<token> y el comprador confirma sin login. La seccion Devoluciones del detalle del sorteo ahora se muestra para cualquier estado (antes solo con el sorteo cancelado), con Copiar enlace, WhatsApp y Marcar pagada.
 Why        — el comprador no encontraba donde avisar y el organizador no tenia el enlace a mano; el boton de marcar pagada existia pero la seccion solo se renderizaba en sorteos cancelados.
 Evidence   — 0094 (token, refund_by_token, confirm_refund_by_token), pagina /devolucion/[token], componente RefundRow; verificar_0094.sql pendiente de correr.
+
+## 2026-11-06 — La devolucion libera al pagarse: semantica unificada  (feature: panel-ventas)
+Decision   — se adopta la version del otro chat: registrar una devolucion NO libera los numeros; se liberan recien al marcar la devolucion como pagada (trigger liberar_numeros_al_pagar_devolucion). La UI avisa que siguen vendidos hasta entonces.
+Why        — liberar antes de pagar permite vender de nuevo un numero que el comprador anterior todavia espera cobrar.
+Verificacion — la base confirma: columnas buyer_confirmed_at, numbers y confirmation_token existen; trigger presente; la funcion ya no libera al registrar.
+Choque     — dos sesiones crearon 0090, 0091 y 0094 en paralelo; el ledger guarda una nota por numero aunque se aplicaran las dos. Regla: las migraciones de una linea salen de una sola sesion.
+Superseded — verificar_0091, verificar_0092 y verificar_fix_devolucion; el vigente es verificar_0094_liberar_al_pagar.sql.

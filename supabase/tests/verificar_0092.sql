@@ -1,5 +1,7 @@
 -- =====================================================================
 -- Verificador 0092 — registrar pago y devolver números elegidos
+-- SUPERSEDED: la parte de devolución cambió con 0094 (libera al pagarse).
+-- Lo vigente está en verificar_0094_liberar_al_pagar.sql.
 -- =====================================================================
 -- Qué prueba:
 --   1  registrar un pago cobrado crea la fila aprobada y enlaza los números

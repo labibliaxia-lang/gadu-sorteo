@@ -1,5 +1,7 @@
 -- =====================================================================
 -- Verificador del fix de devolución — libera EXACTAMENTE lo elegido
+-- SUPERSEDED: con 0094 los números quedan vendidos al registrar y se liberan
+-- recién al marcar la devolución pagada. Ver verificar_0094_liberar_al_pagar.sql.
 -- =====================================================================
 -- Reproduce el caso reportado: un comprador con 6 números y una devolución
 -- de solo 2 (los números 2 y 4). Comprueba que la base libera esos y deja

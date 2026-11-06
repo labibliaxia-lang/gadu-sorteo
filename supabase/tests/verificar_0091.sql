@@ -1,5 +1,7 @@
 -- =====================================================================
 -- Verificador 0091 — panel de ventas con plata real y devolución
+-- SUPERSEDED: desde 0094 (liberar al pagarse) la liberación NO es inmediata.
+-- El verificador vigente de devoluciones es verificar_0094_liberar_al_pagar.sql.
 -- =====================================================================
 -- Qué prueba:
 --   1  el resumen trae lo cobrado de payments (no números × precio)

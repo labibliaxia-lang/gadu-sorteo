@@ -60,7 +60,7 @@ export function VentasAcciones({
     }
 
     const confirmar = window.confirm(
-      `Se va a registrar una devolución y volverán a estar disponibles estos números:\n\n${seleccion.join(", ")}\n\n¿Continuar?`,
+      `Se va a registrar una devolución por estos números:\n\n${seleccion.join(", ")}\n\nSiguen vendidos hasta que marques la devolución como pagada.\n\n¿Continuar?`,
     );
     if (!confirmar) return;
 
@@ -74,7 +74,9 @@ export function VentasAcciones({
         setError(res.error);
         return;
       }
-      setAviso(`${res.count} número(s) devueltos y liberados.`);
+      setAviso(
+        `${res.count} número(s) en devolución. Se liberan cuando la marques pagada.`,
+      );
       setAbierto(false);
       setMotivo("");
       setSeleccion([]);
@@ -149,6 +151,9 @@ export function VentasAcciones({
         <div className="w-[240px] space-y-2 rounded-lg border border-hairline bg-panel-2 p-2">
           <p className="text-[11px] font-medium">
             Elegí los números a devolver ({seleccion.length} de {numbers.length})
+          </p>
+          <p className="text-[10px] text-fg-subtle">
+            Siguen vendidos hasta que marques la devolución como pagada.
           </p>
           <div className="flex gap-1">
             <button
