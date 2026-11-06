@@ -19,6 +19,8 @@ import { telefonoLegible, waHref, waLink } from "@/lib/whatsapp";
 export interface NotificationItem {
   id: string;
   type: string;
+  title?: string | null;
+  message?: string | null;
   raffle_id: string | null;
   payload: {
     numbers?: number[];
@@ -42,6 +44,8 @@ const TIPO_LABEL: Record<string, string> = {
   refund_requested: "Pedido de devolución",
   refund_confirmed: "El comprador confirmó que recibió la devolución",
   winner_unreachable: "El ganador no tiene email: avisale vos",
+  organizer_review: "Nueva reseña",
+  organizer_question: "Nueva pregunta",
   draw_ready: "Sorteo listo para sortear",
   report_pending: "Denuncia pendiente",
 };
@@ -235,8 +239,11 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0 space-y-1">
             <p className="text-sm font-medium">
-              {TIPO_LABEL[item.type] ?? item.type}
+              {item.title ?? TIPO_LABEL[item.type] ?? item.type}
             </p>
+            {item.message && (
+              <p className="max-w-md text-xs text-fg-subtle">{item.message}</p>
+            )}
             <p className="text-sm text-fg-muted">
               {nombre}
               {numeros.length > 0 && (

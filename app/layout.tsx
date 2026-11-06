@@ -8,6 +8,7 @@ import { ProfileCompletionGate } from "@/components/ProfileCompletionGate";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { TermsGate } from "@/components/TermsGate";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Toaster } from "@/components/ui/Toaster";
 import { createClient } from "@/lib/supabase/server";
 import { readImpersonationOrigin } from "@/lib/impersonation-server";
 import { TERMS_VERSION } from "@/lib/terms";
@@ -209,6 +210,7 @@ export default async function RootLayout({
             {children}
           </main>
           <Footer />
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

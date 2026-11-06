@@ -21,6 +21,7 @@ import type { Session } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { NotificationBell } from "@/components/NotificationBell";
 import { RequestAdminButton } from "@/components/RequestAdminButton";
 import { cn } from "@/lib/utils";
 
@@ -256,6 +257,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
+          <NotificationBell userId={userId} />
           {!userId && (
             <Link
               href="/login"

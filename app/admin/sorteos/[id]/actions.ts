@@ -86,6 +86,18 @@ async function notifyWinner(
       .eq("id", winnerUserId)
       .maybeSingle();
 
+    // Campana del jugador: el premio se ve aunque no tenga email.
+    await admin.from("notifications").insert({
+      user_id: winnerUserId,
+      type: "buyer_won",
+      title: "🏆 ¡Ganaste!",
+      message: `Ganaste el sorteo ${title} con el número ${winnerNumber}.`,
+      audience: "buyer",
+      raffle_id: raffleId,
+      payload: { number: winnerNumber },
+      priority: "urgent",
+    });
+
     // Es transaccional: alcanza con tener email. Antes exigía opt-in y
     // términos, y si faltaban el aviso se perdía en silencio.
     let enviado = false;

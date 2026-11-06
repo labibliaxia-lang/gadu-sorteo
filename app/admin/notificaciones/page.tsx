@@ -21,7 +21,7 @@ export default async function NotificacionesPage() {
   const supabase = createClient();
   const { data } = await supabase
     .from("notifications")
-    .select("id, type, raffle_id, payload, status, priority, created_at, expires_at")
+    .select("id, type, title, message, raffle_id, payload, status, priority, created_at, expires_at")
     .order("created_at", { ascending: false })
     .limit(100);
 

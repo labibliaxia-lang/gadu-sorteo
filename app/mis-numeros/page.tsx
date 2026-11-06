@@ -83,6 +83,7 @@ export default function MisNumerosPage() {
   );
   const [reviewTarget, setReviewTarget] = useState<string | null>(null);
   const [premios, setPremios] = useState<Premio[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     async function load() {
@@ -136,7 +137,31 @@ export default function MisNumerosPage() {
       setLoading(false);
     }
     load();
-  }, [supabase]);
+  }, [supabase, refreshKey]);
+
+  // Si el organizador aprueba, libera, o el sorteo se ejecuta, el jugador ve el
+  // cambio sin recargar: la campana y esta pantalla escuchan la misma tabla.
+  useEffect(() => {
+    if (!userId) return;
+
+    const canal = supabase
+      .channel(`mis-numeros-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        () => setRefreshKey((k) => k + 1),
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(canal);
+    };
+  }, [userId, supabase]);
 
   const byRaffle = new Map<string, RaffleNumbersGroup>();
 

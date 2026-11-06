@@ -66,6 +66,18 @@ async function notifyWinner(
       .eq("id", winnerUserId)
       .maybeSingle();
 
+    // Campana del jugador: el premio se ve aunque no tenga email.
+    await admin.from("notifications").insert({
+      user_id: winnerUserId,
+      type: "buyer_won",
+      title: "🏆 ¡Ganaste!",
+      message: `Ganaste el sorteo ${title} con el número ${winningNumber}.`,
+      audience: "buyer",
+      raffle_id: raffleId,
+      payload: { number: winningNumber },
+      priority: "urgent",
+    });
+
     // Transaccional: con email alcanza. Antes exigía opt-in y términos.
     let enviado = false;
     if (profile?.email) {

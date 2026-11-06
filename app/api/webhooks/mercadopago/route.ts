@@ -334,6 +334,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Campana del jugador: aviso de pago acreditado (0101). Best-effort.
+    try {
+      const { data: sorteo } = await admin
+        .from("raffles")
+        .select("title")
+        .eq("id", payment.raffle_id)
+        .maybeSingle();
+
+      const numeros = Array.isArray(payment.numbers) ? payment.numbers : [];
+      await admin.from("notifications").insert({
+        user_id: payment.user_id,
+        type: "buyer_payment_approved",
+        title: "✅ Pago aprobado",
+        message: `Tus ${numeros.length} número(s) están confirmados en ${
+          (sorteo?.title as string) ?? "el sorteo"
+        }.`,
+        audience: "buyer",
+        raffle_id: payment.raffle_id,
+        payload: { numbers: numeros },
+      });
+    } catch (error) {
+      console.error("Webhook MP: no se pudo avisar al comprador", error);
+    }
+
     // Referidos: otorga un número gratis al referente (atómico e idempotente).
     const { data: referral } = await admin
       .from("referrals")
