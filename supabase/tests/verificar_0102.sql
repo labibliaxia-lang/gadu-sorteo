@@ -22,6 +22,24 @@ begin
     coalesce(current_setting('test.v102', true), '') || p_linea || E'\n', true);
 end $$;
 
+-- Obtiene o crea el vínculo. Tras la 0103 la unique impide insertarlo dos
+-- veces, así que los escenarios que comparten par reutilizan la misma fila.
+create or replace function pg_temp.vinculo(p_ref uuid, p_inv uuid)
+returns uuid language plpgsql as $$
+declare
+  v_id uuid;
+begin
+  insert into public.referrals (referrer_id, referred_id)
+  values (p_ref, p_inv)
+  on conflict (referrer_id, referred_id) do nothing;
+
+  select id into v_id
+    from public.referrals
+   where referrer_id = p_ref and referred_id = p_inv;
+
+  return v_id;
+end $$;
+
 do $$
 declare
   v_owner uuid;
@@ -156,8 +174,7 @@ begin
   update public.raffle_numbers set status='sold', sold_to=v_inv, sold_at=now()
    where raffle_id = v_r and number in (1, 2);
 
-  insert into public.referrals (referrer_id, referred_id) values (v_ref, v_inv)
-  returning id into v_rel;
+  v_rel := pg_temp.vinculo(v_ref, v_inv);
 
   v_num := public.reward_referral(v_rel, v_r);
 
@@ -180,8 +197,7 @@ begin
   update public.raffle_numbers set status='sold', sold_to=v_inv, sold_at=now()
    where raffle_id = v_r and number in (1, 2);
 
-  insert into public.referrals (referrer_id, referred_id) values (v_ref, v_inv)
-  returning id into v_rel;
+  v_rel := pg_temp.vinculo(v_ref, v_inv);
 
   v_num := public.reward_referral(v_rel, v_r);
 
@@ -206,8 +222,7 @@ begin
   update public.raffle_numbers set status='sold', sold_to=v_inv, sold_at=now()
    where raffle_id = v_r and number in (1, 2);
 
-  insert into public.referrals (referrer_id, referred_id) values (v_ref, v_inv)
-  returning id into v_rel;
+  v_rel := pg_temp.vinculo(v_ref, v_inv);
 
   v_num := public.reward_referral(v_rel, v_r);
 
@@ -269,8 +284,8 @@ begin
   update public.raffle_numbers set status='sold', sold_to=v_b, sold_at=now()
    where raffle_id = v_r and number = 2;
 
-  insert into public.referrals (referrer_id, referred_id) values (v_ref, v_a) returning id into v_rel_a;
-  insert into public.referrals (referrer_id, referred_id) values (v_ref, v_b) returning id into v_rel_b;
+  v_rel_a := pg_temp.vinculo(v_ref, v_a);
+  v_rel_b := pg_temp.vinculo(v_ref, v_b);
 
   v_uno := public.reward_referral(v_rel_a, v_r);
   v_dos := public.reward_referral(v_rel_b, v_r);
@@ -292,8 +307,7 @@ declare
 begin
   if v_r is null or v_inv is null then return; end if;
 
-  insert into public.referrals (referrer_id, referred_id) values (v_ref, v_inv)
-  returning id into v_rel;
+  v_rel := pg_temp.vinculo(v_ref, v_inv);
 
   v_num := public.reward_referral(v_rel, v_r);
 
