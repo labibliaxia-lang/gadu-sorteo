@@ -1,0 +1,6 @@
+﻿[
+  { "paso": "D1-migracion", "rol": "base", "esperado": "la funcion registra sin liberar", "observado": "refund_and_release_numbers guarda refunds.numbers y no toca raffle_numbers", "resultado": "ok", "evidencia": ["verificacion.txt"] },
+  { "paso": "D2-registrar", "rol": "organizador", "esperado": "los numeros siguen vendidos tras registrar", "observado": "auditoria registra refund_numbers [3,9]; al pagar el trigger encuentra 2 numeros vendidos para liberar, lo que implica que seguian vendidos", "resultado": "ok", "evidencia": ["verificacion.txt"] },
+  { "paso": "D3-pagar", "rol": "organizador", "esperado": "los numeros se liberan recien al pagar", "observado": "auditoria: refund_number_released [3,9] 'devolucion pagada: 2 numero(s) liberados'", "resultado": "ok", "evidencia": ["verificacion.txt"] },
+  { "paso": "D4-no-ejercitado", "rol": "auditor", "esperado": "documentar lo que no se probo", "observado": "no se probo el caso sorteo en drawn (marca pagada sin liberar) ni devoluciones parciales sucesivas", "resultado": "pendiente", "evidencia": [] }
+]

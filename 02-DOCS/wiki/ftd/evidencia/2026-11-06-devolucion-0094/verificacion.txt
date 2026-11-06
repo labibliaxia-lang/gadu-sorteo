@@ -1,0 +1,32 @@
+﻿Devolucion que libera al pagar (0094) — verificacion
+====================================================
+
+Escenario (todo dentro de una transaccion con rollback)
+  sorteo activo, precio 500, numeros 3 y 9 vendidos al mismo comprador.
+
+Resultado que devolvio la base (paso 7, auditoria)
+  refund_numbers           [3,9]  "prueba de verificacion 0094"
+  refund_number_released   [3,9]  "devolucion pagada: 2 numero(s) liberados"
+
+POR QUE ESTO PRUEBA EL CAMBIO
+  El mensaje "liberados 2" solo se escribe cuando el trigger encuentra
+  numeros vendidos para liberar EN EL MOMENTO DEL PAGO. Si la liberacion
+  hubiera ocurrido al registrar (el bug de 0091), al marcar pagada ya no
+  habria nada que liberar: el motivo habria sido "devolucion pagada sin
+  numeros asociados" o "sin liberar". Dijo 2.
+
+  Es decir: entre registrar y pagar los numeros siguieron vendidos (paso 3),
+  y recien al pagar pasaron a disponible (paso 6). El orden quedo como se
+  decidio.
+
+  Ademas quedaron los dos registros de auditoria separados: uno por el
+  registro, otro por la liberacion. Se puede reconstruir quien devolvio que,
+  cuando, por cuanto y cuando se libero.
+
+LO QUE NO SE EJERCITO
+  · el camino "sorteo ya sorteado": la rama que marca pagada sin liberar no
+    se probo con un sorteo en drawn. Esta escrita y auditada, no verificada.
+  · devoluciones parciales sucesivas (el acumulado de numbers y amount).
+
+Limpieza: el verificador termina en rollback; no quedo sorteo, ni numeros,
+ni devolucion, ni el cambio de rol del perfil usado en el escenario.
