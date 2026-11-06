@@ -395,3 +395,9 @@ Why        — liberar antes de pagar permite vender de nuevo un numero que el c
 Verificacion — la base confirma: columnas buyer_confirmed_at, numbers y confirmation_token existen; trigger presente; la funcion ya no libera al registrar.
 Choque     — dos sesiones crearon 0090, 0091 y 0094 en paralelo; el ledger guarda una nota por numero aunque se aplicaran las dos. Regla: las migraciones de una linea salen de una sola sesion.
 Superseded — verificar_0091, verificar_0092 y verificar_fix_devolucion; el vigente es verificar_0094_liberar_al_pagar.sql.
+
+## 2026-11-06 — Migracion 0097 aplicada sin archivo en el repo  (feature: panel-ventas)
+Hallazgo   — la base tiene una migracion 0097 ("notificaciones con telefono y pago") que duplica la pieza de notificaciones de 0090 y no existe como archivo en el repo: el otro chat la aplico sin commitearla.
+Decision   — mi normalizacion de ledger pasa a 0098; ademas anota la fila 0097 para no perder la procedencia.
+Why        — un paso aplicado sin archivo es deuda invisible: una reconstruccion desde el repo no lo tendria.
+Evidence   — 0098_ledger_normalization.sql; la consulta de pg_proc mostro todos los objetos en true.
