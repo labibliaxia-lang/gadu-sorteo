@@ -14,9 +14,15 @@
 -- hace falta `active`), pero la página es pública y ofrece un contacto: alcanza
 -- para pedir transferencias por fuera. Es el vector de estafa clásico.
 --
--- Y hay cómo llegar a role='admin' sin KYC: `prevent_role_self_update` (0010)
--- exige `is_admin()`, no `is_superadmin()`, así que un organizador ya aprobado
--- puede promover a otro. Ese otro queda sin verificar.
+-- Y hay cómo llegar a role='admin' sin KYC: el rol no se auto-asigna (lo impide
+-- `prevent_role_self_update`), pero una cuenta que YA es admin y todavía no está
+-- verificada puede crear sorteos. Ese es el caso que este guard cierra.
+--
+-- (Corrección: una versión anterior de este comentario decía que cualquier admin
+-- podía promover a otro. Es falso. El RLS de `profiles` sólo permite editar la
+-- propia fila (`profiles_update_own`, 0001:418-420), y la 0014 impide que un
+-- admin se ascienda a superadmin. Hoy el rol lo otorga únicamente el superadmin,
+-- por `setUserRole` / `createOrganizer` / `approveRoleRequest`.)
 --
 -- Qué cambia: la condición pasa a ser «¿este sorteo puede quedar visible?».
 --

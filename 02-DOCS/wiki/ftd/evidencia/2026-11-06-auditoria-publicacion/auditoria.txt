@@ -43,15 +43,25 @@ AGUJERO ENCONTRADO
    Probado dos veces de forma indirecta: un sorteo 'closed' real ("sorteo
    navidad") aparece hoy en el HTML de la home.
 
-COMO SE LLEGA A role='admin' SIN KYC
-   prevent_role_self_update solo exige is_admin(), no is_superadmin(). Es decir:
-   un organizador ya aprobado (que es admin) puede promover a otro a admin.
-   Ese otro queda con role='admin' y verification_status='pending'.
-   No puede publicar un sorteo activo, pero SI uno 'closed', y verlo en la home.
+COMO SE LLEGA A role='admin' SIN KYC   (CORREGIDO 2026-11-06)
+   En la primera version de esta auditoria escribi que cualquier admin podia
+   promover a otro. Es FALSO. Se verifico:
 
-   No es explotable por un desconocido solo, pero reduce el control a "un
-   organizador de confianza" en vez de "el superadmin".
+   - RLS de profiles: la unica politica de UPDATE es profiles_update_own
+     (0001:418-420), con using/with check (auth.uid() = id). Nadie puede editar
+     la fila de otro por PostgREST, ni siquiera un admin.
+   - prevent_role_self_update, version vigente (0014:46-64): si el rol nuevo o
+     el viejo es 'superadmin', exige is_superadmin(). Un admin no puede
+     auto-ascenderse.
+   - setUserRole (super/actions.ts:404), createOrganizer (:507) y
+     approveRoleRequest (:309): los tres arrancan con requireSuperadminSession.
 
+   Conclusión: el rol de organizador lo otorga UNICAMENTE el superadmin, tanto
+   por la app como por la base. La 0085 no necesitaba tocar esto.
+
+   Lo que si quedaba abierto —y la 0085 cierra— era publicar sin KYC: una cuenta
+   que ya era admin y no estaba verificada podia crear un sorteo 'closed' y
+   verlo en la home.
 ARREGLO PROPUESTO (0085)
    Extender el guard de KYC a cualquier sorteo que pueda quedar visible:
        if new.status <> 'active' and new.is_listed is not true then return new; end if;
