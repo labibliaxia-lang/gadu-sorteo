@@ -19,6 +19,7 @@ begin
   perform set_config('test.v88.r1', '', true);
   perform set_config('test.v88.futuro', '', true);
   perform set_config('test.v88.pasado', '', true);
+  perform set_config('test.v88.sorteado', '', true);
 end $$;
 
 create or replace function pg_temp.anota(p_linea text)
@@ -70,6 +71,13 @@ begin
 
   insert into public.raffle_numbers (raffle_id, number, status)
   select v_id, n, 'available' from generate_series(1, 3) as n;
+
+  -- Un sorteo ya sorteado exige fecha pasada: `enforce_draw_date` no deja
+  -- marcar 'drawn' antes de la fecha anunciada.
+  insert into public.raffles (title, draw_date, price_per_number, status, created_by)
+  values ('v88 sorteado', now() - interval '1 day', 100, 'active', v_owner)
+  returning id into v_id;
+  perform set_config('test.v88.sorteado', v_id::text, true);
 
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_buyer, 'role', 'authenticated')::text, true);
@@ -128,20 +136,24 @@ reset role;
 -- 3) Ataque: sorteado -> activo
 -- ---------------------------------------------------------------------
 update public.raffles set status = 'drawn'
- where id = nullif(current_setting('test.v88.r1', true), '')::uuid;
+ where id = nullif(current_setting('test.v88.sorteado', true), '')::uuid;
 
 set local role authenticated;
 
 do $$
-declare v_id uuid := nullif(current_setting('test.v88.r1', true), '')::uuid;
+declare v_id uuid := nullif(current_setting('test.v88.sorteado', true), '')::uuid;
 begin
   if v_id is null then return; end if;
 
   begin
     update public.raffles set status = 'active' where id = v_id;
     perform pg_temp.anota('3 CRÍTICO  reabrió un sorteo sorteado');
-  exception when check_violation then
-    perform pg_temp.anota('3 OK       sorteado no se reabre: ' || sqlerrm);
+  exception when others then
+    if sqlerrm ilike '%sorteado%' or sqlerrm ilike '%no se puede cambiar%' then
+      perform pg_temp.anota('3 OK       sorteado no se reabre: ' || sqlerrm);
+    else
+      perform pg_temp.anota('3 OTRO     falló por otro motivo: ' || sqlerrm);
+    end if;
   end;
 end $$;
 
