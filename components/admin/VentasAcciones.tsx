@@ -33,7 +33,9 @@ export function VentasAcciones({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [abierto, setAbierto] = useState(false);
-  const [seleccion, setSeleccion] = useState<number[]>(numbers);
+  // Arranca VACÍO a propósito: antes venía todo marcado y tocar un número lo
+  // desmarcaba, así que se devolvían los que NO se habían elegido.
+  const [seleccion, setSeleccion] = useState<number[]>([]);
   const [motivo, setMotivo] = useState("");
   const [busy, setBusy] = useState<"refund" | "pay" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export function VentasAcciones({
     }
 
     const confirmar = window.confirm(
-      `Se va a registrar una devolución por ${seleccion.length} número(s) de ${nombre} y volverán a estar disponibles.\n\n¿Continuar?`,
+      `Se va a registrar una devolución y volverán a estar disponibles estos números:\n\n${seleccion.join(", ")}\n\n¿Continuar?`,
     );
     if (!confirmar) return;
 
@@ -75,6 +77,7 @@ export function VentasAcciones({
       setAviso(`${res.count} número(s) devueltos y liberados.`);
       setAbierto(false);
       setMotivo("");
+      setSeleccion([]);
       router.refresh();
     });
   }
@@ -145,8 +148,24 @@ export function VentasAcciones({
       {abierto && (
         <div className="w-[240px] space-y-2 rounded-lg border border-hairline bg-panel-2 p-2">
           <p className="text-[11px] font-medium">
-            Números a devolver ({seleccion.length} de {numbers.length})
+            Elegí los números a devolver ({seleccion.length} de {numbers.length})
           </p>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => setSeleccion([...numbers])}
+              className="rounded border border-hairline px-2 py-0.5 text-[10px] text-fg-subtle"
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              onClick={() => setSeleccion([])}
+              className="rounded border border-hairline px-2 py-0.5 text-[10px] text-fg-subtle"
+            >
+              Ninguno
+            </button>
+          </div>
           <div className="grid grid-cols-5 gap-1">
             {numbers.map((numero) => {
               const marcado = seleccion.includes(numero);
@@ -182,7 +201,7 @@ export function VentasAcciones({
             size="sm"
             className="w-full"
             onClick={devolver}
-            disabled={busy !== null || pending}
+            disabled={busy !== null || pending || seleccion.length === 0}
           >
             {busy === "refund" ? (
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
