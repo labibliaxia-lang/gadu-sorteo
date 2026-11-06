@@ -55,13 +55,13 @@ describe("moderación: pausar un sorteo denunciado", () => {
 
 describe("moderación: un pausado no se republica solo", () => {
   const MIGRACION = readFileSync(
-    join(RAIZ, "supabase/migrations/0083_guard_reopen_reported_raffle.sql"),
+    join(RAIZ, "supabase/migrations/0084_guard_reopen_fix_security_definer.sql"),
     "utf8",
   );
 
   it("bloquea la vuelta a active con denuncia pendiente", () => {
     expect(MIGRACION).toMatch(/new\.status\s*=\s*'active'/);
-    expect(MIGRACION).toMatch(/from\s+public\.raffle_reports/i);
+    expect(MIGRACION).toMatch(/tiene_denuncia_pendiente/);
     expect(MIGRACION).toMatch(/status\s*=\s*'pending'/i);
     expect(MIGRACION).toMatch(/raise\s+exception/i);
   });
@@ -74,5 +74,27 @@ describe("moderación: un pausado no se republica solo", () => {
 
   it("exime a service_role y al SQL Editor para no trabar la moderación", () => {
     expect(MIGRACION).toMatch(/current_user[\s\S]{0,80}\('authenticated',\s*'anon'\)/);
+  });
+
+  it("el trigger NO es security definer (si no, current_user es el dueño)", () => {
+    // Esta fue la causa de que la 0083 no frenara nada: dentro de una función
+    // security definer, current_user es `postgres`, no `authenticated`, así que
+    // la exención se cumplía siempre. La consulta a denuncias va por una función
+    // aparte, que sí es definer.
+    const bloqueTrigger = MIGRACION.slice(
+      MIGRACION.indexOf("create or replace function public.guard_reopen_reported_raffle"),
+      MIGRACION.indexOf("drop trigger if exists guard_reopen_reported_raffle"),
+    );
+
+    expect(bloqueTrigger).not.toMatch(/security\s+definer/i);
+  });
+
+  it("la consulta de denuncias sí es definer, para no depender de la RLS", () => {
+    const bloqueHelper = MIGRACION.slice(
+      MIGRACION.indexOf("create or replace function public.tiene_denuncia_pendiente"),
+      MIGRACION.indexOf("create or replace function public.guard_reopen_reported_raffle"),
+    );
+
+    expect(bloqueHelper).toMatch(/security\s+definer/i);
   });
 });
