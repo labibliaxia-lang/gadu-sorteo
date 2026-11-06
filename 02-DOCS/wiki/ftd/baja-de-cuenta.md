@@ -115,7 +115,8 @@ el pendiente y volver a pedirla.
 
 ### Pendiente
 
-- Probar el flujo completo en un navegador con una cuenta de prueba.
+- Probar el flujo en un navegador con una cuenta descartable: guion en
+  `02-DOCS/wiki/ftd/baja-de-cuenta-smoke-test.md` (cuatro escenarios y verificación en base).
 
 ### Hecho después de la primera versión
 
