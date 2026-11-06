@@ -52,7 +52,7 @@ No se toca lógica de pagos, reservas, sorteos ni datos. Solo presentación.
   rosa), más columnas en móvil (6/8/10/20), `aria-pressed`.
 - Eliminación de degradés violeta/fucsia (`planes`, `PremiumGate`, `LicenseCodesPanel`,
   `AdvancedAnalytics`) y de los degradés ámbar-naranja heredados.
-- Corrección de textos rotos por encoding en `LiveFomo` ("Â¡Alguien…", "nÃºmero").
+- Corrección de textos rotos por encoding en `LiveFomo` ("¡Alguien…", "número").
 - Se deja de mostrar `NEXT_PUBLIC_SALES_WHATSAPP` como texto al público en `/planes`.
 
 **Out:** lógica de pagos, reservas, sorteo, RLS, migraciones, datos. Panel admin más allá de
