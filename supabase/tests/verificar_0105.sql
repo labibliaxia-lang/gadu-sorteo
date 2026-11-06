@@ -115,6 +115,16 @@ begin
 
   v_rel := pg_temp.vinculo(v_ref, v_inv);
 
+  -- Si el par ya existía de una prueba real y estaba premiado, se reinicia
+  -- dentro de la transacción para probar el camino feliz. El ROLLBACK lo deja
+  -- como estaba.
+  update public.referrals
+     set rewarded = false,
+         rewarded_raffle_id = null,
+         rewarded_number = null,
+         rewarded_via_raffle_id = null
+   where id = v_rel;
+
   v_num := public.reward_referral(v_rel, v_main);
 
   -- Escenario sin números en el exclusivo
@@ -256,7 +266,7 @@ begin
   select rewarded_via_raffle_id, rewarded_raffle_id into v_via, v_destino
     from public.referrals
    where referrer_id = v_ref
-   order by created_at desc limit 1;
+     and referred_id = nullif(current_setting('test.v105.inv', true), '')::uuid;
 
   perform pg_temp.anota('4 ' || case
     when v_via = v_main and v_destino = v_bonus
@@ -300,6 +310,11 @@ begin
 
   v_rel := pg_temp.vinculo(v_ref, v_inv);
 
+  update public.referrals
+     set rewarded = false, rewarded_raffle_id = null,
+         rewarded_number = null, rewarded_via_raffle_id = null
+   where id = v_rel;
+
   v_num := public.reward_referral(v_rel, v_main2);
 
   perform pg_temp.anota('6 ' || case when v_num is null
@@ -322,6 +337,11 @@ begin
   end if;
 
   v_rel := pg_temp.vinculo(v_ref, v_inv);
+
+  update public.referrals
+     set rewarded = false, rewarded_raffle_id = null,
+         rewarded_number = null, rewarded_via_raffle_id = null
+   where id = v_rel;
 
   v_num := public.reward_referral(v_rel, v_main3);
 
