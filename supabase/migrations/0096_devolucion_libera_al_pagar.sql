@@ -269,8 +269,8 @@ do $$
 begin
   if to_regclass('public._applied_migrations') is not null then
     insert into public._applied_migrations (version, note)
-    values ('0094', 'la devolucion libera numeros al pagarse, no al registrarse')
+    values ('0096', 'la devolucion libera numeros al pagarse, no al registrarse')
     on conflict (version) do nothing;
   end if;
-end
+end;
 $$;

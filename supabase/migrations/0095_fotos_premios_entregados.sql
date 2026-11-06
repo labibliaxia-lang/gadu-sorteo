@@ -197,8 +197,8 @@ do $$
 begin
   if to_regclass('public._applied_migrations') is not null then
     insert into public._applied_migrations (version, note)
-    values ('0091', 'fotos de premios entregados con aprobacion del organizador')
+    values ('0095', 'fotos de premios entregados con aprobacion del organizador')
     on conflict (version) do nothing;
   end if;
-end
+end;
 $$;
