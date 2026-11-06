@@ -62,8 +62,32 @@ async function avisarComprador(
   }
 }
 
-/** Email de pago confirmado al comprador (best-effort, no bloquea nada). */
-async function emailAprobado(noti: FilaNotificacion): Promise<void> {
+/**
+ * "Invitá y ganá" (0102): al aprobar una reserva manual se revisan los
+ * referidos de ese comprador que todavía no cobraron. La función de la base
+ * aplica las reglas del organizador (sorteo habilitado, mínimos y tope).
+ */
+async function premiarReferidos(raffleId: string, buyerId: string): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const { data: pendientes } = await admin
+      .from("referrals")
+      .select("id")
+      .eq("referred_id", buyerId)
+      .eq("rewarded", false);
+
+    for (const fila of pendientes ?? []) {
+      await admin.rpc("reward_referral", {
+        p_referral_id: fila.id as string,
+        p_raffle_id: raffleId,
+      });
+    }
+  } catch (error) {
+    console.error("[referidos] no se pudo premiar al referente:", error);
+  }
+}
+
+/** Email de pago confirmado al comprador (best-effort, no bloquea nada). */async function emailAprobado(noti: FilaNotificacion): Promise<void> {
   if (!noti.subject_user_id || !noti.raffle_id) return;
 
   try {
@@ -158,6 +182,10 @@ export async function approveReservation(id: string): Promise<NotifActionResult>
     "Tus números están confirmados. ¡Ya estás participando!",
   );
   await emailAprobado(noti);
+
+  if (noti.subject_user_id) {
+    await premiarReferidos(noti.raffle_id, noti.subject_user_id);
+  }
 
   await cerrarNotificacion(id, "resolved");
   revalidatePath("/admin/notificaciones");

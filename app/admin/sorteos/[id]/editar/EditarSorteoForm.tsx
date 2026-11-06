@@ -40,6 +40,11 @@ const schema = z.object({
   min_tickets_required: z.coerce.number().int().min(0).max(10000),
   if_not_met: z.enum(["extend_date", "cancel_and_refund"]),
   winners_count: z.coerce.number().int().min(1).max(30),
+  // 0102: "Invitá y ganá" lo decide el organizador, sorteo por sorteo.
+  referral_enabled: z.boolean().optional(),
+  referral_min_numbers: z.coerce.number().int().min(1).max(1000).optional(),
+  referral_require_buyer_min: z.coerce.number().int().min(0).max(1000).optional(),
+  referral_max_per_user: z.coerce.number().int().min(0).max(1000).optional(),
   transfer_alias: z.string().optional(),
   transfer_cbu: z.string().optional(),
   transfer_bank: z.string().optional(),
@@ -107,10 +112,15 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
       min_tickets_required: raffle.min_tickets_required ?? 0,
       if_not_met: raffle.if_not_met ?? "extend_date",
       winners_count: raffle.winners_count ?? 1,
+      referral_enabled: raffle.referral_enabled ?? false,
+      referral_min_numbers: raffle.referral_min_numbers ?? 1,
+      referral_require_buyer_min: raffle.referral_require_buyer_min ?? 0,
+      referral_max_per_user: raffle.referral_max_per_user ?? 0,
     },
   });
 
   const paymentType = watch("payment_type");
+  const referralEnabled = watch("referral_enabled");
 
   async function onSubmit(values: FormValues) {
     setSaving(true);
@@ -420,6 +430,78 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
             )}
 
             {error && <p className="text-sm text-destructive">{error}</p>}
+
+            <div className="space-y-3 rounded-xl border p-4">
+              <label htmlFor="referral_enabled" className="flex items-start gap-3">
+                <input
+                  id="referral_enabled"
+                  type="checkbox"
+                  className="mt-1 h-4 w-4 accent-primary"
+                  {...register("referral_enabled")}
+                />
+                <span>
+                  <span className="block text-sm font-semibold">
+                    Invitá y ganá en este sorteo
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    Por cada invitado que compre, quien lo invitó recibe un
+                    número gratis <strong>de este sorteo</strong>. Ese número
+                    sale de tu recaudación: elegí el mínimo y el tope.
+                  </span>
+                </span>
+              </label>
+
+              {referralEnabled && (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="referral_min_numbers">
+                      Compra mínima del invitado
+                    </Label>
+                    <Input
+                      id="referral_min_numbers"
+                      type="number"
+                      min={1}
+                      max={1000}
+                      {...register("referral_min_numbers")}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Cuántos números debe comprar tu invitado en este sorteo.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="referral_require_buyer_min">
+                      Mínimo comprado por vos
+                    </Label>
+                    <Input
+                      id="referral_require_buyer_min"
+                      type="number"
+                      min={0}
+                      max={1000}
+                      {...register("referral_require_buyer_min")}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      0 = no hace falta que el que invita haya comprado.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="referral_max_per_user">
+                      Tope por persona
+                    </Label>
+                    <Input
+                      id="referral_max_per_user"
+                      type="number"
+                      min={0}
+                      max={1000}
+                      {...register("referral_max_per_user")}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      0 = sin tope. Es la cantidad máxima de números gratis por
+                      referente en este sorteo.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <Button type="submit" className="w-full" disabled={saving}>
               {saving ? "Guardando…" : "Guardar cambios"}

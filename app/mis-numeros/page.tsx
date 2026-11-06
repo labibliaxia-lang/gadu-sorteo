@@ -84,6 +84,10 @@ export default function MisNumerosPage() {
   const [reviewTarget, setReviewTarget] = useState<string | null>(null);
   const [premios, setPremios] = useState<Premio[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [referralRegla, setReferralRegla] = useState<{
+    min: number;
+    max: number;
+  } | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -133,6 +137,26 @@ export default function MisNumerosPage() {
         .limit(10);
 
       setPremios((wins as unknown as Premio[]) ?? []);
+
+      // "Invitá y ganá" solo se muestra si algún sorteo activo lo habilitó
+      // (0102). Si nadie lo habilitó, no se promete nada.
+      const { data: conReferidos } = await supabase
+        .from("raffles")
+        .select("referral_min_numbers, referral_max_per_user")
+        .eq("referral_enabled", true)
+        .eq("status", "active")
+        .order("draw_date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      setReferralRegla(
+        conReferidos
+          ? {
+              min: Number(conReferidos.referral_min_numbers ?? 1),
+              max: Number(conReferidos.referral_max_per_user ?? 0),
+            }
+          : null,
+      );
 
       setLoading(false);
     }
@@ -310,7 +334,7 @@ export default function MisNumerosPage() {
 
       <MisDevoluciones />
 
-      {userId && (
+      {userId && referralRegla && (
         <Card>
           <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-2">
@@ -318,8 +342,13 @@ export default function MisNumerosPage() {
               <div className="space-y-1">
                 <p className="font-semibold">Invitá y ganá</p>
                 <p className="text-sm text-muted-foreground">
-                  Por cada amigo que se registre con tu enlace y compre un
-                  número, recibís un número gratis.
+                  En los sorteos que lo habilitan, tu amigo debe comprar al
+                  menos {referralRegla.min} número
+                  {referralRegla.min === 1 ? "" : "s"} y vos recibís uno gratis
+                  en ese sorteo.
+                  {referralRegla.max > 0
+                    ? ` Máximo ${referralRegla.max} por persona.`
+                    : ""}
                 </p>
               </div>
             </div>

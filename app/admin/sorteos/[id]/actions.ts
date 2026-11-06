@@ -274,6 +274,11 @@ const raffleUpdateSchema = z.object({
   min_tickets_required: z.coerce.number().int().min(0).max(10000),
   if_not_met: z.enum(["extend_date", "cancel_and_refund"]),
   winners_count: z.coerce.number().int().min(1).max(30),
+  // 0102: el organizador decide si su sorteo participa de "Invitá y ganá".
+  referral_enabled: z.coerce.boolean().optional(),
+  referral_min_numbers: z.coerce.number().int().min(1).max(1000).optional(),
+  referral_require_buyer_min: z.coerce.number().int().min(0).max(1000).optional(),
+  referral_max_per_user: z.coerce.number().int().min(0).max(1000).optional(),
 });
 
 export async function deleteRaffle(raffleId: string): Promise<ActionResult> {
@@ -389,6 +394,10 @@ export async function updateRaffle(
       min_tickets_required: values.min_tickets_required,
       if_not_met: values.if_not_met,
       winners_count: values.winners_count,
+      referral_enabled: values.referral_enabled ?? false,
+      referral_min_numbers: values.referral_min_numbers ?? 1,
+      referral_require_buyer_min: values.referral_require_buyer_min ?? 0,
+      referral_max_per_user: values.referral_max_per_user ?? 0,
     })
     .eq("id", id.data);
 

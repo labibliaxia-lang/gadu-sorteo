@@ -88,6 +88,11 @@ export interface Raffle {
   min_tickets_required: number;
   if_not_met: "extend_date" | "cancel_and_refund";
   winners_count: number;
+  /** "Invitá y ganá" por sorteo (migración 0102). */
+  referral_enabled: boolean;
+  referral_min_numbers: number;
+  referral_require_buyer_min: number;
+  referral_max_per_user: number;
   /** Hash combinado de todos los premios (migración 0058). */
   results_hash: string | null;
   /** Cancelación manual (migración 0063). */
