@@ -893,6 +893,17 @@ export default async function RafflePage({
                 : "Confirmá el pago"}
             </div>
           </div>
+          {raffle.payment_type === "transferencia" && (
+            <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-[13px] text-amber-900 dark:text-amber-200">
+              <p className="font-semibold">Prepago manual por WhatsApp</p>
+              <p className="mt-1">
+                Reservás tus números y coordinás el pago por transferencia. Si el
+                organizador cancela el sorteo, se devuelve el{" "}
+                <strong>100% del dinero por transferencia</strong>.
+              </p>
+            </div>
+          )}
+
           <NumbersGrid
             raffleId={raffle.id}
             raffleTitle={raffle.title}
