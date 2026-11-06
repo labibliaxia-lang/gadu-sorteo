@@ -52,3 +52,27 @@ describe("moderación: pausar un sorteo denunciado", () => {
     expect(cuerpo).toMatch(/unlisted:\s*true/);
   });
 });
+
+describe("moderación: un pausado no se republica solo", () => {
+  const MIGRACION = readFileSync(
+    join(RAIZ, "supabase/migrations/0083_guard_reopen_reported_raffle.sql"),
+    "utf8",
+  );
+
+  it("bloquea la vuelta a active con denuncia pendiente", () => {
+    expect(MIGRACION).toMatch(/new\.status\s*=\s*'active'/);
+    expect(MIGRACION).toMatch(/from\s+public\.raffle_reports/i);
+    expect(MIGRACION).toMatch(/status\s*=\s*'pending'/i);
+    expect(MIGRACION).toMatch(/raise\s+exception/i);
+  });
+
+  it("el trigger está creado, no sólo la función (regresión de 0025)", () => {
+    expect(MIGRACION).toMatch(
+      /create\s+trigger\s+guard_reopen_reported_raffle\s+[\s\S]*?before\s+update\s+on\s+public\.raffles/i,
+    );
+  });
+
+  it("exime a service_role y al SQL Editor para no trabar la moderación", () => {
+    expect(MIGRACION).toMatch(/current_user[\s\S]{0,80}\('authenticated',\s*'anon'\)/);
+  });
+});
