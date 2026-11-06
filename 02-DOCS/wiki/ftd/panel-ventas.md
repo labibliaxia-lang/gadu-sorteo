@@ -79,16 +79,18 @@ teléfono sale de `raffle_buyers`, que ya respeta la visibilidad por KYC.
 
 ## Evidencia
 
-- **Fase 1 implementada (2026-11-06), pendiente de aplicar y verificar:**
-  - `0091`: tabla `raffle_audit`, RPC `raffle_sales_summary` (cobrado, devuelto y neto desde
-    `payments` y `refunds`) y `refund_and_release_numbers` (devolución por lo cobrado, motivo de
-    10+ caracteres, guarda de estado y auditoría).
+- **Fase 1 implementada y verificada (2026-11-06).** `0091` aplicada:
+  - `raffle_audit` (RLS: solo el dueño del sorteo o superadmin).
+  - `raffle_sales_summary`: cobrado/devuelto/neto desde `payments` y `refunds`.
+  - `refund_and_release_numbers`: devolución por lo cobrado (reparto del pago, criterio 0079),
+    motivo de 10+ caracteres, guarda de estado y auditoría.
   - La planilla y el CSV leen de la RPC; KPIs de cobrado/devuelto/neto; buscador por nombre,
     teléfono o número; acción «Devolver y liberar» por comprador.
-  - `verificar_0091.sql`: 6 comprobaciones — resumen con la plata de `payments`, devolución de la
-    mitad de un pago de 199.99, auditoría con motivo, rechazo de motivo corto y rechazo con el
-    sorteo sorteado.
+  - `verificar_0091.sql`: **6/6** — el resumen cobra 199.99 (no 300 de precio), devolver un número
+    de un pago de 199.99 por 2 deja una devolución de 100.00, el neto pasa a 99.99, la liberación
+    queda auditada, un motivo corto se rechaza y un sorteo sorteado no se toca.
   - Gates: typecheck 0, lint 0, 291 tests, build OK.
+- Pendiente: probar el botón con un sorteo real y ver el KPI de Neto bajar; fases 2 y 3.
 
 ## Next
 
