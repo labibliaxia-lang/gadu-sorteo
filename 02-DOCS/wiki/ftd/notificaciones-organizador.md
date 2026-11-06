@@ -123,18 +123,21 @@ Acciones y su efecto:
 
 ## Evidencia
 
-- **Fase 1 implementada (2026-11-06), pendiente de aplicar y verificar:**
-  - `0089`: tabla `notifications` con RLS, helper `notificar_reserva`, aviso desde
+- **Fase 1 implementada y verificada (2026-11-06).**
+  - `0089` aplicada: tabla `notifications` con RLS, helper `notificar_reserva`, aviso desde
     `reserve_numbers` y `reserve_numbers_prepaid`, aviso de vencimiento desde
     `release_expired_reservations`, y `extend_reservation` (solo organizador).
+  - `verificar_0089.sql`: **7/7** — tabla con RLS, el comprador no ve lo ajeno, reservar crea una
+    notificación con los 2 números, el comprador no puede ampliar («No autorizado»), el organizador
+    amplía 15 minutos y el vencimiento libera y avisa.
   - `/admin/notificaciones` con pendientes/historial, cuenta regresiva y acciones aprobar, liberar,
-    +15 min, pedir comprobante y marcar leída.
-  - Campana con contador en el encabezado del panel, actualizada por Realtime.
-  - `verificar_0089.sql`: 5 comprobaciones (RLS, aviso al reservar, ampliar solo dueño, liberación
-    con aviso).
+    +15 min, pedir comprobante y marcar leída. Campana con contador por Realtime en el panel.
   - Gates: typecheck 0, lint 0, 285 tests, build OK.
-- Pendiente: aplicar `0089`, correr el verificador y probar con dos cuentas (organizador recibe el
-  aviso, aprueba y ve los números vendidos).
+- **Lección del verificador (cuarta vez):** el paso 2 dejaba la sesión como comprador y el paso 3
+  contaba con esa RLS, así que la fila del organizador parecía inexistente. Los conteos se hacen
+  siempre de vuelta en postgres.
+- Pendiente de fase 1: probar con dos cuentas reales (campana, aprobar, números vendidos) e
+  incorporar `payment_approved` desde el webhook y el teléfono del comprador en el payload.
 
 ## Next
 
