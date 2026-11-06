@@ -136,8 +136,12 @@ Acciones y su efecto:
 - **Lección del verificador (cuarta vez):** el paso 2 dejaba la sesión como comprador y el paso 3
   contaba con esa RLS, así que la fila del organizador parecía inexistente. Los conteos se hacen
   siempre de vuelta en postgres.
-- Pendiente de fase 1: probar con dos cuentas reales (campana, aprobar, números vendidos) e
-  incorporar `payment_approved` desde el webhook y el teléfono del comprador en el payload.
+- **Cierre de fase 1 (2026-11-06):** `0090` agrega el **teléfono del comprador** al payload (el
+  botón «Pedir comprobante» ahora abre WhatsApp con destinatario, normalizado a 54) y
+  `notificar_pago_aprobado`, que el webhook llama al acreditar un pago (best-effort: si falla, el
+  pago sigue aprobado). `verificar_0090.sql` pendiente de correr.
+- Pendiente de fase 1: aplicar `0090`, correr su verificador y probar con dos cuentas reales
+  (campana, aprobar, números vendidos).
 
 ## Next
 

@@ -13,6 +13,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatPrice } from "@/lib/utils";
+import { waHref } from "@/lib/whatsapp";
 
 export interface NotificationItem {
   id: string;
@@ -22,6 +23,7 @@ export interface NotificationItem {
     numbers?: number[];
     count?: number;
     buyer_name?: string;
+    buyer_phone?: string | null;
     total?: number | string;
     price_per_number?: number | string;
   } | null;
@@ -146,6 +148,7 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
           {visibles.map((item) => {
             const numeros = (item.payload?.numbers ?? []) as number[];
             const nombre = item.payload?.buyer_name ?? "Un comprador";
+            const telefono = item.payload?.buyer_phone ?? null;
             const total = item.payload?.total;
             const reloj = restante(item.expires_at, now);
             const esReserva = item.type === "reservation_pending";
@@ -247,7 +250,7 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
 
                   {item.raffle_id && esReserva && (
                     <a
-                      href="https://wa.me/?text=Hola%2C%20recibimos%20tu%20reserva.%20Pas%C3%A1nos%20el%20comprobante%20para%20confirmarla."
+                      href={waHref(telefono, nombre, numeros)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={buttonVariants({ variant: "ghost", size: "sm" })}

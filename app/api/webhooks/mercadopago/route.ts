@@ -322,6 +322,18 @@ export async function POST(request: NextRequest) {
       .update({ status: "approved", mp_payment_id: String(paymentId) })
       .eq("id", payment.id);
 
+    // Aviso informativo al organizador (tabla notifications, 0089/0090).
+    // Es best-effort: un fallo acá no puede tumbar un pago ya acreditado.
+    const { error: avisoError } = await admin.rpc("notificar_pago_aprobado", {
+      p_payment_id: payment.id,
+    });
+    if (avisoError) {
+      console.error(
+        "Webhook MP: no se pudo crear el aviso de pago acreditado",
+        avisoError,
+      );
+    }
+
     // Referidos: otorga un número gratis al referente (atómico e idempotente).
     const { data: referral } = await admin
       .from("referrals")
