@@ -131,7 +131,7 @@ begin
   insert into public.raffle_numbers (raffle_id, number, status)
   select v_r3, n, 'available' from generate_series(1, 3) n;
   insert into public.raffle_numbers (raffle_id, number, status)
-  select v_r4, n, 'available' from generate_series(1, 2) n;
+  select v_r4, n, 'available' from generate_series(1, 4) n;
   insert into public.raffle_numbers (raffle_id, number, status)
   select v_r5, n, 'sold' from generate_series(1, 2) n;
 
@@ -261,6 +261,9 @@ begin
     return;
   end if;
 
+  -- 4 números: dos vendidos a los invitados y dos disponibles para premiar.
+  -- Con solo dos, el primer premio se quedaba sin número y el tope no se
+  -- llegaba a probar (falso CRÍTICO).
   update public.raffle_numbers set status='sold', sold_to=v_a, sold_at=now()
    where raffle_id = v_r and number = 1;
   update public.raffle_numbers set status='sold', sold_to=v_b, sold_at=now()
