@@ -93,3 +93,6 @@ gcm-diagnose.log
 
 # Copias de seguridad: llevan datos personales, nunca al repositorio
 backups/
+*.dump
+*.dump.gz
+*.backup
