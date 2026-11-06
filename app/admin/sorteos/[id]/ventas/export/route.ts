@@ -19,7 +19,13 @@ export async function GET(
 
   if (!resultado.ok) {
     const status =
-      resultado.motivo === "sin-sesion" ? 401 : resultado.motivo === "sin-permiso" ? 403 : 404;
+      resultado.motivo === "sin-sesion"
+        ? 401
+        : resultado.motivo === "sin-permiso"
+          ? 403
+          : resultado.motivo === "error"
+            ? 500
+            : 404;
     return NextResponse.json({ error: resultado.motivo }, { status });
   }
 

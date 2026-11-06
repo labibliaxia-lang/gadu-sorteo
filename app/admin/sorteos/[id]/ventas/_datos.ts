@@ -1,18 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import {
-  agruparVentas,
   resumirVentas,
-  type Comprador,
   type FilaVenta,
-  type NumeroVendido,
   type ResumenVentas,
 } from "@/lib/ventas";
 
 /**
  * Carga compartida entre la planilla y su exportación a CSV.
  *
- * Vive acá para que el control de permisos sea uno solo: si mañana cambia quién
- * puede ver las ventas, se cambia en un lugar y no en dos.
+ * La plata sale de `raffle_sales_summary` (migración 0091): cobrado, devuelto y
+ * neto por comprador. Antes se calculaba `números × precio` en JavaScript, que
+ * informa mal en cuanto cambia el precio o hay una devolución.
  */
 
 export type ResultadoVentas =
@@ -22,10 +20,21 @@ export type ResultadoVentas =
       filas: FilaVenta[];
       resumen: ResumenVentas;
     }
-  | { ok: false; motivo: "sin-sesion" | "sin-permiso" | "no-existe" };
+  | { ok: false; motivo: "sin-sesion" | "sin-permiso" | "no-existe" | "error" };
 
-/** PostgREST corta en 1000 filas: hay que paginar o se pierden ventas. */
-const PAGINA = 1000;
+interface FilaResumen {
+  buyer_id: string | null;
+  full_name: string | null;
+  phone: string | null;
+  numbers: number[] | null;
+  quantity: number | null;
+  paid: number | null;
+  refunded: number | null;
+  net: number | null;
+  payment_state: string | null;
+  first_sale_at: string | null;
+  last_sale_at: string | null;
+}
 
 export async function cargarVentas(sorteoId: string): Promise<ResultadoVentas> {
   const supabase = createClient();
@@ -58,41 +67,30 @@ export async function cargarVentas(sorteoId: string): Promise<ResultadoVentas> {
     return { ok: false, motivo: "sin-permiso" };
   }
 
-  const vendidos: NumeroVendido[] = [];
-  for (let desde = 0; ; desde += PAGINA) {
-    const { data, error } = await supabase
-      .from("raffle_numbers")
-      .select("number, sold_to, sold_at")
-      .eq("raffle_id", sorteoId)
-      .eq("status", "sold")
-      .order("number")
-      .range(desde, desde + PAGINA - 1);
+  const { data, error } = await supabase.rpc("raffle_sales_summary", {
+    p_raffle_id: sorteoId,
+  });
 
-    if (error || !data || data.length === 0) break;
-    vendidos.push(...data);
-    if (data.length < PAGINA) break;
-  }
+  if (error) return { ok: false, motivo: "error" };
 
-  const compradores: Comprador[] = [];
-  for (let desde = 0; ; desde += PAGINA) {
-    const { data, error } = await supabase
-      .from("raffle_buyers")
-      .select("buyer_id, full_name, phone")
-      .eq("raffle_id", sorteoId)
-      .order("buyer_id")
-      .range(desde, desde + PAGINA - 1);
-
-    if (error || !data || data.length === 0) break;
-    compradores.push(...data);
-    if (data.length < PAGINA) break;
-  }
-
-  const precio = Number(raffle.price_per_number ?? 0);
-  const filas = agruparVentas(vendidos, compradores, precio);
+  const filas: FilaVenta[] = ((data ?? []) as FilaResumen[]).map((fila) => ({
+    compradorId: fila.buyer_id ?? null,
+    nombre: fila.full_name ?? "Sin comprador registrado",
+    telefono: fila.phone ?? null,
+    numeros: (fila.numbers ?? []) as number[],
+    cantidad: Number(fila.quantity ?? 0),
+    total: Number(fila.net ?? 0),
+    cobrado: Number(fila.paid ?? 0),
+    devuelto: Number(fila.refunded ?? 0),
+    neto: Number(fila.net ?? 0),
+    estadoPago: (fila.payment_state ?? "manual") as FilaVenta["estadoPago"],
+    primeraVenta: fila.first_sale_at ?? null,
+    ultimaVenta: fila.last_sale_at ?? null,
+  }));
 
   return {
     ok: true,
-    sorteo: { id: raffle.id, title: raffle.title, precio },
+    sorteo: { id: raffle.id, title: raffle.title, precio: Number(raffle.price_per_number ?? 0) },
     filas,
     resumen: resumirVentas(filas),
   };

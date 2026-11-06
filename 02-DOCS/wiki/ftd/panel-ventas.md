@@ -79,7 +79,16 @@ teléfono sale de `raffle_buyers`, que ya respeta la visibilidad por KYC.
 
 ## Evidencia
 
-Pendiente: spec recién escrita.
+- **Fase 1 implementada (2026-11-06), pendiente de aplicar y verificar:**
+  - `0091`: tabla `raffle_audit`, RPC `raffle_sales_summary` (cobrado, devuelto y neto desde
+    `payments` y `refunds`) y `refund_and_release_numbers` (devolución por lo cobrado, motivo de
+    10+ caracteres, guarda de estado y auditoría).
+  - La planilla y el CSV leen de la RPC; KPIs de cobrado/devuelto/neto; buscador por nombre,
+    teléfono o número; acción «Devolver y liberar» por comprador.
+  - `verificar_0091.sql`: 6 comprobaciones — resumen con la plata de `payments`, devolución de la
+    mitad de un pago de 199.99, auditoría con motivo, rechazo de motivo corto y rechazo con el
+    sorteo sorteado.
+  - Gates: typecheck 0, lint 0, 291 tests, build OK.
 
 ## Next
 

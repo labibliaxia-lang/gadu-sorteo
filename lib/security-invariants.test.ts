@@ -233,6 +233,15 @@ describe("blindaje: resultado del sorteo", () => {
     expect(ampliar).toMatch(/is_admin/i);
   });
 
+  it("liberar un número vendido es una devolución auditada", () => {
+    const fn = lastDefinition("refund_and_release_numbers");
+
+    expect(fn).toMatch(/insert into public\.refunds/i);
+    expect(fn).toMatch(/raffle_audit/i);
+    expect(fn).toMatch(/length\(v_motivo\)\s*<\s*10/i);
+    expect(fn).toMatch(/not in \('active', 'closed'\)/i);
+  });
+
   it("nadie inserta números por PostgREST (hallazgo #14)", () => {
     // Insertar filas 'sold' falsas cambia el conjunto con el que se sortea.
     expect(file("0072")).toMatch(

@@ -32,6 +32,11 @@ export interface FilaVenta {
   numeros: number[];
   cantidad: number;
   total: number;
+  /** Lo efectivamente cobrado (`payments`). Ausente en el camino estimado. */
+  cobrado?: number;
+  devuelto?: number;
+  neto?: number;
+  estadoPago?: "pagado" | "pendiente" | "manual";
   primeraVenta: string | null;
   ultimaVenta: string | null;
 }
@@ -40,6 +45,10 @@ export interface ResumenVentas {
   compradores: number;
   numeros: number;
   total: number;
+  /** Totales reales; 0 cuando la planilla viene del camino estimado. */
+  cobrado: number;
+  devuelto: number;
+  neto: number;
   /** Cuántos números se vendieron sin dueño registrado. */
   anonimos: number;
 }
@@ -108,6 +117,9 @@ export function resumirVentas(filas: FilaVenta[]): ResumenVentas {
     compradores: filas.filter((f) => f.compradorId !== null).length,
     numeros: filas.reduce((total, f) => total + f.cantidad, 0),
     total: filas.reduce((total, f) => total + f.total, 0),
+    cobrado: filas.reduce((total, f) => total + (f.cobrado ?? 0), 0),
+    devuelto: filas.reduce((total, f) => total + (f.devuelto ?? 0), 0),
+    neto: filas.reduce((total, f) => total + (f.neto ?? 0), 0),
     anonimos: filas.filter((f) => f.compradorId === null).reduce((total, f) => total + f.cantidad, 0),
   };
 }
@@ -124,21 +136,42 @@ function campo(valor: string | number | null): string {
  * para que no se partan en columnas.
  */
 export function csvDeVentas(filas: FilaVenta[], titulo: string): string {
-  const encabezado = ["Comprador", "Teléfono", "Cantidad", "Números", "Total", "Primera venta", "Última venta"];
+  // Con plata real se agregan las columnas; el camino estimado queda igual.
+  const conPlata = filas.some((f) => f.cobrado !== undefined);
+
+  const encabezado = conPlata
+    ? ["Comprador", "Teléfono", "Cantidad", "Números", "Total", "Cobrado", "Devuelto", "Neto", "Estado", "Primera venta", "Última venta"]
+    : ["Comprador", "Teléfono", "Cantidad", "Números", "Total", "Primera venta", "Última venta"];
+
   const lineas = [
     `Sorteo;${campo(titulo)}`,
     "",
     encabezado.join(";"),
     ...filas.map((f) =>
-      [
-        campo(f.nombre),
-        campo(f.telefono),
-        campo(f.cantidad),
-        campo(f.numeros.join(" ")),
-        campo(f.total),
-        campo(f.primeraVenta),
-        campo(f.ultimaVenta),
-      ].join(";"),
+      (conPlata
+        ? [
+            campo(f.nombre),
+            campo(f.telefono),
+            campo(f.cantidad),
+            campo(f.numeros.join(" ")),
+            campo(f.total),
+            campo(f.cobrado ?? 0),
+            campo(f.devuelto ?? 0),
+            campo(f.neto ?? 0),
+            campo(f.estadoPago ?? ""),
+            campo(f.primeraVenta),
+            campo(f.ultimaVenta),
+          ]
+        : [
+            campo(f.nombre),
+            campo(f.telefono),
+            campo(f.cantidad),
+            campo(f.numeros.join(" ")),
+            campo(f.total),
+            campo(f.primeraVenta),
+            campo(f.ultimaVenta),
+          ]
+      ).join(";"),
     ),
   ];
 
