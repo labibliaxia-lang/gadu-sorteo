@@ -16,6 +16,7 @@ import { getPlanContext } from "@/lib/plans";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { AutoDrawToggle } from "@/components/AutoDrawToggle";
+import { InvitarResenas } from "@/components/InvitarResenas";
 import {
   Card,
   CardContent,
@@ -206,6 +207,53 @@ export default async function AdminRaffleDetailPage({
     phone: row.phone,
   }));
   const buyerById = new Map(buyers.map((buyer) => [buyer.id, buyer]));
+
+  // Compradores con números vendidos, para invitarlos a dejar reseña.
+  // Sólo tiene sentido con el sorteo ya sorteado: la política de `reviews`
+  // (0045) exige número comprado Y sorteo en estado `drawn`, así que antes de
+  // sortear la invitación llevaría a un callejón sin salida.
+  let compradoresParaResena: { nombre: string; telefono: string | null; numeros: number }[] = [];
+  if (raffle.status === "drawn") {
+    // Paginado: PostgREST corta en 1000 filas y el conteo quedaría mal.
+    const vendidos: { sold_to: string | null }[] = [];
+    for (let desde = 0; ; desde += 1000) {
+      const { data, error } = await supabase
+        .from("raffle_numbers")
+        .select("sold_to")
+        .eq("raffle_id", params.id)
+        .eq("status", "sold")
+        .range(desde, desde + 999);
+      if (error || !data || data.length === 0) break;
+      vendidos.push(...(data as { sold_to: string | null }[]));
+      if (data.length < 1000) break;
+    }
+
+    const { data: contactosVenta } = await supabase
+      .from("raffle_buyers")
+      .select("buyer_id, full_name, phone")
+      .eq("raffle_id", params.id)
+      .eq("kind", "sold");
+
+    const contactos = new Map(
+      ((contactosVenta ?? []) as { buyer_id: string; full_name: string | null; phone: string | null }[]).map(
+        (c) => [c.buyer_id, c],
+      ),
+    );
+
+    const conteo = new Map<string, number>();
+    for (const fila of vendidos) {
+      if (!fila.sold_to) continue;
+      conteo.set(fila.sold_to, (conteo.get(fila.sold_to) ?? 0) + 1);
+    }
+
+    compradoresParaResena = [...conteo.entries()]
+      .map(([id, numeros]) => ({
+        nombre: contactos.get(id)?.full_name?.trim() || "Comprador sin nombre",
+        telefono: contactos.get(id)?.phone ?? null,
+        numeros,
+      }))
+      .sort((a, b) => b.numeros - a.numeros);
+  }
 
   const reservedGroups = reservedBuyerIds
     .map((userId) => {
@@ -454,6 +502,15 @@ export default async function AdminRaffleDetailPage({
               <Receipt className="mr-1.5 h-4 w-4" />
               Ventas
             </Link>
+            {raffle.status === "drawn" && (
+              <div className="w-full">
+                <InvitarResenas
+                  sorteoId={raffle.id}
+                  tituloSorteo={raffle.title}
+                  compradores={compradoresParaResena}
+                />
+              </div>
+            )}
             <Link
               href={`/admin/sorteos/${raffle.id}/premios`}
               className={buttonVariants({ variant: "outline" })}
