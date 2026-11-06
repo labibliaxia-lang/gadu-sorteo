@@ -383,3 +383,8 @@ Evidence   — sendRefundIssuedEmail en lib/email.ts, llamado desde refundAndRel
 Decision   — el comprador ve sus devoluciones en Mis numeros y puede avisar "Ya la recibi": deja buyer_confirmed_at y avisa al organizador con una notificacion refund_confirmed. No cierra la deuda: el aviso publico sigue dependiendo de que el organizador marque la devolucion como pagada.
 Why        — el comprador no tenia forma de avisar que la plata llego y el organizador no se enteraba; el boton de marcar pagada existia en el codigo pero no estaba en ninguna pantalla.
 Evidence   — 0093 (columna, tipo de notificacion y RPC confirm_refund_received), verificar_0093.sql y componente MisDevoluciones en /mis-numeros.
+
+## 2026-11-06 — Enlace directo para confirmar la devolucion  (feature: panel-ventas)
+Decision   — cada devolucion tiene un confirmation_token unico; el organizador comparte /devolucion/<token> y el comprador confirma sin login. La seccion Devoluciones del detalle del sorteo ahora se muestra para cualquier estado (antes solo con el sorteo cancelado), con Copiar enlace, WhatsApp y Marcar pagada.
+Why        — el comprador no encontraba donde avisar y el organizador no tenia el enlace a mano; el boton de marcar pagada existia pero la seccion solo se renderizaba en sorteos cancelados.
+Evidence   — 0094 (token, refund_by_token, confirm_refund_by_token), pagina /devolucion/[token], componente RefundRow; verificar_0094.sql pendiente de correr.

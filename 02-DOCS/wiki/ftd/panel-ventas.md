@@ -111,6 +111,12 @@ teléfono sale de `raffle_buyers`, que ya respeta la visibilidad por KYC.
   «Mis números» y avisa **«Ya la recibí»**. Eso deja `buyer_confirmed_at` y avisa al organizador con
   una notificación `refund_confirmed`. **No cierra la deuda**: el aviso público sigue dependiendo de
   que el organizador marque la devolución como pagada.
+- **Enlace directo de devolución (0094, 2026-11-06).** Cada devolución tiene un `confirmation_token`
+  único. El organizador ve una sección **Devoluciones** en el detalle del sorteo para *cualquier*
+  estado (antes solo aparecía con el sorteo cancelado), con **Copiar enlace**, **WhatsApp** y
+  **Marcar pagada**. El comprador abre `/devolucion/<token>` sin login y confirma; queda
+  `buyer_confirmed_at` y el organizador recibe la notificación `refund_confirmed` con `via: link`.
+  El token no expone nombre, teléfono ni email.
 - Pendiente: control visual del disparador (números sin marcar + confirmación con la lista) y la
   reparación de la devolución accidental, si el dueño la pide.
 

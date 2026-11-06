@@ -27,7 +27,7 @@ import { RaffleActions } from "@/components/RaffleActions";
 import { CopyLandingLink } from "@/components/CopyLandingLink";
 import { PublishCommitmentButton } from "@/components/PublishCommitmentButton";
 import { RaffleDeleteButton } from "@/components/RaffleDeleteButton";
-import { RefundMarkPaidButton } from "@/components/admin/RefundMarkPaidButton";
+import { RefundRow } from "@/components/admin/RefundRow";
 import { RaffleCloneButton } from "@/components/RaffleCloneButton";
 import { ReservedNumbersPanel } from "@/components/ReservedNumbersPanel";
 import { formatDateTime, formatPrice } from "@/lib/utils";
@@ -286,12 +286,14 @@ export default async function AdminRaffleDetailPage({
     amount: number;
     status: string;
     paid_at: string | null;
+    confirmed: boolean;
+    token: string;
   }[] = [];
 
-  if (raffle.status === "cancelled") {
+  {
     const { data: refundRows } = await supabase
       .from("refunds")
-      .select("id, user_id, amount, status, paid_at")
+      .select("id, user_id, amount, status, paid_at, buyer_confirmed_at, confirmation_token")
       .eq("raffle_id", params.id)
       .order("created_at", { ascending: true });
 
@@ -321,6 +323,8 @@ export default async function AdminRaffleDetailPage({
       amount: Number(row.amount),
       status: row.status as string,
       paid_at: (row.paid_at as string | null) ?? null,
+      confirmed: Boolean(row.buyer_confirmed_at),
+      token: row.confirmation_token as string,
     }));
   }
 
@@ -451,31 +455,48 @@ export default async function AdminRaffleDetailPage({
               ) : (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">
-                    Devoluciones manuales ({refunds.filter((r) => r.status === "paid").length}/
+                    Devoluciones ({refunds.filter((r) => r.status === "paid").length}/
                     {refunds.length} pagadas):
                   </p>
                   {refunds.map((refund) => (
-                    <div
+                    <RefundRow
                       key={refund.id}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-background/70 p-3 text-sm"
-                    >
-                      <div>
-                        <p className="font-medium">{refund.user_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatPrice(refund.amount)}
-                          {refund.paid_at
-                            ? ` · ${formatDateTime(refund.paid_at)}`
-                            : ""}
-                        </p>
-                      </div>
-                      <RefundMarkPaidButton
-                        refundId={refund.id}
-                        paid={refund.status === "paid"}
-                      />
-                    </div>
+                      refundId={refund.id}
+                      nombre={refund.user_name}
+                      amount={refund.amount}
+                      status={refund.status}
+                      confirmed={refund.confirmed}
+                      token={refund.token}
+                    />
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {raffle.status !== "cancelled" && refunds.length > 0 && (
+            <div className="space-y-3 rounded-xl border p-4">
+              <div>
+                <p className="font-semibold">Devoluciones</p>
+                <p className="text-xs text-muted-foreground">
+                  Compartí el enlace con el comprador para que avise que la
+                  recibió, y marcala como pagada cuando le hayas devuelto el
+                  dinero.
+                </p>
+              </div>
+              <div className="space-y-2">
+                {refunds.map((refund) => (
+                  <RefundRow
+                    key={refund.id}
+                    refundId={refund.id}
+                    nombre={refund.user_name}
+                    amount={refund.amount}
+                    status={refund.status}
+                    confirmed={refund.confirmed}
+                    token={refund.token}
+                  />
+                ))}
+              </div>
             </div>
           )}
 
