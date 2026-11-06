@@ -139,9 +139,10 @@ Acciones y su efecto:
 - **Cierre de fase 1 (2026-11-06):** `0090` agrega el **teléfono del comprador** al payload (el
   botón «Pedir comprobante» ahora abre WhatsApp con destinatario, normalizado a 54) y
   `notificar_pago_aprobado`, que el webhook llama al acreditar un pago (best-effort: si falla, el
-  pago sigue aprobado). `verificar_0090.sql` pendiente de correr.
-- Pendiente de fase 1: aplicar `0090`, correr su verificador y probar con dos cuentas reales
-  (campana, aprobar, números vendidos).
+  pago sigue aprobado). **Verificado 2/2:** el aviso de reserva trae el teléfono y el de pago
+  acreditado trae importe, números y teléfono.
+- Falta sólo la prueba con dos cuentas reales (campana, aprobar, números vendidos). El resto de la
+  fase 1 está cerrado con evidencia.
 
 ## Next
 

@@ -357,3 +357,11 @@ Why        — hoy solo hay email y el panel de numeros no se actualiza solo; la
 Fases      — 1 bandeja + Realtime + ampliar; 2 comprobante en la app y TTL por sorteo; 3 devolucion por numero; 4 digest y metricas.
 Defaults   — comprobante en la app en fase 2; TTL de 10 min + ampliar en fase 1; liberar un vendido genera devolucion registrada (fase 3).
 Evidence   — 02-DOCS/wiki/ftd/notificaciones-organizador.md (spec; sin implementar).
+
+## 2026-11-06 — Panel de ventas: la plata real y acciones con auditoria  (feature: panel-ventas)
+Decision 1 — el total sale de payments y refunds, no de numeros por precio. La planilla y el CSV leen de una RPC agregada, no de calculo en JavaScript.
+Decision 2 — liberar un numero vendido es una devolucion: crea refunds por lo cobrado (reparto de 0079), deja el numero disponible, exige motivo y avisa al comprador.
+Decision 3 — toda accion del organizador queda en raffle_audit (actor, accion, numeros, monto, motivo).
+Why        — el panel actual informa mal (total estimado) y no permite operar; el organizador necesitaba liberar, devolver y buscar sin otro panel.
+Fases      — 1 plata real + acciones + auditoria + buscador; 2 export y plantillas; 3 KPIs.
+Evidence   — 02-DOCS/wiki/ftd/panel-ventas.md (spec; sin implementar).
