@@ -123,7 +123,18 @@ Acciones y su efecto:
 
 ## Evidencia
 
-Pendiente: spec recién escrita, sin implementar.
+- **Fase 1 implementada (2026-11-06), pendiente de aplicar y verificar:**
+  - `0089`: tabla `notifications` con RLS, helper `notificar_reserva`, aviso desde
+    `reserve_numbers` y `reserve_numbers_prepaid`, aviso de vencimiento desde
+    `release_expired_reservations`, y `extend_reservation` (solo organizador).
+  - `/admin/notificaciones` con pendientes/historial, cuenta regresiva y acciones aprobar, liberar,
+    +15 min, pedir comprobante y marcar leída.
+  - Campana con contador en el encabezado del panel, actualizada por Realtime.
+  - `verificar_0089.sql`: 5 comprobaciones (RLS, aviso al reservar, ampliar solo dueño, liberación
+    con aviso).
+  - Gates: typecheck 0, lint 0, 285 tests, build OK.
+- Pendiente: aplicar `0089`, correr el verificador y probar con dos cuentas (organizador recibe el
+  aviso, aprueba y ve los números vendidos).
 
 ## Next
 

@@ -224,6 +224,15 @@ describe("blindaje: resultado del sorteo", () => {
     expect(cuerpo).toMatch(/no se pueden reservar/i);
   });
 
+  it("la bandeja avisa al reservar y solo el organizador amplía", () => {
+    const reserva = lastDefinition("reserve_numbers");
+    expect(reserva).toMatch(/notificar_reserva/i);
+
+    const ampliar = lastDefinition("extend_reservation");
+    expect(ampliar).toMatch(/owns_raffle/i);
+    expect(ampliar).toMatch(/is_admin/i);
+  });
+
   it("nadie inserta números por PostgREST (hallazgo #14)", () => {
     // Insertar filas 'sold' falsas cambia el conjunto con el que se sortea.
     expect(file("0072")).toMatch(

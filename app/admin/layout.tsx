@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { NotificationsBell } from "@/components/admin/NotificationsBell";
 import { adminMfaRequired } from "@/lib/flags";
 import { evaluateAdminMfaGate } from "@/lib/mfa";
 import { lockAdminSession } from "@/app/admin/verify/actions";
@@ -78,6 +79,7 @@ export default async function AdminLayout({
                 </button>
               </form>
             )}
+            <NotificationsBell />
             <Link
               href="/admin/sorteos/nuevo"
               className={cn(buttonVariants(), "w-full sm:w-auto")}
