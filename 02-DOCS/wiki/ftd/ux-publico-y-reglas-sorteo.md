@@ -44,6 +44,22 @@ de un sorteo con gente y plata adentro.
 4. **La paleta cruza las dos vistas.** Disponible verde, reservado ámbar, vendido rojo; así la
    leyenda del comprador y los puntos del organizador dicen lo mismo.
 
+## Ciclo de vida del sorteo (segunda tanda, 2026-11-06)
+
+El compromiso publicado no congela el sorteo, congela la semilla. Lo que sí limita los botones es
+la plata, la gente y la fecha. De ahí salieron cuatro cambios:
+
+1. **Cerrar y reabrir pasan por el servidor.** Antes eran un `UPDATE` directo del navegador, sin
+   validación ni auditoría. `closeRaffle` exige `active`; `reopenRaffle` exige `closed` **y**
+   `now < draw_date`.
+2. **Estados terminales congelados** (0088, trigger `guard_terminal_raffle_state`): un sorteo
+   `drawn` o `cancelled` no puede volver a `active` por PostgREST. `drawn` ya lo cubría 0034;
+   `cancelled` era el agujero (se podía reabrir un sorteo que ya generó devoluciones).
+3. **La venta corta en la fecha** (0088, `reserve_numbers`): con `draw_date <= now()` no se reserva
+   más, aunque el estado siga `active`.
+4. **El botón Eliminar se oculta** cuando hay números movidos, pagos o compromiso, en vez de
+   mostrarse y fallar.
+
 ## Checklist
 
 | # | Task | Proof it is done |
@@ -53,15 +69,22 @@ de un sorteo con gente y plata adentro.
 | 3 | Volver en premios y editar | Navegación de ida y vuelta sin pasar por el listado |
 | 4 | Eliminar bloqueado con actividad | `verificar_0087.sql` 5/5: control, vendido, compromiso y pago |
 | 5 | Cancelar con confirmación extrema | Sin la frase, el servidor no cancela; con motivo corto, tampoco |
-| 6 | Gates verdes | typecheck, lint, tests, build |
+| 6 | Cerrar/reabrir validados en el servidor | `closeRaffle`/`reopenRaffle` en la Server Action; la base rechaza reabrir cancelado/sorteado |
+| 7 | Estados terminales congelados | `verificar_0088.sql`: cancelado y sorteado no vuelven a activo |
+| 8 | Sin venta después de la fecha | `verificar_0088.sql`: reserva después de `draw_date` rechazada |
+| 9 | Gates verdes | typecheck, lint, tests, build |
 
 ## Evidencia
 
-Pendiente: cambios recién aplicados, sin prueba visual ni SQL todavía.
+- **0087 (eliminar):** verificado 5/5 el 2026-11-06.
+- **0088 (estados y ventana de venta):** escrito, pendiente de aplicar y correr el verificador.
+- **UI:** implementada; falta la prueba visual (grilla, volver, botones de ciclo de vida).
 
 ## Next
 
-1. Aplicar `0087` y correr `verificar_0087.sql`.
+1. Aplicar `0087` (si no se aplicó) y `0088`; correr `verificar_0088.sql`.
 2. Probar la grilla pública con un sorteo que tenga vendidos y reservados.
 3. Recorrer el panel del organizador y volver desde cada subsección.
 4. Probar cancelar un sorteo con participantes: sin la frase no cancela, con la frase sí.
+5. Probar reabrir un sorteo cerrado: antes de la fecha sí, después no.
+6. Probar la venta con la fecha vencida: la grilla debe rechazar la reserva.

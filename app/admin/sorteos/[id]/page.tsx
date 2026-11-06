@@ -143,6 +143,20 @@ export default async function AdminRaffleDetailPage({
     .eq("raffle_id", params.id)
     .eq("status", "reserved");
 
+  // Eliminar solo tiene sentido mientras el sorteo no existió para nadie:
+  // sin números movidos, sin pagos y sin compromiso. La base lo hace cumplir
+  // igual (0087); acá se oculta el botón para no ofrecer algo que va a fallar.
+  const { count: paymentsCount } = await supabase
+    .from("payments")
+    .select("id", { count: "exact", head: true })
+    .eq("raffle_id", params.id);
+
+  const canDeleteRaffle =
+    (soldCount ?? 0) === 0 &&
+    (reservedCount ?? 0) === 0 &&
+    (paymentsCount ?? 0) === 0 &&
+    !raffle.draw_commitment;
+
   // Reservas vivas para el prepago manual (WhatsApp). Se agrupan por comprador
   // porque un mismo comprobante cubre todos los números de esa persona.
   const { data: reservedRows } = await supabase
@@ -467,7 +481,16 @@ export default async function AdminRaffleDetailPage({
               Editar sorteo
             </Link>
             <RaffleCloneButton raffleId={raffle.id} />
-            <RaffleDeleteButton raffleId={raffle.id} />
+            {canDeleteRaffle ? (
+              <RaffleDeleteButton raffleId={raffle.id} />
+            ) : (
+              <span
+                className="self-center text-xs text-fg-subtle"
+                title="Tiene números movidos, pagos o compromiso publicado: se cancela en lugar de eliminarse."
+              >
+                No se puede eliminar: tiene actividad
+              </span>
+            )}
           </div>
 
           <AutoDrawToggle

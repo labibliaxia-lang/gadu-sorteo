@@ -208,6 +208,22 @@ describe("blindaje: resultado del sorteo", () => {
     expect(cuerpo).toMatch(/draw_commitment/i);
   });
 
+  it("un sorteo cancelado no se reabre: los estados terminales se congelan", () => {
+    const cuerpo = lastDefinition("guard_terminal_raffle_state");
+
+    expect(cuerpo).toMatch(/old\.status\s+in\s*\(\s*'drawn'\s*,\s*'cancelled'\s*\)/i);
+    expect(cuerpo).toMatch(/new\.status\s+is\s+distinct\s+from\s+old\.status/i);
+    expect(cuerpo).toMatch(/raise\s+exception/i);
+  });
+
+  it("la venta corta en la fecha del sorteo", () => {
+    // La última definición de reserve_numbers es la que vale (0088).
+    const cuerpo = lastDefinition("reserve_numbers");
+
+    expect(cuerpo).toMatch(/draw_date\s*<=\s*now\(\)/i);
+    expect(cuerpo).toMatch(/no se pueden reservar/i);
+  });
+
   it("nadie inserta números por PostgREST (hallazgo #14)", () => {
     // Insertar filas 'sold' falsas cambia el conjunto con el que se sortea.
     expect(file("0072")).toMatch(

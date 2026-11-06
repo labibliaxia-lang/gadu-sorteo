@@ -342,3 +342,11 @@ Decision 2 — «Volver» en premios y editar, las dos únicas subsecciones del 
 Decision 3 — eliminar un sorteo con actividad se bloquea en la Server Action y en la base (0087, trigger BEFORE DELETE), porque el dueño puede llamar a PostgREST; cancelar con participantes o compromiso exige escribir CANCELAR SORTEO y un motivo de 10+ caracteres.
 Why        — el comprador leía los números vendidos como «apagados» sin poder distinguirlos, y el panel podía destruir pagos por cascada al borrar un sorteo con ventas.
 Evidence   — FTD ux-publico-y-reglas-sorteo; verificar_0087.sql (control + tres ataques); invariante en security-invariants.test.ts; gates verdes.
+
+## 2026-11-06 — Ciclo de vida del sorteo: estados terminales y ventana de venta  (feature: ux-publico-y-reglas-sorteo)
+Decision 1 — cerrar y reabrir dejan de ser UPDATE del navegador: closeRaffle exige active y reopenRaffle exige closed y now < draw_date.
+Decision 2 — 0088 congela los estados terminales (drawn, cancelled): un sorteo cancelado no se reabre por PostgREST.
+Decision 3 — 0088 corta la venta en draw_date: reserve_numbers rechaza con la fecha vencida aunque el estado siga active.
+Decision 4 — el botón Eliminar se oculta cuando hay actividad o compromiso, en vez de ofrecerse y fallar.
+Why        — el compromiso congela la semilla, no el sorteo; lo que limita los botones es la plata, la gente y la fecha. Se podía reabrir un sorteo cancelado con devoluciones ya generadas y vender después de la fecha prometida.
+Evidence   — 0088 y verificar_0088.sql (control de cierre, cancelado/sorteado sin reapertura, reserva antes y después de la fecha); invariantes en security-invariants.test.ts; gates verdes.

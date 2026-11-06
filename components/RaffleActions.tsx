@@ -4,10 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Clock } from "lucide-react";
 
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/utils";
-import { publishDrawCommitment, drawWinner as drawRaffleWinner, cancelRaffle } from "@/app/admin/sorteos/[id]/actions";
+import {
+  publishDrawCommitment,
+  drawWinner as drawRaffleWinner,
+  cancelRaffle,
+  closeRaffle as closeRaffleAction,
+  reopenRaffle as reopenRaffleAction,
+} from "@/app/admin/sorteos/[id]/actions";
 
 interface RaffleActionsProps {
   raffleId: string;
@@ -45,7 +50,6 @@ export function RaffleActions({
   soldCount,
 }: RaffleActionsProps) {
   const router = useRouter();
-  const supabase = createClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState<number | null>(null);
@@ -72,11 +76,8 @@ export function RaffleActions({
   async function closeRaffle() {
     setBusy("close");
     setError(null);
-    const { error: updateError } = await supabase
-      .from("raffles")
-      .update({ status: "closed" })
-      .eq("id", raffleId);
-    if (updateError) setError(updateError.message);
+    const result = await closeRaffleAction(raffleId);
+    if (!result.ok) setError(result.error);
     setBusy(null);
     router.refresh();
   }
@@ -84,11 +85,8 @@ export function RaffleActions({
   async function reopenRaffle() {
     setBusy("reopen");
     setError(null);
-    const { error: updateError } = await supabase
-      .from("raffles")
-      .update({ status: "active" })
-      .eq("id", raffleId);
-    if (updateError) setError(updateError.message);
+    const result = await reopenRaffleAction(raffleId);
+    if (!result.ok) setError(result.error);
     setBusy(null);
     router.refresh();
   }

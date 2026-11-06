@@ -703,6 +703,99 @@ export async function cancelRaffle(
   return { ok: true };
 }
 
+/**
+ * Cierra la venta de un sorteo activo.
+ *
+ * Antes se hacía con un UPDATE directo del navegador: sin validación de estado
+ * ni auditoría. Acá el servidor decide, y la base congela después los estados
+ * terminales (0088).
+ */
+export async function closeRaffle(raffleId: string): Promise<ActionResult> {
+  const ctx = await requireAdminSession();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  const id = uuidSchema.safeParse(raffleId);
+  if (!id.success) return { ok: false, error: firstIssue(id.error) };
+
+  if (!(await ownsRaffle(id.data))) {
+    return { ok: false, error: "No autorizado" };
+  }
+
+  const supabase = createClient();
+  const { data: raffle } = await supabase
+    .from("raffles")
+    .select("id, status")
+    .eq("id", id.data)
+    .maybeSingle();
+
+  if (!raffle) return { ok: false, error: "El sorteo no existe." };
+  if (raffle.status !== "active") {
+    return { ok: false, error: "Solo se puede cerrar la venta de un sorteo activo." };
+  }
+
+  const { error } = await supabase
+    .from("raffles")
+    .update({ status: "closed" })
+    .eq("id", id.data);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/sorteos");
+  revalidatePath(`/admin/sorteos/${id.data}`);
+  revalidatePath(`/sorteos/${id.data}`);
+  return { ok: true };
+}
+
+/**
+ * Reabre la venta de un sorteo cerrado. No después de la fecha: la cuenta
+ * regresiva es una promesa y vender después de la fecha la rompe.
+ */
+export async function reopenRaffle(raffleId: string): Promise<ActionResult> {
+  const ctx = await requireAdminSession();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  const id = uuidSchema.safeParse(raffleId);
+  if (!id.success) return { ok: false, error: firstIssue(id.error) };
+
+  if (!(await ownsRaffle(id.data))) {
+    return { ok: false, error: "No autorizado" };
+  }
+
+  const supabase = createClient();
+  const { data: raffle } = await supabase
+    .from("raffles")
+    .select("id, status, draw_date")
+    .eq("id", id.data)
+    .maybeSingle();
+
+  if (!raffle) return { ok: false, error: "El sorteo no existe." };
+  if (raffle.status !== "closed") {
+    return { ok: false, error: "Solo se puede reabrir un sorteo cerrado." };
+  }
+
+  if (new Date(raffle.draw_date as string).getTime() <= Date.now()) {
+    return {
+      ok: false,
+      error:
+        "La fecha del sorteo ya pasó: no se puede reabrir la venta. Cambiá la fecha o sortea.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("raffles")
+    .update({ status: "active" })
+    .eq("id", id.data);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/sorteos");
+  revalidatePath(`/admin/sorteos/${id.data}`);
+  revalidatePath(`/sorteos/${id.data}`);
+  return { ok: true };
+}
+
 /** Marca una devolución como pagada; RLS y `owns_raffle` lo limitan al dueño. */
 export async function markRefundPaid(
   refundId: string,
