@@ -365,3 +365,10 @@ Decision 3 — toda accion del organizador queda en raffle_audit (actor, accion,
 Why        — el panel actual informa mal (total estimado) y no permite operar; el organizador necesitaba liberar, devolver y buscar sin otro panel.
 Fases      — 1 plata real + acciones + auditoria + buscador; 2 export y plantillas; 3 KPIs.
 Evidence   — 02-DOCS/wiki/ftd/panel-ventas.md (spec; sin implementar).
+
+## 2026-11-06 — Bug de seleccion invertida en la devolucion de numeros  (feature: panel-ventas)
+Sintoma    — el dueno selecciono 2 de 6 numeros y se devolvieron los otros 4.
+Causa      — la seleccion arrancaba con TODOS los numeros marcados: tocar un numero lo DESmarcaba. El backend recibio exactamente lo que la pantalla mando; el error era de la interfaz.
+Fix        — la seleccion arranca vacia, hay botones Todos/Ninguno, el confirmar se deshabilita sin seleccion y el cartel lista los numeros exactos antes de ejecutar.
+Verificacion — verificar_fix_devolucion.sql 5/5: 6 vendidos, devolver 2 y 4 libera solo esos, deja los otros 4 vendidos, devuelve 200 del pago de 600 y audita solo los elegidos.
+Leccion    — en una accion destructiva, ningun elemento puede venir premarcado: "todo marcado" se lee como "nada elegido". La confirmacion tiene que enumerar el efecto exacto.

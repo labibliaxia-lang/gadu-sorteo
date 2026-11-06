@@ -96,7 +96,15 @@ teléfono sale de `raffle_buyers`, que ya respeta la visibilidad por KYC.
   (ej.: compró 1–5 y devuelve 2 y 4) con motivo y confirmación. Verificado: pago de 150 aprobado y
   enlazado a 2 números, auditoría, estado pagado con sólo el número sin pago marcado, devolución
   parcial de 1 (75.00) dejando el otro vendido, y sorteo sorteado rechazado.
-- Pendiente: probar el botón con un sorteo real y ver el KPI de Neto bajar; fases 2 y 3.
+- **Fix de selección (2026-11-06).** El reporte del dueño: eligió 2 de 6 números y se devolvieron
+  los otros 4. Causa: la selección arrancaba **toda marcada**, así que tocar dos números los
+  desmarcaba. Ahora arranca vacía, hay «Todos/Ninguno», el botón se deshabilita sin selección y la
+  confirmación **lista los números exactos** antes de ejecutar.
+  `verificar_fix_devolucion.sql` **5/5**: 6 vendidos, devolver 2 y 4 → libera exactamente 2 y 4,
+  deja los otros 4 vendidos, devuelve 200 del pago de 600, audita solo los elegidos y el resumen
+  queda en 4 números / 600 / 200 / 400.
+- Pendiente: control visual del disparador (números sin marcar + confirmación con la lista) y la
+  reparación de la devolución accidental, si el dueño la pide.
 
 ## Next
 
