@@ -18,6 +18,25 @@
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
+-- 0) La tabla `referrals` real no coincide con la 0007 del repo: en la base
+--    falta `rewarded`. Se aseguran las columnas antes de tocar la función,
+--    sin importar con qué versión se creó la tabla. (Verificado en producción
+--    el 2026-11-06: error 42703 en reward_referral.)
+-- ---------------------------------------------------------------------
+alter table public.referrals
+  add column if not exists rewarded boolean not null default false;
+
+alter table public.referrals
+  add column if not exists rewarded_raffle_id uuid
+    references public.raffles (id) on delete set null;
+
+alter table public.referrals
+  add column if not exists rewarded_number int;
+
+create index if not exists referrals_referred_idx
+  on public.referrals (referred_id) where rewarded = false;
+
+-- ---------------------------------------------------------------------
 -- 1) Configuración por sorteo
 -- ---------------------------------------------------------------------
 alter table public.raffles
