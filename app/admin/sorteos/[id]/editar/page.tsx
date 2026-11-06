@@ -1,7 +1,10 @@
 import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { requireAdminSession } from "@/lib/auth";
+import { buttonVariants } from "@/components/ui/button";
 import type { Raffle } from "@/lib/types";
 
 import { EditarSorteoForm } from "./EditarSorteoForm";
@@ -31,5 +34,16 @@ export default async function EditarSorteoPage({
   if (!data) notFound();
   if (!actor.isSuper && data.created_by !== actor.id) notFound();
 
-  return <EditarSorteoForm raffle={data as Raffle} />;
+  return (
+    <div className="space-y-4">
+      <Link
+        href={`/admin/sorteos/${params.id}`}
+        className={buttonVariants({ variant: "outline", size: "sm" })}
+      >
+        <ArrowLeft className="mr-1.5 h-4 w-4" />
+        Volver al sorteo
+      </Link>
+      <EditarSorteoForm raffle={data as Raffle} />
+    </div>
+  );
 }

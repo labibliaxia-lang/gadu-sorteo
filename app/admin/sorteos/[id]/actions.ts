@@ -159,6 +159,46 @@ export async function deleteRaffle(raffleId: string): Promise<ActionResult> {
   }
 
   const supabase = createClient();
+
+  // No se borra un sorteo con actividad: la cascada destruiría pagos y
+  // devoluciones, y dejaría a los compradores sin comprobante. El trigger de
+  // la 0083 es el backstop; esto da el mensaje legible.
+  const [{ count: ocupados }, { count: pagos }, { count: devoluciones }] =
+    await Promise.all([
+      supabase
+        .from("raffle_numbers")
+        .select("id", { count: "exact", head: true })
+        .eq("raffle_id", id.data)
+        .neq("status", "available"),
+      supabase
+        .from("payments")
+        .select("id", { count: "exact", head: true })
+        .eq("raffle_id", id.data),
+      supabase
+        .from("refunds")
+        .select("id", { count: "exact", head: true })
+        .eq("raffle_id", id.data),
+    ]);
+
+  const { data: estado } = await supabase
+    .from("raffles")
+    .select("draw_commitment")
+    .eq("id", id.data)
+    .maybeSingle();
+
+  const actividad: string[] = [];
+  if ((ocupados ?? 0) > 0) actividad.push(`${ocupados} número(s) vendidos o reservados`);
+  if ((pagos ?? 0) > 0) actividad.push(`${pagos} pago(s)`);
+  if ((devoluciones ?? 0) > 0) actividad.push(`${devoluciones} devolución(es)`);
+  if (estado?.draw_commitment) actividad.push("el compromiso de semilla publicado");
+
+  if (actividad.length > 0) {
+    return {
+      ok: false,
+      error: `No se puede eliminar el sorteo: tiene ${actividad.join(", ")}. Si el sorteo no va, cancelalo en vez de eliminarlo.`,
+    };
+  }
+
   const { error } = await supabase
     .from("raffles")
     .delete()
@@ -569,14 +609,28 @@ export type DrawResult =
   | { ok: true; winningNumber: number }
   | { ok: false; error: string };
 
+export type CancelRaffleResult =
+  | { ok: true }
+  | {
+      ok: false;
+      error: string;
+      /** El sorteo tiene participantes o compromiso: hace falta confirmación extrema. */
+      requiereConfirmacion?: boolean;
+      detalle?: string;
+    };
+
 /**
  * Cancela un sorteo activo/cerrado y genera devoluciones pendientes por
  * comprador. La RPC valida dueño/superadmin y estado; no toca el motor.
+ *
+ * Con participantes o compromiso publicado exige escribir
+ * `CANCELAR SORTEO` y un motivo: es irreversible.
  */
 export async function cancelRaffle(
   raffleId: string,
   reason?: string,
-): Promise<ActionResult> {
+  confirmacion?: string,
+): Promise<CancelRaffleResult> {
   const ctx = await requireAdminSession();
   if (!ctx) return { ok: false, error: "No autorizado" };
 
@@ -588,6 +642,52 @@ export async function cancelRaffle(
   }
 
   const supabase = createClient();
+
+  const [{ count: ocupados }, { count: pagos }, { data: estado }] =
+    await Promise.all([
+      supabase
+        .from("raffle_numbers")
+        .select("id", { count: "exact", head: true })
+        .eq("raffle_id", id.data)
+        .neq("status", "available"),
+      supabase
+        .from("payments")
+        .select("id", { count: "exact", head: true })
+        .eq("raffle_id", id.data),
+      supabase
+        .from("raffles")
+        .select("draw_commitment")
+        .eq("id", id.data)
+        .maybeSingle(),
+    ]);
+
+  const participantes = (ocupados ?? 0) > 0 || (pagos ?? 0) > 0;
+  const compromiso = Boolean(estado?.draw_commitment);
+  const conRiesgo = participantes || compromiso;
+
+  if (conRiesgo && confirmacion !== "CANCELAR SORTEO") {
+    const partes: string[] = [];
+    if ((ocupados ?? 0) > 0) partes.push(`${ocupados} número(s) vendidos o reservados`);
+    if ((pagos ?? 0) > 0) partes.push(`${pagos} pago(s)`);
+    if (compromiso) partes.push("compromiso de semilla publicado");
+
+    return {
+      ok: false,
+      error: "Este sorteo ya tiene participantes o compromiso.",
+      requiereConfirmacion: true,
+      detalle: partes.join(" · "),
+    };
+  }
+
+  if (conRiesgo && (reason ?? "").trim().length < 10) {
+    return {
+      ok: false,
+      error:
+        "Para cancelar un sorteo con participantes escribí un motivo de al menos 10 caracteres.",
+      requiereConfirmacion: true,
+    };
+  }
+
   const { error } = await supabase.rpc("cancel_raffle", {
     p_raffle_id: id.data,
     p_reason: reason?.trim() || null,

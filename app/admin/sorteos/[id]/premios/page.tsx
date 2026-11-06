@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -133,6 +135,21 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="space-y-8">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="text-xl font-semibold">Premios del sorteo</h2>
+          <p className="text-sm text-muted-foreground">
+            Los premios que se sortean, en orden.
+          </p>
+        </div>
+        <Link
+          href={`/admin/sorteos/${params.id}`}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          <ArrowLeft className="mr-1.5 h-4 w-4" />
+          Volver
+        </Link>
+      </div>
       <div>
         <h2 className="text-xl font-semibold">Premios ({prizes.length}/10)</h2>
         <p className="text-sm text-muted-foreground">

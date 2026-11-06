@@ -836,14 +836,14 @@ export function NumbersGrid({
           aria-label="Leyenda de estados"
         >
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] border border-hairline-strong bg-panel-1" />{" "}
+            <span className="h-3 w-3 rounded-[3px] border border-emerald-500/50 bg-emerald-500/15" />{" "}
             Disponible
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-brand-500" /> Reservado
+            <span className="h-3 w-3 rounded-full bg-amber-500" /> Reservado
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] bg-panel-3 line-through" />{" "}
+            <span className="h-3 w-3 rounded-[3px] border border-rose-500/50 bg-rose-500/20" />{" "}
             Vendido
           </span>
           <span className="flex items-center gap-1.5">
@@ -956,9 +956,9 @@ export function NumbersGrid({
                             !isSelected &&
                             "border-hairline bg-panel-1 text-fg-muted hover:border-brand-500/60 hover:text-fg",
                           status === "sold" &&
-                            "cursor-not-allowed border-transparent bg-panel-2/40 text-fg-subtle/50 line-through",
+                            "cursor-not-allowed border-rose-500/30 bg-rose-500/10 text-rose-700 line-through dark:text-rose-300",
                           status === "reserved" &&
-                            "cursor-not-allowed border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+                            "cursor-not-allowed border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300",
                           isSelected &&
                             "border-brand-500 bg-brand-500 font-semibold text-ink ring-2 ring-brand-500/30",
                           highlight?.num === num &&
@@ -969,7 +969,9 @@ export function NumbersGrid({
                         <span
                           className={cn(
                             "absolute right-1 top-1 h-1.5 w-1.5 rounded-full",
+                            status === "available" && "bg-emerald-500/60",
                             status === "reserved" && "bg-amber-500",
+                            status === "sold" && "bg-rose-500",
                             isSelected && "bg-ink",
                           )}
                         />

@@ -118,7 +118,41 @@ export function RaffleActions({
 
     setBusy("cancel");
     setError(null);
-    const result = await cancelRaffle(raffleId, reason || undefined);
+
+    let result = await cancelRaffle(raffleId, reason || undefined);
+
+    // Con participantes o compromiso, el servidor pide confirmación extrema.
+    if (!result.ok && result.requiereConfirmacion) {
+      const detalle = result.detalle ? `\n\n${result.detalle}` : "";
+      const seguir = window.confirm(
+        `⚠️ ${result.error}${detalle}\n\nCancelar igual genera devoluciones para los compradores y es irreversible. ¿Seguir?`,
+      );
+      if (!seguir) {
+        setBusy(null);
+        return;
+      }
+
+      const motivo = window.prompt(
+        "Motivo de la cancelación forzada (mínimo 10 caracteres, queda registrado en el sorteo):",
+      );
+      if (!motivo || motivo.trim().length < 10) {
+        setError("El motivo es obligatorio y debe tener al menos 10 caracteres.");
+        setBusy(null);
+        return;
+      }
+
+      const frase = window.prompt(
+        "Para confirmar, escribí exactamente: CANCELAR SORTEO",
+      );
+      if (frase !== "CANCELAR SORTEO") {
+        setError("Confirmación incorrecta: no se canceló nada.");
+        setBusy(null);
+        return;
+      }
+
+      result = await cancelRaffle(raffleId, motivo, frase);
+    }
+
     if (!result.ok) setError(result.error);
     setBusy(null);
     router.refresh();

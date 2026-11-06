@@ -198,6 +198,16 @@ describe("blindaje: resultado del sorteo", () => {
     expect(file("0070")).toMatch(/'refunded'\s*,\s*'charged_back'/);
   });
 
+  it("un sorteo con participantes no se elimina (regla de negocio)", () => {
+    const cuerpo = lastDefinition("guard_raffle_deletion");
+
+    expect(cuerpo).toMatch(/from public\.raffle_numbers/i);
+    expect(cuerpo).toMatch(/status\s*<>\s*'available'/i);
+    expect(cuerpo).toMatch(/from public\.payments/i);
+    expect(cuerpo).toMatch(/from public\.refunds/i);
+    expect(cuerpo).toMatch(/draw_commitment/i);
+  });
+
   it("nadie inserta números por PostgREST (hallazgo #14)", () => {
     // Insertar filas 'sold' falsas cambia el conjunto con el que se sortea.
     expect(file("0072")).toMatch(
