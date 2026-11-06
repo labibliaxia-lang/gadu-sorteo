@@ -96,6 +96,8 @@ interface NumbersGridProps {  raffleId: string;
     cbu?: string | null;
     bank?: string | null;
     whatsapp?: string | null;
+    /** Aviso propio del sorteo, arriba de los datos de transferencia. */
+    note?: string | null;
   };
   raffleTitle?: string;
 }
@@ -1143,6 +1145,13 @@ export function NumbersGrid({
                 transferInfo?.cbu ||
                 transferInfo?.bank) && (
                 <div className="mt-4 space-y-1.5">
+                  {/* Aviso del propio sorteo (0090). Va primero, antes de que
+                      nadie copie el alias. */}
+                  {transferInfo.note && (
+                    <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs font-medium text-amber-900 dark:text-amber-200">
+                      {transferInfo.note}
+                    </p>
+                  )}
                   <p className="text-sm font-semibold">Datos para transferir</p>
                   {transferInfo.alias && (
                     <CopyRow label="Alias" value={transferInfo.alias} />

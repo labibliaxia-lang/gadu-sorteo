@@ -14,17 +14,17 @@ export type VerificationStatus = "pending" | "approved" | "rejected";
 export type AdminRequestStatus = "none" | "pending" | "approved" | "rejected";
 
 /**
- * Datos públicos del organizador (vista `public_organizers`, migración 0030).
- * Sin email, teléfono ni rutas del KYC: eso ya no se expone a anónimos.
+ * Datos pÃºblicos del organizador (vista `public_organizers`, migraciÃ³n 0030).
+ * Sin email, telÃ©fono ni rutas del KYC: eso ya no se expone a anÃ³nimos.
  */
 export interface PublicOrganizer {
   id: string;
-  /** Slug público (migración 0035). Puede faltar en cuentas viejas. */
+  /** Slug pÃºblico (migraciÃ³n 0035). Puede faltar en cuentas viejas. */
   slug: string | null;
   full_name: string;
   avatar_url: string | null;
   is_verified: boolean;
-  /** Campos de presentación (migración 0053). */
+  /** Campos de presentaciÃ³n (migraciÃ³n 0053). */
   bio: string | null;
   website_url: string | null;
   location: string | null;
@@ -66,13 +66,14 @@ export interface Raffle {
   transfer_alias: string | null;
   transfer_cbu: string | null;
   transfer_bank: string | null;
+  transfer_note: string | null;
   whatsapp_contact: string | null;
   status: RaffleStatus;
   winner_number: number | null;
   winner_user_id: string | null;
   winner_name: string | null;
   drawn_at: string | null;
-  /** Huellas SHA-256 publicadas al sortear (migración 0033). */
+  /** Huellas SHA-256 publicadas al sortear (migraciÃ³n 0033). */
   numbers_hash: string | null;
   result_hash: string | null;
   hashes_at: string | null;
@@ -81,20 +82,20 @@ export interface Raffle {
   draw_commitment_at: string | null;
   draw_seed: string | null;
   draw_seed_revealed_at: string | null;
-  /** Sorteo automático opt-in (migración 0048). */
+  /** Sorteo automÃ¡tico opt-in (migraciÃ³n 0048). */
   auto_draw: boolean;
-  /** Reglas de venta y premios (migración 0057). */
+  /** Reglas de venta y premios (migraciÃ³n 0057). */
   min_tickets_required: number;
   if_not_met: "extend_date" | "cancel_and_refund";
   winners_count: number;
-  /** Hash combinado de todos los premios (migración 0058). */
+  /** Hash combinado de todos los premios (migraciÃ³n 0058). */
   results_hash: string | null;
-  /** Cancelación manual (migración 0063). */
+  /** CancelaciÃ³n manual (migraciÃ³n 0063). */
   cancelled_at: string | null;
   cancellation_reason: string | null;
-  /** Bloques de la landing promocional (migración 0044). */
+  /** Bloques de la landing promocional (migraciÃ³n 0044). */
   landing_content: import("@/lib/landing").LandingBlock[] | null;
-  /** Sorteo destacado por el superadmin (migración 0066). */
+  /** Sorteo destacado por el superadmin (migraciÃ³n 0066). */
   is_featured: boolean | null;
   featured_at: string | null;
   created_by: string | null;
@@ -114,7 +115,7 @@ export interface RaffleNumber {
   sold_at: string | null;
 }
 
-/** Ganador de un premio (migración 0058). */
+/** Ganador de un premio (migraciÃ³n 0058). */
 export interface RaffleWinner {
   position: number;
   number: number;

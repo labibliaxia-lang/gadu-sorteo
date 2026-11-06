@@ -849,6 +849,8 @@ export default async function RafflePage({
               bank: raffle.transfer_bank,
               // El WhatsApp sale del sorteo; el perfil ya no expone teléfono.
               whatsapp: raffle.whatsapp_contact || null,
+              // Aviso propio del sorteo (0090): se ve antes de copiar el alias.
+              note: raffle.transfer_note || null,
             }}
           />
 
