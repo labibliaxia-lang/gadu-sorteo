@@ -1,0 +1,32 @@
+﻿Planilla de ventas — verificacion
+=================================
+
+Escenario: sorteo temporal, precio 1000 por numero.
+  5 y 9 vendidos a Ana Ficticia Compradora (+5491155550166)
+  12 vendido sin dueño (marcado a mano, como pasa desde "Gestionar numeros")
+
+En pantalla
+  comprador ................. aparece
+  telefono .................. aparece
+  numeros 5 y 9 ............. aparecen
+  total $2.000 .............. correcto (2 x 1000)
+  aviso de sin comprador .... aparece
+  resumen ................... 3 numeros, 1 comprador, $3.000
+
+CSV (GET /ventas/export)
+  status 200, text/csv; charset=utf-8, BOM al inicio, separador ';'
+  Comprador;Telefono;Cantidad;Numeros;Total;Primera venta;Ultima venta
+  Ana Ficticia Compradora;+5491155550166;2;5 9;2000;...
+  Sin comprador registrado;;1;12;1000;...
+
+Detalle a mejorar (no bloqueante)
+  las fechas van en ISO 8601. Son ordenables y sin ambiguedad, pero Excel no
+  las formatea solas. Si molesta, se formatean en el CSV.
+
+Permisos
+  La pagina y la exportacion usan cargarVentas() (_datos.ts): sesion, rol
+  admin/superadmin y pertenencia del sorteo. Un solo lugar donde cambiarlo.
+  No se ejercito con un tercero; si cambia el criterio, cambia una vez.
+
+Limpieza
+  Sorteo y cuentas temporales borrados. 1 sorteo en la base, 0 cuentas @gadu.test.

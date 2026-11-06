@@ -1,0 +1,94 @@
+﻿[
+    {
+        "paso":  "V1-pagina-carga",
+        "rol":  "organizador",
+        "inicio":  "2026-11-06T01:34:35.9176518-03:00",
+        "nota":  null,
+        "esperado":  "la planilla abre desde el panel",
+        "evidencia":  [
+                          "planilla.png"
+                      ],
+        "observado":  "GET /admin/sorteos/\u003cid\u003e/ventas responde y renderiza con el link \u0027Volver al sorteo\u0027",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T01:34:35.9176518-03:00"
+    },
+    {
+        "paso":  "V2-datos-por-comprador",
+        "rol":  "organizador",
+        "inicio":  "2026-11-06T01:34:35.9176518-03:00",
+        "nota":  "sorteo temporal con precio 1000 por numero",
+        "esperado":  "nombre, telefono, cuantos y cuales numeros, total",
+        "evidencia":  [
+                          "planilla.png"
+                      ],
+        "observado":  "\u0027Ana Ficticia Compradora\u0027, telefono +5491155550166, numeros 5 y 9, total .000",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T01:34:35.9176518-03:00"
+    },
+    {
+        "paso":  "V3-sin-comprador",
+        "rol":  "organizador",
+        "inicio":  "2026-11-06T01:34:35.9176518-03:00",
+        "nota":  null,
+        "esperado":  "un numero vendido a mano sin dueño no se pierde",
+        "evidencia":  [
+                          "planilla.png",
+                          "verificacion.txt"
+                      ],
+        "observado":  "fila \u0027Sin comprador registrado\u0027 con el numero 12 y aviso ambar contando 1",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T01:34:35.9176518-03:00"
+    },
+    {
+        "paso":  "V4-resumen",
+        "rol":  "organizador",
+        "inicio":  "2026-11-06T01:34:35.9176518-03:00",
+        "nota":  null,
+        "esperado":  "totales del sorteo",
+        "evidencia":  [
+                          "planilla.png"
+                      ],
+        "observado":  "3 numeros vendidos, 1 comprador, .000",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T01:34:35.9176518-03:00"
+    },
+    {
+        "paso":  "V5-csv",
+        "rol":  "organizador",
+        "inicio":  "2026-11-06T01:34:35.9176518-03:00",
+        "nota":  "las fechas van en ISO: ordenables, aunque no las formatea Excel",
+        "esperado":  "descarga utilizable en Excel",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "HTTP 200, text/csv, BOM, separador \u0027;\u0027, una fila por comprador y los numeros separados por espacio",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T01:34:35.9176518-03:00"
+    },
+    {
+        "paso":  "V6-permisos",
+        "rol":  "sistema",
+        "inicio":  "2026-11-06T01:34:35.9176518-03:00",
+        "nota":  "no ejercitado con un tercero: misma funcion para ambas rutas",
+        "esperado":  "solo el dueño o superadmin",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "pagina y exportacion comparten cargarVentas(), que valida sesion, rol admin y pertenencia del sorteo",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T01:34:35.9176518-03:00"
+    },
+    {
+        "paso":  "V7-limpieza",
+        "rol":  "sistema",
+        "inicio":  "2026-11-06T01:34:35.9176518-03:00",
+        "nota":  null,
+        "esperado":  "no dejar rastros",
+        "evidencia":  [
+                          "verificacion.txt"
+                      ],
+        "observado":  "sorteo y cuentas temporales borrados; 1 sorteo en la base; 0 cuentas @gadu.test",
+        "resultado":  "ok",
+        "fin":  "2026-11-06T01:34:35.9176518-03:00"
+    }
+]
