@@ -15,6 +15,7 @@ import {
 
 import { createClient } from "@/lib/supabase/client";
 import { ReviewFormDialog } from "@/components/ReviewSection";
+import { MisDevoluciones } from "@/components/MisDevoluciones";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
@@ -202,6 +203,8 @@ export default function MisNumerosPage() {
           Tus números confirmados y las reservas que están esperando el pago.
         </p>
       </header>
+
+      <MisDevoluciones />
 
       {userId && (
         <Card>

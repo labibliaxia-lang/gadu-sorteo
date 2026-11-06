@@ -37,6 +37,7 @@ const TIPO_LABEL: Record<string, string> = {
   payment_approved: "Pago acreditado",
   reservation_expired: "Reserva vencida y liberada",
   refund_requested: "Pedido de devolución",
+  refund_confirmed: "El comprador confirmó que recibió la devolución",
   draw_ready: "Sorteo listo para sortear",
   report_pending: "Denuncia pendiente",
 };

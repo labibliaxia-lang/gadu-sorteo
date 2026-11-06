@@ -378,3 +378,8 @@ Decision   — al registrar una devolucion se manda un email transaccional al co
 Why        — una devolucion es plata que sale del historial del comprador; sin aviso no tiene forma de notar un error ni de reclamarlo.
 Best-effort — si el email falla, la devolucion ya esta registrada: se loguea y sigue.
 Evidence   — sendRefundIssuedEmail en lib/email.ts, llamado desde refundAndRelease; gates verdes.
+
+## 2026-11-06 — El comprador confirma la devolucion recibida  (feature: panel-ventas)
+Decision   — el comprador ve sus devoluciones en Mis numeros y puede avisar "Ya la recibi": deja buyer_confirmed_at y avisa al organizador con una notificacion refund_confirmed. No cierra la deuda: el aviso publico sigue dependiendo de que el organizador marque la devolucion como pagada.
+Why        — el comprador no tenia forma de avisar que la plata llego y el organizador no se enteraba; el boton de marcar pagada existia en el codigo pero no estaba en ninguna pantalla.
+Evidence   — 0093 (columna, tipo de notificacion y RPC confirm_refund_received), verificar_0093.sql y componente MisDevoluciones en /mis-numeros.

@@ -107,6 +107,10 @@ teléfono sale de `raffle_buyers`, que ya respeta la visibilidad por KYC.
   transaccional al comprador con los números devueltos y la invitación a reclamar si no la pidió.
   Es transaccional, no marketing: no depende de `email_opt_in`, solo de que tenga email y términos
   aceptados. Best-effort: si el email falla, la devolución ya está hecha y solo queda el log.
+- **Confirmación del comprador (0093, 2026-11-06).** El comprador ve sus devoluciones en
+  «Mis números» y avisa **«Ya la recibí»**. Eso deja `buyer_confirmed_at` y avisa al organizador con
+  una notificación `refund_confirmed`. **No cierra la deuda**: el aviso público sigue dependiendo de
+  que el organizador marque la devolución como pagada.
 - Pendiente: control visual del disparador (números sin marcar + confirmación con la lista) y la
   reparación de la devolución accidental, si el dueño la pide.
 
