@@ -1,0 +1,54 @@
+[
+  {
+    "paso": "C1-calculo",
+    "rol": "repo",
+    "esperado": "la barra sale de senales duras, no de estrellas",
+    "observado": "lib/confianza.ts con 13 tests: deuda o denuncias fuerzan con-problemas aunque haya 40 resenas de 5; sin sorteos completados no hay verde; un promedio alto no rescata cancelaciones",
+    "resultado": "ok",
+    "evidencia": [
+      "verificacion.txt"
+    ],
+    "nota": "mi propio test encontro '2 devolucion es' mal pluralizado; corregido antes del deploy",
+    "inicio": "2026-11-06T06:32:15.804Z",
+    "fin": "2026-11-06T06:32:15.804Z"
+  },
+  {
+    "paso": "C2-barra-en-la-web",
+    "rol": "visitante",
+    "esperado": "ver el semaforo en la pagina publica del sorteo",
+    "observado": "deploy real: 'Sin historial', advertencia 'Este organizador todavía no completó ningún sorteo', motivo '2 sorteos en curso' y enlace a resenas",
+    "resultado": "ok",
+    "evidencia": [
+      "verificacion.txt"
+    ],
+    "nota": "no muestra 'Identidad verificada' porque ninguno de los 8 perfiles esta aprobado",
+    "inicio": "2026-11-06T06:32:15.804Z",
+    "fin": "2026-11-06T06:32:15.804Z"
+  },
+  {
+    "paso": "C3-invitacion",
+    "rol": "organizador",
+    "esperado": "poder invitar a los compradores despues del sorteo",
+    "observado": "sorteo temporal en drawn: aparece el bloque, lista a la compradora con '2 números', enlace wa.me con mensaje prellenado y boton 'Copiar mensaje para el grupo'",
+    "resultado": "ok",
+    "evidencia": [
+      "invitar.png"
+    ],
+    "nota": "solo se muestra si status=drawn: la politica de reviews exige sorteo sorteado",
+    "inicio": "2026-11-06T06:32:15.804Z",
+    "fin": "2026-11-06T06:32:15.804Z"
+  },
+  {
+    "paso": "C4-limpieza",
+    "rol": "sistema",
+    "esperado": "no dejar rastros",
+    "observado": "sorteo y cuentas temporales borrados; 2 sorteos en la base (del duenio); 0 cuentas @gadu.test",
+    "resultado": "ok",
+    "evidencia": [
+      "verificacion.txt"
+    ],
+    "nota": null,
+    "inicio": "2026-11-06T06:32:15.804Z",
+    "fin": "2026-11-06T06:32:15.804Z"
+  }
+]

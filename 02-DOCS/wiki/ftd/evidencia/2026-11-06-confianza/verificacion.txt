@@ -1,0 +1,54 @@
+Semaforo de confianza e invitacion a resenar — verificacion
+===========================================================
+
+1) EL CALCULO (lib/confianza.ts, 13 tests)
+   Reglas que no se negocian:
+   · devoluciones pendientes o denuncias abiertas -> "con problemas" aunque
+     tenga 40 resenas de 5 estrellas. Debe plata: eso manda.
+   · 0 sorteos completados -> "sin historial". No se puntua y no se promete
+     nada, aunque haya 9 resenas.
+   · cancelaciones restan (tope 25); el promedio de resenas pesa poco (+-10)
+     y recien desde 3 resenas.
+   · el aporte por historia esta topeado: 20 sorteos no valen 60 puntos.
+
+   Bug propio que encontro el test: generaba "2 devolucion es" en vez de
+   "2 devoluciones". Corregido antes del deploy.
+
+2) LA BARRA EN LA WEB (pagina publica del sorteo, deploy real)
+   El organizador de la demo muestra:
+
+     Este organizador todavía no completó ningún sorteo.
+     Si no lo conocés, tomá precauciones antes de transferir.
+
+     Sin historial
+     · 2 sorteos en curso
+     Ver reseñas y sorteos del organizador
+
+   Es correcto: ningun sorteo llego a drawn, y ninguno de los 8 perfiles
+   tiene verification_status aprobado, por eso tampoco aparece el motivo
+   "Identidad verificada".
+
+   Nunca color solo: debajo de la barra van los motivos.
+
+3) LA INVITACION (panel, solo con status=drawn)
+   Sorteo temporal en drawn, con 2 numeros vendidos a una compradora:
+
+     · el bloque aparece ...................... si
+     · lista a la compradora .................. si
+     · muestra "2 números" .................... si
+     · enlaces wa.me .......................... 1
+     · mensaje prellenado ..................... si
+     · boton "Copiar mensaje para el grupo" ... si
+
+   No escribe nada en la base: no hay envio automatico. El organizador ve el
+   texto listo y aprieta enviar. Se avisa en la propia UI.
+
+   Por que WhatsApp y no email: el organizador solo ve nombre y telefono
+   (vista raffle_buyers, 0073). El email no se expone y el envio masivo no
+   esta implementado.
+
+4) LIMPIEZA
+   Sorteo y cuentas temporales borrados. 2 sorteos en la base (del duenio),
+   0 cuentas @gadu.test.
+
+Gates: typecheck 0 | lint 0 | 305/305 tests | build 0
