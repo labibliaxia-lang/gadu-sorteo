@@ -92,7 +92,7 @@ el pendiente y volver a pedirla.
 
 ## Evidencia
 
-- **Esquema y validaciones — verificado (2026-11-05).** `verificar_0082.sql`: 6/6 (tabla con RLS,
+- **Esquema y validaciones — verificado (2026-11-05).** `verificar_0086.sql`: 6/6 (tabla con RLS,
   índice único de pendientes, `payments`/`refunds` con `SET NULL`, los cuatro motivos detectados y
   el pago sobreviviendo al borrado de la cuenta).
 - **UI — implementada, sin prueba en navegador todavía.**

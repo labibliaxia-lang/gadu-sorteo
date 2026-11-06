@@ -1,5 +1,5 @@
 -- =====================================================================
--- Verificador 0083 — un sorteo con participantes no se elimina
+-- Verificador 0087 — un sorteo con participantes no se elimina
 -- =====================================================================
 -- Qué prueba:
 --   1  el trigger está instalado
@@ -34,7 +34,7 @@ begin
          and tgrelid = 'public.raffles'::regclass
          and not tgisinternal
     ) then 'OK       trigger guard_raffle_deletion instalado'
-      else 'FALTA    falta el trigger -> aplicar 0083' end);
+      else 'FALTA    falta el trigger -> aplicar 0087' end);
 end $$;
 
 -- 2) Control: sorteo vacío
@@ -42,7 +42,7 @@ do $$
 declare v_id uuid;
 begin
   insert into public.raffles (title, draw_date, price_per_number, status)
-  values ('prueba 0083 vacio', now() + interval '30 days', 100, 'active')
+  values ('prueba 0087 vacio', now() + interval '30 days', 100, 'active')
   returning id into v_id;
 
   begin
@@ -58,7 +58,7 @@ do $$
 declare v_id uuid;
 begin
   insert into public.raffles (title, draw_date, price_per_number, status)
-  values ('prueba 0083 vendido', now() + interval '30 days', 100, 'active')
+  values ('prueba 0087 vendido', now() + interval '30 days', 100, 'active')
   returning id into v_id;
 
   insert into public.raffle_numbers (raffle_id, number, status)
@@ -77,7 +77,7 @@ do $$
 declare v_id uuid;
 begin
   insert into public.raffles (title, draw_date, price_per_number, status, draw_commitment, draw_commitment_at)
-  values ('prueba 0083 compromiso', now() + interval '30 days', 100, 'active', repeat('a', 64), now())
+  values ('prueba 0087 compromiso', now() + interval '30 days', 100, 'active', repeat('a', 64), now())
   returning id into v_id;
 
   begin
@@ -98,7 +98,7 @@ begin
   select id into v_uid from public.profiles order by created_at limit 1;
 
   insert into public.raffles (title, draw_date, price_per_number, status)
-  values ('prueba 0083 pago', now() + interval '30 days', 100, 'active')
+  values ('prueba 0087 pago', now() + interval '30 days', 100, 'active')
   returning id into v_id;
 
   insert into public.payments (user_id, raffle_id, numbers, amount, status)

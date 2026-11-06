@@ -1,5 +1,5 @@
 -- =====================================================================
--- 0083 — Un sorteo con participantes no se elimina
+-- 0087 — Un sorteo con participantes no se elimina
 -- =====================================================================
 -- Qué resuelve:
 --   `raffles_delete_owner` (0041/0065) permite al dueño borrar su sorteo por
@@ -67,7 +67,7 @@ do $$
 begin
   if to_regclass('public._applied_migrations') is not null then
     insert into public._applied_migrations (version, note)
-    values ('0083', 'un sorteo con participantes, pagos, devoluciones o compromiso no se puede eliminar')
+    values ('0087', 'un sorteo con participantes, pagos, devoluciones o compromiso no se puede eliminar')
     on conflict (version) do nothing;
   end if;
 end;

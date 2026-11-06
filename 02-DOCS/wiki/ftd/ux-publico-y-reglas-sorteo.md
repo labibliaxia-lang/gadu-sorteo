@@ -26,7 +26,7 @@ de un sorteo con gente y plata adentro.
 3. **Reglas de los botones peligrosos.**
    - `deleteRaffle` (Server Action): bloquea si el sorteo tiene números vendidos o reservados,
      pagos, devoluciones o compromiso publicado, con el detalle en el mensaje.
-   - `0083` (trigger `guard_raffle_deletion`): el mismo bloqueo en la base, porque el dueño puede
+   - `0087` (trigger `guard_raffle_deletion`): el mismo bloqueo en la base, porque el dueño puede
      llamar a PostgREST directamente y la política de DELETE ya existía.
    - `cancelRaffle` (Server Action): con participantes o compromiso exige confirmación extrema —
      escribir `CANCELAR SORTEO` y un motivo de 10+ caracteres, que se guarda como
@@ -51,7 +51,7 @@ de un sorteo con gente y plata adentro.
 | 1 | Grilla pública con estados distinguibles | Captura 375/768 con números vendidos y reservados |
 | 2 | Leyenda coherente con las celdas | Los cuatro colores coinciden con el grid |
 | 3 | Volver en premios y editar | Navegación de ida y vuelta sin pasar por el listado |
-| 4 | Eliminar bloqueado con actividad | `verificar_0083.sql` 5/5: control, vendido, compromiso y pago |
+| 4 | Eliminar bloqueado con actividad | `verificar_0087.sql` 5/5: control, vendido, compromiso y pago |
 | 5 | Cancelar con confirmación extrema | Sin la frase, el servidor no cancela; con motivo corto, tampoco |
 | 6 | Gates verdes | typecheck, lint, tests, build |
 
@@ -61,7 +61,7 @@ Pendiente: cambios recién aplicados, sin prueba visual ni SQL todavía.
 
 ## Next
 
-1. Aplicar `0083` y correr `verificar_0083.sql`.
+1. Aplicar `0087` y correr `verificar_0087.sql`.
 2. Probar la grilla pública con un sorteo que tenga vendidos y reservados.
 3. Recorrer el panel del organizador y volver desde cada subsección.
 4. Probar cancelar un sorteo con participantes: sin la frase no cancela, con la frase sí.

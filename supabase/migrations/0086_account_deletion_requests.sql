@@ -1,5 +1,5 @@
 -- =====================================================================
--- 0082 — Baja de cuenta: solicitud, validaciones y anonimización posible
+-- 0086 — Baja de cuenta: solicitud, validaciones y anonimización posible
 -- =====================================================================
 -- Por qué (spec: 02-DOCS/wiki/ftd/baja-de-cuenta.md):
 --   Hoy el único camino para darse de baja es un mail, y el borrado del panel
@@ -196,7 +196,7 @@ do $$
 begin
   if to_regclass('public._applied_migrations') is not null then
     insert into public._applied_migrations (version, note)
-    values ('0082', 'baja de cuenta: solicitudes, RLS y validaciones; pagos y devoluciones ya no se borran en cascada')
+    values ('0086', 'baja de cuenta: solicitudes, RLS y validaciones; pagos y devoluciones ya no se borran en cascada')
     on conflict (version) do nothing;
   end if;
 end;

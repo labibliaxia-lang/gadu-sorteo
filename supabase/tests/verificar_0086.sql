@@ -1,5 +1,5 @@
 -- =====================================================================
--- Verificador 0082 — baja de cuenta: esquema, validaciones y plata intacta
+-- Verificador 0086 — baja de cuenta: esquema, validaciones y plata intacta
 -- =====================================================================
 -- Qué prueba:
 --   1  la tabla de solicitudes existe y tiene RLS
@@ -33,7 +33,7 @@ do $$
 begin
   perform pg_temp.anota('1 ' || case
     when to_regclass('public.account_deletion_requests') is null
-      then 'FALTA    no existe account_deletion_requests -> aplicar 0082'
+      then 'FALTA    no existe account_deletion_requests -> aplicar 0086'
     when not (select relrowsecurity from pg_class where oid = 'public.account_deletion_requests'::regclass)
       then 'FALTA    la tabla no tiene RLS'
     else 'OK       tabla de solicitudes con RLS' end);

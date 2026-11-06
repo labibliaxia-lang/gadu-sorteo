@@ -339,6 +339,6 @@ Evidence   — `02-DOCS/wiki/ftd/baja-de-cuenta.md` (spec con checklist y decisi
 ## 2026-11-06 — UX del comprador y reglas del sorteo  (feature: ux-publico-y-reglas-sorteo)
 Decision 1 — la grilla pública usa el mismo lenguaje que el panel: disponible con punto verde, reservado ámbar, vendido rojo tachado, y la leyenda coincide con las celdas.
 Decision 2 — «Volver» en premios y editar, las dos únicas subsecciones del sorteo que no tenían retorno al detalle.
-Decision 3 — eliminar un sorteo con actividad se bloquea en la Server Action y en la base (0083, trigger BEFORE DELETE), porque el dueño puede llamar a PostgREST; cancelar con participantes o compromiso exige escribir CANCELAR SORTEO y un motivo de 10+ caracteres.
+Decision 3 — eliminar un sorteo con actividad se bloquea en la Server Action y en la base (0087, trigger BEFORE DELETE), porque el dueño puede llamar a PostgREST; cancelar con participantes o compromiso exige escribir CANCELAR SORTEO y un motivo de 10+ caracteres.
 Why        — el comprador leía los números vendidos como «apagados» sin poder distinguirlos, y el panel podía destruir pagos por cascada al borrar un sorteo con ventas.
-Evidence   — FTD ux-publico-y-reglas-sorteo; verificar_0083.sql (control + tres ataques); invariante en security-invariants.test.ts; gates verdes.
+Evidence   — FTD ux-publico-y-reglas-sorteo; verificar_0087.sql (control + tres ataques); invariante en security-invariants.test.ts; gates verdes.
