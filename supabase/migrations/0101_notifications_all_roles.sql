@@ -267,6 +267,26 @@ create trigger notificar_kyc_pendiente
   for each row execute procedure public.notificar_kyc_pendiente();
 
 -- ---------------------------------------------------------------------
+-- 9) Realtime: la tabla tiene que estar en la publicación para que
+--    lleguen los toasts y se actualicen las vistas sin recargar.
+-- ---------------------------------------------------------------------
+do $$
+begin
+  if exists (
+    select 1 from pg_publication where pubname = 'supabase_realtime'
+  ) and not exists (
+    select 1
+      from pg_publication_tables
+     where pubname = 'supabase_realtime'
+       and schemaname = 'public'
+       and tablename = 'notifications'
+  ) then
+    alter publication supabase_realtime add table public.notifications;
+  end if;
+end;
+$$;
+
+-- ---------------------------------------------------------------------
 -- Ledger
 -- ---------------------------------------------------------------------
 do $$
