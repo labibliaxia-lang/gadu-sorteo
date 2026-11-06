@@ -6,6 +6,7 @@ import { Check, Clock, Loader2, MessageCircle, TimerReset, X } from "lucide-reac
 
 import {
   approveReservation,
+  dismissNotification,
   extendReservation,
   markNotificationRead,
   releaseReservation,
@@ -28,6 +29,7 @@ export interface NotificationItem {
     price_per_number?: number | string;
   } | null;
   status: string;
+  priority: string;
   created_at: string;
   expires_at: string | null;
 }
@@ -58,6 +60,7 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [aviso, setAviso] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -67,7 +70,7 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
   const cargar = useCallback(async () => {
     const { data } = await supabase
       .from("notifications")
-      .select("id, type, raffle_id, payload, status, created_at, expires_at")
+      .select("id, type, raffle_id, payload, status, priority, created_at, expires_at")
       .order("created_at", { ascending: false })
       .limit(100);
 
@@ -92,24 +95,48 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
   async function ejecutar(
     id: string,
     accion: () => Promise<{ ok: boolean; error?: string }>,
+    mensajeOk?: string,
   ) {
     setBusy(id);
     setError(null);
-    const res = await accion();
-    setBusy(null);
+    setAviso(null);
 
-    if (!res.ok) {
-      setError(res.error ?? "No se pudo completar la acción.");
-      return;
+    try {
+      const res = await accion();
+      if (!res.ok) {
+        setError(res.error ?? "No se pudo completar la acción.");
+        return;
+      }
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, status: "resolved" } : item,
+        ),
+      );
+      if (mensajeOk) setAviso(mensajeOk);
+    } catch (falla) {
+      // Sin este catch, un error de red dejaba la tarjeta con el botón
+      // deshabilitado para siempre.
+      console.error("[notificaciones] la acción falló", falla);
+      setError("La acción falló por un problema de conexión. Probá de nuevo.");
+    } finally {
+      setBusy(null);
     }
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status: "resolved" } : item,
-      ),
-    );
   }
 
-  const pendientes = items.filter((i) => i.status === "pending" || i.status === "read");
+  // Lo urgente primero; entre iguales, lo que vence antes.
+  const ordenar = (lista: NotificationItem[]) =>
+    [...lista].sort((a, b) => {
+      const peso = (i: NotificationItem) => (i.priority === "urgent" ? 0 : 1);
+      if (peso(a) !== peso(b)) return peso(a) - peso(b);
+      const vence = (i: NotificationItem) =>
+        i.expires_at ? new Date(i.expires_at).getTime() : Number.MAX_SAFE_INTEGER;
+      if (vence(a) !== vence(b)) return vence(a) - vence(b);
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+  const pendientes = ordenar(
+    items.filter((i) => i.status === "pending" || i.status === "read"),
+  );
   const historial = items.filter((i) => i.status === "resolved" || i.status === "expired");
   const visibles = tab === "pending" ? pendientes : historial;
 
@@ -135,6 +162,12 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
       {error && (
         <p role="alert" className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">
           {error}
+        </p>
+      )}
+
+      {aviso && (
+        <p className="rounded-md bg-emerald-500/10 p-2 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+          {aviso}
         </p>
       )}
 
@@ -187,6 +220,18 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
                         Total estimado: {formatPrice(Number(total))}
                       </p>
                     )}
+                    {item.type === "refund_confirmed" && (
+                      <p className="max-w-md text-xs text-fg-subtle">
+                        El comprador avisó que recibió la devolución. La deuda se
+                        cierra cuando la marques como pagada en el sorteo.
+                      </p>
+                    )}
+                    {item.type === "payment_approved" && (
+                      <p className="max-w-md text-xs text-fg-subtle">
+                        Mercado Pago acreditó el pago: los números ya están
+                        vendidos.
+                      </p>
+                    )}
                   </div>
 
                   {reloj && esReserva && (
@@ -209,7 +254,13 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
                     <>
                       <Button
                         size="sm"
-                        onClick={() => void ejecutar(item.id, () => approveReservation(item.id))}
+                        onClick={() =>
+                          void ejecutar(
+                            item.id,
+                            () => approveReservation(item.id),
+                            "Reserva aprobada: los números quedaron vendidos.",
+                          )
+                        }
                         disabled={busy === item.id}
                       >
                         {busy === item.id ? (
@@ -222,7 +273,13 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => void ejecutar(item.id, () => releaseReservation(item.id))}
+                        onClick={() =>
+                          void ejecutar(
+                            item.id,
+                            () => releaseReservation(item.id),
+                            "Reserva liberada: los números volvieron a estar disponibles.",
+                          )
+                        }
                         disabled={busy === item.id}
                       >
                         <X className="mr-1.5 h-4 w-4" />
@@ -231,7 +288,13 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => void ejecutar(item.id, () => extendReservation(item.id, 15))}
+                        onClick={() =>
+                          void ejecutar(
+                            item.id,
+                            () => extendReservation(item.id, 15),
+                            "Reserva ampliada 15 minutos.",
+                          )
+                        }
                         disabled={busy === item.id}
                       >
                         <TimerReset className="mr-1.5 h-4 w-4" />
@@ -265,10 +328,34 @@ export function NotificationsPanel({ inicial }: { inicial: NotificationItem[] })
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => void ejecutar(item.id, () => markNotificationRead(item.id))}
+                      onClick={() =>
+                        void ejecutar(
+                          item.id,
+                          () => markNotificationRead(item.id),
+                          "Marcada como leída.",
+                        )
+                      }
                       disabled={busy === item.id}
                     >
                       Marcar leída
+                    </Button>
+                  )}
+
+                  {!esReserva && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        void ejecutar(
+                          item.id,
+                          () => dismissNotification(item.id),
+                          "Aviso archivado.",
+                        )
+                      }
+                      disabled={busy === item.id}
+                    >
+                      <Check className="mr-1.5 h-4 w-4" />
+                      Listo
                     </Button>
                   )}
                 </div>

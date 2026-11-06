@@ -141,6 +141,10 @@ Acciones y su efecto:
   `notificar_pago_aprobado`, que el webhook llama al acreditar un pago (best-effort: si falla, el
   pago sigue aprobado). **Verificado 2/2:** el aviso de reserva trae el teléfono y el de pago
   acreditado trae importe, números y teléfono.
+- **Mejoras de flujo (2026-11-06).** Las tarjetas informativas (`refund_confirmed`, `payment_approved`)
+  ahora explican qué significan y tienen **Listo** para archivarlas: ninguna queda sin salida. Los
+  errores de red ya no dejan botones deshabilitados (try/finally) y cada acción muestra su
+  confirmación. Lo urgente se ordena primero y luego por vencimiento.
 - Falta sólo la prueba con dos cuentas reales (campana, aprobar, números vendidos). El resto de la
   fase 1 está cerrado con evidencia.
 

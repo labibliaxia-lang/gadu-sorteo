@@ -58,6 +58,22 @@ export async function markNotificationRead(id: string): Promise<NotifActionResul
   return result;
 }
 
+/**
+ * Cierra un aviso informativo (pago acreditado, devolución confirmada, etc.)
+ * sin tocar nada del sorteo. Es lo que permite que ninguna tarjeta quede sin
+ * salida: siempre hay un "Listo".
+ */
+export async function dismissNotification(
+  id: string,
+): Promise<NotifActionResult> {
+  const actor = await requireAdminSession();
+  if (!actor) return { ok: false, error: "No autorizado" };
+
+  const result = await cerrarNotificacion(id, "resolved");
+  revalidatePath("/admin/notificaciones");
+  return result;
+}
+
 /** Aprueba la reserva: los números pasan a vendidos y la tarjeta se resuelve. */
 export async function approveReservation(id: string): Promise<NotifActionResult> {
   const actor = await requireAdminSession();
