@@ -53,6 +53,59 @@ describe("moderación: pausar un sorteo denunciado", () => {
   });
 });
 
+describe("moderación: publicar exige KYC aunque el sorteo no esté activo", () => {
+  const MIGRACION = readFileSync(
+    join(RAIZ, "supabase/migrations/0085_kyc_cubre_visibilidad.sql"),
+    "utf8",
+  );
+
+  it("el guard mira visibilidad, no sólo el estado", () => {
+    // La 0060 sólo miraba `status = 'active'`, y la home lista también los
+    // `closed`: un admin sin KYC podía publicar un sorteo cerrado y visible.
+    expect(MIGRACION).toMatch(/new\.status\s*=\s*'active'/);
+    expect(MIGRACION).toMatch(/new\.is_listed\s+is\s+true/i);
+    expect(MIGRACION).toMatch(/v_visible/);
+  });
+
+  it("un borrador no listado no pide KYC", () => {
+    expect(MIGRACION).toMatch(/if\s+not\s+v_visible\s+then\s+return\s+new/i);
+  });
+
+  it("no vuelve a pedir KYC al editar uno ya visible", () => {
+    expect(MIGRACION).toMatch(/v_ya_era_visible/);
+  });
+
+  it("conserva los 9 campos y la exención de superadmin", () => {
+    for (const campo of [
+      "verification_status",
+      "full_name",
+      "phone",
+      "location",
+      "dni_number",
+      "address_line",
+      "city",
+      "province",
+      "postal_code",
+      "dni_address",
+    ]) {
+      expect(MIGRACION).toMatch(new RegExp(campo));
+    }
+    expect(MIGRACION).toMatch(/is_superadmin\(\)/);
+  });
+
+  it("usa auth.uid() y no current_user (el error de la 0083)", () => {
+    // Se mira sólo el cuerpo de la función: el encabezado menciona
+    // `current_user` a propósito, explicando el error de la 0083.
+    const cuerpo = MIGRACION.slice(
+      MIGRACION.indexOf("create or replace function public.enforce_organizer_kyc"),
+      MIGRACION.indexOf("end;\n$$;"),
+    );
+
+    expect(cuerpo).toMatch(/auth\.uid\(\)\s+is\s+null/);
+    expect(cuerpo).not.toMatch(/current_user/);
+  });
+});
+
 describe("moderación: un pausado no se republica solo", () => {
   const MIGRACION = readFileSync(
     join(RAIZ, "supabase/migrations/0084_guard_reopen_fix_security_definer.sql"),
