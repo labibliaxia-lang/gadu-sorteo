@@ -34,6 +34,16 @@ export default async function EditarSorteoPage({
   if (!data) notFound();
   if (!actor.isSuper && data.created_by !== actor.id) notFound();
 
+  // 0105: posibles sorteos destino para los premios de referidos.
+  const { data: candidatos } = await supabase
+    .from("raffles")
+    .select("id, title")
+    .eq("created_by", data.created_by as string)
+    .neq("id", params.id)
+    .in("status", ["active", "closed"])
+    .order("draw_date", { ascending: true })
+    .limit(50);
+
   return (
     <div className="space-y-4">
       <Link
@@ -43,7 +53,13 @@ export default async function EditarSorteoPage({
         <ArrowLeft className="mr-1.5 h-4 w-4" />
         Volver al sorteo
       </Link>
-      <EditarSorteoForm raffle={data as Raffle} />
+      <EditarSorteoForm
+        raffle={data as Raffle}
+        sorteosBonus={(candidatos ?? []).map((c) => ({
+          id: c.id as string,
+          title: c.title as string,
+        }))}
+      />
     </div>
   );
 }

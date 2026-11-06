@@ -134,6 +134,13 @@ export default async function AdminRaffleDetailPage({
     }
   }
 
+  // 0105: si este sorteo es el destino de premios de referidos de otros,
+  // el organizador lo ve acá para no confundir esos números con ventas.
+  const { data: sorteosOrigen } = await supabase
+    .from("raffles")
+    .select("id, title")
+    .eq("bonus_raffle_id", params.id);
+
   const { count: soldCount } = await supabase
     .from("raffle_numbers")
     .select("*", { count: "exact", head: true })
@@ -513,6 +520,20 @@ export default async function AdminRaffleDetailPage({
                   />
                 ))}
               </div>
+            </div>
+          )}
+
+          {(sorteosOrigen ?? []).length > 0 && (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+              <p className="font-semibold">Este sorteo recibe premios de referidos</p>
+              <p className="mt-1 text-[13px]">
+                Los números ganados por invitar se entregan acá, marcados como
+                🎁 premio (no son ventas). Sorteo(s) de origen:{" "}
+                {(sorteosOrigen ?? [])
+                  .map((s) => s.title as string)
+                  .join(", ")}
+                .
+              </p>
             </div>
           )}
 

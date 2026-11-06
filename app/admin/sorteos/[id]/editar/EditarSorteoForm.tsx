@@ -45,6 +45,7 @@ const schema = z.object({
   referral_min_numbers: z.coerce.number().int().min(1).max(1000).optional(),
   referral_require_buyer_min: z.coerce.number().int().min(0).max(1000).optional(),
   referral_max_per_user: z.coerce.number().int().min(0).max(1000).optional(),
+  bonus_raffle_id: z.string().optional(),
   transfer_alias: z.string().optional(),
   transfer_cbu: z.string().optional(),
   transfer_bank: z.string().optional(),
@@ -83,7 +84,13 @@ function toLocalInput(iso: string): string {
   )}:${p(d.getMinutes())}`;
 }
 
-export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
+export function EditarSorteoForm({
+  raffle,
+  sorteosBonus = [],
+}: {
+  raffle: Raffle;
+  sorteosBonus?: { id: string; title: string }[];
+}) {
   const router = useRouter();
 
   const [saving, setSaving] = useState(false);
@@ -116,6 +123,7 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
       referral_min_numbers: raffle.referral_min_numbers ?? 1,
       referral_require_buyer_min: raffle.referral_require_buyer_min ?? 0,
       referral_max_per_user: raffle.referral_max_per_user ?? 0,
+      bonus_raffle_id: raffle.bonus_raffle_id ?? "",
     },
   });
 
@@ -129,6 +137,7 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
     const res = await updateRaffle(raffle.id, {
       ...values,
       cover_image_url: coverUrl,
+      bonus_raffle_id: values.bonus_raffle_id ? values.bonus_raffle_id : null,
     });
 
     if (!res.ok) {
@@ -497,6 +506,29 @@ export function EditarSorteoForm({ raffle }: { raffle: Raffle }) {
                     <p className="text-[11px] text-muted-foreground">
                       0 = sin tope. Es la cantidad máxima de números gratis por
                       referente en este sorteo.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1 sm:col-span-3">
+                    <Label htmlFor="bonus_raffle_id">
+                      ¿Dónde se entregan los números gratis?
+                    </Label>
+                    <select
+                      id="bonus_raffle_id"
+                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      {...register("bonus_raffle_id")}
+                    >
+                      <option value="">En este mismo sorteo</option>
+                      {sorteosBonus.map((sorteo) => (
+                        <option key={sorteo.id} value={sorteo.id}>
+                          En un sorteo exclusivo: {sorteo.title}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[11px] text-muted-foreground">
+                      Si elegís un sorteo exclusivo, el número se entrega ahí y
+                      queda marcado como 🎁 premio. Ese sorteo debe tener
+                      números disponibles.
                     </p>
                   </div>
                 </div>

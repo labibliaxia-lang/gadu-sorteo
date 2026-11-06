@@ -93,6 +93,8 @@ export interface Raffle {
   referral_min_numbers: number;
   referral_require_buyer_min: number;
   referral_max_per_user: number;
+  /** Sorteo exclusivo donde se entregan los premios de referidos (0105). */
+  bonus_raffle_id: string | null;
   /** Hash combinado de todos los premios (migración 0058). */
   results_hash: string | null;
   /** Cancelación manual (migración 0063). */

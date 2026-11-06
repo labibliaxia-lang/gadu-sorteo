@@ -38,6 +38,7 @@ interface NumberRow {
   number: number;
   status: string;
   reserved_until: string | null;
+  origin: string | null;
   raffles: RaffleRef | null;
 }
 
@@ -45,6 +46,8 @@ interface RaffleNumbersGroup {
   raffle: RaffleRef;
   sold: number[];
   reserved: { number: number; until: string | null }[];
+  /** Números ganados por referido (origin = premio, 0104/0105). */
+  premios: number[];
 }
 
 interface Premio {
@@ -106,7 +109,7 @@ export default function MisNumerosPage() {
       const { data } = await supabase
         .from("raffle_numbers")
         .select(
-          "raffle_id, number, status, reserved_until, raffles(id, title, cover_image_url, draw_date, status, winner_number, winner_name, whatsapp_contact, created_by)",
+          "raffle_id, number, status, reserved_until, origin, raffles(id, title, cover_image_url, draw_date, status, winner_number, winner_name, whatsapp_contact, created_by)",
         )
         .or(`sold_to.eq.${user.id},reserved_by.eq.${user.id}`)
         .in("status", ["sold", "reserved"])
@@ -195,11 +198,15 @@ export default function MisNumerosPage() {
       raffle: r.raffles,
       sold: [],
       reserved: [],
+      premios: [],
     };
     if (r.status === "reserved") {
       current.reserved.push({ number: r.number, until: r.reserved_until });
     } else if (r.status === "sold") {
       current.sold.push(r.number);
+      if (r.origin === "premio") {
+        current.premios.push(r.number);
+      }
     }
     byRaffle.set(r.raffles.id, current);
   }
@@ -424,6 +431,11 @@ export default function MisNumerosPage() {
                     </Badge>
                     {g.reserved.length > 0 && (
                       <Badge variant="warning">Pago pendiente</Badge>
+                    )}
+                    {g.premios.length > 0 && (
+                      <Badge variant="warning">
+                        🎁 Bono de Referido · Nº {g.premios.join(", ")}
+                      </Badge>
                     )}
 
                     {g.raffle.status === "cancelled" && (

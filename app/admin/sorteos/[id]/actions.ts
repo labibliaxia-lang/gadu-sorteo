@@ -279,6 +279,10 @@ const raffleUpdateSchema = z.object({
   referral_min_numbers: z.coerce.number().int().min(1).max(1000).optional(),
   referral_require_buyer_min: z.coerce.number().int().min(0).max(1000).optional(),
   referral_max_per_user: z.coerce.number().int().min(0).max(1000).optional(),
+  // 0105: sorteo exclusivo donde se entregan los premios (otro del mismo dueño).
+  bonus_raffle_id: z
+    .union([z.string().uuid("Sorteo inválido"), z.null()])
+    .optional(),
 });
 
 export async function deleteRaffle(raffleId: string): Promise<ActionResult> {
@@ -361,6 +365,8 @@ export async function updateRaffle(
     min_tickets_required: number;
     if_not_met: "extend_date" | "cancel_and_refund";
     winners_count: number;
+    /** 0105: sorteo exclusivo donde se entregan los premios de referidos. */
+    bonus_raffle_id?: string | null;
   },
 ): Promise<ActionResult> {
   const ctx = await requireAdminSession();
@@ -377,6 +383,31 @@ export async function updateRaffle(
   }
 
   const values = parsed.data;
+
+  // 0105: el sorteo destino tiene que ser del mismo dueño y no ser este.
+  if (values.bonus_raffle_id) {
+    if (values.bonus_raffle_id === id.data) {
+      return { ok: false, error: "El sorteo destino no puede ser el mismo." };
+    }
+
+    const { data: destino } = await createClient()
+      .from("raffles")
+      .select("id, created_by, status")
+      .eq("id", values.bonus_raffle_id)
+      .maybeSingle();
+
+    if (!destino || destino.created_by !== ctx.id) {
+      return { ok: false, error: "Ese sorteo destino no es tuyo." };
+    }
+
+    if (!["active", "closed"].includes(destino.status as string)) {
+      return {
+        ok: false,
+        error: "El sorteo destino tiene que estar activo o cerrado.",
+      };
+    }
+  }
+
   const supabase = createClient();
   const { error } = await supabase
     .from("raffles")
@@ -398,6 +429,7 @@ export async function updateRaffle(
       referral_min_numbers: values.referral_min_numbers ?? 1,
       referral_require_buyer_min: values.referral_require_buyer_min ?? 0,
       referral_max_per_user: values.referral_max_per_user ?? 0,
+      bonus_raffle_id: values.bonus_raffle_id ?? null,
     })
     .eq("id", id.data);
 
