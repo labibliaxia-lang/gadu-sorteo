@@ -242,6 +242,15 @@ describe("blindaje: resultado del sorteo", () => {
     expect(fn).toMatch(/not in \('active', 'closed'\)/i);
   });
 
+  it("registrar un pago es del organizador y queda auditado", () => {
+    const fn = lastDefinition("organizer_register_payment");
+
+    expect(fn).toMatch(/owns_raffle/i);
+    expect(fn).toMatch(/insert into public\.payments/i);
+    expect(fn).toMatch(/register_payment/i);
+    expect(fn).toMatch(/not in \('active', 'closed'\)/i);
+  });
+
   it("nadie inserta números por PostgREST (hallazgo #14)", () => {
     // Insertar filas 'sold' falsas cambia el conjunto con el que se sortea.
     expect(file("0072")).toMatch(

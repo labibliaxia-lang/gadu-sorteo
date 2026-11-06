@@ -43,3 +43,39 @@ export async function refundAndRelease(
 
   return { ok: true, count: Number(data ?? 0) };
 }
+
+/**
+ * Registra un pago ya cobrado (transferencia, efectivo, alias) sobre números
+ * vendidos a mano. Crea la fila en `payments` y la enlaza a los números.
+ */
+export async function registerPayment(
+  raffleId: string,
+  numbers: number[],
+  amount: number,
+): Promise<VentaActionResult> {
+  const actor = await requireAdminSession();
+  if (!actor) return { ok: false, error: "No autorizado" };
+
+  if (!Array.isArray(numbers) || numbers.length === 0) {
+    return { ok: false, error: "No hay números para registrar." };
+  }
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { ok: false, error: "El importe tiene que ser mayor que cero." };
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc("organizer_register_payment", {
+    p_raffle_id: raffleId,
+    p_numbers: numbers,
+    p_amount: amount,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/admin/sorteos/${raffleId}/ventas`);
+  revalidatePath(`/admin/sorteos/${raffleId}`);
+  revalidatePath(`/admin/sorteos/${raffleId}/numeros`);
+
+  return { ok: true, count: numbers.length };
+}

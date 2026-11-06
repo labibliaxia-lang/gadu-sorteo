@@ -37,6 +37,8 @@ export interface FilaVenta {
   devuelto?: number;
   neto?: number;
   estadoPago?: "pagado" | "pendiente" | "manual";
+  /** Números vendidos que todavía no tienen un pago asociado. */
+  numerosSinPago?: number[];
   primeraVenta: string | null;
   ultimaVenta: string | null;
 }

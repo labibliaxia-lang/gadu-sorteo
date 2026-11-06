@@ -34,6 +34,7 @@ interface FilaResumen {
   payment_state: string | null;
   first_sale_at: string | null;
   last_sale_at: string | null;
+  numbers_manual: number[] | null;
 }
 
 export async function cargarVentas(sorteoId: string): Promise<ResultadoVentas> {
@@ -84,6 +85,7 @@ export async function cargarVentas(sorteoId: string): Promise<ResultadoVentas> {
     devuelto: Number(fila.refunded ?? 0),
     neto: Number(fila.net ?? 0),
     estadoPago: (fila.payment_state ?? "manual") as FilaVenta["estadoPago"],
+    numerosSinPago: (fila.numbers_manual ?? []) as number[],
     primeraVenta: fila.first_sale_at ?? null,
     ultimaVenta: fila.last_sale_at ?? null,
   }));

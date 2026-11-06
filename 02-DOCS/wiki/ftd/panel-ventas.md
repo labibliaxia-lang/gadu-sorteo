@@ -90,6 +90,11 @@ teléfono sale de `raffle_buyers`, que ya respeta la visibilidad por KYC.
     de un pago de 199.99 por 2 deja una devolución de 100.00, el neto pasa a 99.99, la liberación
     queda auditada, un motivo corto se rechaza y un sorteo sorteado no se toca.
   - Gates: typecheck 0, lint 0, 291 tests, build OK.
+- **Segunda tanda (0092, 2026-11-06):** el organizador puede **registrar un pago ya cobrado**
+  sobre números vendidos a mano (crea `payments` aprobado, enlaza los números y audita
+  `register_payment`), y la devolución pasa a ser **parcial**: se eligen los números en la fila
+  (ej.: compró 1–5 y devuelve 2 y 4) con motivo y confirmación. `verificar_0092.sql` pendiente de
+  correr.
 - Pendiente: probar el botón con un sorteo real y ver el KPI de Neto bajar; fases 2 y 3.
 
 ## Next

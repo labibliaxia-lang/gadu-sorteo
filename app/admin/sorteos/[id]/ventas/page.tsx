@@ -226,6 +226,8 @@ export default async function SorteoVentasPage({
                             raffleId={sorteo.id}
                             numbers={fila.numeros}
                             nombre={fila.nombre}
+                            sinPago={fila.numerosSinPago ?? []}
+                            precio={sorteo.precio}
                           />
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
