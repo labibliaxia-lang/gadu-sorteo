@@ -28,6 +28,7 @@ import { CopyLandingLink } from "@/components/CopyLandingLink";
 import { PublishCommitmentButton } from "@/components/PublishCommitmentButton";
 import { RaffleDeleteButton } from "@/components/RaffleDeleteButton";
 import { RefundRow } from "@/components/admin/RefundRow";
+import { NotifyWinnerButton } from "@/components/admin/NotifyWinnerButton";
 import { RaffleCloneButton } from "@/components/RaffleCloneButton";
 import { ReservedNumbersPanel } from "@/components/ReservedNumbersPanel";
 import { formatDateTime, formatPrice } from "@/lib/utils";
@@ -138,6 +139,16 @@ export default async function AdminRaffleDetailPage({
     .select("*", { count: "exact", head: true })
     .eq("raffle_id", params.id)
     .eq("status", "sold");
+
+  // Vendidos sin pago vinculado: si el sorteo se sortea así, el comprador
+  // (posible ganador) queda sin comprobante. Desde 0099 se puede registrar
+  // incluso con el sorteo sorteado, pero mejor avisar antes.
+  const { count: soldSinPago } = await supabase
+    .from("raffle_numbers")
+    .select("*", { count: "exact", head: true })
+    .eq("raffle_id", params.id)
+    .eq("status", "sold")
+    .is("payment_id", null);
 
   const { count: reservedCount } = await supabase
     .from("raffle_numbers")
@@ -389,9 +400,14 @@ export default async function AdminRaffleDetailPage({
           <div className="rounded-xl border bg-muted/40 p-4">
             <p className="text-sm text-muted-foreground">Número ganador</p>
             {raffle.status === "drawn" && raffle.winner_number != null ? (
-              <p className="text-lg font-bold">
-                🎉 {raffle.winner_name ?? "Anónimo"} — Nº {raffle.winner_number}
-              </p>
+              <>
+                <p className="text-lg font-bold">
+                  🎉 {raffle.winner_name ?? "Anónimo"} — Nº {raffle.winner_number}
+                </p>
+                <div className="mt-2">
+                  <NotifyWinnerButton raffleId={raffle.id} />
+                </div>
+              </>
             ) : (
               <p className="text-muted-foreground">
                 Aún no se realizó el sorteo.
@@ -497,6 +513,25 @@ export default async function AdminRaffleDetailPage({
                   />
                 ))}
               </div>
+            </div>
+          )}
+
+          {(soldSinPago ?? 0) > 0 && raffle.status !== "cancelled" && (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+              <p className="font-semibold">
+                {soldSinPago} número(s) vendidos sin pago registrado
+              </p>
+              <p className="mt-1 text-[13px]">
+                Si el sorteo se sortea así, ese comprador queda sin pago vinculado.
+                Registralo desde{" "}
+                <Link
+                  href={`/admin/sorteos/${raffle.id}/ventas`}
+                  className="underline underline-offset-2"
+                >
+                  Ventas
+                </Link>{" "}
+                antes de sortear.
+              </p>
             </div>
           )}
 

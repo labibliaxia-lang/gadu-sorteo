@@ -248,7 +248,9 @@ describe("blindaje: resultado del sorteo", () => {
     expect(fn).toMatch(/owns_raffle/i);
     expect(fn).toMatch(/insert into public\.payments/i);
     expect(fn).toMatch(/register_payment/i);
-    expect(fn).toMatch(/not in \('active', 'closed'\)/i);
+    // 0099: permite registrar con el sorteo sorteado (solo contabilidad),
+    // pero nunca con el sorteo cancelado.
+    expect(fn).toMatch(/not in \('active', 'closed', 'drawn'\)/i);
   });
 
   it("nadie inserta números por PostgREST (hallazgo #14)", () => {

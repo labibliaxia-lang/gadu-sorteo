@@ -99,6 +99,95 @@ async function notifyWinner(
   }
 }
 
+export type NotifyWinnerResult =
+  | { ok: true; sent: true }
+  | { ok: false; error: string; phone?: string | null };
+
+/**
+ * Reenvía el aviso al ganador desde el panel.
+ *
+ * El aviso automático del sorteo solo sale si el perfil tiene email, opt-in y
+ * términos aceptados; si algo falta, es silencioso. Este botón da una salida
+ * manual, con el teléfono como alternativa, y deja constancia en la auditoría.
+ *
+ * Es transaccional (no marketing): se envía con solo tener email.
+ */
+export async function notifyWinnerManually(
+  raffleId: string,
+): Promise<NotifyWinnerResult> {
+  const ctx = await requireAdminSession();
+  if (!ctx) return { ok: false, error: "No autorizado" };
+
+  const id = uuidSchema.safeParse(raffleId);
+  if (!id.success) return { ok: false, error: firstIssue(id.error) };
+
+  if (!(await ownsRaffle(id.data))) {
+    return { ok: false, error: "No autorizado" };
+  }
+
+  const admin = createAdminClient();
+  const { data: raffle } = await admin
+    .from("raffles")
+    .select("title, status, winner_user_id, winner_number")
+    .eq("id", id.data)
+    .maybeSingle();
+
+  if (!raffle) return { ok: false, error: "El sorteo no existe." };
+  if (raffle.status !== "drawn" || raffle.winner_number === null) {
+    return { ok: false, error: "El sorteo todavía no tiene ganador." };
+  }
+
+  const { data: perfil } = raffle.winner_user_id
+    ? await admin
+        .from("profiles")
+        .select("email, phone")
+        .eq("id", raffle.winner_user_id)
+        .maybeSingle()
+    : { data: null };
+
+  const telefono = (perfil?.phone as string | null) ?? null;
+
+  if (!perfil?.email) {
+    return {
+      ok: false,
+      error:
+        "El ganador no tiene email en su perfil. Contactalo por WhatsApp o teléfono.",
+      phone: telefono,
+    };
+  }
+
+  const enviado = await sendWinnerEmail({
+    to: perfil.email as string,
+    raffleTitle: raffle.title as string,
+    raffleId: id.data,
+    winnerNumber: Number(raffle.winner_number),
+  });
+
+  // Sin política de INSERT en raffle_audit: escribe el service role.
+  await admin.from("raffle_audit").insert({
+    raffle_id: id.data,
+    actor_id: ctx.id,
+    action: "winner_notified",
+    numbers: [Number(raffle.winner_number)],
+    reason: enviado
+      ? "email de ganador reenviado desde el panel"
+      : "no se pudo enviar el email de ganador",
+  });
+
+  revalidatePath(`/admin/sorteos/${id.data}`);
+
+  if (!enviado) {
+    return {
+      ok: false,
+      error:
+        "No se pudo enviar el email (Resend). Revisá la configuración o contactalo por WhatsApp.",
+      phone: telefono,
+    };
+  }
+
+  return { ok: true, sent: true };
+}
+
 /**
  * Pertenencia del sorteo, resuelta en la base con `owns_raffle()` (0030).
  * Incluye al superadmin y es la misma regla que usan las políticas RLS.
