@@ -27,14 +27,14 @@ const statusLabel: Record<Raffle["status"], string> = {
 export default async function LiveDrawPage({
   params,
 }: {
-  params: { id: string };
+  params: { slug: string };
 }) {
   const supabase = createClient();
 
   const { data: raffle } = await supabase
     .from("raffles")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", params.slug)
     .maybeSingle();
 
   if (!raffle) notFound();
@@ -43,14 +43,14 @@ export default async function LiveDrawPage({
     supabase
       .from("raffle_numbers")
       .select("number")
-      .eq("raffle_id", params.id)
+      .eq("raffle_id", params.slug)
       .eq("status", "sold")
       .order("number")
       .limit(300),
     supabase
       .from("raffle_numbers")
       .select("*", { count: "exact", head: true })
-      .eq("raffle_id", params.id)
+      .eq("raffle_id", params.slug)
       .eq("status", "sold"),
   ]);
 
@@ -68,7 +68,7 @@ export default async function LiveDrawPage({
   if (user) {
     const [{ data: profile }, { data: owns }] = await Promise.all([
       supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
-      supabase.rpc("owns_raffle", { p_raffle_id: params.id }),
+      supabase.rpc("owns_raffle", { p_raffle_id: params.slug }),
     ]);
 
     canDraw =
@@ -79,7 +79,7 @@ export default async function LiveDrawPage({
   return (
     <div className="space-y-6">
       <Link
-        href={`/sorteos/${params.id}`}
+        href={`/sorteos/${params.slug}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -117,13 +117,13 @@ export default async function LiveDrawPage({
 
       <div className="flex flex-wrap gap-2 text-sm">
         <Link
-          href={`/sorteos/${params.id}`}
+          href={`/sorteos/${params.slug}`}
           className="text-brand-800 underline-offset-4 hover:underline dark:text-brand-300"
         >
           Ver el sorteo
         </Link>
         <Link
-          href={`/sorteos/${params.id}/verificar`}
+          href={`/sorteos/${params.slug}/verificar`}
           className="text-brand-800 underline-offset-4 hover:underline dark:text-brand-300"
         >
           Página de verificación

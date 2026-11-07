@@ -58,6 +58,8 @@ export interface Profile {
 export interface Raffle {
   id: string;
   title: string;
+  /** 0115: URL amigable; los enlaces viejos usan el id. */
+  slug?: string | null;
   description: string | null;
   draw_date: string;
   price_per_number: number;

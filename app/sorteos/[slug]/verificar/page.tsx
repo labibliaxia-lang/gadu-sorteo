@@ -45,14 +45,14 @@ function siteUrl(): string {
 export default async function VerifyPage({
   params,
 }: {
-  params: { id: string };
+  params: { slug: string };
 }) {
   const supabase = createClient();
 
   const { data: raffle } = await supabase
     .from("raffles")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", params.slug)
     .maybeSingle();
 
   if (!raffle) notFound();
@@ -64,7 +64,7 @@ export default async function VerifyPage({
     const { data, error } = await supabase
       .from("raffle_numbers")
       .select("number")
-      .eq("raffle_id", params.id)
+      .eq("raffle_id", params.slug)
       .eq("status", "sold")
       .order("number", { ascending: true })
       .range(from, to);
@@ -77,22 +77,22 @@ export default async function VerifyPage({
       ? await supabase
           .from("raffle_winners")
           .select("position, number, user_name, prize_title, winner_hash")
-          .eq("raffle_id", params.id)
+          .eq("raffle_id", params.slug)
           .order("position", { ascending: true })
       : { data: null };
   const winners = (winnerRows ?? []) as RaffleWinner[];
 
   const base = siteUrl();
   const verifyUrl = base
-    ? `${base}/sorteos/${params.id}/verificar`
-    : `/sorteos/${params.id}/verificar`;
+    ? `${base}/sorteos/${params.slug}/verificar`
+    : `/sorteos/${params.slug}/verificar`;
 
   const drawn = raffle.status === "drawn" && raffle.winner_number != null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <Link
-        href={`/sorteos/${params.id}`}
+        href={`/sorteos/${params.slug}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -141,7 +141,7 @@ export default async function VerifyPage({
               </p>
             )}
             <Link
-              href={`/sorteos/${params.id}/en-vivo`}
+              href={`/sorteos/${params.slug}/en-vivo`}
               className="inline-flex items-center gap-1.5 text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
             >
               Ir a la sala en vivo
@@ -325,13 +325,13 @@ export default async function VerifyPage({
 
       <div className="flex flex-wrap gap-3 text-sm">
         <Link
-          href={`/sorteos/${params.id}`}
+          href={`/sorteos/${params.slug}`}
           className="text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
         >
           Página pública del sorteo
         </Link>
         <Link
-          href={`/sorteos/${params.id}/en-vivo`}
+          href={`/sorteos/${params.slug}/en-vivo`}
           className="text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
         >
           Sala en vivo

@@ -24,11 +24,13 @@ import { cn } from "@/lib/utils";
  */
 export function ShareRaffleButton({
   raffleId,
+  slug,
   titulo,
   imageUrl,
   className,
 }: {
   raffleId: string;
+  slug?: string | null;
   titulo: string;
   imageUrl?: string | null;
   className?: string;
@@ -50,7 +52,8 @@ export function ShareRaffleButton({
   function urlParaCompartir(): string {
     if (typeof window === "undefined") return "";
     const { origin, pathname, href } = window.location;
-    const ruta = `/sorteos/${raffleId}`;
+    const clave = slug || raffleId;
+    const ruta = `/sorteos/${clave}`;
     if (pathname === ruta || pathname.startsWith(`${ruta}/`)) return href;
     const base = process.env.NEXT_PUBLIC_URL?.trim() || origin;
     return `${base.replace(/\/$/, "")}${ruta}`;

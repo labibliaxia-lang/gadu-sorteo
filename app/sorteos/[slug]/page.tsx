@@ -56,10 +56,21 @@ const statusLabel: Record<Raffle["status"], string> = {
  * Metadata por sorteo: es lo que se ve al compartir el link por WhatsApp o
  * redes. No incluye el nombre del ganador (PII): título, premio y fecha.
  */
+const UUID_RAFFLE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * 0115: la ruta acepta slug amigable o UUID viejo. Se resuelve sin romper los
+ * enlaces ya compartidos.
+ */
+function resolverColumna(valor: string): "id" | "slug" {
+  return UUID_RAFFLE.test(valor) ? "id" : "slug";
+}
+
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string };
+  params: { slug: string };
 }): Promise<Metadata> {
   const supabase = createClient();
   const { data: raffle } = await supabase
@@ -67,7 +78,7 @@ export async function generateMetadata({
     .select(
       "title, description, cover_image_url, draw_date, price_per_number, currency, status, winner_name, winner_number, player_terms_text",
     )
-    .eq("id", params.id)
+    .eq(resolverColumna(params.slug), params.slug)
     .maybeSingle();
 
   if (!raffle) {
@@ -127,16 +138,28 @@ export async function generateMetadata({
 export default async function RafflePage({
   params,
 }: {
-  params: { id: string };
+  params: { slug: string };
 }) {
   const supabase = createClient();
   const isDev = process.env.NODE_ENV === "development";
 
+  const columna = resolverColumna(params.slug);
   let { data: raffle } = await supabase
     .from("raffles")
     .select("*")
-    .eq("id", params.id)
-    .single();
+    .eq(columna, params.slug)
+    .maybeSingle();
+
+  // Compatibilidad: un slug viejo inexistente no debe romper; si no aparece,
+  // se intenta por id (por si el parámetro era un UUID con formato raro).
+  if (!raffle && columna === "slug") {
+    const { data: porId } = await supabase
+      .from("raffles")
+      .select("*")
+      .eq("id", params.slug)
+      .maybeSingle();
+    raffle = porId;
+  }
 
   if (!raffle) notFound();
 
@@ -163,7 +186,7 @@ export default async function RafflePage({
         const { data: refreshed } = await supabase
           .from("raffles")
           .select("*")
-          .eq("id", params.id)
+          .eq("id", raffle.id)
           .single();
         if (refreshed) raffle = refreshed;
       }
@@ -220,7 +243,7 @@ export default async function RafflePage({
   const { data: prizes } = await supabase
     .from("prizes")
     .select("*")
-    .eq("raffle_id", params.id)
+    .eq("raffle_id", raffle.id)
     .order("position", { ascending: true });
 
   // Perfil público del organizador: se lee de la vista `public_organizers`
@@ -446,6 +469,7 @@ export default async function RafflePage({
           </div>
           <ShareRaffleButton
             raffleId={raffle.id}
+            slug={raffle.slug as string | null}
             titulo={raffle.title}
             imageUrl={raffle.cover_image_url}
           />

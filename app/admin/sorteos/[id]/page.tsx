@@ -28,6 +28,7 @@ import { CopyLandingLink } from "@/components/CopyLandingLink";
 import { PublishCommitmentButton } from "@/components/PublishCommitmentButton";
 import { RaffleDeleteButton } from "@/components/RaffleDeleteButton";
 import { RefundRow } from "@/components/admin/RefundRow";
+import { CopyTextButton } from "@/components/CopyTextButton";
 import { NotifyWinnerButton } from "@/components/admin/NotifyWinnerButton";
 import { RaffleCloneButton } from "@/components/RaffleCloneButton";
 import { ReservedNumbersPanel } from "@/components/ReservedNumbersPanel";
@@ -76,6 +77,11 @@ export default async function AdminRaffleDetailPage({
 
   if (!raffle) notFound();
   if (!actor.isSuper && raffle.created_by !== actor.id) notFound();
+
+  // 0115: slug para enlaces públicos y de referidos (con fallback al UUID).
+  const publicSlug = (raffle.slug as string | null) ?? raffle.id;
+  const siteBase = (process.env.NEXT_PUBLIC_URL ?? "").replace(/\/$/, "");
+  const referralUrl = `${siteBase}/sorteos/${publicSlug}?ref=${actor.id}`;
 
   // Dirección de entrega de los ganadores: sólo el organizador dueño (o
   // superadmin) la ve, y sólo para los ganadores de este sorteo.
@@ -360,7 +366,7 @@ export default async function AdminRaffleDetailPage({
               promocional lo podés editar después.
             </p>
           </div>
-          <CopyLandingLink raffleId={raffle.id} />
+          <CopyLandingLink raffleId={publicSlug} />
         </div>
       )}
 
@@ -667,7 +673,7 @@ export default async function AdminRaffleDetailPage({
             La página del sorteo se genera al crearlo y queda publicada en esta
             dirección. Copiala para difundirla en el momento que quieras.
           </p>
-          <CopyLandingLink raffleId={raffle.id} />
+          <CopyLandingLink raffleId={publicSlug} />
           <Link
             href={`/admin/sorteos/${raffle.id}/landing`}
             className="inline-flex text-sm text-amber-700 underline-offset-4 hover:underline dark:text-amber-300"
@@ -679,9 +685,61 @@ export default async function AdminRaffleDetailPage({
 
       <Card>
         <CardHeader>
+          <CardTitle>Tu enlace de referidos</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          {raffle.referral_enabled ? (
+            <>
+              <p className="text-muted-foreground">
+                Compartí este enlace: cada amigo que se registre y compre suma un
+                número gratis para vos en este sorteo, según las reglas
+                configuradas.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="min-w-0 flex-1 truncate rounded-md bg-muted px-2 py-1.5 text-xs">
+                  {referralUrl || `/sorteos/${publicSlug}?ref=${actor.id}`}
+                </code>
+                <CopyTextButton
+                  texto={referralUrl || `/sorteos/${publicSlug}?ref=${actor.id}`}
+                  label="Copiar enlace"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-muted-foreground">
+                Este sorteo todavía no tiene <strong>Invitá y Ganá</strong>{" "}
+                activado.
+              </p>
+              <Link
+                href={`/admin/sorteos/${raffle.id}/editar`}
+                className="inline-flex text-sm text-amber-700 underline-offset-4 hover:underline dark:text-amber-300"
+              >
+                Activar Invitá y Ganá
+              </Link>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Pasos para publicar y sortear</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
+          {!raffle.draw_commitment && (
+            <div className="mb-2 animate-pulse rounded-xl border border-amber-500/50 bg-amber-500/15 p-3 text-amber-900 dark:text-amber-200">
+              <p className="font-semibold">
+                ⚠️ Acción obligatoria: debés publicar el compromiso para que el
+                sorteo sea válido y verificable
+              </p>
+              <p className="mt-1 text-xs">
+                Sin el hash de la semilla no se puede sortear ni verificar el
+                resultado. Es el paso 3.
+              </p>
+            </div>
+          )}
+
           {[
             {
               label: "1. Datos del sorteo",
@@ -703,7 +761,9 @@ export default async function AdminRaffleDetailPage({
               // El botón vive acá y no solo en la fila de acciones: el paso que
               // dice «Pendiente» tiene que traer la acción al lado.
               action: raffle.draw_commitment ? null : (
-                <PublishCommitmentButton raffleId={raffle.id} />
+                <span className="inline-flex animate-pulse">
+                  <PublishCommitmentButton raffleId={raffle.id} />
+                </span>
               ),
             },
             {
