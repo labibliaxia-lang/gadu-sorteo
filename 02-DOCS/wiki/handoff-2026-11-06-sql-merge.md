@@ -228,8 +228,9 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
     que llama al endpoint solo en ese horario (o manual).
   - **Superadmin**: banner con cotización actual y última corrida; precios locales de solo lectura.
   - **Pública**: selector USD/ARS/MXN/COP/CLP; precios desde `plan_configs`.
-  - Verificador `verificar_0116.sql`: 8 comprobaciones (tabla, monedas, RLS, columnas, checks,
-    planes pagos, coherencia con la cotización y ledger).
+  - Verificador `verificar_0116.sql`: **9/9** (tabla, monedas, RLS, grants de tabla, columnas, checks,
+    planes pagos, coherencia con la cotización y ledger). Se detectó y corrigió que RLS sin grants no deja
+    escribir al service_role: el cron respondía ok y no guardaba cotizaciones (`199fa32`).
 - **Cotizaciones reales verificadas:** ARS 1545 · MXN 18,65 · COP 3240 · CLP 974; el cron actualizó
   los 3 planes pagos con `ok: true`.
 - **Pendiente manual:** backup de la base; prueba completa de referidos en la web. No hay verificador
