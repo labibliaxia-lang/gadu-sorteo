@@ -72,6 +72,31 @@ begin
          || ' politica=' || coalesce(v_politica::text, 'null') end);
 end $$;
 
+-- 3b) Grants de tabla (RLS sola no alcanza: service_role necesita escribir)
+do $$
+declare
+  v_service text;
+  v_lectura text;
+begin
+  select string_agg(privilege_type, ', ' order by privilege_type) into v_service
+    from information_schema.role_table_grants
+   where table_schema = 'public' and table_name = 'exchange_rates'
+     and grantee = 'service_role'
+     and privilege_type in ('INSERT', 'UPDATE');
+
+  select string_agg(grantee, ', ' order by grantee) into v_lectura
+    from information_schema.role_table_grants
+   where table_schema = 'public' and table_name = 'exchange_rates'
+     and grantee in ('anon', 'authenticated')
+     and privilege_type = 'SELECT';
+
+  perform pg_temp.anota('3b ' || case
+    when v_service is not null and v_lectura is not null
+      then 'OK       grants correctos: service_role escribe y anon/authenticated leen'
+    else 'CRÍTICO  grants incompletos · service_role: ' || coalesce(v_service, 'ninguno')
+         || ' · lectura pública: ' || coalesce(v_lectura, 'ninguna') end);
+end $$;
+
 -- 4) Columnas de precios locales
 do $$
 declare
