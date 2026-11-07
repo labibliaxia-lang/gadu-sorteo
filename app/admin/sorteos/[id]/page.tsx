@@ -41,6 +41,7 @@ const statusLabel: Record<Raffle["status"], string> = {
   closed: "Cerrado",
   drawn: "Sorteado",
   cancelled: "Cancelado",
+  paused: "Pausado",
 };
 
 export default async function AdminRaffleDetailPage({
@@ -520,6 +521,16 @@ export default async function AdminRaffleDetailPage({
                   />
                 ))}
               </div>
+            </div>
+          )}
+
+          {raffle.status === "paused" && (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+              <p className="font-semibold">Sorteo pausado por plan</p>
+              <p className="mt-1 text-[13px]">
+                Este sorteo está temporalmente pausado: actualizá tu plan para
+                reactivarlo. No se perdió ningún dato.
+              </p>
             </div>
           )}
 

@@ -49,6 +49,7 @@ const statusLabel: Record<Raffle["status"], string> = {
   closed: "Cerrado",
   drawn: "Sorteado",
   cancelled: "Cancelado",
+  paused: "Pausado",
 };
 
 /**
@@ -423,6 +424,15 @@ export default async function RafflePage({
             <p className="max-w-xl text-[15px] leading-relaxed text-fg-subtle">
               {raffle.description}
             </p>
+          )}
+
+          {raffle.status === "paused" && (
+            <div className="max-w-xl rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
+              <p className="font-semibold">Este sorteo está temporalmente pausado</p>
+              <p className="mt-1 text-muted-foreground">
+                El organizador debe actualizar su plan para reactivarlo.
+              </p>
+            </div>
           )}
 
           {raffle.status === "cancelled" && (

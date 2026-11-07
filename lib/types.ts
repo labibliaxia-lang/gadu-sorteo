@@ -1,6 +1,6 @@
 export type Role = "user" | "admin" | "superadmin";
 export type Plan = "organizador" | "pro" | "premium" | "social";
-export type RaffleStatus = "active" | "closed" | "drawn" | "cancelled";
+export type RaffleStatus = "active" | "closed" | "drawn" | "cancelled" | "paused";
 export type NumberStatus = "available" | "reserved" | "sold";
 export type PaymentStatus =
   | "pending"

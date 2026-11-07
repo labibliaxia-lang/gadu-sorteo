@@ -21,6 +21,7 @@ const statusLabel: Record<Raffle["status"], string> = {
   closed: "Cerrado",
   drawn: "Sorteado",
   cancelled: "Cancelado",
+  paused: "Pausado",
 };
 
 export default async function LiveDrawPage({

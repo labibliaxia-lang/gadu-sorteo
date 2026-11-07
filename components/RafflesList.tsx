@@ -25,6 +25,7 @@ const statusLabel: Record<Raffle["status"], string> = {
   closed: "Cerrado",
   drawn: "Sorteado",
   cancelled: "Cancelado",
+  paused: "Pausado",
 };
 
 const statusVariant: Record<
@@ -35,6 +36,7 @@ const statusVariant: Record<
   closed: "warning",
   drawn: "secondary",
   cancelled: "secondary",
+  paused: "warning",
 };
 
 const FILTERS: { key: Filter; label: string }[] = [
