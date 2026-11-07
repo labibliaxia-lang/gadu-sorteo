@@ -36,13 +36,24 @@ export interface PlanLimits {
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   organizador: {
     id: "organizador",
-    label: "Organizador",
+    label: "Starter",
     description: "Plan base para publicar tus primeros sorteos.",
     maxActiveRaffles: 2,
     maxNumbersPerRaffle: 100,
     maxPrizesPerRaffle: 3,
     analytics: false,
     exclusiveFeatures: false,
+    paymentMethods: ["transferencia"],
+  },
+  pro: {
+    id: "pro",
+    label: "Pro",
+    description: "Para organizadores que ya crecieron.",
+    maxActiveRaffles: 6,
+    maxNumbersPerRaffle: 1000,
+    maxPrizesPerRaffle: 10,
+    analytics: true,
+    exclusiveFeatures: true,
     paymentMethods: ["transferencia"],
   },
   premium: {
@@ -57,6 +68,17 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     exclusiveFeatures: true,
     paymentMethods: ["transferencia", "mercadopago"],
   },
+  social: {
+    id: "social",
+    label: "Social / ONG",
+    description: "Precio solidario con herramientas de crecimiento.",
+    maxActiveRaffles: 5,
+    maxNumbersPerRaffle: 1000,
+    maxPrizesPerRaffle: 5,
+    analytics: false,
+    exclusiveFeatures: true,
+    paymentMethods: ["transferencia"],
+  },
 };
 
 /**
@@ -69,15 +91,26 @@ export const PLAN_BENEFITS: Record<Plan, string[]> = {
     `Hasta ${PLAN_LIMITS.organizador.maxActiveRaffles} sorteos activos a la vez`,
     `${PLAN_LIMITS.organizador.maxNumbersPerRaffle} números por sorteo`,
     "Cobro por transferencia con comprobante por WhatsApp",
-    "Panel con analíticas básicas",
     "Perfil público de organizador",
+  ],
+  pro: [
+    `Hasta ${PLAN_LIMITS.pro.maxActiveRaffles} sorteos activos a la vez`,
+    `${PLAN_LIMITS.pro.maxNumbersPerRaffle.toLocaleString("es-AR")} números por sorteo`,
+    "Invitá y ganá + landing promocional",
+    "Analíticas y exportación a CSV",
   ],
   premium: [
     `Hasta ${PLAN_LIMITS.premium.maxActiveRaffles} sorteos activos a la vez`,
     `${PLAN_LIMITS.premium.maxNumbersPerRaffle.toLocaleString("es-AR")} números por sorteo`,
     "Analíticas avanzadas y exportación a CSV",
-    "Cobro automático con Mercado Pago (próximamente)",
-    "Todo lo del plan Organizador",
+    "Mercado Pago y sorteo automático",
+    "Todo lo del plan Pro",
+  ],
+  social: [
+    `Hasta ${PLAN_LIMITS.social.maxActiveRaffles} sorteos activos a la vez`,
+    `${PLAN_LIMITS.social.maxNumbersPerRaffle.toLocaleString("es-AR")} números por sorteo`,
+    "Invitá y ganá + landing promocional",
+    "Precio solidario para ONG",
   ],
 };
 
@@ -96,7 +129,9 @@ export interface PlanContext {
 
 /** Normaliza un valor desconocido al plan canónico (común por defecto). */
 export function normalizePlan(value: unknown): Plan {
-  return value === "premium" ? "premium" : "organizador";
+  return value === "premium" || value === "pro" || value === "social"
+    ? value
+    : "organizador";
 }
 
 /** Contexto de plan a partir del perfil (o `null` si no hay sesión). */

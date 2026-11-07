@@ -1332,13 +1332,13 @@ export async function unbanUser(userId: string): Promise<BanResult> {
 // Soporte: pago manual de plan y extensión de vigencia (0038)
 // =====================================================================
 
-export type PlanId = "organizador" | "premium";
+export type PlanId = "organizador" | "pro" | "premium" | "social";
 
 export type PlanExtendResult =
   | { ok: true; expiresAt: string }
   | { ok: false; error: string };
 
-const PLAN_IDS: PlanId[] = ["organizador", "premium"];
+const PLAN_IDS: PlanId[] = ["organizador", "pro", "premium", "social"];
 const PAYMENT_METHODS = ["transferencia", "efectivo", "otro"];
 
 /**

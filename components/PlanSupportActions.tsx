@@ -12,8 +12,10 @@ import {
 } from "@/app/admin/super/actions";
 
 const PLAN_OPTIONS: { value: PlanId; label: string }[] = [
-  { value: "organizador", label: "Organizador" },
+  { value: "organizador", label: "Starter" },
+  { value: "pro", label: "Pro" },
   { value: "premium", label: "Premium" },
+  { value: "social", label: "Social / ONG" },
 ];
 
 const DAYS_OPTIONS = [30, 60, 90, 180, 365];
