@@ -76,6 +76,8 @@ async function actualizar(request: Request) {
   }
 
   const ahora = new Date().toISOString();
+  const rateErrors: string[] = [];
+  let ratesGuardadas = 0;
 
   for (const moneda of MONEDAS) {
     if (!rates[moneda]) continue;
@@ -88,7 +90,10 @@ async function actualizar(request: Request) {
       { onConflict: "currency_code" },
     );
     if (error) {
+      rateErrors.push(`${moneda}: ${error.message}`);
       console.error(`[update-rates] no se pudo guardar ${moneda}:`, error.message);
+    } else {
+      ratesGuardadas += 1;
     }
   }
 
@@ -132,6 +137,8 @@ async function actualizar(request: Request) {
     source: FUENTE,
     updated_at: ahora,
     rates,
+    rates_guardadas: ratesGuardadas,
+    rate_errors: rateErrors,
     planes_actualizados: actualizados,
   });
 }
