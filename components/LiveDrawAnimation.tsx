@@ -33,7 +33,218 @@ interface LiveDrawAnimationProps {
   simulatedWinners?: LiveWinner[];
 }
 
-type Phase = "idle" | "spinning" | "done";
+type Phase = "idle" | "countdown" | "spinning" | "done";
+
+interface ConfettiOrigin {
+  x: number;
+  y: number;
+}
+
+const CONFETTI_COLORS = ["#F5B301", "#FFD23A", "#FFF0B8", "#FFFFFF"];
+
+/** Respeta la preferencia del sistema también antes de importar el paquete. */
+function prefiereMenosMovimiento(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+/**
+ * Lluvia de confeti del "Modo Ceremonia".
+ * - `premio`: una ráfaga corta desde el número revelado.
+ * - `final`: el cierre, con dos cañones laterales.
+ * El paquete se importa recién cuando hace falta y nunca corre en SSR.
+ */
+function lanzarConfeti(tipo: "premio" | "final", origen?: ConfettiOrigin) {
+  if (prefiereMenosMovimiento()) return;
+
+  void import("canvas-confetti").then(({ default: confetti }) => {
+    const base = {
+      colors: CONFETTI_COLORS,
+      disableForReducedMotion: true,
+      zIndex: 80,
+    };
+
+    if (tipo === "final") {
+      confetti({
+        ...base,
+        particleCount: 180,
+        spread: 100,
+        startVelocity: 46,
+        origin: { x: 0.5, y: 0.4 },
+        ticks: 220,
+      });
+      window.setTimeout(() => {
+        confetti({
+          ...base,
+          particleCount: 80,
+          angle: 60,
+          spread: 65,
+          startVelocity: 40,
+          origin: { x: 0, y: 0.7 },
+        });
+        confetti({
+          ...base,
+          particleCount: 80,
+          angle: 120,
+          spread: 65,
+          startVelocity: 40,
+          origin: { x: 1, y: 0.7 },
+        });
+      }, 180);
+      return;
+    }
+
+    confetti({
+      ...base,
+      particleCount: 90,
+      spread: 75,
+      startVelocity: 34,
+      origin: origen ?? { x: 0.5, y: 0.45 },
+      ticks: 170,
+      scalar: 0.95,
+    });
+  });
+}
+
+/**
+ * Capas visuales del Modo Ceremonia. Viven en este archivo para no tocar
+ * `globals.css`: luces, ruleta, cuenta regresiva, revelado y podio.
+ * Todas se apagan con `prefers-reduced-motion`.
+ */
+const CEREMONIA_CSS = `
+  .ceremonia-stage::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: -2.5rem;
+    left: -1.5rem;
+    right: -1.5rem;
+    height: 24rem;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 55% 60% at 50% 0%,
+      rgba(245, 179, 1, 0.28),
+      rgba(245, 179, 1, 0.08) 45%,
+      transparent 72%
+    );
+    filter: blur(52px);
+  }
+
+  .ceremonia-reel {
+    animation: ceremonia-reel 0.26s ease-in-out infinite;
+    will-change: transform, filter;
+  }
+
+  @keyframes ceremonia-reel {
+    0%,
+    100% {
+      transform: translateY(-3%) scale(1.02);
+      filter: blur(2px);
+      opacity: 0.85;
+    }
+    50% {
+      transform: translateY(4%) scale(0.97);
+      filter: blur(8px);
+      opacity: 0.6;
+    }
+  }
+
+  .ceremonia-reveal {
+    animation: ceremonia-reveal 0.55s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+  }
+
+  @keyframes ceremonia-reveal {
+    0% {
+      transform: scale(0.9);
+      filter: blur(6px);
+      text-shadow: 0 0 0 rgba(245, 179, 1, 0);
+    }
+    60% {
+      transform: scale(1.07);
+      filter: blur(0);
+      text-shadow: 0 0 34px rgba(245, 179, 1, 0.6);
+    }
+    100% {
+      transform: scale(1);
+      filter: blur(0);
+      text-shadow: 0 0 18px rgba(245, 179, 1, 0.25);
+    }
+  }
+
+  .ceremonia-count {
+    animation: ceremonia-count 0.8s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+  }
+
+  @keyframes ceremonia-count {
+    0% {
+      opacity: 0;
+      transform: scale(1.65);
+      filter: blur(10px);
+    }
+    40% {
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0);
+    }
+    100% {
+      opacity: 0.92;
+      transform: scale(0.96);
+      filter: blur(0);
+    }
+  }
+
+  .ceremonia-flash {
+    animation: ceremonia-flash 0.85s ease-out both;
+  }
+
+  @keyframes ceremonia-flash {
+    0% {
+      opacity: 0.9;
+      transform: scale(0.65);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.6);
+    }
+  }
+
+  .ceremonia-rise {
+    animation: ceremonia-rise 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+  }
+
+  @keyframes ceremonia-rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ceremonia-stage::before {
+      filter: none;
+      opacity: 0.55;
+    }
+
+    .ceremonia-reel,
+    .ceremonia-reveal,
+    .ceremonia-count,
+    .ceremonia-rise {
+      animation: none;
+      filter: none;
+      transform: none;
+    }
+
+    .ceremonia-flash {
+      display: none;
+    }
+  }
+`;
 
 function nombreCorto(fullName: string | null): string {
   const partes = (fullName ?? "").trim().split(/\s+/).filter(Boolean);
@@ -49,6 +260,9 @@ function nombreCorto(fullName: string | null): string {
  * - Multipremio (0058): anima cada posición en orden, 2 s de pausa entre
  *   premios, y va llenando el podio. Los números los elige la base; la
  *   animación solo los revela.
+ * - "Modo Ceremonia": luz ambiental, cuenta regresiva 3-2-1, ruleta con blur,
+ *   confeti al revelar y podio destacado. Son capas visuales: no cambian las
+ *   props ni la lógica del sorteo.
  */
 export function LiveDrawAnimation({
   raffleId,
@@ -67,6 +281,7 @@ export function LiveDrawAnimation({
   const animated = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const samples = useRef(sampleNumbers);
+  const numberRef = useRef<HTMLParagraphElement | null>(null);
 
   const [phase, setPhase] = useState<Phase>(
     initialStatus === "drawn"
@@ -83,6 +298,9 @@ export function LiveDrawAnimation({
   const [currentPrize, setCurrentPrize] = useState<LiveWinner | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [revealed, setRevealed] = useState(false);
+  const [revealKey, setRevealKey] = useState(0);
 
   useEffect(() => {
     samples.current = sampleNumbers;
@@ -110,15 +328,14 @@ export function LiveDrawAnimation({
   }, [raffleId, supabase]);
 
   /**
-   * Secuencia: por cada premio corre la ruleta ~2 s, revela el número, lo
-   * suma al podio y espera 2 s antes del siguiente.
+   * Secuencia: cuenta 3-2-1, corre la ruleta ~2 s por premio, revela el
+   * número, lanza confeti, lo suma al podio y espera 2 s antes del siguiente.
    */
   const runSequence = useCallback(
     (lista: LiveWinner[]) => {
       if (animated.current || lista.length === 0) return;
       animated.current = true;
 
-      setPhase("spinning");
       const numeros = samples.current.length > 0 ? samples.current : [1];
 
       const animarPremio = (indice: number) => {
@@ -126,10 +343,13 @@ export function LiveDrawAnimation({
         if (!premio) {
           setPhase("done");
           setCurrentPrize(null);
+          setCountdown(null);
+          lanzarConfeti("final");
           return;
         }
 
         setCurrentPrize(premio);
+        setRevealed(false);
         let tick = 0;
         const totalTicks = 40;
 
@@ -144,10 +364,26 @@ export function LiveDrawAnimation({
 
           setDisplay(premio.number);
           setWinner(premio.number);
+          setRevealed(true);
+          setRevealKey((clave) => clave + 1);
           setPodium((prev) => [
             ...prev.filter((p) => p.position !== premio.position),
             premio,
           ]);
+
+          const rect = numberRef.current?.getBoundingClientRect();
+          const origen =
+            rect && typeof window !== "undefined"
+              ? {
+                  x:
+                    (rect.left + rect.width / 2) /
+                    Math.max(window.innerWidth, 1),
+                  y:
+                    (rect.top + rect.height / 2) /
+                    Math.max(window.innerHeight, 1),
+                }
+              : undefined;
+          lanzarConfeti("premio", origen);
 
           timers.current.push(
             setTimeout(() => animarPremio(indice + 1), 2000),
@@ -157,7 +393,19 @@ export function LiveDrawAnimation({
         girar();
       };
 
-      animarPremio(0);
+      // Marco de evento: 3, 2, 1 antes del primer giro.
+      setPhase("countdown");
+      const descontar = (n: number) => {
+        if (n === 0) {
+          setCountdown(null);
+          setPhase("spinning");
+          animarPremio(0);
+          return;
+        }
+        setCountdown(n);
+        timers.current.push(setTimeout(() => descontar(n - 1), 800));
+      };
+      descontar(3);
     },
     [],
   );
@@ -183,6 +431,9 @@ export function LiveDrawAnimation({
     animated.current = false;
     setPhase("idle");
     setPodium([]);
+    setCountdown(null);
+    setRevealed(false);
+    setRevealKey(0);
     timers.current.push(
       setTimeout(() => runSequence(demoWinners), 300),
     );
@@ -267,6 +518,9 @@ export function LiveDrawAnimation({
     setWinner(null);
     setDisplay(null);
     setCurrentPrize(null);
+    setCountdown(null);
+    setRevealed(false);
+    setRevealKey(0);
     setPhase("idle");
     timers.current.push(setTimeout(() => runSequence(simulatedWinners), 250));
   }
@@ -312,26 +566,78 @@ export function LiveDrawAnimation({
     : null;
 
   return (
-    <div className="space-y-5">
-      <div className="relative overflow-hidden rounded-xl border border-hairline bg-panel-1 p-8 text-center">
+    <div className="ceremonia-stage relative isolate space-y-5">
+      <style>{CEREMONIA_CSS}</style>
+
+      <div className="relative overflow-hidden rounded-xl border border-hairline bg-panel-1 p-5 text-center shadow-[0_24px_70px_-40px_rgba(245,179,1,0.35)] sm:p-8">
+        {/* Marco de evento en vivo */}
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-hairline/70 pb-4">
+          <span className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-red-600 dark:text-red-400">
+            <span className="relative flex h-2 w-2" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-70 motion-reduce:animate-none" />
+              <span className="relative inline-flex h-2 w-2 animate-live-pulse rounded-full bg-red-500" />
+            </span>
+            REC
+          </span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-fg-subtle">
+            {phase === "done"
+              ? "Sorteo finalizado"
+              : phase === "countdown"
+                ? "Comenzando"
+                : "Sorteo en vivo"}
+          </span>
+        </div>
+
         <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-accent">
           {phase === "done"
             ? "Resultado final"
-            : enJuego
-              ? `Sorteando · ${enJuego}`
-              : "Sorteo en vivo"}
+            : phase === "countdown"
+              ? "Preparando el sorteo"
+              : enJuego
+                ? `Sorteando · ${enJuego}`
+                : "Sorteo en vivo"}
         </p>
 
-        <p
-          className={
-            phase === "spinning"
-              ? "mt-4 font-mono text-6xl font-medium tabular-nums tracking-[0.08em] text-fg sm:text-8xl"
-              : "mt-4 font-mono text-6xl font-medium tabular-nums tracking-[0.08em] text-brand-accent sm:text-8xl"
-          }
-          aria-live="polite"
-        >
-          {numberLabel}
-        </p>
+        <div className="relative mx-auto mt-4 flex h-[7.5rem] items-center justify-center sm:h-[10rem]">
+          {phase === "countdown" && countdown != null ? (
+            <div className="flex flex-col items-center" aria-hidden="true">
+              <span
+                key={countdown}
+                className="ceremonia-count flex h-28 w-28 items-center justify-center rounded-full border-2 border-brand/50 bg-brand/10 font-mono text-7xl font-semibold tabular-nums text-brand shadow-[0_0_50px_-12px_rgba(245,179,1,0.65)] sm:h-32 sm:w-32 sm:text-8xl"
+              >
+                {countdown}
+              </span>
+              <span className="mt-3 font-mono text-[10px] uppercase tracking-[0.24em] text-fg-subtle">
+                El sorteo comienza
+              </span>
+            </div>
+          ) : (
+            <p
+              ref={numberRef}
+              className={[
+                "font-mono text-6xl font-medium tabular-nums tracking-[0.08em] sm:text-8xl",
+                phase === "done" || revealed
+                  ? "text-brand-accent"
+                  : "text-fg",
+                phase === "spinning" && !revealed ? "ceremonia-reel" : "",
+                revealed ? "ceremonia-reveal" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              aria-live="polite"
+            >
+              {numberLabel}
+            </p>
+          )}
+
+          {revealKey > 0 && (
+            <span
+              key={revealKey}
+              aria-hidden="true"
+              className="ceremonia-flash pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(245,179,1,0.35),transparent_65%)]"
+            />
+          )}
+        </div>
 
         {phase === "done" && winner != null ? (
           <div className="mt-4 space-y-1">
@@ -345,7 +651,13 @@ export function LiveDrawAnimation({
           </div>
         ) : phase === "spinning" ? (
           <p className="mt-4 text-[13px] text-fg-subtle">
-            Mezclando los números vendidos…
+            {revealed
+              ? "Número revelado. Preparando el siguiente premio…"
+              : "Mezclando los números vendidos…"}
+          </p>
+        ) : phase === "countdown" ? (
+          <p className="mt-4 text-[13px] text-fg-subtle">
+            Luces encendidas: la ceremonia arranca en instantes.
           </p>
         ) : (
           <p className="mt-4 text-[13px] text-fg-subtle">
@@ -427,34 +739,104 @@ export function LiveDrawAnimation({
       </div>
 
       {podium.length > 0 && (
-        <div className="rounded-xl border border-hairline bg-panel-1/60 p-4">
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-brand-accent">
-            {phase === "done" ? "Podio final" : "Podio en vivo"}
-          </p>
-          <ul className="mt-3 space-y-2">
+        <div className="relative overflow-hidden rounded-xl border border-hairline bg-panel-1/60 p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-brand-accent">
+              {phase === "done" ? "Podio final" : "Podio en vivo"}
+            </p>
+            <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-fg-subtle">
+              {podium.length} {podium.length === 1 ? "premio" : "premios"}
+            </span>
+          </div>
+          <ul className="mt-4 space-y-2">
             {[...podium]
               .sort((a, b) => a.position - b.position)
-              .map((ganador) => (
-                <li
-                  key={ganador.position}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-hairline bg-background/60 px-3 py-2"
-                >
-                  <span className="flex items-center gap-2 text-sm">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-accent/15 font-mono text-[11px] font-bold text-brand-accent">
-                      {ganador.position}
+              .map((ganador) => {
+                const primero = ganador.position === 1;
+                const segundo = ganador.position === 2;
+                const tercero = ganador.position === 3;
+
+                const fila = primero
+                  ? "border-brand/45 bg-gradient-to-r from-brand/15 via-brand/5 to-transparent px-4 py-4 shadow-[0_0_40px_-18px_rgba(245,179,1,0.75)] sm:px-5 sm:py-5"
+                  : segundo
+                    ? "border-fg/20 bg-gradient-to-r from-fg/10 to-transparent px-3.5 py-3"
+                    : tercero
+                      ? "border-orange-400/25 bg-gradient-to-r from-orange-400/10 to-transparent px-3.5 py-3"
+                      : "border-hairline bg-background/60 px-3 py-2.5";
+
+                const medalla = primero
+                  ? "bg-brand text-brand-foreground shadow-glow"
+                  : segundo
+                    ? "bg-fg/15 text-fg"
+                    : tercero
+                      ? "bg-orange-400/20 text-orange-700 dark:text-orange-300"
+                      : "bg-brand-accent/15 text-brand-accent";
+
+                const etiqueta = primero
+                  ? "Oro"
+                  : segundo
+                    ? "Plata"
+                    : tercero
+                      ? "Bronce"
+                      : null;
+
+                return (
+                  <li
+                    key={ganador.position}
+                    className={`ceremonia-rise flex flex-wrap items-center justify-between gap-2 rounded-lg border ${fila}`}
+                    style={{
+                      animationDelay: `${Math.min(ganador.position - 1, 5) * 80}ms`,
+                    }}
+                  >
+                    <span className="flex min-w-0 items-center gap-3">
+                      <span
+                        className={`flex shrink-0 items-center justify-center rounded-full font-mono font-bold ${medalla} ${
+                          primero ? "h-9 w-9 text-sm" : "h-7 w-7 text-[11px]"
+                        }`}
+                      >
+                        {ganador.position}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <span
+                            className={`font-medium ${
+                              primero ? "text-base sm:text-lg" : "text-sm"
+                            }`}
+                          >
+                            {ganador.prizeTitle ??
+                              `Premio ${ganador.position}`}
+                          </span>
+                          {etiqueta && (
+                            <span
+                              className={`font-mono text-[9px] uppercase tracking-[0.16em] ${
+                                primero ? "text-brand-accent" : "text-fg-subtle"
+                              }`}
+                            >
+                              {etiqueta}
+                            </span>
+                          )}
+                        </span>
+                        <span className="mt-0.5 block text-[12px] text-fg-subtle">
+                          {nombreCorto(ganador.name)}
+                        </span>
+                      </span>
                     </span>
-                    <span className="font-medium">
-                      {ganador.prizeTitle ?? `Premio ${ganador.position}`}
+                    <span
+                      className={`flex items-center gap-2 font-mono tabular-nums text-fg ${
+                        primero ? "text-lg sm:text-xl" : "text-sm"
+                      }`}
+                    >
+                      {primero && (
+                        <Trophy
+                          className="h-4 w-4 text-brand"
+                          aria-hidden="true"
+                        />
+                      )}
+                      Nº {String(ganador.number).padStart(4, "0")}
                     </span>
-                    <span className="text-fg-subtle">
-                      {nombreCorto(ganador.name)}
-                    </span>
-                  </span>
-                  <span className="font-mono text-sm tabular-nums text-fg">
-                    Nº {String(ganador.number).padStart(4, "0")}
-                  </span>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
           </ul>
         </div>
       )}
