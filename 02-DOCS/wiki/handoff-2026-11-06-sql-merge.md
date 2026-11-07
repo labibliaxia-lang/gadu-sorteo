@@ -256,6 +256,10 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
   el efecto de Realtime se saltea con `isDemo`. La explicación de hash/certificado quedó en un
   acordeón **¿Cómo se verifica esto?** debajo de la animación. `SandboxDraw` ya no se usa en esa
   página.
+- **Aclaración sobre `SandboxDraw`:** **no es código muerto.** Sigue en uso en el sandbox del
+  Superadmin (`app/admin/super/sandbox/page.tsx`), que conserva el simulador técnico con compromiso,
+  hashes y certificado. Solo se quitó de `/como-funciona`, que ahora usa `LiveDrawAnimation` en modo
+  demo. No hay que borrarlo sin reemplazar antes esa página de Superadmin.
 - **Fase 3 (Página de Resultados): HECHA.** `/sorteos/[slug]/resultados` pública con podio (foto
   del premio, nombre recortado, número), compatible con sorteos de un ganador; botón
   **Compartir Resultados** (Web Share API con fallback a copiar enlace) y `opengraph-image.tsx`
