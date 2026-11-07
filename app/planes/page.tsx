@@ -13,31 +13,42 @@ import {
 import { RedeemCodeForm } from "@/components/RedeemCodeForm";
 import { PLAN_BENEFITS, PLAN_LIMITS, normalizePlan } from "@/lib/plans";
 import { waLink } from "@/lib/superadmin";
-import { cn, formatDateTime, formatPrice } from "@/lib/utils";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { cn, formatDateTime, formatPriceIn } from "@/lib/utils";
 import type { Plan } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 const PLANS: Plan[] = ["free", "organizador", "pro", "premium", "social"];
 
-interface PlanPriceRow {
-  plan: Plan;
+interface PlanConfigRow {
+  plan_name: Plan;
+  label: string;
+  price_usd: number | string;
   price_ars: number | string;
+  max_raffles: number;
+  max_numbers: number;
 }
 
 export default async function PlanesPage() {
   const supabase = createClient();
   const salesWhatsapp = process.env.NEXT_PUBLIC_SALES_WHATSAPP?.trim() || null;
 
-  // Precios: lectura pública (RLS de 0032). Si la migración no está aplicada,
-  // la página sigue funcionando y muestra «consultar».
-  const { data: priceRows } = await supabase
-    .from("plan_prices")
-    .select("plan, price_ars");
+  // Precios y límites: fuente única `plan_configs` (donde los edita el
+  // Superadmin). Se lee con service role en el servidor y solo se renderizan
+  // datos públicos; la tabla no es legible por anon.
+  const admin = createAdminClient();
+  const { data: configRows } = await admin
+    .from("plan_configs")
+    .select("plan_name, label, price_usd, price_ars, max_raffles, max_numbers");
+
+  const configByPlan = new Map<string, PlanConfigRow>(
+    ((configRows ?? []) as PlanConfigRow[]).map((row) => [row.plan_name, row]),
+  );
 
   const priceByPlan = new Map<string, number>(
-    ((priceRows ?? []) as PlanPriceRow[]).map((row) => [
-      row.plan,
+    [...configByPlan.entries()].map(([plan, row]) => [
+      plan,
       Number(row.price_ars),
     ]),
   );
@@ -72,11 +83,18 @@ export default async function PlanesPage() {
     : null;
 
   function salesHref(plan: Plan): string | null {
-    const price = priceByPlan.get(plan) ?? 0;
-    const priceText = price > 0 ? formatPrice(price) : "a convenir";
+    const cfg = configByPlan.get(plan);
+    const usd = Number(cfg?.price_usd ?? 0);
+    const ars = Number(cfg?.price_ars ?? 0);
+    const precio =
+      usd > 0
+        ? `${formatPriceIn(usd, "USD")} por mes`
+        : ars > 0
+          ? `${formatPriceIn(ars, "ARS")} por mes`
+          : "a convenir";
     const msg = `Hola! Quiero contratar el plan ${
       PLAN_LIMITS[plan].label
-    } de Gadu Sorteos (${priceText} por mes)${
+    } de Gadu Sorteos (${precio})${
       profile?.full_name ? `. Mi nombre es ${profile.full_name}` : ""
     }.`;
     return waLink(salesWhatsapp, msg);
@@ -118,9 +136,12 @@ export default async function PlanesPage() {
       <section className="grid gap-5 md:grid-cols-2">
         {PLANS.map((plan) => {
           const limits = PLAN_LIMITS[plan];
-          const price = priceByPlan.get(plan) ?? 0;
+          const cfg = configByPlan.get(plan);
+          const usd = Number(cfg?.price_usd ?? 0);
+          const ars = Number(cfg?.price_ars ?? 0);
           const href = salesHref(plan);
           const isPremium = plan === "premium";
+          const esGratis = usd <= 0 && ars <= 0;
 
           return (
             <Card
@@ -143,19 +164,22 @@ export default async function PlanesPage() {
                     Precio mensual
                   </p>
                   <p className="mt-1 font-mono text-2xl font-medium tracking-tight text-fg">
-                    {plan === "free" ? (
+                    {esGratis ? (
                       "Gratis"
-                    ) : price > 0 ? (
+                    ) : (
                       <>
-                        {formatPrice(price)}
+                        {formatPriceIn(usd, "USD")}
                         <span className="ml-1 font-normal text-fg-subtle">
                           / mes
                         </span>
                       </>
-                    ) : (
-                      "A convenir"
                     )}
                   </p>
+                  {!esGratis && ars > 0 && (
+                    <p className="text-[11px] text-fg-subtle">
+                      Equivale a {formatPriceIn(ars, "ARS")} por mes
+                    </p>
+                  )}
                 </div>
               </CardHeader>
 
@@ -170,7 +194,14 @@ export default async function PlanesPage() {
                 </ul>
 
                 <div className="mt-auto space-y-2">
-                  {href ? (
+                  {plan === "free" ? (
+                    <Link
+                      href="/register"
+                      className={cn(buttonVariants(), "w-full")}
+                    >
+                      Empezar gratis
+                    </Link>
+                  ) : href ? (
                     <a
                       href={href}
                       target="_blank"
@@ -192,9 +223,11 @@ export default async function PlanesPage() {
                     </Link>
                   )}
                   <p className="text-center text-[12px] text-fg-subtle">
-                    {plan === "social"
-                      ? "El Plan Social lo asigna el equipo desde soporte. No hay autoservicio."
-                      : "Prepago manual: transferís, mandás el comprobante y te entregamos el código de 30 días."}
+                    {plan === "free"
+                      ? "Sin tarjeta. Creá tu cuenta y publicá tu primer sorteo de prueba."
+                      : plan === "social"
+                        ? "El Plan Social lo asigna el equipo desde soporte. No hay autoservicio."
+                        : "Prepago manual: transferís, mandás el comprobante y te entregamos el código de 30 días."}
                   </p>
                 </div>
               </CardContent>
