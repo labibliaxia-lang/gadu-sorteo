@@ -5,8 +5,8 @@
 - **Staging** (`dolxvoxyespguvixhkku`): migraciones `0118` y `0119` aplicadas. E2E completo pasa,
   premio otorgado al aprobar, **consola limpia**.
 - **Producción** (`mjgcoeikcyzwojbqtuakh` en `.env.local`): `0118` y `0119` aplicadas.
-  **Verificador corrido por el dueño: 14 líneas OK** (ver más abajo). Falta la prueba manual en la web
-  y el backup.
+  **Verificadores corridos por el dueño: 14 líneas OK (0118) y 11 líneas OK (0119)**. Falta la
+  prueba manual en la web y el backup.
 
 ### Verificador en producción (después de la 0119)
 
@@ -68,8 +68,8 @@ Evidencia: `02-DOCS/wiki/ftd/evidencia/2026-11-07-e2e-referidos/` (`staging-e2e-
 
 1. Aplicar `0119_referrals_policy_fix.sql` en producción — **hecho**. Verificador: 14 líneas OK.
 2. Correr `verificar_0118.sql` en producción — **hecho**, sin CRÍTICOS.
-3. Opcional: correr `verificar_0119.sql` (11 líneas). El cheque 5 es el que de verdad reproduce el
-   escenario de producción.
+3. Correr `verificar_0119.sql` (11 líneas) — **hecho**: todas OK, incluido el cheque 5 (perfil del
+   referente oculto y el INSERT igual pasa).
 4. Prueba manual en la web: enlace `?ref=`, compra del mínimo, aprobar reserva, ver el número premio.
 5. **Backup manual** (Supabase backup) después de validar.
 6. Cosmético: la 0119 deja la política limpia; no hay más cambios de código abiertos en este hilo.
