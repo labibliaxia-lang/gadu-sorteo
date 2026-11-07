@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 
 import { guardarPlanes, type PlanConfigInput } from "@/app/admin/super/planes/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatPriceIn } from "@/lib/utils";
 
 export interface PlanConfigRow extends PlanConfigInput {
   label: string;
@@ -125,9 +126,13 @@ export function PlanConfigEditor({
                 </label>
               ))}
 
+              {/* Único precio editable: el USD. Los locales se calculan solos. */}
               <label className="space-y-1 text-xs">
-                <span className="block text-fg-subtle">
-                  Precio Base (USD)
+                <span className="flex items-center justify-between gap-2 text-fg-subtle">
+                  <span>Precio Base (USD)</span>
+                  <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
+                    Editable
+                  </span>
                 </span>
                 <Input
                   type="number"
@@ -137,41 +142,35 @@ export function PlanConfigEditor({
                   onChange={(e) =>
                     cambiar(index, { price_usd: Number(e.target.value) })
                   }
-                />
-              </label>
-
-              <label className="space-y-1 text-xs">
-                <span className="block text-fg-subtle">
-                  Precio Local (ARS)
-                </span>
-                <Input
-                  type="number"
-                  min={0}
-                  readOnly
-                  value={String(fila.price_ars)}
-                  className="bg-muted/50"
+                  className="border-amber-500/60 bg-background font-mono"
                 />
               </label>
 
               {(
                 [
+                  ["price_ars", "ARS"],
                   ["price_mxn", "MXN"],
                   ["price_cop", "COP"],
                   ["price_clp", "CLP"],
                 ] as const
               ).map(([campo, moneda]) => (
-                <label key={campo} className="space-y-1 text-xs">
+                <div key={campo} className="space-y-1 text-xs">
                   <span className="block text-fg-subtle">
                     Precio Local ({moneda})
                   </span>
-                  <Input
-                    type="number"
-                    min={0}
-                    readOnly
-                    value={String(fila[campo])}
-                    className="bg-muted/50"
-                  />
-                </label>
+                  <div className="flex items-center justify-between gap-2 rounded-md bg-muted/40 px-2 py-[7px]">
+                    <span className="font-mono text-sm text-fg">
+                      {formatPriceIn(Number(fila[campo]), moneda)}
+                    </span>
+                    <span
+                      className="inline-flex items-center gap-1 text-[10px] text-fg-subtle"
+                      title="Se calcula solo desde el precio USD y la cotización del día"
+                    >
+                      <Lock className="h-3 w-3" aria-hidden="true" />
+                      Auto
+                    </span>
+                  </div>
+                </div>
               ))}
               <p className="col-span-full text-[10px] text-fg-subtle">
                 Los precios locales se recalculan solos desde el precio USD y la
