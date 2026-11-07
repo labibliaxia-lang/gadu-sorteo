@@ -33,6 +33,12 @@ create policy "exchange_rates_public_read"
   to anon, authenticated
   using (true);
 
+-- Privilegios de tabla: la política RLS sola NO alcanza. Sin estos grants,
+-- el service_role del cron no puede hacer upsert (permission denied) y las
+-- cotizaciones quedan viejas aunque el cron responda ok.
+grant select on public.exchange_rates to anon, authenticated;
+grant select, insert, update, delete on public.exchange_rates to service_role;
+
 -- Precios locales de cada plan.
 alter table public.plan_configs
   add column if not exists price_mxn numeric(12, 2) not null default 0;
