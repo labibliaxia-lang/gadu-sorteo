@@ -36,7 +36,7 @@ import { RaffleMiniCard } from "@/components/RaffleMiniCard";
 import { RaffleQnA } from "@/components/RaffleQnA";
 import { RaffleVisitTracker } from "@/components/RaffleVisitTracker";
 import { ReportRaffleButton } from "@/components/ReportRaffleButton";
-import { ShareButton } from "@/components/ShareButton";
+import { ShareRaffleButton } from "@/components/ShareRaffleButton";
 import { formatDateTime, formatNumber, formatPrice, formatPriceIn } from "@/lib/utils";
 import { calcularConfianza } from "@/lib/confianza";
 import { cargarSenalesConfianza } from "@/lib/confianza-senales";
@@ -444,7 +444,11 @@ export default async function RafflePage({
               </Badge>
             )}
           </div>
-          <ShareButton sorteoId={raffle.id} titulo={raffle.title} />
+          <ShareRaffleButton
+            raffleId={raffle.id}
+            titulo={raffle.title}
+            imageUrl={raffle.cover_image_url}
+          />
           {raffle.status === "active" && viewer?.id !== raffle.created_by && (
             <ReportRaffleButton raffleId={raffle.id} isLoggedIn={Boolean(viewer)} />
           )}
