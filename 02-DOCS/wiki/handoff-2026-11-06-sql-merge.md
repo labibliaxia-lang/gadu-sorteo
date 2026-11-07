@@ -158,6 +158,15 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
 - **0110 — Free por defecto:** `profiles.plan` default `'free'` y `handle_new_user` asigna Free a
   toda cuenta nueva. Los usuarios existentes **no** cambian de plan (el ON CONFLICT no toca `plan`).
   `/planes` muestra "Gratis" en el plan Free.
+- **0111 — Solicitud de organizador:** formulario "Quiero ser Organizador" con nombre real,
+  teléfono, qué sortearía y redes; se guardan en `profiles.request_tools` / `request_social` y el
+  Superadmin los ve en la tarjeta. Verificador `verificar_0111.sql`: **5/5**.
+- **0112 — Nadie es admin automáticamente:** `handle_new_user` asigna siempre `role = 'user'` y
+  `plan = 'free'`. Las invitaciones del Superadmin ya **no otorgan rol**: quedan como registro
+  histórico. El único camino a organizador es solicitud → aprobación manual → KYC.
+  El trigger `enforce_organizer_kyc` sigue bloqueando el alta de sorteos en la base.
+  **El circuito de organizadores queda 100 % cerrado: no existe ninguna vía a `admin` sin
+  aprobación manual y KYC.**
 - **Pendiente manual:** flujo completo de referidos en la web (reserva del invitado → aprobación →
   bono en el sorteo exclusivo).
 - **Postergado:** integración de Mercado Pago vía OAuth (Marketplace).
