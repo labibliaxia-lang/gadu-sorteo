@@ -304,19 +304,13 @@ export function SuperAdminDashboard({
       return;
     }
 
-    setNotice(
-      res.mode === "assigned"
-        ? "Organizador asignado correctamente."
-        : res.message ??
-            "Invitación creada. Se asignará el rol al primer inicio de sesión.",
-    );
+    setNotice("Organizador asignado correctamente.");
     closeModal();
     setBusy(false);
     await refreshAll();
   }
 
   const trimmed = newOrgInput.trim();
-  const inviteMode = trimmed.includes("@") && emailRegistered === false;
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
 
@@ -768,9 +762,9 @@ export function SuperAdminDashboard({
               <div>
                 <h3 className="text-lg font-semibold">Nuevo Organizador</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Asigná el rol por email o ID. Si el email no tiene cuenta, se
-                  enviará una invitación que se activa en su primer inicio de
-                  sesión.
+                  Asigná el rol a un usuario ya registrado. Si el email todavía
+                  no tiene cuenta, pedile que se registre y solicite ser
+                  organizador desde su perfil.
                 </p>
               </div>
               <button
@@ -793,23 +787,18 @@ export function SuperAdminDashboard({
                 }}
               />
 
-              {inviteMode && (
-                <p className="rounded-lg bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
-                  Ese email no tiene cuenta: se enviará una invitación para ser
-                  organizador.
-                </p>
-              )}
+              <p className="rounded-lg bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-300">
+                El usuario debe estar registrado. Si no figura en la lista,
+                pedile que se registre y solicite ser organizador desde su
+                perfil.
+              </p>
 
               <Button
                 className="w-full"
                 onClick={() => void handleCreate()}
                 disabled={busy || !trimmed}
               >
-                {busy
-                  ? "Procesando…"
-                  : inviteMode
-                    ? "Enviar invitación por email"
-                    : "Asignar rol de organizador"}
+                {busy ? "Procesando…" : "Asignar rol de organizador"}
               </Button>
             </div>
           </div>
