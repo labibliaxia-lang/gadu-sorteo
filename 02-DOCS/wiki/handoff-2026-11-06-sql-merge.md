@@ -119,6 +119,42 @@ Los organizadores ya no pueden reservar números en un sorteo que crearon: la RP
 en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los botones. Verificador
 `verificar_0106.sql`: 5/5.
 
+## Planes dinámicos y Fase 2 de UI (cierre de sesión)
+
+### Base de datos
+
+- **0107 — planes dinámicos:** tabla `plan_configs` (organizador/pro/premium/social) con límites,
+  precio y toggles; `enforce_plan_raffle_limit`, `create_raffle_numbers` y `enforce_raffle_rules`
+  leen de la tabla. Se cerraron los bypasses premium en la base (MP, auto-draw, referidos y landing;
+  en UPDATE solo si la columna cambia). Se agregó `raffles.currency` y el estado `paused`;
+  `expire_plans` degrada a Starter y pausa los sorteos excedidos.
+  Verificador `verificar_0107.sql`: **9/9**.
+- **0108 — estructura final:** Starter 2 sorteos/300 números sin landing ni referidos; Pro 6/1.000 con
+  landing y 10 referidos por sorteo; Premium 20/10.000 con referidos ilimitados y auto-sorteo;
+  Social igual a Premium **sin Mercado Pago**. Nuevo tope `max_referrals_per_raffle` aplicado por
+  trigger en `referrals`; USD admitido; trigger que impide autoasignarse el Plan Social.
+  Verificador `verificar_0108.sql`: **6/6**.
+
+### UI
+
+- **Pausado:** `"paused"` en `RaffleStatus` y en los 6 mapas de estado; carteles en el panel del
+  organizador y en la vista pública. El grid bloquea la compra porque solo `active` permite reservar.
+- **Moneda:** `formatPriceIn(value, currency)` en `lib/utils.ts`; `Raffle.currency`; selector
+  ARS/MXN/COP/CLP/USD en el wizard (se envía en el insert y la vista previa lo respeta); la página
+  pública y el grid muestran precios y totales en la moneda del sorteo.
+- **Configurar Planes:** `/admin/super/planes` con editor de los 4 planes y Server Action que valida
+  superadmin; enlace desde el header del panel. La tabla ya no se edita por SQL.
+- **Página `/planes`:** lista los 4 niveles; el CTA de Social dice "Solo por contacto" y aclara que no
+  hay autoservicio.
+
+### Estado de pruebas
+
+- **15/15**: 9/9 de 0107 + 6/6 de 0108.
+- Gates: typecheck limpio, lint 0, tests y build OK.
+- **Pendiente manual:** flujo completo de referidos en la web (reserva del invitado → aprobación →
+  bono en el sorteo exclusivo).
+- **Postergado:** integración de Mercado Pago vía OAuth (Marketplace).
+
 ## Backup
 
 Hecho el 2026-11-06 14:27 y repetido a las 14:46 con `01-TOOLS/backup/backup-db.ps1` (pg_dump 17.6
