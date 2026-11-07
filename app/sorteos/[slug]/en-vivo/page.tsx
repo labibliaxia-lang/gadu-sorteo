@@ -27,8 +27,10 @@ const statusLabel: Record<Raffle["status"], string> = {
 
 export default async function LiveDrawPage({
   params,
+  searchParams,
 }: {
   params: { slug: string };
+  searchParams?: { demo?: string };
 }) {
   const supabase = createClient();
 
@@ -76,6 +78,31 @@ export default async function LiveDrawPage({
     (row) => row.number,
   );
   const soldCount = soldCountResult.count ?? sampleNumbers.length;
+
+  // 0058: ganadores definitivos (multipremio). Público por RLS.
+  const { data: winnersData } = await supabase
+    .from("raffle_winners")
+    .select("position, number, user_name, prize_title")
+    .eq("raffle_id", raffleId)
+    .order("position", { ascending: true });
+
+  const initialWinners = (winnersData ?? []).map((fila) => ({
+    position: Number(fila.position),
+    number: Number(fila.number),
+    name: (fila.user_name as string | null) ?? null,
+    prizeTitle: (fila.prize_title as string | null) ?? null,
+  }));
+
+  // Solo desarrollo: ?demo=1 muestra la animación con 3 premios ficticios.
+  const demo =
+    process.env.NODE_ENV !== "production" && searchParams?.demo === "1";
+  const demoWinners = demo
+    ? [
+        { position: 1, number: 11, name: "Juan Pérez", prizeTitle: "1º premio" },
+        { position: 2, number: 42, name: "María Gómez", prizeTitle: "2º premio" },
+        { position: 3, number: 7, name: "Luis Díaz", prizeTitle: "3º premio" },
+      ]
+    : [];
 
   const {
     data: { user },
@@ -125,10 +152,12 @@ export default async function LiveDrawPage({
 
       <LiveDrawAnimation
         raffleId={raffle.id}
-        initialStatus={raffle.status}
-        initialWinner={raffle.winner_number ?? null}
+        initialStatus={demo ? "active" : raffle.status}
+        initialWinner={demo ? null : (raffle.winner_number ?? null)}
+        initialWinners={demo ? [] : initialWinners}
+        demoWinners={demoWinners}
         soldCount={soldCount}
-        canDraw={canDraw}
+        canDraw={demo ? false : canDraw}
         hasCommitment={Boolean(raffle.draw_commitment)}
         sampleNumbers={sampleNumbers}
       />

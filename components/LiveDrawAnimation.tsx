@@ -7,33 +7,56 @@ import { ExternalLink, Play, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 
+export interface LiveWinner {
+  position: number;
+  number: number;
+  name: string | null;
+  prizeTitle: string | null;
+}
+
 interface LiveDrawAnimationProps {
   raffleId: string;
   initialStatus: string;
   initialWinner: number | null;
+  /** 0058: ganadores ya guardados en raffle_winners (multipremio). */
+  initialWinners?: LiveWinner[];
   soldCount: number;
   /** El usuario actual puede sortear (organizador dueño o superadmin). */
   canDraw: boolean;
   hasCommitment: boolean;
   /** Muestra de números vendidos para el ciclo de la animación. */
   sampleNumbers: number[];
+  /** Solo desarrollo: dispara una secuencia falsa de 3 premios. */
+  demoWinners?: LiveWinner[];
 }
 
 type Phase = "idle" | "spinning" | "done";
 
+function nombreCorto(fullName: string | null): string {
+  const partes = (fullName ?? "").trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "Participante";
+  if (partes.length === 1) return partes[0];
+  return `${partes[0]} ${partes[partes.length - 1][0]}.`;
+}
+
 /**
- * Sala de sorteo en vivo: el organizador dispara el RPC y todos los presentes
- * reciben el UPDATE de `raffles` por Realtime. La animación frena en el número
- * que ya quedó guardado en la base (no en un número elegido en el navegador).
+ * Sala de sorteo en vivo.
+ *
+ * - Un premio: se comporta como siempre (un único número).
+ * - Multipremio (0058): anima cada posición en orden, 2 s de pausa entre
+ *   premios, y va llenando el podio. Los números los elige la base; la
+ *   animación solo los revela.
  */
 export function LiveDrawAnimation({
   raffleId,
   initialStatus,
   initialWinner,
+  initialWinners = [],
   soldCount,
   canDraw,
   hasCommitment,
   sampleNumbers,
+  demoWinners = [],
 }: LiveDrawAnimationProps) {
   const supabase = useRef(createClient()).current;
   const animated = useRef(false);
@@ -41,10 +64,18 @@ export function LiveDrawAnimation({
   const samples = useRef(sampleNumbers);
 
   const [phase, setPhase] = useState<Phase>(
-    initialStatus === "drawn" && initialWinner != null ? "done" : "idle",
+    initialStatus === "drawn"
+      ? initialWinners.length > 0 || initialWinner != null
+        ? "done"
+        : "idle"
+      : "idle",
   );
   const [display, setDisplay] = useState<number | null>(initialWinner);
   const [winner, setWinner] = useState<number | null>(initialWinner);
+  const [podium, setPodium] = useState<LiveWinner[]>(
+    initialStatus === "drawn" ? initialWinners : [],
+  );
+  const [currentPrize, setCurrentPrize] = useState<LiveWinner | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,49 +83,131 @@ export function LiveDrawAnimation({
     samples.current = sampleNumbers;
   }, [sampleNumbers]);
 
-  const runAnimation = useCallback(
-    (target: number) => {
-      if (animated.current || !Number.isFinite(target)) return;
+  const limpiarTimers = useCallback(() => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  }, []);
+
+  /** Busca en la base los ganadores definitivos (multipremio). */
+  const cargarGanadores = useCallback(async (): Promise<LiveWinner[]> => {
+    const { data } = await supabase
+      .from("raffle_winners")
+      .select("position, number, user_name, prize_title")
+      .eq("raffle_id", raffleId)
+      .order("position", { ascending: true });
+
+    return (data ?? []).map((fila) => ({
+      position: Number(fila.position),
+      number: Number(fila.number),
+      name: (fila.user_name as string | null) ?? null,
+      prizeTitle: (fila.prize_title as string | null) ?? null,
+    }));
+  }, [raffleId, supabase]);
+
+  /**
+   * Secuencia: por cada premio corre la ruleta ~2 s, revela el número, lo
+   * suma al podio y espera 2 s antes del siguiente.
+   */
+  const runSequence = useCallback(
+    (lista: LiveWinner[]) => {
+      if (animated.current || lista.length === 0) return;
       animated.current = true;
 
-      setWinner(target);
       setPhase("spinning");
+      const numeros = samples.current.length > 0 ? samples.current : [1];
 
-      const numbers = samples.current.length > 0 ? samples.current : [1];
-      let tick = 0;
-      const totalTicks = 45;
-
-      const step = () => {
-        tick += 1;
-
-        if (tick < totalTicks) {
-          setDisplay(numbers[Math.floor(Math.random() * numbers.length)]);
-          const delay = 45 + Math.pow(tick / totalTicks, 3) * 140;
-          timers.current.push(setTimeout(step, delay));
+      const animarPremio = (indice: number) => {
+        const premio = lista[indice];
+        if (!premio) {
+          setPhase("done");
+          setCurrentPrize(null);
           return;
         }
 
-        setDisplay(target);
-        timers.current.push(
-          setTimeout(() => {
-            setPhase("done");
-          }, 700),
-        );
+        setCurrentPrize(premio);
+        let tick = 0;
+        const totalTicks = 40;
+
+        const girar = () => {
+          tick += 1;
+          if (tick < totalTicks) {
+            setDisplay(numeros[Math.floor(Math.random() * numeros.length)]);
+            const delay = 45 + Math.pow(tick / totalTicks, 3) * 120;
+            timers.current.push(setTimeout(girar, delay));
+            return;
+          }
+
+          setDisplay(premio.number);
+          setWinner(premio.number);
+          setPodium((prev) => [
+            ...prev.filter((p) => p.position !== premio.position),
+            premio,
+          ]);
+
+          timers.current.push(
+            setTimeout(() => animarPremio(indice + 1), 2000),
+          );
+        };
+
+        girar();
       };
 
-      step();
+      animarPremio(0);
     },
     [],
   );
 
+  const runSingle = useCallback(
+    (target: number) => {
+      if (animated.current || !Number.isFinite(target)) return;
+      runSequence([
+        {
+          position: 1,
+          number: target,
+          name: null,
+          prizeTitle: null,
+        },
+      ]);
+    },
+    [runSequence],
+  );
+
+  // Solo desarrollo: permite ver la animación secuencial sin un sorteo real.
   useEffect(() => {
-    if (initialStatus === "drawn" && initialWinner != null) {
+    if (demoWinners.length === 0) return;
+    animated.current = false;
+    setPhase("idle");
+    setPodium([]);
+    timers.current.push(
+      setTimeout(() => runSequence(demoWinners), 300),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoWinners.length]);
+
+  // Estado inicial ya sorteado: mostrar el resultado sin repetir la animación.
+  useEffect(() => {
+    if (initialStatus !== "drawn") return;
+    if (initialWinners.length > 0) {
+      animated.current = true;
+      const ultimo = initialWinners[initialWinners.length - 1];
+      setPodium(initialWinners);
+      setWinner(ultimo.number);
+      setDisplay(ultimo.number);
+      setCurrentPrize(ultimo);
+      setPhase("done");
+      return;
+    }
+    if (initialWinner != null) {
       animated.current = true;
       setWinner(initialWinner);
       setDisplay(initialWinner);
       setPhase("done");
-      return;
     }
+  }, [initialStatus, initialWinner, initialWinners]);
+
+  // Espectadores: escuchan el UPDATE de `raffles` y animan lo que quedó en base.
+  useEffect(() => {
+    if (initialStatus === "drawn") return;
 
     const channel = supabase
       .channel(`raffle-live-${raffleId}`)
@@ -111,20 +224,31 @@ export function LiveDrawAnimation({
             status?: string;
             winner_number?: number | null;
           };
+          if (row.status !== "drawn") return;
 
-          if (row.status === "drawn" && typeof row.winner_number === "number") {
-            runAnimation(row.winner_number);
-          }
+          void cargarGanadores().then((lista) => {
+            if (lista.length > 0) runSequence(lista);
+            else if (typeof row.winner_number === "number") {
+              runSingle(row.winner_number);
+            }
+          });
         },
       )
       .subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
-      timers.current.forEach(clearTimeout);
-      timers.current = [];
+      limpiarTimers();
     };
-  }, [raffleId, initialStatus, initialWinner, runAnimation, supabase]);
+  }, [
+    raffleId,
+    initialStatus,
+    cargarGanadores,
+    runSequence,
+    runSingle,
+    supabase,
+    limpiarTimers,
+  ]);
 
   async function startDraw() {
     setBusy(true);
@@ -145,24 +269,36 @@ export function LiveDrawAnimation({
     const row = (Array.isArray(data) ? data[0] : data) as
       | { winning_number?: number }
       | null;
-    const number = Number(row?.winning_number ?? 0);
 
+    const lista = await cargarGanadores();
+    if (lista.length > 0) {
+      runSequence(lista);
+      return;
+    }
+
+    const number = Number(row?.winning_number ?? 0);
     if (!number) {
       setError("El sorteo se ejecutó pero no se pudo leer el ganador.");
       return;
     }
-
-    runAnimation(number);
+    runSingle(number);
   }
 
   const numberLabel =
     display != null ? String(display).padStart(4, "0") : "----";
+  const enJuego = currentPrize
+    ? currentPrize.prizeTitle ?? `Premio ${currentPrize.position}`
+    : null;
 
   return (
     <div className="space-y-5">
       <div className="relative overflow-hidden rounded-xl border border-hairline bg-panel-1 p-8 text-center">
         <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-accent">
-          {phase === "done" ? "Resultado final" : "Sorteo en vivo"}
+          {phase === "done"
+            ? "Resultado final"
+            : enJuego
+              ? `Sorteando · ${enJuego}`
+              : "Sorteo en vivo"}
         </p>
 
         <p
@@ -179,7 +315,8 @@ export function LiveDrawAnimation({
         {phase === "done" && winner != null ? (
           <div className="mt-4 space-y-1">
             <p className="flex items-center justify-center gap-2 text-lg font-semibold">
-              <Trophy className="h-5 w-5 text-brand-accent" /> Número ganador
+              <Trophy className="h-5 w-5 text-brand-accent" />
+              {podium.length > 1 ? "Ganadores confirmados" : "Número ganador"}
             </p>
             <p className="text-[13px] text-fg-subtle">
               {soldCount} números vendidos participaron.
@@ -240,9 +377,42 @@ export function LiveDrawAnimation({
         )}
       </div>
 
+      {podium.length > 0 && (
+        <div className="rounded-xl border border-hairline bg-panel-1/60 p-4">
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-brand-accent">
+            {phase === "done" ? "Podio final" : "Podio en vivo"}
+          </p>
+          <ul className="mt-3 space-y-2">
+            {[...podium]
+              .sort((a, b) => a.position - b.position)
+              .map((ganador) => (
+                <li
+                  key={ganador.position}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-hairline bg-background/60 px-3 py-2"
+                >
+                  <span className="flex items-center gap-2 text-sm">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-accent/15 font-mono text-[11px] font-bold text-brand-accent">
+                      {ganador.position}
+                    </span>
+                    <span className="font-medium">
+                      {ganador.prizeTitle ?? `Premio ${ganador.position}`}
+                    </span>
+                    <span className="text-fg-subtle">
+                      {nombreCorto(ganador.name)}
+                    </span>
+                  </span>
+                  <span className="font-mono text-sm tabular-nums text-fg">
+                    Nº {String(ganador.number).padStart(4, "0")}
+                  </span>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
       <p className="text-center text-xs text-muted-foreground">
-        El número ganador se calcula en la base con la semilla comprometida
-        antes del sorteo. La animación solo lo muestra: no lo elige.
+        Los ganadores se calculan en la base con la semilla comprometida antes
+        del sorteo. La animación solo los muestra: no los elige.
       </p>
     </div>
   );

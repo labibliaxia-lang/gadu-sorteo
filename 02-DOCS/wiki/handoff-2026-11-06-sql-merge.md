@@ -241,6 +241,23 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
 - **Pendiente manual:** backup de la base (hecho el 2026-11-07, archivo `gadu-2026-11-07-0206.dump`);
   prueba completa de referidos en la web (guía paso a paso: `02-DOCS/wiki/guia-e2e-referidos.md`). No hay verificador escrito para 0115.
 
+## Roadmap Live TV / Resultados — estado
+
+- **Fase 1 (Live TV multipremio): HECHA.** `LiveDrawAnimation` recibe `initialWinners` desde
+  `raffle_winners` (posición, número, nombre, premio), anima en secuencia (ruleta ~2 s, revela,
+  pausa 2 s, siguiente) y llena un **podio en vivo** que pasa a «Podio final». Nombres recortados
+  (nombre + inicial). Los espectadores siguen recibiendo el UPDATE de `raffles` por Realtime y el
+  componente busca `raffle_winners` al detectar `drawn`; el botón de sortear sigue siendo solo del
+  dueño. Probado en navegador con el modo **solo desarrollo** `?demo=1` (3 premios ficticios):
+  secuencia y podio correctos, sin tocar datos.
+- **Fase 2 (Simulador unificado): PENDIENTE.** `/como-funciona` sigue usando `SandboxDraw`; falta
+  extraer una animación reutilizable con 3 premios falsos sin tocar el sandbox real.
+- **Fase 3 (Página de Resultados): PENDIENTE.** No existe `/sorteos/[slug]/resultados` ni su
+  `opengraph-image.tsx`; el podio final hoy se ve solo en `/en-vivo` y en el muro `/ganadores`.
+- **Deuda menor:** `/en-vivo` toma el título del sorteo desde `raffles.status`; un sorteo
+  multipremio ya sorteado muestra «Sorteo finalizado» correctamente, pero el subtítulo podría
+  detallar «3 premios».
+
 ## Backup
 
 Hecho el 2026-11-06 14:27 y repetido a las 14:46 con `01-TOOLS/backup/backup-db.ps1` (pg_dump 17.6
