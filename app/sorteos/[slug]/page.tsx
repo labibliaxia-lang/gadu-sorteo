@@ -113,9 +113,18 @@ export async function generateMetadata({
     ? `¡${nombreCorto} ganó ${raffle.title} en Gadu Sorteos!`
     : `${raffle.title} | Gadu Sorteos`;
 
-  const images = raffle.cover_image_url
-    ? [{ url: raffle.cover_image_url as string }]
-    : undefined;
+  const images = dibujado
+    ? [
+        {
+          url: `/sorteos/${params.slug}/opengraph-image`,
+          width: 1200,
+          height: 630,
+          alt: `Ganador del sorteo ${raffle.title}`,
+        },
+      ]
+    : raffle.cover_image_url
+      ? [{ url: raffle.cover_image_url as string }]
+      : undefined;
 
   return {
     title,

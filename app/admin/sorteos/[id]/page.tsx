@@ -29,6 +29,7 @@ import { PublishCommitmentButton } from "@/components/PublishCommitmentButton";
 import { RaffleDeleteButton } from "@/components/RaffleDeleteButton";
 import { RefundRow } from "@/components/admin/RefundRow";
 import { CopyTextButton } from "@/components/CopyTextButton";
+import { DownloadWinnerCard } from "@/components/DownloadWinnerCard";
 import { NotifyWinnerButton } from "@/components/admin/NotifyWinnerButton";
 import { RaffleCloneButton } from "@/components/RaffleCloneButton";
 import { ReservedNumbersPanel } from "@/components/ReservedNumbersPanel";
@@ -418,8 +419,13 @@ export default async function AdminRaffleDetailPage({
                 <p className="text-lg font-bold">
                   🎉 {raffle.winner_name ?? "Anónimo"} — Nº {raffle.winner_number}
                 </p>
-                <div className="mt-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   <NotifyWinnerButton raffleId={raffle.id} />
+                  <DownloadWinnerCard
+                    title={raffle.title}
+                    winnerName={raffle.winner_name ?? null}
+                    winnerNumber={Number(raffle.winner_number)}
+                  />
                 </div>
               </>
             ) : (
