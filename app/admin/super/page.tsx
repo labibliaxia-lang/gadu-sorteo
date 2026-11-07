@@ -680,10 +680,64 @@ function KpiCard({
    Página
    ===================================================================== */
 
+type SuperAdminSearchParams = Record<string, string | string[] | undefined>;
+
+/**
+ * `redirect()` y `notFound()` no son fallos: Next los implementa lanzando un
+ * error con un `digest` interno. Si el try/catch los traga, el redirect deja
+ * de funcionar y el panel queda en blanco. Se re-lanzan tal cual.
+ */
+function esErrorDeControl(error: unknown): boolean {
+  const digest = (error as { digest?: unknown } | null)?.digest;
+  return (
+    typeof digest === "string" &&
+    (digest.startsWith("NEXT_REDIRECT") ||
+      digest.startsWith("NEXT_NOT_FOUND") ||
+      digest.startsWith("NEXT_HTTP_ERROR_FALLBACK"))
+  );
+}
+
+/** Fallback del panel cuando una consulta del servidor falla de forma inesperada. */
+function SuperAdminFallback() {
+  return (
+    <div className="mx-auto max-w-xl py-16" role="alert">
+      <Card>
+        <CardHeader>
+          <CardTitle>No pudimos cargar el panel</CardTitle>
+          <CardDescription>
+            Falló una consulta al cargar esta sección. El resto de la app sigue
+            funcionando: volvé a intentar en unos segundos.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/admin/super" className={buttonVariants()}>
+            Reintentar
+          </Link>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default async function SuperAdminPage({
   searchParams,
 }: {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: SuperAdminSearchParams;
+}) {
+  try {
+    return await SuperAdminPanel({ searchParams });
+  } catch (error) {
+    // Un redirect/404 tiene que seguir su curso; sólo atrapamos fallas reales.
+    if (esErrorDeControl(error)) throw error;
+    console.error("[admin/super] no se pudo cargar el panel", error);
+    return <SuperAdminFallback />;
+  }
+}
+
+async function SuperAdminPanel({
+  searchParams,
+}: {
+  searchParams: SuperAdminSearchParams;
 }) {
   const supabase = createClient();
 

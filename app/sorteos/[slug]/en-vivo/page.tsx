@@ -37,23 +37,40 @@ export default async function LiveDrawPage({
   // 0115: la ruta acepta slug o UUID viejo. Sin esto, `/sorteos/<slug>/en-vivo`
   // respondía 404 porque buscaba el slug en la columna `id`.
   const parametro = params.slug.trim();
+  if (!parametro) notFound();
+
   const columna = resolverColumna(parametro);
-  let { data: raffle } = await supabase
+  let { data: raffle, error: raffleError } = await supabase
     .from("raffles")
     .select("*")
     .eq(columna, parametro)
     .maybeSingle();
 
   if (!raffle && columna === "slug") {
-    const { data: porId } = await supabase
+    const { data: porId, error: porIdError } = await supabase
       .from("raffles")
       .select("*")
       .eq("id", parametro)
       .maybeSingle();
     raffle = porId;
+    raffleError = porIdError;
   }
 
-  if (!raffle) notFound();
+  // No hay sorteo: 404, no una sala en vivo vacía. Si además hubo un error de
+  // lectura, es una falla real y tiene que verse, no confundirse con un 404.
+  if (!raffle) {
+    if (raffleError) {
+      throw new Error(
+        `No se pudo cargar el sorteo en vivo: ${raffleError.message}`,
+      );
+    }
+    notFound();
+  }
+
+  // La sala sólo tiene sentido para un sorteo que se puede sortear o que ya
+  // se sorteó. Un sorteo cancelado o pausado no va a producir un resultado:
+  // 404 en vez de una animación que nunca arranca.
+  if (!["active", "closed", "drawn"].includes(raffle.status)) notFound();
 
   // De acá para abajo todo va por id; los enlaces conservan la forma pública.
   const raffleId = raffle.id;
