@@ -29,7 +29,14 @@ declare
   v_owner uuid;
 begin
   select id into v_owner from public.profiles
-   where role in ('admin', 'superadmin') order by created_at limit 1;
+   where role = 'admin' order by created_at limit 1;
+
+  -- Si solo hay superadmins, los guards premium no aplican (is_superadmin
+  -- los saltea): se usa igual para el resto de las pruebas, pero 4 y 5 avisan.
+  if v_owner is null then
+    select id into v_owner from public.profiles
+     where role = 'superadmin' order by created_at limit 1;
+  end if;
 
   if v_owner is null then
     perform pg_temp.anota('1 AVISO    hace falta un organizador');
@@ -37,6 +44,8 @@ begin
   end if;
 
   perform set_config('test.v107.owner', v_owner::text, true);
+  perform set_config('test.v107.ownerrole',
+    (select role from public.profiles where id = v_owner), true);
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
 end $$;
@@ -191,7 +200,7 @@ begin
   begin
     insert into public.raffles (title, draw_date, price_per_number, status,
                                 created_by, currency)
-    values ('v107 usd', now() + interval '5 days', 100, 'closed', v_owner, 'USD');
+    values ('v107 btc', now() + interval '5 days', 100, 'closed', v_owner, 'BTC');
   exception when others then
     v_mal := true;
   end;
@@ -206,7 +215,7 @@ begin
   end;
 
   perform pg_temp.anota('6 ' || case when v_mal and v_ok
-    then 'OK       moneda: USD rechazado, MXN aceptado'
+    then 'OK       moneda: BTC rechazado, MXN aceptado'
     else 'CRÍTICO  mal=' || v_mal || ' ok=' || v_ok end);
 end $$;
 
@@ -236,6 +245,8 @@ do $$
 declare
   v_owner uuid := nullif(current_setting('test.v107.owner', true), '')::uuid;
   v_pausados int;
+  v_activos int;
+  v_limite int;
   v_plan text;
 begin
   if v_owner is null then return; end if;
@@ -252,12 +263,22 @@ begin
   perform public.expire_plans();
 
   select plan into v_plan from public.profiles where id = v_owner;
-  select count(*) into v_pausados from public.raffles
-   where created_by = v_owner and status = 'paused';
+  v_limite := public.plan_max_active_raffles('organizador');
 
-  perform pg_temp.anota('8 ' || case when v_plan = 'organizador' and v_pausados = 1
-    then 'OK       downgrade a Starter y 1 sorteo excedido pausado'
-    else 'CRÍTICO  plan=' || coalesce(v_plan, 'null') || ' pausados=' || v_pausados end);
+  -- Se cuenta solo lo que creó esta prueba: la base real puede tener sorteos
+  -- activos del mismo usuario y descolocar el conteo global.
+  select count(*) into v_pausados from public.raffles
+   where created_by = v_owner and status = 'paused'
+     and title like 'v107 downgrade %';
+  select count(*) into v_activos from public.raffles
+   where created_by = v_owner and status = 'active';
+
+  perform pg_temp.anota('8 ' || case
+    when v_plan = 'organizador' and v_pausados >= 1 and v_activos <= v_limite
+      then 'OK       downgrade a Starter; excedentes pausados y activos <= ' || v_limite
+    else 'CRÍTICO  plan=' || coalesce(v_plan, 'null')
+         || ' pausados_nuevos=' || v_pausados
+         || ' activos=' || v_activos || ' limite=' || v_limite end);
 end $$;
 
 -- 9) Ledger
