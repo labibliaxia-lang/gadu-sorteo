@@ -360,13 +360,22 @@ export function LiveDrawAnimation({
           )}
 
           {phase === "done" && (
-            <Link
-              href={`/sorteos/${raffleId}/verificar`}
-              className={buttonVariants({ variant: "secondary" })}
-            >
-              Ver verificación y certificado
-              <ExternalLink className="ml-2 h-4 w-4" />
-            </Link>
+            <>
+              <Link
+                href={`/sorteos/${raffleId}/resultados`}
+                className={buttonVariants({ variant: "default" })}
+              >
+                <Trophy className="mr-2 h-4 w-4" />
+                Ver Resultados Oficiales
+              </Link>
+              <Link
+                href={`/sorteos/${raffleId}/verificar`}
+                className={buttonVariants({ variant: "secondary" })}
+              >
+                Ver verificación y certificado
+                <ExternalLink className="ml-2 h-4 w-4" />
+              </Link>
+            </>
           )}
         </div>
 
