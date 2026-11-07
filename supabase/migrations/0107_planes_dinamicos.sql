@@ -357,7 +357,10 @@ begin
         raise exception 'Invitá y ganá no está incluido en tu plan';
       end if;
 
+      -- La columna tiene default vacío (`[]`/`{}`), no NULL: sin este filtro
+      -- cualquier sorteo parecía tener landing y se bloqueaba solo.
       if new.landing_content is not null
+         and new.landing_content not in ('[]'::jsonb, '{}'::jsonb)
          and not coalesce(v_cfg.allow_landing, false)
          and (tg_op = 'INSERT' or new.landing_content is distinct from old.landing_content) then
         raise exception 'La landing promocional no está incluida en tu plan';
