@@ -45,6 +45,7 @@ const schema = z.object({
     .min(10, "Mínimo 10 números")
     .max(10000, "Máximo 10.000 números"),
   payment_type: z.enum(["mercadopago", "transferencia"]),
+  currency: z.enum(["ARS", "MXN", "COP", "CLP", "USD"]),
   min_tickets_required: z.coerce
     .number()
     .int("El mínimo debe ser un número entero")
@@ -142,6 +143,7 @@ export default function NuevoSorteoPage() {
     defaultValues: {
       max_numbers: 100,
       payment_type: "transferencia",
+      currency: "ARS",
       min_tickets_required: 0,
       if_not_met: "extend_date",
       winners_count: 1,
@@ -151,6 +153,7 @@ export default function NuevoSorteoPage() {
 
   const title = watch("title");
   const price = watch("price_per_number");
+  const currency = watch("currency");
   const drawDate = watch("draw_date");
   const maxNumbers = watch("max_numbers");
   const paymentType = watch("payment_type");
@@ -397,6 +400,7 @@ export default function NuevoSorteoPage() {
         cover_image_url: coverUrl,
         created_by: user.id,
         payment_type: values.payment_type,
+        currency: values.currency,
         transfer_alias: values.transfer_alias || null,
         transfer_cbu: values.transfer_cbu || null,
         transfer_bank: values.transfer_bank || null,
@@ -611,6 +615,24 @@ export default function NuevoSorteoPage() {
             </div>
 
             <div className="space-y-2">
+              <div className="space-y-2">
+                <Label htmlFor="currency">Moneda</Label>
+                <select
+                  id="currency"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  {...register("currency")}
+                >
+                  <option value="ARS">ARS · Peso argentino</option>
+                  <option value="MXN">MXN · Peso mexicano</option>
+                  <option value="COP">COP · Peso colombiano</option>
+                  <option value="CLP">CLP · Peso chileno</option>
+                  <option value="USD">USD · Dólar</option>
+                </select>
+                <p className="text-[11px] text-muted-foreground">
+                  El precio y los totales se muestran en esta moneda.
+                </p>
+              </div>
+
               <Label htmlFor="max_numbers">Cantidad de números</Label>
               <div className="relative">
                 <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

@@ -6,7 +6,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { AlertTriangle, Clock, MessageCircle } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn, formatPriceIn } from "@/lib/utils";
 import {
   locateNumber as findNumberLocation,
   normalizeJumpInput,
@@ -100,6 +100,8 @@ interface NumbersGridProps {  raffleId: string;
     note?: string | null;
   };
   raffleTitle?: string;
+  /** 0107/0108: moneda del sorteo. */
+  currency?: "ARS" | "MXN" | "COP" | "CLP" | "USD";
   /** 0106: quien mira es el organizador dueño; no puede comprar acá. */
   esDueno?: boolean;
 }
@@ -112,6 +114,7 @@ export function NumbersGrid({
   paymentType = "mercadopago",
   transferInfo,
   raffleTitle,
+  currency = "ARS",
   esDueno = false,
 }: NumbersGridProps) {
   const supabase = useMemo(() => createClient(), []);
@@ -430,7 +433,7 @@ export function NumbersGrid({
     const numbersText = sorted.length > 0 ? sorted.join(", ") : "a confirmar";
     const msg = `Hola! Quiero participar en "${
       raffleTitle ?? "el sorteo"
-    }" con los números: ${numbersText}. Total: ${formatPrice(total)}`;
+    }" con los números: ${numbersText}. Total: ${formatPriceIn(total, currency)}`;
     return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
   }
 
@@ -749,7 +752,7 @@ export function NumbersGrid({
             </span>{" "}
             · Total:{" "}
             <span className="font-semibold text-foreground">
-              {formatPrice(totalPrice)}
+              {formatPriceIn(totalPrice, currency)}
             </span>
           </span>
           {selected.size > 0 && deadline !== null && (
@@ -1056,7 +1059,7 @@ export function NumbersGrid({
                 {selected.size} número{selected.size === 1 ? "" : "s"}
               </p>
               <p className="text-xs text-muted-foreground">
-                {formatPrice(totalPrice)}
+                {formatPriceIn(totalPrice, currency)}
                 {deadline !== null && remaining > 0
                   ? ` · elegí en ${formatCountdown(remaining)}`
                   : ""}
@@ -1158,7 +1161,7 @@ export function NumbersGrid({
             <p className="mt-4 text-sm">
               Total a pagar:{" "}
               <span className="text-lg font-bold">
-                {formatPrice(summary.total)}
+                {formatPriceIn(summary.total, currency)}
               </span>
             </p>
             <p className="mt-1 text-xs text-muted-foreground">

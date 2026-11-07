@@ -37,7 +37,7 @@ import { RaffleQnA } from "@/components/RaffleQnA";
 import { RaffleVisitTracker } from "@/components/RaffleVisitTracker";
 import { ReportRaffleButton } from "@/components/ReportRaffleButton";
 import { ShareButton } from "@/components/ShareButton";
-import { formatDateTime, formatNumber, formatPrice } from "@/lib/utils";
+import { formatDateTime, formatNumber, formatPrice, formatPriceIn } from "@/lib/utils";
 import { calcularConfianza } from "@/lib/confianza";
 import { cargarSenalesConfianza } from "@/lib/confianza-senales";
 import type { Prize, PublicOrganizer, Raffle, RaffleWinner } from "@/lib/types";
@@ -65,7 +65,7 @@ export async function generateMetadata({
   const { data: raffle } = await supabase
     .from("raffles")
     .select(
-      "title, description, cover_image_url, draw_date, price_per_number",
+      "title, description, cover_image_url, draw_date, price_per_number, currency",
     )
     .eq("id", params.id)
     .maybeSingle();
@@ -469,7 +469,7 @@ export default async function RafflePage({
                 Precio por número
               </span>
               <span className="font-mono text-xl text-fg">
-                {formatPrice(Number(raffle.price_per_number))}
+                {formatPriceIn(Number(raffle.price_per_number), raffle.currency ?? "ARS")}
               </span>
             </span>
           </div>
@@ -920,6 +920,7 @@ export default async function RafflePage({
             raffleId={raffle.id}
             raffleTitle={raffle.title}
             pricePerNumber={Number(raffle.price_per_number)}
+            currency={raffle.currency ?? "ARS"}
             raffleStatus={raffle.status}
             isDev={isDev}
             paymentType={raffle.payment_type}
