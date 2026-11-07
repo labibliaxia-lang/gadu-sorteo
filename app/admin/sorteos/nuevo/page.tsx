@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PremiumGate } from "@/components/admin/PremiumGate";
 import { getPlanContext } from "@/lib/plans";
+import { generarBasesLegales } from "@/lib/raffle-terms";
 import { datosPersonalesCompletos } from "@/lib/kyc";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 
@@ -127,6 +128,9 @@ export default function NuevoSorteoPage() {
   const [checkingVerification, setCheckingVerification] = useState(true);
   const [plan, setPlan] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [organizerName, setOrganizerName] = useState("");
+  const [organizerDoc, setOrganizerDoc] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [activeRafflesCount, setActiveRafflesCount] = useState<number | null>(
     null,
   );
@@ -190,6 +194,8 @@ export default function NuevoSorteoPage() {
         const ctx = getPlanContext({ plan: userPlan, role: userRole });
 
         setVerificationStatus(data?.verification_status ?? "pending");
+        setOrganizerName((data?.full_name as string | null) ?? "");
+        setOrganizerDoc((data?.dni_number as string | null) ?? "");
         // Misma regla que el trigger `enforce_organizer_kyc` (0060). Antes acá
         // se pedían 4 campos y la base 9: el organizador completaba los tres
         // pasos y recibía «KYC incompleto» recién al crear.
@@ -321,6 +327,28 @@ export default function NuevoSorteoPage() {
     setLoading(true);
     setError(null);
 
+    // 0113: las bases legales son obligatorias para publicar.
+    if (!termsAccepted) {
+      setError(
+        "Tenés que aceptar y publicar las bases legales del sorteo para crearlo.",
+      );
+      setLoading(false);
+      return;
+    }
+
+    const basesLegales = generarBasesLegales({
+      organizerName,
+      organizerDoc,
+      raffleTitle: values.title,
+      drawDateLabel: formatDateTime(new Date(values.draw_date)),
+      priceLabel: `${values.price_per_number} ${values.currency}`,
+      numbersCount: values.max_numbers,
+      transferAlias: values.transfer_alias,
+      transferCbu: values.transfer_cbu,
+      transferBank: values.transfer_bank,
+      whatsapp: values.whatsapp_contact,
+    });
+
     // Validación dinámica por plan (la base de datos también lo enforce).
     if (!planContext.isSuperadmin) {
       if (reachedActiveLimit) {
@@ -410,6 +438,8 @@ export default function NuevoSorteoPage() {
         min_tickets_required: values.min_tickets_required,
         if_not_met: values.if_not_met,
         winners_count: values.winners_count,
+        terms_accepted_by_organizer: true,
+        player_terms_text: basesLegales,
       })
       .select()
       .single();
@@ -943,6 +973,47 @@ export default function NuevoSorteoPage() {
                 Al crear se generan los números automáticamente. Los premios y
                 el compromiso del sorteo se cargan después.
               </p>
+            </div>
+
+            {/* 0113: bases legales obligatorias para publicar. */}
+            <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
+              <div>
+                <p className="font-semibold">
+                  Términos y Condiciones del sorteo
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Se generan con tu nombre y DNI/CUIT del KYC. El jugador deberá
+                  aceptarlos antes de reservar números.
+                </p>
+              </div>
+
+              <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg border bg-background p-3 text-[11px] leading-relaxed text-muted-foreground">
+{generarBasesLegales({
+  organizerName,
+  organizerDoc,
+  raffleTitle: title,
+  drawDateLabel: drawDate ? formatDateTime(drawDate) : "a definir",
+  priceLabel: `${price || 0} ${currency || "ARS"}`,
+  numbersCount: Number(maxNumbers) || null,
+  transferAlias,
+  transferCbu: watch("transfer_cbu"),
+  transferBank: watch("transfer_bank"),
+  whatsapp: whatsappContact,
+})}
+              </pre>
+
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 accent-amber-600"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                />
+                <span className="font-medium">
+                  Acepto publicar estos términos como bases legales de mi
+                  sorteo
+                </span>
+              </label>
             </div>
 
             {/* 0079: visible u oculto de los listados. No es privacidad: el

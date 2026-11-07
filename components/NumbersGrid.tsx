@@ -102,6 +102,8 @@ interface NumbersGridProps {  raffleId: string;
   raffleTitle?: string;
   /** 0107/0108: moneda del sorteo. */
   currency?: "ARS" | "MXN" | "COP" | "CLP" | "USD";
+  /** 0113: bases legales que el jugador debe aceptar antes de reservar. */
+  playerTerms?: string | null;
   /** 0106: quien mira es el organizador dueño; no puede comprar acá. */
   esDueno?: boolean;
 }
@@ -115,6 +117,7 @@ export function NumbersGrid({
   transferInfo,
   raffleTitle,
   currency = "ARS",
+  playerTerms = null,
   esDueno = false,
 }: NumbersGridProps) {
   const supabase = useMemo(() => createClient(), []);
@@ -130,6 +133,10 @@ export function NumbersGrid({
   // tiene privilegio sobre reserved_by/sold_to (migración 0080).
   const [authReady, setAuthReady] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [termsOk, setTermsOk] = useState(false);
+  const termsOkRef = useRef(false);
+  const pendingRef = useRef<null | "reserve" | "checkout">(null);
   const [error, setError] = useState<string | null>(null);
   const [deadline, setDeadline] = useState<number | null>(null);
   const [remaining, setRemaining] = useState(0);
@@ -447,6 +454,13 @@ export function NumbersGrid({
    * organizador a mano desde el panel.
    */
   async function handleReservePrepaid() {
+    // 0113: sin aceptar las bases legales no se puede reservar.
+    if (playerTerms && !termsOkRef.current) {
+      pendingRef.current = "reserve";
+      setTermsOk(false);
+      setShowTerms(true);
+      return;
+    }
     if (!userId) {
       window.location.href = loginHref;
       return;
@@ -546,6 +560,13 @@ export function NumbersGrid({
   }
 
   async function handleCheckout() {
+    // 0113: mismo requisito para Mercado Pago.
+    if (playerTerms && !termsOkRef.current) {
+      pendingRef.current = "checkout";
+      setTermsOk(false);
+      setShowTerms(true);
+      return;
+    }
     if (!userId) {
       window.location.href = loginHref;
       return;
@@ -1269,6 +1290,68 @@ export function NumbersGrid({
             >
               Ahora no
             </Button>
+          </div>
+        </div>
+      )}
+
+      {showTerms && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onClick={() => setShowTerms(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="terms-title"
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-background p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="terms-title" className="text-lg font-semibold">
+              Términos y Condiciones del sorteo
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Para reservar números tenés que aceptar estas bases legales.
+            </p>
+
+            <pre className="mt-3 max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg border bg-muted/30 p-3 text-[11px] leading-relaxed text-muted-foreground">
+{playerTerms ?? "El organizador no cargó bases legales para este sorteo."}
+            </pre>
+
+            <label className="mt-3 flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 accent-amber-600"
+                checked={termsOk}
+                onChange={(e) => setTermsOk(e.target.checked)}
+              />
+              <span>
+                He leído y acepto los Términos y Condiciones de este sorteo
+              </span>
+            </label>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                className="flex-1"
+                disabled={!termsOk}
+                onClick={() => {
+                  termsOkRef.current = true;
+                  setShowTerms(false);
+                  setTermsOk(true);
+                  const accion = pendingRef.current;
+                  pendingRef.current = null;
+                  if (accion === "reserve") void handleReservePrepaid();
+                  else if (accion === "checkout") void handleCheckout();
+                }}
+              >
+                Aceptar y continuar
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowTerms(false)}
+              >
+                Cancelar
+              </Button>
+            </div>
           </div>
         </div>
       )}

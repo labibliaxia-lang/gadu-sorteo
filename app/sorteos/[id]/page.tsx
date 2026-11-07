@@ -65,7 +65,7 @@ export async function generateMetadata({
   const { data: raffle } = await supabase
     .from("raffles")
     .select(
-      "title, description, cover_image_url, draw_date, price_per_number, currency, status, winner_name, winner_number",
+      "title, description, cover_image_url, draw_date, price_per_number, currency, status, winner_name, winner_number, player_terms_text",
     )
     .eq("id", params.id)
     .maybeSingle();
@@ -945,6 +945,7 @@ export default async function RafflePage({
             raffleTitle={raffle.title}
             pricePerNumber={Number(raffle.price_per_number)}
             currency={raffle.currency ?? "ARS"}
+            playerTerms={raffle.player_terms_text ?? null}
             raffleStatus={raffle.status}
             isDev={isDev}
             paymentType={raffle.payment_type}
