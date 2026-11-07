@@ -169,10 +169,9 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
   aprobación manual y KYC.**
 - **Verificado en producción:** la cuenta nueva `hackedigma@gmail.com` entró con `role = user` y
   `plan = free`. El `prosrc` de `handle_new_user` no contiene la palabra `admin`.
-- **Normalización pendiente (la corre el dueño):** `jacintocards@gmail.com` y
-  `auja.costura@gmail.com` tenían `role = 'user'` con `plan = 'organizador'` (plan pago sin permiso
-  para publicar). Se pasan a `free` para que la ficha quede coherente y no infle métricas de
-  facturación. SQL en la sección «Limpieza de datos» de abajo.
+- **Normalización aplicada (2026-11-06):** `jacintocards@gmail.com` y
+  `auja.costura@gmail.com` quedaron con `role = 'user'`, `plan = 'free'` y `plan_expires_at = NULL`.
+  Ficha coherente y sin métricas de facturación falsas.
 - **Invitaciones:** el panel **no tiene** una sección "Invitaciones pendientes". Lo único que queda
   es el botón «Crear organizador» (`createOrganizer`), que envía una invitación y ya no otorga
   privilegios; conviene retirarlo en una próxima pasada para no confundir.
