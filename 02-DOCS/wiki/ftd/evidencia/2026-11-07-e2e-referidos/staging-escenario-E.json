@@ -1,0 +1,35 @@
+{
+  "entorno": "staging",
+  "proyecto": "dolxvoxyespguvixhkku",
+  "base": "http://localhost:3001",
+  "fecha": "2026-11-07T15:18:00.123Z",
+  "migracionAplicada": "0118_referrals_grants.sql",
+  "cuentas": {
+    "organizador": "edf88057-5458-446d-b97e-1d729d2fc638",
+    "invitado": "0d42ca33-a18d-488f-8dc3-7940a84ab3d5",
+    "plan": "premium"
+  },
+  "sorteos": {
+    "principal": "ac3b5eda-ef31-47f5-bdc4-7540d167b724",
+    "bonus": "1ee1de86-fec8-4e8b-b1e5-da286050445e",
+    "slug": "e2e-referidos-principal-a3fd",
+    "bonus_estado": "active"
+  },
+  "circuito": {
+    "captura": "ok (sin 403; 2 x 409 por intento duplicado de ReferralCapture)",
+    "compra": "2 numeros reserved",
+    "aprobacion": "sold + rewarded=true en el mismo paso",
+    "premio": {
+      "numero": 43,
+      "origin": "premio",
+      "status": "sold",
+      "sold_to": "organizador"
+    },
+    "rpc_manual": null,
+    "premio_otorgado_por_la_app": true
+  },
+  "comparacion_produccion": {
+    "antes": "POST /rest/v1/referrals -> 403 42501 permission denied; bonus paused -> reward_referral null",
+    "despues_en_staging": "captura permitida; bonus activo por trigger 0118; approval premia sin intervencion"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "corrida": "Escenario E (reanudado) — staging",
+  "proyecto": "dolxvoxyespguvixhkku",
+  "base": "http://localhost:3001",
+  "fecha": "2026-11-07T16:18:27.022Z",
+  "migracion": "0118_referrals_grants.sql (en ledger)",
+  "cuentas": {
+    "organizador": "811e02a0-0598-4b11-88c5-dd7a8a2c4824",
+    "invitado": "c06d052d-93c3-4bee-89c8-47cd64b53fd3",
+    "plan": "premium"
+  },
+  "sorteos": {
+    "principal": "baef2bcb-1aa8-479d-a23a-c6f6d6a96396",
+    "bonus": "b16ca592-03f9-4efb-9888-b334362e8ae7",
+    "slug": "e2e-referidos-principal-69de",
+    "bonus_estado": "active (por trigger 0118 al elegirlo como bonus)",
+    "config": {
+      "referral_enabled": true,
+      "min": 2,
+      "max": 3
+    }
+  },
+  "compra": {
+    "numeros": [
+      1,
+      2
+    ],
+    "estado": "sold"
+  },
+  "aprobacion": {
+    "premio_otorgado": true,
+    "numero": 1
+  },
+  "premio": {
+    "numero": 1,
+    "origin": "premio",
+    "status": "sold",
+    "sold_to": "organizador",
+    "en_bonus": true,
+    "via_principal": true
+  },
+  "rpc_manual_despues": null,
+  "veredicto": "El premio de referidos SÍ se otorga, automáticamente al aprobar la reserva."
+}

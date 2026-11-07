@@ -67,6 +67,11 @@ const schema = z.object({
   // El campo se llama por lo que la persona marca («no listar»), no por la
   // columna: al revés, una casilla tildada terminaba publicando el sorteo.
   no_listado: z.boolean(),
+  // 0118: «Invitá y Ganá» se configura también al crear (0102/0105).
+  referral_enabled: z.boolean(),
+  referral_min_numbers: z.coerce.number().int().min(1).max(1000),
+  referral_max_per_user: z.coerce.number().int().min(0).max(1000),
+  bonus_raffle_id: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (data.min_tickets_required > data.max_numbers) {
     ctx.addIssue({
@@ -131,6 +136,10 @@ export default function NuevoSorteoPage() {
   const [organizerName, setOrganizerName] = useState("");
   const [organizerDoc, setOrganizerDoc] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  // Candidatos a «sorteo bonus»: sorteos activos del mismo organizador.
+  const [sorteosBonus, setSorteosBonus] = useState<
+    { id: string; title: string }[]
+  >([]);
   const [activeRafflesCount, setActiveRafflesCount] = useState<number | null>(
     null,
   );
@@ -152,6 +161,10 @@ export default function NuevoSorteoPage() {
       if_not_met: "extend_date",
       winners_count: 1,
       no_listado: false,
+      referral_enabled: false,
+      referral_min_numbers: 2,
+      referral_max_per_user: 3,
+      bonus_raffle_id: "",
     },
   });
 
@@ -163,6 +176,7 @@ export default function NuevoSorteoPage() {
   const paymentType = watch("payment_type");
   const transferAlias = watch("transfer_alias");
   const whatsappContact = watch("whatsapp_contact");
+  const referralEnabled = watch("referral_enabled");
 
   useEffect(() => {
     let active = true;
@@ -188,6 +202,14 @@ export default function NuevoSorteoPage() {
         .eq("created_by", user.id)
         .eq("status", "active");
 
+      const { data: candidatos } = await supabase
+        .from("raffles")
+        .select("id, title")
+        .eq("created_by", user.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
       if (active) {
         const userPlan = (data?.plan as string | null) ?? "organizador";
         const userRole = (data?.role as string | null) ?? null;
@@ -203,6 +225,9 @@ export default function NuevoSorteoPage() {
         setPlan(userPlan);
         setRole(userRole);
         setActiveRafflesCount(count ?? 0);
+        setSorteosBonus(
+          (candidatos ?? []) as { id: string; title: string }[],
+        );
 
         // Ajusta los valores por defecto al plan real del organizador.
         setValue(
@@ -1016,6 +1041,91 @@ export default function NuevoSorteoPage() {
               </label>
             </div>
 
+            {/* 0118: «Invitá y Ganá» se configura también al crear; antes sólo
+                existía al editar. El sorteo bonus lista los activos propios. */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Invitá y Ganá (Referidos)
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Cada invitado que compre el mínimo te da un número gratis en el
+                  sorteo bonus.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <label
+                  htmlFor="referral_enabled"
+                  className="flex items-start gap-3 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    id="referral_enabled"
+                    className="mt-0.5 h-4 w-4 accent-amber-600"
+                    {...register("referral_enabled")}
+                  />
+                  <span className="font-medium">
+                    Activar referidos en este sorteo
+                  </span>
+                </label>
+
+                {referralEnabled && (
+                  <>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="referral_min_numbers">
+                          Compra mínima del invitado
+                        </Label>
+                        <Input
+                          id="referral_min_numbers"
+                          type="number"
+                          min={1}
+                          {...register("referral_min_numbers")}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Cuántos números debe comprar tu invitado.
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="referral_max_per_user">
+                          Tope de premios
+                        </Label>
+                        <Input
+                          id="referral_max_per_user"
+                          type="number"
+                          min={0}
+                          {...register("referral_max_per_user")}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          0 = sin tope por referente.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="bonus_raffle_id">Sorteo bonus</Label>
+                      <select
+                        id="bonus_raffle_id"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        {...register("bonus_raffle_id")}
+                      >
+                        <option value="">
+                          Entregar el número en este mismo sorteo
+                        </option>
+                        {sorteosBonus.map((sorteo) => (
+                          <option key={sorteo.id} value={sorteo.id}>
+                            {sorteo.title}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-muted-foreground">
+                        Sólo sorteos activos del mismo organizador.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
             {/* 0079: visible u oculto de los listados. No es privacidad: el
                 enlace sigue funcionando, así se puede probar sin anunciarlo. */}
             <div className="rounded-xl border bg-muted/30 p-4">

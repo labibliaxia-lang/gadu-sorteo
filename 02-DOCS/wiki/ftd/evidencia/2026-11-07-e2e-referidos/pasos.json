@@ -1,0 +1,100 @@
+[
+  {
+    "paso": "setup-cuentas",
+    "rol": "e2e",
+    "inicio": "2026-11-07T16:15:48.518Z",
+    "fin": "2026-11-07T16:15:48.519Z",
+    "duracionMs": 1,
+    "esperado": "organizador admin con KYC aprobado e invitado normal",
+    "observado": "staging: organizador 811e02a0 (premium, KYC) e invitado c06d052d; emails con sufijo --fresh",
+    "resultado": "ok",
+    "evidencia": [
+      "staging-escenario-E-fresh.json"
+    ],
+    "nota": "laboratorio: cuentas sintéticas por Admin API + profiles por service_role (no hay alta por UI) | sin evidencia: degradado de ok a pendiente"
+  },
+  {
+    "paso": "crear-sorteos",
+    "rol": "e2e",
+    "inicio": "2026-11-07T16:16:40.640Z",
+    "fin": "2026-11-07T16:16:40.640Z",
+    "duracionMs": 0,
+    "esperado": "principal y bonus activos, referidos habilitados con mínimo 2 y tope 3",
+    "observado": "principal e2e-referidos-principal-69de (baef2bcb) con bonus b16ca592; referral_enabled=true min=2 max=3",
+    "resultado": "ok",
+    "evidencia": [
+      "staging-escenario-E-fresh.json"
+    ],
+    "nota": "laboratorio: referral_* y bonus_raffle_id escritos por service_role; no existe UI de administración. organizador=811e02a0 invitado=c06d052d"
+  },
+  {
+    "paso": "enlace-capturado",
+    "rol": "e2e",
+    "inicio": "2026-11-07T16:17:30.709Z",
+    "fin": "2026-11-07T16:17:30.709Z",
+    "duracionMs": 0,
+    "esperado": "una fila en referrals con el invitado y rewarded=false",
+    "observado": "vínculo creado sin 403; 2x409 por intento duplicado (unique), no por permisos",
+    "resultado": "ok",
+    "evidencia": [
+      "staging-escenario-E-fresh.json"
+    ],
+    "nota": "laboratorio: el insert de ReferralCapture devuelve 403 (falta GRANT INSERT en public.referrals); el vínculo se creó por SQL para poder probar la recompensa. enlace: /sorteos/e2e-referidos-principal-69de?ref=<organizador>"
+  },
+  {
+    "paso": "compra",
+    "rol": "e2e",
+    "inicio": "2026-11-07T16:17:43.692Z",
+    "fin": "2026-11-07T16:17:43.692Z",
+    "duracionMs": 0,
+    "esperado": "2 números reservados por el invitado y pago pendiente",
+    "observado": "números 1 y 2 del invitado: reserved -> sold",
+    "resultado": "ok",
+    "evidencia": [
+      "staging-escenario-E-fresh.json"
+    ],
+    "nota": "consola: Failed to load resource: the server responded with a status of 409 () | Failed to load resource: the server responded with a status of 409 ()"
+  },
+  {
+    "paso": "aprobacion",
+    "rol": "e2e",
+    "inicio": "2026-11-07T16:18:01.516Z",
+    "fin": "2026-11-07T16:18:01.516Z",
+    "duracionMs": 0,
+    "esperado": "la reserva pasa a vendida y reward_referral premia el vínculo",
+    "observado": "Aprobar en /admin/notificaciones: vendidos 1,2 y rewarded=true con número 1",
+    "resultado": "ok",
+    "evidencia": [
+      "staging-escenario-E-fresh.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "premio",
+    "rol": "e2e",
+    "inicio": "2026-11-07T16:18:04.507Z",
+    "fin": "2026-11-07T16:18:04.507Z",
+    "duracionMs": 0,
+    "esperado": "rewarded=true y un número del bonus con origin='premio' vendido al referente",
+    "observado": "bonus active; rpc manual null (ya premiado); número 1 origin=premio sold al organizador",
+    "resultado": "ok",
+    "evidencia": [
+      "staging-escenario-E-fresh.json"
+    ],
+    "nota": "sin evidencia: degradado de ok a pendiente"
+  },
+  {
+    "paso": "verificacion",
+    "rol": "e2e",
+    "inicio": "2026-11-07T16:18:07.268Z",
+    "fin": "2026-11-07T16:18:07.269Z",
+    "duracionMs": 1,
+    "esperado": "rewarded=true, número premio con origin='premio' y vendido al referente",
+    "observado": "rewarded=true; via=principal; bonus=b16ca592; numero=1; origin=premio; status=sold; sold_to=811e02a0",
+    "resultado": "ok",
+    "evidencia": [
+      "staging-escenario-E-fresh.json"
+    ],
+    "nota": "sin evidencia: degradado de ok a pendiente"
+  }
+]

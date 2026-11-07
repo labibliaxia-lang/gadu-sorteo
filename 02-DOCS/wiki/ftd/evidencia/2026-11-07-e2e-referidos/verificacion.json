@@ -1,0 +1,20 @@
+{
+  "sorteoPrincipal": "b34847fe-e150-40e7-afec-86a8b1671a08",
+  "sorteoBonus": "7a17e4db-9618-4bdf-9a15-05c8483f4f16",
+  "organizador": "48f1c5c8-74e8-40e2-b255-721ea4972904",
+  "invitado": "207be03d-c1f3-4506-8ef6-22f66a4f99f7",
+  "referrals": 1,
+  "premiado": true,
+  "rewardedVerdadero": true,
+  "numeroPremio": 33,
+  "origen": "premio",
+  "estado": "sold",
+  "soldTo": "48f1c5c8-74e8-40e2-b255-721ea4972904",
+  "rewardedViaRaffle": "b34847fe-e150-40e7-afec-86a8b1671a08",
+  "rewardedRaffle": "7a17e4db-9618-4bdf-9a15-05c8483f4f16",
+  "vendidosInvitado": 2,
+  "rpc": {
+    "valorDevuelto": 33,
+    "idempotenteSegundoIntento": null
+  }
+}
