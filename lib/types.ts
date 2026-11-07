@@ -90,7 +90,9 @@ export interface Raffle {
   min_tickets_required: number;
   if_not_met: "extend_date" | "cancel_and_refund";
   winners_count: number;
-  /** "Invitá y ganá" por sorteo (migración 0102). */
+  /** Bases legales (0113). */
+  terms_accepted_by_organizer: boolean;
+  player_terms_text: string | null;
   referral_enabled: boolean;
   referral_min_numbers: number;
   referral_require_buyer_min: number;

@@ -179,6 +179,28 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
   bono en el sorteo exclusivo).
 - **Postergado:** integración de Mercado Pago vía OAuth (Marketplace).
 
+## Cierre del día: PWA, SEO y bases legales
+
+- **PWA (instalable):** `app/manifest.ts` (standalone, colores, íconos 192/512 generados desde el
+  logo), `public/sw.js` (navegación red-primero, estáticos cache-primero; nunca `/api` ni `/auth`),
+  `components/PwaRegister.tsx` (registra solo en producción) y metadatos `apple-*` + `theme-color`.
+  Verificado con `next start`: manifest, sw e íconos responden 200 y el head incluye manifest,
+  theme-color y apple-touch.
+- **SEO de ganadores:** `generateMetadata` del sorteo ahora, si está `drawn`, titula
+  «¡Nombre A. ganó [Título] en Gadu Sorteos!» y describe el número ganador; también en OpenGraph y
+  Twitter. El nombre se recorta (sin apellido completo) y no se exponen email ni teléfono. El Muro
+  `/ganadores` ya existía: solo `drawn`, campos limitados y hash público.
+- **0113 — Bases legales por sorteo:** `raffles.terms_accepted_by_organizer` y
+  `raffles.player_terms_text`. `lib/raffle-terms.ts` genera el texto con nombre y DNI/CUIT del KYC,
+  premio, fecha, precio y datos de pago; se sanea y se renderiza como texto (sin HTML).
+  - **Alta:** sección con vista previa + checkbox obligatorio; sin tildar no se crea.
+  - **Edición:** misma sección con las bases sugeridas; sin tildar no guarda.
+  - **Jugador:** al reservar (prepago o MP) se abre el modal con las bases y el botón de aceptar
+    está deshabilitado hasta tildar. Se exige también en sorteos viejos sin texto (fallback).
+- **Bypass cerrado:** los usuarios ya no pueden autoasignarse planes ni el plan Social; el plan
+  Free es el default de cuentas nuevas (0110) y el alta de organizadores ahora pasa siempre por
+  solicitud + aprobación + KYC (0112).
+
 ## Backup
 
 Hecho el 2026-11-06 14:27 y repetido a las 14:46 con `01-TOOLS/backup/backup-db.ps1` (pg_dump 17.6

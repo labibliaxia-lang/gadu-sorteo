@@ -87,14 +87,19 @@ function toLocalInput(iso: string): string {
 export function EditarSorteoForm({
   raffle,
   sorteosBonus = [],
+  basesSugeridas = "",
 }: {
   raffle: Raffle;
   sorteosBonus?: { id: string; title: string }[];
+  basesSugeridas?: string;
 }) {
   const router = useRouter();
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(
+    raffle.terms_accepted_by_organizer ?? false,
+  );
   const [coverUrl, setCoverUrl] = useState<string | null>(
     raffle.cover_image_url ?? null,
   );
@@ -134,10 +139,20 @@ export function EditarSorteoForm({
     setSaving(true);
     setError(null);
 
+    if (!termsAccepted) {
+      setError(
+        "Tenés que aceptar y publicar las bases legales del sorteo para guardar.",
+      );
+      setSaving(false);
+      return;
+    }
+
     const res = await updateRaffle(raffle.id, {
       ...values,
       cover_image_url: coverUrl,
       bonus_raffle_id: values.bonus_raffle_id ? values.bonus_raffle_id : null,
+      terms_accepted_by_organizer: true,
+      player_terms_text: raffle.player_terms_text || basesSugeridas || null,
     });
 
     if (!res.ok) {
@@ -439,6 +454,33 @@ export function EditarSorteoForm({
             )}
 
             {error && <p className="text-sm text-destructive">{error}</p>}
+
+            <div className="space-y-3 rounded-xl border p-4">
+              <div>
+                <p className="text-sm font-semibold">
+                  Términos y Condiciones del sorteo
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Bases legales que verá el jugador antes de reservar. Se
+                  generan con tus datos de KYC.
+                </p>
+              </div>
+              <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap rounded-lg border bg-muted/30 p-3 text-[11px] leading-relaxed text-muted-foreground">
+{raffle.player_terms_text || basesSugeridas || "Sin bases legales cargadas."}
+              </pre>
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1 h-4 w-4 accent-primary"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                />
+                <span className="font-medium">
+                  Acepto publicar estos términos como bases legales de mi
+                  sorteo
+                </span>
+              </label>
+            </div>
 
             <div className="space-y-3 rounded-xl border p-4">
               <label htmlFor="referral_enabled" className="flex items-start gap-3">

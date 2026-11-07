@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdminSession } from "@/lib/auth";
 import { buttonVariants } from "@/components/ui/button";
+import { generarBasesLegales } from "@/lib/raffle-terms";
 import type { Raffle } from "@/lib/types";
 
 import { EditarSorteoForm } from "./EditarSorteoForm";
@@ -44,6 +45,28 @@ export default async function EditarSorteoPage({
     .order("draw_date", { ascending: true })
     .limit(50);
 
+  // 0113: bases legales sugeridas con los datos de KYC del organizador.
+  const { data: owner } = await supabase
+    .from("profiles")
+    .select("full_name, dni_number")
+    .eq("id", data.created_by as string)
+    .maybeSingle();
+
+  const basesSugeridas = generarBasesLegales({
+    organizerName: (owner?.full_name as string | null) ?? null,
+    organizerDoc: (owner?.dni_number as string | null) ?? null,
+    raffleTitle: data.title as string,
+    drawDateLabel: new Date(data.draw_date as string).toLocaleString("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+    }),
+    priceLabel: `${Number(data.price_per_number)} ${(data.currency as string) ?? "ARS"}`,
+    numbersCount: null,
+    transferAlias: data.transfer_alias as string | null,
+    transferCbu: data.transfer_cbu as string | null,
+    transferBank: data.transfer_bank as string | null,
+    whatsapp: data.whatsapp_contact as string | null,
+  });
+
   return (
     <div className="space-y-4">
       <Link
@@ -55,6 +78,7 @@ export default async function EditarSorteoPage({
       </Link>
       <EditarSorteoForm
         raffle={data as Raffle}
+        basesSugeridas={basesSugeridas}
         sorteosBonus={(candidatos ?? []).map((c) => ({
           id: c.id as string,
           title: c.title as string,

@@ -454,8 +454,9 @@ export function NumbersGrid({
    * organizador a mano desde el panel.
    */
   async function handleReservePrepaid() {
-    // 0113: sin aceptar las bases legales no se puede reservar.
-    if (playerTerms && !termsOkRef.current) {
+    // 0113: sin aceptar las bases legales no se puede reservar. Aplica también
+    // a sorteos viejos sin texto: se muestra el fallback genérico.
+    if (!termsOkRef.current) {
       pendingRef.current = "reserve";
       setTermsOk(false);
       setShowTerms(true);
@@ -560,8 +561,8 @@ export function NumbersGrid({
   }
 
   async function handleCheckout() {
-    // 0113: mismo requisito para Mercado Pago.
-    if (playerTerms && !termsOkRef.current) {
+    // 0113: mismo requisito para Mercado Pago, incluso sin texto cargado.
+    if (!termsOkRef.current) {
       pendingRef.current = "checkout";
       setTermsOk(false);
       setShowTerms(true);

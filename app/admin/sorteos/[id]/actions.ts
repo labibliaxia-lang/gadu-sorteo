@@ -283,6 +283,9 @@ const raffleUpdateSchema = z.object({
   bonus_raffle_id: z
     .union([z.string().uuid("Sorteo inválido"), z.null()])
     .optional(),
+  // 0113: bases legales del sorteo.
+  terms_accepted_by_organizer: z.coerce.boolean().optional(),
+  player_terms_text: z.string().max(8000).nullish(),
 });
 
 export async function deleteRaffle(raffleId: string): Promise<ActionResult> {
@@ -367,6 +370,9 @@ export async function updateRaffle(
     winners_count: number;
     /** 0105: sorteo exclusivo donde se entregan los premios de referidos. */
     bonus_raffle_id?: string | null;
+    /** 0113: bases legales. */
+    terms_accepted_by_organizer?: boolean;
+    player_terms_text?: string | null;
   },
 ): Promise<ActionResult> {
   const ctx = await requireAdminSession();
@@ -430,6 +436,8 @@ export async function updateRaffle(
       referral_require_buyer_min: values.referral_require_buyer_min ?? 0,
       referral_max_per_user: values.referral_max_per_user ?? 0,
       bonus_raffle_id: values.bonus_raffle_id ?? null,
+      terms_accepted_by_organizer: values.terms_accepted_by_organizer ?? false,
+      player_terms_text: values.player_terms_text ?? null,
     })
     .eq("id", id.data);
 
