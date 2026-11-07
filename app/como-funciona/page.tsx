@@ -12,7 +12,7 @@ import {
 
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { SandboxDraw } from "@/components/SandboxDraw";
+import { LiveDrawAnimation } from "@/components/LiveDrawAnimation";
 
 export const metadata: Metadata = {
   title: "Cómo funciona | Gadu Sorteos",
@@ -225,30 +225,28 @@ export default function ComoFuncionaPage() {
         </div>
 
         <p className="mt-4 text-[13px] leading-relaxed text-fg-subtle">
-          Este es un entorno de pruebas educativo. No se juegan premios reales.
-          El objetivo es que veas cómo nuestro motor selecciona un ganador y cómo
-          se genera el código Hash que garantiza la transparencia. Es el mismo
-          simulador del panel de administración: podés ver los resultados,
-          verificar el hash de cada premio y descargar el certificado en PNG con
-          todos los datos.
+          Este es un entorno de pruebas educativo: no se juegan premios reales.
+          Vas a ver la misma animación del sorteo en vivo, con tres premios
+          ficticios. El ganador real lo define la base con la semilla
+          comprometida; acá solo se muestra cómo se revela.
         </p>
 
         <ol className="mt-5 grid gap-3 sm:grid-cols-3">
           {[
             {
               n: "1",
-              title: "Elegí el escenario",
-              text: "Cuántos números (1 a 10.000) y cuántos premios (1 a 50) sortear.",
+              title: "Iniciá la simulación",
+              text: "Un clic y arranca la ruleta, igual que el día del sorteo.",
             },
             {
               n: "2",
-              title: "Publicá el compromiso y sorteá",
-              text: "Primero queda fijo el hash de la semilla; después se ejecuta el sorteo.",
+              title: "Mirá la ruleta y el podio",
+              text: "Cada premio se revela y se suma al podio, en orden.",
             },
             {
               n: "3",
-              title: "Verificá y descargá",
-              text: "Recalculá los hashes en tu navegador y bajá el certificado PNG de cada premio.",
+              title: "¿Cómo se verifica?",
+              text: "Abrí el acordeón de abajo para entender el hash y el certificado.",
             },
           ].map((step) => (
             <li
@@ -268,9 +266,68 @@ export default function ComoFuncionaPage() {
           ))}
         </ol>
 
-        <div className="mt-6 rounded-lg border border-hairline bg-panel-2 p-4 sm:p-5">
-          <SandboxDraw verifyUrl="/como-funciona#demo" />
+        <div className="mt-6 rounded-xl border border-hairline bg-panel-2 p-4 sm:p-6">
+          <LiveDrawAnimation
+            raffleId="demo-como-funciona"
+            initialStatus="active"
+            initialWinner={null}
+            soldCount={240}
+            canDraw={false}
+            hasCommitment
+            sampleNumbers={Array.from({ length: 60 }, (_, i) => i * 7 + 3)}
+            isDemo
+            simulatedWinners={[
+              {
+                position: 1,
+                number: 11,
+                name: "Juan Pérez",
+                prizeTitle: "Amoladora",
+              },
+              {
+                position: 2,
+                number: 42,
+                name: "María Gómez",
+                prizeTitle: "Taladro",
+              },
+              {
+                position: 3,
+                number: 7,
+                name: "Luis Díaz",
+                prizeTitle: "Cinta métrica",
+              },
+            ]}
+          />
         </div>
+
+        <details className="group mt-4 rounded-xl border border-hairline bg-panel-2 p-4">
+          <summary className="cursor-pointer text-sm font-semibold text-fg">
+            ¿Cómo se verifica esto?
+          </summary>
+          <div className="mt-3 space-y-2 text-[13px] leading-relaxed text-fg-subtle">
+            <p>
+              Antes de sortear, el organizador publica el{" "}
+              <strong className="text-fg">compromiso</strong>: el hash de una
+              semilla secreta que todavía no se conoce. Cuando el sorteo termina,
+              se revela la semilla y cualquiera puede recalcular el hash y
+              comprobar que coincide.
+            </p>
+            <p>
+              El resultado se calcula en la base con esa semilla y los números
+              vendidos. La animación que viste no elige al ganador: solo lo
+              muestra.
+            </p>
+            <p>
+              Cada premio tiene su propio hash y su certificado. En un sorteo real
+              podés descargarlo desde la página de verificación del sorteo.
+            </p>
+            <Link
+              href="/ganadores"
+              className="inline-flex text-sm text-brand-800 underline-offset-4 hover:underline dark:text-brand-300"
+            >
+              Ver sorteos ya verificados
+            </Link>
+          </div>
+        </details>
 
         <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-subtle">
           Sin registro · entorno aislado · mismo motor que los sorteos reales

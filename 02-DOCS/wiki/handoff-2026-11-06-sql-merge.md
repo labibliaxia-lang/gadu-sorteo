@@ -250,8 +250,12 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
   componente busca `raffle_winners` al detectar `drawn`; el botón de sortear sigue siendo solo del
   dueño. Probado en navegador con el modo **solo desarrollo** `?demo=1` (3 premios ficticios):
   secuencia y podio correctos, sin tocar datos.
-- **Fase 2 (Simulador unificado): PENDIENTE.** `/como-funciona` sigue usando `SandboxDraw`; falta
-  extraer una animación reutilizable con 3 premios falsos sin tocar el sandbox real.
+- **Fase 2 (Simulador unificado): HECHA.** `/como-funciona` usa `LiveDrawAnimation` en modo
+  `isDemo` con 3 premios ficticios (Amoladora/Juan P., Taladro/María G., Cinta métrica/Luis D.),
+  botón **Iniciar Simulación**, podio secuencial y **Repetir simulación**. Sin peticiones a Supabase:
+  el efecto de Realtime se saltea con `isDemo`. La explicación de hash/certificado quedó en un
+  acordeón **¿Cómo se verifica esto?** debajo de la animación. `SandboxDraw` ya no se usa en esa
+  página.
 - **Fase 3 (Página de Resultados): HECHA.** `/sorteos/[slug]/resultados` pública con podio (foto
   del premio, nombre recortado, número), compatible con sorteos de un ganador; botón
   **Compartir Resultados** (Web Share API con fallback a copiar enlace) y `opengraph-image.tsx`

@@ -28,6 +28,9 @@ interface LiveDrawAnimationProps {
   sampleNumbers: number[];
   /** Solo desarrollo: dispara una secuencia falsa de 3 premios. */
   demoWinners?: LiveWinner[];
+  /** Simulador público: no toca Supabase y espera un clic para arrancar. */
+  isDemo?: boolean;
+  simulatedWinners?: LiveWinner[];
 }
 
 type Phase = "idle" | "spinning" | "done";
@@ -57,6 +60,8 @@ export function LiveDrawAnimation({
   hasCommitment,
   sampleNumbers,
   demoWinners = [],
+  isDemo = false,
+  simulatedWinners = [],
 }: LiveDrawAnimationProps) {
   const supabase = useRef(createClient()).current;
   const animated = useRef(false);
@@ -184,6 +189,9 @@ export function LiveDrawAnimation({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [demoWinners.length]);
 
+  // Simulador público: sin Realtime ni consultas. Se dispara con el botón.
+  // (El modo `demoWinners` de /en-vivo sigue auto-arrancando en desarrollo.)
+
   // Estado inicial ya sorteado: mostrar el resultado sin repetir la animación.
   useEffect(() => {
     if (initialStatus !== "drawn") return;
@@ -207,6 +215,7 @@ export function LiveDrawAnimation({
 
   // Espectadores: escuchan el UPDATE de `raffles` y animan lo que quedó en base.
   useEffect(() => {
+    if (isDemo) return;
     if (initialStatus === "drawn") return;
 
     const channel = supabase
@@ -243,12 +252,24 @@ export function LiveDrawAnimation({
   }, [
     raffleId,
     initialStatus,
+    isDemo,
     cargarGanadores,
     runSequence,
     runSingle,
     supabase,
     limpiarTimers,
   ]);
+
+  function reiniciarDemo() {
+    animated.current = false;
+    limpiarTimers();
+    setPodium([]);
+    setWinner(null);
+    setDisplay(null);
+    setCurrentPrize(null);
+    setPhase("idle");
+    timers.current.push(setTimeout(() => runSequence(simulatedWinners), 250));
+  }
 
   async function startDraw() {
     setBusy(true);
@@ -334,7 +355,20 @@ export function LiveDrawAnimation({
         )}
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-          {phase === "idle" && canDraw && hasCommitment && soldCount > 0 && (
+          {isDemo && phase === "idle" && (
+            <Button
+              size="lg"
+              onClick={() => {
+                animated.current = false;
+                runSequence(simulatedWinners);
+              }}
+            >
+              <Play className="mr-2 h-5 w-5" />
+              Iniciar Simulación
+            </Button>
+          )}
+
+          {!isDemo && phase === "idle" && canDraw && hasCommitment && soldCount > 0 && (
             <Button size="lg" onClick={() => void startDraw()} disabled={busy}>
               <Play className="mr-2 h-5 w-5" />
               {busy ? "Iniciando…" : "Iniciar sorteo"}
@@ -353,30 +387,36 @@ export function LiveDrawAnimation({
             </p>
           )}
 
-          {phase === "idle" && !canDraw && (
+          {!isDemo && phase === "idle" && !canDraw && (
             <p className="text-[13px] text-fg-subtle">
               Esperando que el organizador inicie el sorteo.
             </p>
           )}
 
-          {phase === "done" && (
-            <>
-              <Link
-                href={`/sorteos/${raffleId}/resultados`}
-                className={buttonVariants({ variant: "default" })}
-              >
-                <Trophy className="mr-2 h-4 w-4" />
-                Ver Resultados Oficiales
-              </Link>
-              <Link
-                href={`/sorteos/${raffleId}/verificar`}
-                className={buttonVariants({ variant: "secondary" })}
-              >
-                Ver verificación y certificado
-                <ExternalLink className="ml-2 h-4 w-4" />
-              </Link>
-            </>
-          )}
+          {phase === "done" &&
+            (isDemo ? (
+              <Button variant="secondary" size="lg" onClick={reiniciarDemo}>
+                <Play className="mr-2 h-4 w-4" />
+                Repetir simulación
+              </Button>
+            ) : (
+              <>
+                <Link
+                  href={`/sorteos/${raffleId}/resultados`}
+                  className={buttonVariants({ variant: "default" })}
+                >
+                  <Trophy className="mr-2 h-4 w-4" />
+                  Ver Resultados Oficiales
+                </Link>
+                <Link
+                  href={`/sorteos/${raffleId}/verificar`}
+                  className={buttonVariants({ variant: "secondary" })}
+                >
+                  Ver verificación y certificado
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </Link>
+              </>
+            ))}
         </div>
 
         {error && (
