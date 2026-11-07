@@ -21,6 +21,9 @@ export function RequestAdminButton() {
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [realName, setRealName] = useState("");
+  const [tools, setTools] = useState("");
+  const [social, setSocial] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -37,7 +40,7 @@ export function RequestAdminButton() {
 
       const { data } = await supabase
         .from("profiles")
-        .select("role, admin_request_status, phone")
+        .select("role, admin_request_status, phone, full_name, request_tools, request_social")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -45,6 +48,9 @@ export function RequestAdminButton() {
         setIsAdmin(data?.role === "admin" || data?.role === "superadmin");
         setStatus(data?.admin_request_status ?? "none");
         setPhone(data?.phone ?? "");
+        setRealName(data?.full_name ?? "");
+        setTools(data?.request_tools ?? "");
+        setSocial(data?.request_social ?? "");
         setLoading(false);
       }
     }
@@ -71,7 +77,10 @@ export function RequestAdminButton() {
     const { error: updateError } = await supabase
       .from("profiles")
       .update({
+        full_name: realName.trim() || null,
         phone: phone || null,
+        request_tools: tools.trim() || null,
+        request_social: social.trim() || null,
         request_message: message || null,
         role_requested: true,
         role_request_status: "pending",
@@ -119,7 +128,7 @@ export function RequestAdminButton() {
       <div className="space-y-1">
         <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
           <ShieldCheck className="mr-1.5 h-4 w-4" />
-          Solicitar ser Organizador
+          Quiero ser Organizador
         </Button>
         {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
@@ -136,11 +145,12 @@ export function RequestAdminButton() {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h3 className="text-lg font-semibold">
-                  Solicitar ser Organizador
+                  Quiero ser Organizador
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Dejanos tu WhatsApp y una propuesta para negociar comisiones
-                  y condiciones.
+                  Contanos quién sos, qué vas a sortear y dónde podemos verte.
+                  El Superadmin revisa la solicitud y, si se aprueba, después
+                  hay que completar el KYC (DNI + selfie).
                 </p>
               </div>
               <button
@@ -154,6 +164,16 @@ export function RequestAdminButton() {
             </div>
 
             <div className="mt-4 space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="realName">Nombre y apellido real</Label>
+                <Input
+                  id="realName"
+                  placeholder="Ej: Jacinto Pérez"
+                  value={realName}
+                  onChange={(e) => setRealName(e.target.value)}
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="wa">Teléfono / WhatsApp</Label>
                 <div className="relative">
@@ -176,6 +196,29 @@ export function RequestAdminButton() {
                   placeholder="Contá qué querés sortear, comisiones, etc."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tools">¿Qué vas a sortear?</Label>
+                <Textarea
+                  id="tools"
+                  rows={2}
+                  placeholder="Ej: celulares, electrodomésticos, indumentaria…"
+                  value={tools}
+                  onChange={(e) => setTools(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="social">
+                  Instagram / Facebook (para que podamos verte)
+                </Label>
+                <Input
+                  id="social"
+                  placeholder="Ej: @mitienda o link del perfil"
+                  value={social}
+                  onChange={(e) => setSocial(e.target.value)}
                 />
               </div>
 

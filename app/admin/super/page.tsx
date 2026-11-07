@@ -179,6 +179,8 @@ interface RoleRequestRow {
   phone: string | null;
   email: string | null;
   request_message: string | null;
+  request_tools: string | null;
+  request_social: string | null;
   role: string;
   created_at: string;
 }
@@ -913,7 +915,7 @@ export default async function SuperAdminPage({
     // --- Solicitudes de la pestaña activa ---
     let requestsQuery = admin
       .from("profiles")
-      .select("id, full_name, phone, email, request_message, role, created_at")
+      .select("id, full_name, phone, email, request_message, request_tools, request_social, role, created_at")
       .eq("admin_request_status", requestTab);
 
     // En "Aprobadas" sólo tiene sentido mostrar a quien hoy es organizador.
@@ -1755,6 +1757,16 @@ export default async function SuperAdminPage({
                           <p className="text-xs text-fg-subtle">
                             {request.phone || "Sin teléfono"}
                           </p>
+                          {request.request_tools && (
+                            <p className="rounded-md bg-panel-2 p-2 text-xs">
+                              🎁 Sortearía: {request.request_tools}
+                            </p>
+                          )}
+                          {request.request_social && (
+                            <p className="break-words rounded-md bg-panel-2 p-2 text-xs">
+                              🔎 Redes: {request.request_social}
+                            </p>
+                          )}
                           {request.request_message ? (
                             <p className="mt-1 whitespace-pre-wrap break-words rounded-md bg-panel-2 p-2 text-xs">
                               💬 {request.request_message}
