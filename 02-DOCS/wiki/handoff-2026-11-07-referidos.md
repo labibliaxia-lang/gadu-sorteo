@@ -5,8 +5,8 @@
 - **Staging** (`dolxvoxyespguvixhkku`): migraciones `0118` y `0119` aplicadas. E2E completo pasa,
   premio otorgado al aprobar, **consola limpia**.
 - **Producción** (`mjgcoeikcyzwojbqtuakh` en `.env.local`): `0118` y `0119` aplicadas.
-  **Verificadores corridos por el dueño: 14 líneas OK (0118) y 11 líneas OK (0119)**. Falta la
-  prueba manual en la web y el backup.
+  **Verificadores: 14 líneas OK (0118) y 11 líneas OK (0119).** Prueba manual hecha: número 33
+  otorgado en el bonus, `origin=premio`. Falta sólo el backup.
 
 ### Verificador en producción (después de la 0119)
 
@@ -64,13 +64,33 @@ consultar `profiles` desde el chequeo.
 Evidencia: `02-DOCS/wiki/ftd/evidencia/2026-11-07-e2e-referidos/` (`staging-e2e-final.json`,
 `pasos.json`) y el informe `02-DOCS/wiki/ftd/e2e-referidos.md`.
 
+## Prueba manual en producción — 2026-11-07 14:02 UTC
+
+Corrida por el dueño con datos reales. Resultado:
+
+| rewarded | número | origen | estado | vendido al referente | vía principal | en bonus |
+|---|---|---|---|---|---|---|
+| true | 33 | premio | sold | true | true | true |
+
+Aviso en la campana del referente:
+
+| type | title | status |
+|---|---|---|
+| `buyer_referral_reward` | 🎁 Número gratis | `pending` |
+
+`pending` es el estado normal de una notificación de bandeja sin leer (`pending`/`read` la muestran en
+la campana; `resolved`/`expired` son para avisos accionables). No es un fallo.
+
+**Conclusión: el circuito de referidos funciona de punta a punta en producción.** El número premio se
+otorga en el sorteo bonus con `origin='premio'` y queda a nombre del referente.
+
 ## Pendiente (orden sugerido)
 
 1. Aplicar `0119_referrals_policy_fix.sql` en producción — **hecho**. Verificador: 14 líneas OK.
 2. Correr `verificar_0118.sql` en producción — **hecho**, sin CRÍTICOS.
 3. Correr `verificar_0119.sql` (11 líneas) — **hecho**: todas OK, incluido el cheque 5 (perfil del
    referente oculto y el INSERT igual pasa).
-4. Prueba manual en la web: enlace `?ref=`, compra del mínimo, aprobar reserva, ver el número premio.
+4. Prueba manual en la web — **hecho**: número 33 otorgado en el bonus, aviso en la campana.
 5. **Backup manual** (Supabase backup) después de validar.
 6. Cosmético: la 0119 deja la política limpia; no hay más cambios de código abiertos en este hilo.
 
