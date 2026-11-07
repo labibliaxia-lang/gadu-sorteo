@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolverColumna } from "@/lib/raffle-slug";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const alt = "Resultado del sorteo en Gadu Sorteos";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
