@@ -172,9 +172,9 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
 - **Normalización aplicada (2026-11-06):** `jacintocards@gmail.com` y
   `auja.costura@gmail.com` quedaron con `role = 'user'`, `plan = 'free'` y `plan_expires_at = NULL`.
   Ficha coherente y sin métricas de facturación falsas.
-- **Invitaciones:** el panel **no tiene** una sección "Invitaciones pendientes". Lo único que queda
-  es el botón «Crear organizador» (`createOrganizer`), que envía una invitación y ya no otorga
-  privilegios; conviene retirarlo en una próxima pasada para no confundir.
+- **Invitaciones:** eliminado el flujo de invitación del panel. «Crear organizador» ahora solo
+  promueve a usuarios **ya registrados**; si el email no existe, responde que la persona debe
+  registrarse y solicitar ser organizador. No se insertan más filas en `organizer_invitations`.
 - **Pendiente manual:** flujo completo de referidos en la web (reserva del invitado → aprobación →
   bono en el sorteo exclusivo).
 - **Postergado:** integración de Mercado Pago vía OAuth (Marketplace).
