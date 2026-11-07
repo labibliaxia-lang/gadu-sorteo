@@ -89,31 +89,35 @@ export async function generateMetadata({
   const dibujado = raffle.status === "drawn" && raffle.winner_number != null;
 
   const description = dibujado
-    ? `Ganó ${nombreCorto} con el número ${raffle.winner_number}. Verificá el resultado de ${raffle.title} en Gadu Sorteos.`
+    ? `Mirá el número ganador y verificá el resultado del sorteo. ${nombreCorto} ganó con el número ${raffle.winner_number}.`
     : raffle.description?.trim()
       ? String(raffle.description).trim().slice(0, 160)
       : `Participá por ${raffle.title} en Gadu Sorteos. Precio por número: ${formatPrice(
           Number(raffle.price_per_number),
         )}. Sorteo: ${formatDateTime(raffle.draw_date)}.`;
 
+  // 0114: SEO del sorteo terminado. El nombre ya viene recortado (sin apellido
+  // completo) y no se exponen email ni teléfono.
+  const title = dibujado
+    ? `¡${nombreCorto} ganó ${raffle.title} en Gadu Sorteos!`
+    : `${raffle.title} | Gadu Sorteos`;
+
   const images = raffle.cover_image_url
     ? [{ url: raffle.cover_image_url as string }]
     : undefined;
 
   return {
-    title: dibujado
-      ? `Ganador del sorteo ${raffle.title} en Gadu`
-      : `${raffle.title} | Gadu Sorteos`,
+    title,
     description,
     openGraph: {
-      title: raffle.title,
+      title,
       description,
       type: "website",
       images,
     },
     twitter: {
       card: "summary_large_image",
-      title: raffle.title,
+      title,
       description,
       images: images?.map((image) => image.url),
     },
