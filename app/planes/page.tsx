@@ -176,7 +176,9 @@ export default async function PlanesPage() {
                       className={cn(buttonVariants(), "w-full")}
                     >
                       <MessageCircle className="mr-1.5 h-4 w-4" />
-                      Contratar por WhatsApp
+                      {plan === "social"
+                        ? "Solo por contacto"
+                        : "Contratar por WhatsApp"}
                     </a>
                   ) : (
                     <Link
@@ -188,8 +190,9 @@ export default async function PlanesPage() {
                     </Link>
                   )}
                   <p className="text-center text-[12px] text-fg-subtle">
-                    Prepago manual: transferís, mandás el comprobante y te
-                    entregamos el código de 30 días.
+                    {plan === "social"
+                      ? "El Plan Social lo asigna el equipo desde soporte. No hay autoservicio."
+                      : "Prepago manual: transferís, mandás el comprobante y te entregamos el código de 30 días."}
                   </p>
                 </div>
               </CardContent>

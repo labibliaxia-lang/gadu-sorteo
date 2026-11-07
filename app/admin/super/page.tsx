@@ -1407,6 +1407,13 @@ export default async function SuperAdminPage({
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
+            href="/admin/super/planes"
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <Settings2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Configurar planes
+          </Link>
+          <Link
             href="/admin/super/bajas"
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
