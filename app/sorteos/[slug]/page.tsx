@@ -483,12 +483,15 @@ export default async function RafflePage({
               </Badge>
             )}
           </div>
-          <ShareRaffleButton
-            raffleId={raffle.id}
-            slug={raffle.slug as string | null}
-            titulo={raffle.title}
-            imageUrl={raffle.cover_image_url}
-          />
+          {/* En móvil el botón va edge-to-edge: -mx-4 anula el px-4 de <main>.
+              Desde sm vuelve al ancho natural de la columna. */}
+          <div className="-mx-4 sm:mx-0">
+            <ShareRaffleButton
+              raffleId={raffle.id}
+              slug={raffle.slug as string | null}
+              titulo={raffle.title}
+            />
+          </div>
           {raffle.status === "active" && viewer?.id !== raffle.created_by && (
             <ReportRaffleButton raffleId={raffle.id} isLoggedIn={Boolean(viewer)} />
           )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   Check,
   Copy,
@@ -15,30 +15,47 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+const PREFIJO = "¡Participá en el sorteo de";
+
+/** Texto sin URL: lo usan Telegram y Twitter, que reciben el enlace aparte. */
+function textoBase(titulo: string): string {
+  return `${PREFIJO} ${titulo}! Comprá tus números acá:`;
+}
+
+/** Texto pre-armado del share nativo y de WhatsApp: incluye la URL. */
+function textoConUrl(titulo: string, url: string): string {
+  return `${textoBase(titulo)} ${url}`;
+}
+
 /**
- * Compartir un sorteo:
- *  - En móvil usa la Web Share API (con la portada si el navegador la acepta).
- *  - En escritorio, o si no hay soporte, abre un menú con WhatsApp, Telegram,
- *    Facebook, X y "copiar enlace".
- * No bloquea la carga: es un cliente liviano y sin datos sensibles.
+ * Compartir un sorteo.
+ *
+ * - En móvil abre el menú nativo con la Web Share API.
+ * - En escritorio, o si el navegador no la soporta, abre un menú con
+ *   WhatsApp, Telegram, Facebook, Twitter y "Copiar enlace".
+ *
+ * A propósito NO se adjunta la portada: para mandarla como archivo hay que
+ * descargarla antes de llamar a `navigator.share` y ese `await` consume el
+ * gesto del usuario en iOS, con lo que el menú nativo nunca llega a abrir.
+ * El texto y el enlace son los datos que pide el sorteo.
  */
 export function ShareRaffleButton({
   raffleId,
   slug,
   titulo,
-  imageUrl,
   className,
 }: {
   raffleId: string;
   slug?: string | null;
   titulo: string;
-  imageUrl?: string | null;
   className?: string;
 }) {
   const [abierto, setAbierto] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const contenedor = useRef<HTMLDivElement>(null);
+  const menuId = useId();
 
+  // Cerrar el menú al tocar/clicar fuera.
   useEffect(() => {
     function alClick(evento: MouseEvent) {
       if (contenedor.current && !contenedor.current.contains(evento.target as Node)) {
@@ -49,18 +66,43 @@ export function ShareRaffleButton({
     return () => document.removeEventListener("mousedown", alClick);
   }, []);
 
+  // Cerrar con Escape: el menú se abre con teclado, tiene que poder cerrarse
+  // con teclado.
+  useEffect(() => {
+    if (!abierto) return;
+    function alTecla(evento: KeyboardEvent) {
+      if (evento.key === "Escape") setAbierto(false);
+    }
+    document.addEventListener("keydown", alTecla);
+    return () => document.removeEventListener("keydown", alTecla);
+  }, [abierto]);
+
+  /**
+   * Enlace público del sorteo. Siempre con el slug: la página acepta UUID por
+   * compatibilidad, pero lo que se comparte (y lo que indexa Google) es la
+   * ruta amigable. Si el sorteo es viejo y no tiene slug, cae al id.
+   *
+   * Si ya estamos en la página del sorteo se usa el `href` real para no perder
+   * parámetros de campaña (`?ref=`); si no, se arma contra el origen actual.
+   */
   function urlParaCompartir(): string {
     if (typeof window === "undefined") return "";
     const { origin, pathname, href } = window.location;
-    const clave = slug || raffleId;
+    const clave = (slug ?? "").trim() || raffleId;
     const ruta = `/sorteos/${clave}`;
     if (pathname === ruta || pathname.startsWith(`${ruta}/`)) return href;
-    const base = process.env.NEXT_PUBLIC_URL?.trim() || origin;
-    return `${base.replace(/\/$/, "")}${ruta}`;
+    return `${origin.replace(/\/$/, "")}${ruta}`;
   }
 
-  function texto(tituloSorteo: string): string {
-    return `¡Participá en el sorteo de ${tituloSorteo}! Comprá tus números acá:`;
+  function enDispositivoMovil(): boolean {
+    if (typeof window === "undefined") return false;
+    const punteroGrueso = window.matchMedia
+      ? window.matchMedia("(pointer: coarse)").matches
+      : false;
+    const userAgentMovil = /Android|iPhone|iPad|iPod|Mobile/i.test(
+      navigator.userAgent,
+    );
+    return punteroGrueso || userAgentMovil;
   }
 
   function track(red: string) {
@@ -74,32 +116,17 @@ export function ShareRaffleButton({
   }
 
   async function compartirNativo(url: string): Promise<boolean> {
-    if (!navigator.share) return false;
-
     try {
-      if (imageUrl && navigator.canShare) {
-        const respuesta = await fetch(imageUrl);
-        const blob = await respuesta.blob();
-        const archivo = new File([blob], "portada-sorteo.jpg", {
-          type: blob.type || "image/jpeg",
-        });
-        if (navigator.canShare({ files: [archivo] })) {
-          await navigator.share({
-            title: titulo,
-            text: texto(titulo),
-            url,
-            files: [archivo],
-          });
-          track("native-image");
-          return true;
-        }
-      }
-
-      await navigator.share({ title: titulo, text: texto(titulo), url });
+      // Sin `files` y sin `url` aparte: el enlace va dentro del texto para que
+      // el mensaje quede exactamente como se pide y no se duplique al
+      // pegarlo en WhatsApp. Se llama sin `await` previo para conservar el
+      // gesto del usuario (requisito de Safari/iOS).
+      await navigator.share({ title: titulo, text: textoConUrl(titulo, url) });
       track("native");
       return true;
     } catch (error) {
-      // Cancelar el diálogo nativo no es un error para mostrar.
+      // Cancelar el diálogo nativo no es un error para mostrar ni una razón
+      // para abrir el menú de respaldo.
       if (error instanceof DOMException && error.name === "AbortError") {
         return true;
       }
@@ -109,17 +136,15 @@ export function ShareRaffleButton({
 
   async function alCompartir() {
     const url = urlParaCompartir();
-    const esMovil =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(pointer: coarse)").matches;
-    const soportaNativo = typeof navigator !== "undefined" && Boolean(navigator.share);
+    if (!url) return;
 
-    if (soportaNativo && esMovil) {
+    if (enDispositivoMovil() && typeof navigator.share === "function") {
       const compartido = await compartirNativo(url);
       if (compartido) return;
     }
 
-    setAbierto((prev) => !prev);
+    // Escritorio, navegador sin Web Share o error al abrirlo: menú manual.
+    setAbierto((previo) => !previo);
   }
 
   async function copiar(url: string) {
@@ -135,19 +160,20 @@ export function ShareRaffleButton({
     }
   }
 
-  const url = urlParaCompartir();
-  const mensaje = encodeURIComponent(`${texto(titulo)} ${url}`);
+  const url = abierto ? urlParaCompartir() : "";
+  const texto = textoBase(titulo);
+  const mensajeConUrl = textoConUrl(titulo, url);
 
   const redes = [
     {
       nombre: "WhatsApp",
       icono: MessageCircle,
-      href: `https://wa.me/?text=${mensaje}`,
+      href: `https://wa.me/?text=${encodeURIComponent(mensajeConUrl)}`,
     },
     {
       nombre: "Telegram",
       icono: Send,
-      href: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(texto(titulo))}`,
+      href: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(texto)}`,
     },
     {
       nombre: "Facebook",
@@ -155,20 +181,25 @@ export function ShareRaffleButton({
       href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
     },
     {
-      nombre: "X",
+      nombre: "Twitter",
       icono: Twitter,
-      href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(texto(titulo))}`,
+      href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(texto)}`,
     },
   ];
 
   return (
-    <div ref={contenedor} className={cn("relative inline-block", className)}>
+    <div
+      ref={contenedor}
+      className={cn("relative w-full sm:inline-block sm:w-auto", className)}
+    >
       <Button
         type="button"
         variant="outline"
         onClick={() => void alCompartir()}
         aria-expanded={abierto}
         aria-haspopup="menu"
+        aria-controls={menuId}
+        className="w-full sm:w-auto"
       >
         <Share2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
         Compartir este sorteo
@@ -176,6 +207,7 @@ export function ShareRaffleButton({
 
       {abierto && (
         <div
+          id={menuId}
           role="menu"
           aria-label="Compartir sorteo"
           className="absolute left-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-hairline bg-background p-1 shadow-xl"
@@ -191,7 +223,7 @@ export function ShareRaffleButton({
                 track(red.nombre.toLowerCase());
                 setAbierto(false);
               }}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg transition-colors hover:bg-panel-2"
+              className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-fg transition-colors hover:bg-panel-2"
             >
               <red.icono className="h-4 w-4" aria-hidden="true" />
               {red.nombre}
@@ -202,7 +234,7 @@ export function ShareRaffleButton({
             type="button"
             role="menuitem"
             onClick={() => void copiar(url)}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg transition-colors hover:bg-panel-2"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-fg transition-colors hover:bg-panel-2"
           >
             {copiado ? (
               <Check className="h-4 w-4 text-emerald-500" aria-hidden="true" />
