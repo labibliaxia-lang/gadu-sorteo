@@ -233,8 +233,13 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
     escribir al service_role: el cron respondía ok y no guardaba cotizaciones (`199fa32`).
 - **Cotizaciones reales verificadas:** ARS 1545 · MXN 18,65 · COP 3240 · CLP 974; el cron actualizó
   los 3 planes pagos con `ok: true`.
-- **Pendiente manual:** backup de la base; prueba completa de referidos en la web. No hay verificador
-  escrito para 0115.
+- **0117 — Recálculo automático de precios locales:** trigger `recalcular_precios_plan`
+  (`BEFORE UPDATE OF price_usd` en `plan_configs`) lee `exchange_rates` y recalcula
+  `price_ars/mxn/cop/clp` con `ROUND(...,2)`. Si `price_usd = 0` (Free/Social) deja los cuatro
+  en 0. Funciona también cuando se reenvía el mismo USD, para resincronizar con la cotización del día.
+  Verificador `verificar_0117.sql`: 6/6 (trigger, función, cambio de USD, caso cero, mismo USD y ledger).
+- **Pendiente manual:** backup de la base (hecho el 2026-11-07, archivo `gadu-2026-11-07-0206.dump`);
+  prueba completa de referidos en la web. No hay verificador escrito para 0115.
 
 ## Backup
 
