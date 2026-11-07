@@ -26,11 +26,9 @@ declare
   v_cop numeric;
   v_clp numeric;
 begin
-  -- Solo actúa si el precio USD realmente cambió.
-  if new.price_usd is not distinct from old.price_usd then
-    return new;
-  end if;
-
+  -- Sin guard de «mismo valor»: si la sentencia incluye price_usd, se
+  -- recalcula siempre. Así un guardado que reenvía el mismo USD también
+  -- resincroniza los locales con la cotización vigente.
   if new.price_usd is null or new.price_usd <= 0 then
     new.price_ars := 0;
     new.price_mxn := 0;
