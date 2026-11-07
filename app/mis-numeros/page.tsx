@@ -79,6 +79,7 @@ export default function MisNumerosPage() {
   const supabase = createClient();
   const [rows, setRows] = useState<NumberRow[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [reviewedRaffles, setReviewedRaffles] = useState<Set<string>>(
@@ -104,6 +105,19 @@ export default function MisNumerosPage() {
       }
 
       setUserId(user.id);
+
+      // 0120: código corto del enlace de referido. La RLS deja leer la fila
+      // propia; si la migración todavía no corrió, queda null y la tarjeta no
+      // se muestra (nunca se vuelve al UUID largo).
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("referral_code")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      setReferralCode(
+        (profile?.referral_code as string | null | undefined) ?? null,
+      );
 
       // Números vendidos y reservas pendientes del usuario.
       const { data } = await supabase
@@ -217,9 +231,15 @@ export default function MisNumerosPage() {
       new Date(a.raffle.draw_date).getTime(),
   );
 
-  const referralLink = userId
-    ? `${window.location.origin}/?ref=${userId}`
-    : "";
+  // 0120: enlace corto `/r/<code>`. El UUID sólo se usa como identificador
+  // interno; nunca viaja en el link compartido. Se arma sin tocar `window`
+  // durante el render del servidor (userId y referralCode llegan del efecto).
+  const siteBase =
+    (process.env.NEXT_PUBLIC_URL ?? "").replace(/\/$/, "") ||
+    (typeof window !== "undefined" ? window.location.origin : "");
+
+  const referralLink =
+    userId && referralCode ? `${siteBase}/r/${referralCode}` : "";
 
   async function copyLink() {
     try {
@@ -341,7 +361,7 @@ export default function MisNumerosPage() {
 
       <MisDevoluciones />
 
-      {userId && referralRegla && (
+      {userId && referralCode && referralRegla && (
         <Card>
           <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-2">
