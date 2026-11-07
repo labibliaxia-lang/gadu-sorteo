@@ -12,6 +12,7 @@ import {
 } from "@/app/admin/super/actions";
 
 const PLAN_OPTIONS: { value: PlanId; label: string }[] = [
+  { value: "free", label: "Free" },
   { value: "organizador", label: "Starter" },
   { value: "pro", label: "Pro" },
   { value: "premium", label: "Premium" },

@@ -508,10 +508,19 @@ export default function NuevoSorteoPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {reachedActiveLimit && (
               <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
-                Ya tenés {activeRafflesCount} sorteo(s) activo(s). Tu plan{" "}
-                <strong>{planContext.limits.label}</strong> permite hasta{" "}
-                {planContext.limits.maxActiveRaffles}. Finalizá uno o mejorá a
-                Premium.
+                {plan === "free" ? (
+                  <>
+                    Límite de prueba alcanzado. Actualizá a{" "}
+                    <strong>Starter</strong> para seguir creando sorteos.
+                  </>
+                ) : (
+                  <>
+                    Ya tenés {activeRafflesCount} sorteo(s) activo(s). Tu plan{" "}
+                    <strong>{planContext.limits.label}</strong> permite hasta{" "}
+                    {planContext.limits.maxActiveRaffles}. Finalizá uno o mejorá
+                    de plan.
+                  </>
+                )}
               </div>
             )}
 

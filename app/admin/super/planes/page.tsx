@@ -16,6 +16,14 @@ export default async function PlanesConfigPage() {
     .select("*")
     .order("plan_name", { ascending: true });
 
+  // Orden comercial: de menor a mayor precio.
+  const ORDEN = ["free", "organizador", "pro", "premium", "social"];
+  const configs = [...(data ?? [])].sort(
+    (a, b) =>
+      ORDEN.indexOf(a.plan_name as string) -
+      ORDEN.indexOf(b.plan_name as string),
+  );
+
   return (
     <div className="space-y-4">
       <div>
@@ -26,7 +34,7 @@ export default async function PlanesConfigPage() {
         </p>
       </div>
       <PlanConfigEditor
-        inicial={(data ?? []) as Parameters<typeof PlanConfigEditor>[0]["inicial"]}
+        inicial={configs as Parameters<typeof PlanConfigEditor>[0]["inicial"]}
       />
     </div>
   );

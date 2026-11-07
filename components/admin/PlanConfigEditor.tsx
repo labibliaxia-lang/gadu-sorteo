@@ -6,7 +6,6 @@ import { Loader2 } from "lucide-react";
 import { guardarPlanes, type PlanConfigInput } from "@/app/admin/super/planes/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatPrice } from "@/lib/utils";
 
 export interface PlanConfigRow extends PlanConfigInput {
   label: string;
@@ -104,7 +103,22 @@ export function PlanConfigEditor({ inicial }: { inicial: PlanConfigRow[] }) {
 
               <label className="space-y-1 text-xs">
                 <span className="block text-fg-subtle">
-                  Precio ARS ({formatPrice(Number(fila.price_ars))})
+                  Precio Base (USD)
+                </span>
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={String(fila.price_usd)}
+                  onChange={(e) =>
+                    cambiar(index, { price_usd: Number(e.target.value) })
+                  }
+                />
+              </label>
+
+              <label className="space-y-1 text-xs">
+                <span className="block text-fg-subtle">
+                  Precio Local (ARS)
                 </span>
                 <Input
                   type="number"
@@ -114,6 +128,9 @@ export function PlanConfigEditor({ inicial }: { inicial: PlanConfigRow[] }) {
                     cambiar(index, { price_ars: Number(e.target.value) })
                   }
                 />
+                <span className="block text-[10px] text-fg-subtle">
+                  Mantené el precio en ARS actualizado al tipo de cambio del día.
+                </span>
               </label>
             </div>
 

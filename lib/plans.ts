@@ -34,6 +34,17 @@ export interface PlanLimits {
 }
 
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
+  free: {
+    id: "free",
+    label: "Free",
+    description: "Prueba la plataforma con un sorteo.",
+    maxActiveRaffles: 1,
+    maxNumbersPerRaffle: 100,
+    maxPrizesPerRaffle: 1,
+    analytics: false,
+    exclusiveFeatures: false,
+    paymentMethods: ["transferencia"],
+  },
   organizador: {
     id: "organizador",
     label: "Starter",
@@ -87,6 +98,12 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
  * rotula como «próximamente» para no vender humo.
  */
 export const PLAN_BENEFITS: Record<Plan, string[]> = {
+  free: [
+    `${PLAN_LIMITS.free.maxActiveRaffles} sorteo activo`,
+    `${PLAN_LIMITS.free.maxNumbersPerRaffle} números por sorteo`,
+    "Cobro por transferencia con comprobante",
+    "Perfil público de organizador",
+  ],
   organizador: [
     `Hasta ${PLAN_LIMITS.organizador.maxActiveRaffles} sorteos activos a la vez`,
     `${PLAN_LIMITS.organizador.maxNumbersPerRaffle} números por sorteo`,
@@ -129,7 +146,7 @@ export interface PlanContext {
 
 /** Normaliza un valor desconocido al plan canónico (común por defecto). */
 export function normalizePlan(value: unknown): Plan {
-  return value === "premium" || value === "pro" || value === "social"
+  return value === "premium" || value === "pro" || value === "social" || value === "free"
     ? value
     : "organizador";
 }

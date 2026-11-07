@@ -18,7 +18,7 @@ import type { Plan } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-const PLANS: Plan[] = ["organizador", "pro", "premium", "social"];
+const PLANS: Plan[] = ["free", "organizador", "pro", "premium", "social"];
 
 interface PlanPriceRow {
   plan: Plan;

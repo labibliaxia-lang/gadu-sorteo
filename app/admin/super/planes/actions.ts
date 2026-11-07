@@ -11,6 +11,7 @@ export interface PlanConfigInput {
   max_numbers: number;
   max_prizes: number;
   price_ars: number;
+  price_usd: number;
   allow_referrals: boolean;
   allow_landing: boolean;
   allow_mp: boolean;
@@ -18,7 +19,7 @@ export interface PlanConfigInput {
   max_referrals_per_raffle: number;
 }
 
-const PLANES = ["organizador", "pro", "premium", "social"];
+const PLANES = ["free", "organizador", "pro", "premium", "social"];
 
 function entero(valor: unknown, min: number, max: number): number | null {
   const n = Number(valor);
@@ -51,12 +52,16 @@ export async function guardarPlanes(
     const prizes = entero(c.max_prizes, 1, 30);
     const referidos = entero(c.max_referrals_per_raffle, 0, 1000);
     const precio = Number(c.price_ars);
+    const precioUsd = Number(c.price_usd);
 
     if (raffles === null || numbers === null || prizes === null || referidos === null) {
       return { ok: false, error: `Límites inválidos en ${c.plan_name}.` };
     }
     if (!Number.isFinite(precio) || precio < 0) {
       return { ok: false, error: `Precio inválido en ${c.plan_name}.` };
+    }
+    if (!Number.isFinite(precioUsd) || precioUsd < 0) {
+      return { ok: false, error: `Precio USD inválido en ${c.plan_name}.` };
     }
 
     filas.push({
@@ -65,6 +70,7 @@ export async function guardarPlanes(
       max_numbers: numbers,
       max_prizes: prizes,
       price_ars: Math.round(precio * 100) / 100,
+      price_usd: Math.round(precioUsd * 100) / 100,
       allow_referrals: Boolean(c.allow_referrals),
       allow_landing: Boolean(c.allow_landing),
       allow_mp: Boolean(c.allow_mp),
