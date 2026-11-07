@@ -13,22 +13,9 @@
 alter table public.raffles
   add column if not exists slug text;
 
--- Normaliza un título a slug: minúsculas, sin acentos, guiones simples.
-create or replace function public.slugify(p_texto text)
-returns text
-language sql
-immutable
-as $$
-  select trim(both '-' from
-    regexp_replace(
-      regexp_replace(
-        translate(lower(coalesce(p_texto, '')), 'áéíóúüñçàèìòùâêîôûäëïö', 'aeiouunca eiouaeiouaeiou'),
-        '[^a-z0-9]+', '-', 'g'
-      ),
-      '-{2,}', '-', 'g'
-    )
-  );
-$$;
+-- Se reutiliza `public.slugify(text)` de la 0035 (ya normaliza acentos y
+-- espacios). No se redefine: cambiar el nombre del parámetro rompe la función
+-- existente y la usan los slugs de organizador.
 
 -- Rellena los sorteos existentes. Si el slug ya está tomado, agrega sufijo.
 do $$
