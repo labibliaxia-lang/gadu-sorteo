@@ -143,7 +143,9 @@ export default async function PlanesPage() {
                     Precio mensual
                   </p>
                   <p className="mt-1 font-mono text-2xl font-medium tracking-tight text-fg">
-                    {price > 0 ? (
+                    {plan === "free" ? (
+                      "Gratis"
+                    ) : price > 0 ? (
                       <>
                         {formatPrice(price)}
                         <span className="ml-1 font-normal text-fg-subtle">

@@ -151,6 +151,13 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
 
 - **15/15**: 9/9 de 0107 + 6/6 de 0108.
 - Gates: typecheck limpio, lint 0, tests y build OK.
+- **0109 — Plan Free y precios duales:** `plan_configs.price_usd` (nunca null), plan Free
+  (1 sorteo/100 números), precios 0/0, 3/3000, 10/10000, 25/25000, 0/0, editor con USD y ARS,
+  orden Free→Starter→Pro→Premium→Social y bloqueo del Free en el wizard. Verificador
+  `verificar_0109.sql`: **7/7**.
+- **0110 — Free por defecto:** `profiles.plan` default `'free'` y `handle_new_user` asigna Free a
+  toda cuenta nueva. Los usuarios existentes **no** cambian de plan (el ON CONFLICT no toca `plan`).
+  `/planes` muestra "Gratis" en el plan Free.
 - **Pendiente manual:** flujo completo de referidos en la web (reserva del invitado → aprobación →
   bono en el sorteo exclusivo).
 - **Postergado:** integración de Mercado Pago vía OAuth (Marketplace).
