@@ -62,6 +62,18 @@ export const metadata: Metadata = {
       "Sorteos transparentes con premios de todo tipo. Elegí tus números, participá y ganá.",
     images: ["/og-image.png"],
   },
+  appleWebApp: {
+    capable: true,
+    title: "Gadu Sorteos",
+    statusBarStyle: "default",
+  },
+  applicationName: "Gadu Sorteos",
+};
+
+export const viewport = {
+  themeColor: "#0b0f19",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default async function RootLayout({

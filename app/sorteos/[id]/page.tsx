@@ -65,7 +65,7 @@ export async function generateMetadata({
   const { data: raffle } = await supabase
     .from("raffles")
     .select(
-      "title, description, cover_image_url, draw_date, price_per_number, currency",
+      "title, description, cover_image_url, draw_date, price_per_number, currency, status, winner_name, winner_number",
     )
     .eq("id", params.id)
     .maybeSingle();
@@ -74,18 +74,36 @@ export async function generateMetadata({
     return { title: "Sorteo no encontrado | Gadu Sorteos" };
   }
 
-  const description = raffle.description?.trim()
-    ? String(raffle.description).trim().slice(0, 160)
-    : `Participá por ${raffle.title} en Gadu Sorteos. Precio por número: ${formatPrice(
-        Number(raffle.price_per_number),
-      )}. Sorteo: ${formatDateTime(raffle.draw_date)}.`;
+  // 0113/SEO: si ya se sorteó, el título apunta al ganador. Se usa el nombre
+  // recortado (nombre + inicial) para no publicar el apellido completo.
+  const nombreCorto = (() => {
+    const partes = String(raffle.winner_name ?? "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    if (partes.length === 0) return "un participante";
+    if (partes.length === 1) return partes[0];
+    return `${partes[0]} ${partes[partes.length - 1][0]}.`;
+  })();
+
+  const dibujado = raffle.status === "drawn" && raffle.winner_number != null;
+
+  const description = dibujado
+    ? `Ganó ${nombreCorto} con el número ${raffle.winner_number}. Verificá el resultado de ${raffle.title} en Gadu Sorteos.`
+    : raffle.description?.trim()
+      ? String(raffle.description).trim().slice(0, 160)
+      : `Participá por ${raffle.title} en Gadu Sorteos. Precio por número: ${formatPrice(
+          Number(raffle.price_per_number),
+        )}. Sorteo: ${formatDateTime(raffle.draw_date)}.`;
 
   const images = raffle.cover_image_url
     ? [{ url: raffle.cover_image_url as string }]
     : undefined;
 
   return {
-    title: `${raffle.title} | Gadu Sorteos`,
+    title: dibujado
+      ? `Ganador del sorteo ${raffle.title} en Gadu`
+      : `${raffle.title} | Gadu Sorteos`,
     description,
     openGraph: {
       title: raffle.title,
@@ -415,6 +433,12 @@ export default async function RafflePage({
             <Badge variant="secondary">
               {statusLabel[raffle.status as Raffle["status"]]}
             </Badge>
+            {organizer?.is_verified && (
+              <Badge variant="success">
+                <ShieldCheck className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                Organizador Verificado
+              </Badge>
+            )}
           </div>
           <ShareButton sorteoId={raffle.id} titulo={raffle.title} />
           {raffle.status === "active" && viewer?.id !== raffle.created_by && (
