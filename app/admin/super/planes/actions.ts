@@ -12,6 +12,9 @@ export interface PlanConfigInput {
   max_prizes: number;
   price_ars: number;
   price_usd: number;
+  price_mxn: number;
+  price_cop: number;
+  price_clp: number;
   allow_referrals: boolean;
   allow_landing: boolean;
   allow_mp: boolean;
@@ -53,6 +56,9 @@ export async function guardarPlanes(
     const referidos = entero(c.max_referrals_per_raffle, 0, 1000);
     const precio = Number(c.price_ars);
     const precioUsd = Number(c.price_usd);
+    const precioMxn = Number(c.price_mxn);
+    const precioCop = Number(c.price_cop);
+    const precioClp = Number(c.price_clp);
 
     if (raffles === null || numbers === null || prizes === null || referidos === null) {
       return { ok: false, error: `Límites inválidos en ${c.plan_name}.` };
@@ -71,6 +77,9 @@ export async function guardarPlanes(
       max_prizes: prizes,
       price_ars: Math.round(precio * 100) / 100,
       price_usd: Math.round(precioUsd * 100) / 100,
+      price_mxn: Math.round(precioMxn * 100) / 100,
+      price_cop: Math.round(precioCop * 100) / 100,
+      price_clp: Math.round(precioClp * 100) / 100,
       allow_referrals: Boolean(c.allow_referrals),
       allow_landing: Boolean(c.allow_landing),
       allow_mp: Boolean(c.allow_mp),

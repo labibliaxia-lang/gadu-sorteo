@@ -16,6 +16,23 @@ export default async function PlanesConfigPage() {
     .select("*")
     .order("plan_name", { ascending: true });
 
+  const { data: ratesData } = await admin
+    .from("exchange_rates")
+    .select("currency_code, rate_to_usd, updated_at")
+    .in("currency_code", ["ARS", "MXN", "COP", "CLP"]);
+
+  const rates: Partial<Record<"ARS" | "MXN" | "COP" | "CLP", number>> = {};
+  let ratesUpdatedAt: string | null = null;
+  for (const fila of ratesData ?? []) {
+    const codigo = fila.currency_code as "ARS" | "MXN" | "COP" | "CLP";
+    rates[codigo] = Number(fila.rate_to_usd);
+    if (!ratesUpdatedAt && fila.updated_at) {
+      ratesUpdatedAt = new Date(fila.updated_at as string).toLocaleString(
+        "es-AR",
+      );
+    }
+  }
+
   // Orden comercial: de menor a mayor precio.
   const ORDEN = ["free", "organizador", "pro", "premium", "social"];
   const configs = [...(data ?? [])].sort(
@@ -35,6 +52,8 @@ export default async function PlanesConfigPage() {
       </div>
       <PlanConfigEditor
         inicial={configs as Parameters<typeof PlanConfigEditor>[0]["inicial"]}
+        rates={rates}
+        ratesUpdatedAt={ratesUpdatedAt}
       />
     </div>
   );

@@ -30,7 +30,15 @@ const TOGGLES: { key: keyof PlanConfigInput; label: string }[] = [
   { key: "allow_auto_draw", label: "Auto-sorteo" },
 ];
 
-export function PlanConfigEditor({ inicial }: { inicial: PlanConfigRow[] }) {
+export function PlanConfigEditor({
+  inicial,
+  rates = {},
+  ratesUpdatedAt = null,
+}: {
+  inicial: PlanConfigRow[];
+  rates?: Partial<Record<"ARS" | "MXN" | "COP" | "CLP", number>>;
+  ratesUpdatedAt?: string | null;
+}) {
   const [filas, setFilas] = useState<PlanConfigRow[]>(inicial);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -69,6 +77,22 @@ export function PlanConfigEditor({ inicial }: { inicial: PlanConfigRow[] }) {
           {mensaje}
         </p>
       )}
+
+      <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200">
+        <p className="font-semibold">
+          Cotización actual: 1 USD ={" "}
+          {rates.ARS ? `$${rates.ARS.toLocaleString("es-AR")} ARS` : "— ARS"} /{" "}
+          {rates.MXN ? `$${rates.MXN.toLocaleString("es-AR")} MXN` : "— MXN"} /{" "}
+          {rates.COP ? `$${rates.COP.toLocaleString("es-AR")} COP` : "— COP"} /{" "}
+          {rates.CLP ? `$${rates.CLP.toLocaleString("es-AR")} CLP` : "— CLP"}
+        </p>
+        <p className="mt-1 text-[11px] opacity-80">
+          Se actualiza sola con el cron de cotizaciones
+          {ratesUpdatedAt ? ` · última corrida: ${ratesUpdatedAt}` : ""}. Los
+          precios locales son de solo lectura: salen de multiplicar el precio
+          USD por la cotización.
+        </p>
+      </div>
 
       <div className="space-y-4">
         {filas.map((fila, index) => (
@@ -123,15 +147,36 @@ export function PlanConfigEditor({ inicial }: { inicial: PlanConfigRow[] }) {
                 <Input
                   type="number"
                   min={0}
+                  readOnly
                   value={String(fila.price_ars)}
-                  onChange={(e) =>
-                    cambiar(index, { price_ars: Number(e.target.value) })
-                  }
+                  className="bg-muted/50"
                 />
-                <span className="block text-[10px] text-fg-subtle">
-                  Mantené el precio en ARS actualizado al tipo de cambio del día.
-                </span>
               </label>
+
+              {(
+                [
+                  ["price_mxn", "MXN"],
+                  ["price_cop", "COP"],
+                  ["price_clp", "CLP"],
+                ] as const
+              ).map(([campo, moneda]) => (
+                <label key={campo} className="space-y-1 text-xs">
+                  <span className="block text-fg-subtle">
+                    Precio Local ({moneda})
+                  </span>
+                  <Input
+                    type="number"
+                    min={0}
+                    readOnly
+                    value={String(fila[campo])}
+                    className="bg-muted/50"
+                  />
+                </label>
+              ))}
+              <p className="col-span-full text-[10px] text-fg-subtle">
+                Los precios locales se recalculan solos desde el precio USD y la
+                cotización del día (cron de cotizaciones). No se editan a mano.
+              </p>
             </div>
 
             <div className="flex flex-wrap gap-4">

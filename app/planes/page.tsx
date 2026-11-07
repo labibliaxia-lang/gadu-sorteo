@@ -14,6 +14,7 @@ import { RedeemCodeForm } from "@/components/RedeemCodeForm";
 import { PLAN_BENEFITS, PLAN_LIMITS, normalizePlan } from "@/lib/plans";
 import { waLink } from "@/lib/superadmin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { PlanCurrencySelect } from "@/components/PlanCurrencySelect";
 import { cn, formatDateTime, formatPriceIn } from "@/lib/utils";
 import type { Plan } from "@/lib/types";
 
@@ -26,13 +27,28 @@ interface PlanConfigRow {
   label: string;
   price_usd: number | string;
   price_ars: number | string;
+  price_mxn: number | string;
+  price_cop: number | string;
+  price_clp: number | string;
   max_raffles: number;
   max_numbers: number;
 }
 
-export default async function PlanesPage() {
+const MONEDAS = ["USD", "ARS", "MXN", "COP", "CLP"] as const;
+type Moneda = (typeof MONEDAS)[number];
+
+export default async function PlanesPage({
+  searchParams,
+}: {
+  searchParams?: { currency?: string };
+}) {
   const supabase = createClient();
   const salesWhatsapp = process.env.NEXT_PUBLIC_SALES_WHATSAPP?.trim() || null;
+  const moneda: Moneda = MONEDAS.includes(
+    (searchParams?.currency ?? "").toUpperCase() as Moneda,
+  )
+    ? ((searchParams?.currency ?? "").toUpperCase() as Moneda)
+    : "USD";
 
   // Precios y límites: fuente única `plan_configs` (donde los edita el
   // Superadmin). Se lee con service role en el servidor y solo se renderizan
@@ -40,7 +56,9 @@ export default async function PlanesPage() {
   const admin = createAdminClient();
   const { data: configRows } = await admin
     .from("plan_configs")
-    .select("plan_name, label, price_usd, price_ars, max_raffles, max_numbers");
+    .select(
+      "plan_name, label, price_usd, price_ars, price_mxn, price_cop, price_clp, max_raffles, max_numbers",
+    );
 
   const configByPlan = new Map<string, PlanConfigRow>(
     ((configRows ?? []) as PlanConfigRow[]).map((row) => [row.plan_name, row]),
@@ -133,12 +151,23 @@ export default async function PlanesPage() {
         )}
       </header>
 
+      <div className="flex justify-end">
+        <PlanCurrencySelect actual={moneda} />
+      </div>
+
       <section className="grid gap-5 md:grid-cols-2">
         {PLANS.map((plan) => {
           const limits = PLAN_LIMITS[plan];
           const cfg = configByPlan.get(plan);
           const usd = Number(cfg?.price_usd ?? 0);
           const ars = Number(cfg?.price_ars ?? 0);
+          const precioLocal =
+            moneda === "USD"
+              ? usd
+              : Number(
+                  cfg?.[`price_${moneda.toLowerCase()}` as keyof PlanConfigRow] ??
+                    0,
+                );
           const href = salesHref(plan);
           const isPremium = plan === "premium";
           const esGratis = usd <= 0 && ars <= 0;
@@ -168,14 +197,19 @@ export default async function PlanesPage() {
                       "Gratis"
                     ) : (
                       <>
-                        {formatPriceIn(usd, "USD")}
+                        {formatPriceIn(precioLocal, moneda)}
                         <span className="ml-1 font-normal text-fg-subtle">
                           / mes
                         </span>
                       </>
                     )}
                   </p>
-                  {!esGratis && ars > 0 && (
+                  {!esGratis && moneda !== "USD" && (
+                    <p className="text-[11px] text-fg-subtle">
+                      Base {formatPriceIn(usd, "USD")} por mes
+                    </p>
+                  )}
+                  {!esGratis && moneda === "USD" && ars > 0 && (
                     <p className="text-[11px] text-fg-subtle">
                       Equivale a {formatPriceIn(ars, "ARS")} por mes
                     </p>
