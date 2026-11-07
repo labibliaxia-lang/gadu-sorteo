@@ -201,6 +201,12 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
   Free es el default de cuentas nuevas (0110) y el alta de organizadores ahora pasa siempre por
   solicitud + aprobación + KYC (0112).
 
+- **0114 — Candado de bases legales:** trigger `enforce_terms_on_publish` impide que un sorteo quede
+  `active` sin `terms_accepted_by_organizer = true`. Un usuario autenticado no puede publicarlo ni
+  por API; las sesiones de servicio (SQL Editor/cron) quedan exentas para poder preparar datos, igual
+  que el candado de KYC. Los sorteos ya activos se editan sin problema mientras no cambien de estado.
+  Verificador `verificar_0114.sql`: 7/7.
+
 ## Backup
 
 Hecho el 2026-11-06 14:27 y repetido a las 14:46 con `01-TOOLS/backup/backup-db.ps1` (pg_dump 17.6
