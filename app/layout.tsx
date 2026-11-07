@@ -8,6 +8,7 @@ import { ProfileCompletionGate } from "@/components/ProfileCompletionGate";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { TermsGate } from "@/components/TermsGate";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { PwaRegister } from "@/components/PwaRegister";
 import { Toaster } from "@/components/ui/Toaster";
 import { createClient } from "@/lib/supabase/server";
 import { readImpersonationOrigin } from "@/lib/impersonation-server";
@@ -68,6 +69,10 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
   },
   applicationName: "Gadu Sorteos",
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/icon-192.png",
+  },
 };
 
 export const viewport = {
@@ -223,6 +228,7 @@ export default async function RootLayout({
           </main>
           <Footer />
           <Toaster />
+          <PwaRegister />
         </ThemeProvider>
       </body>
     </html>
