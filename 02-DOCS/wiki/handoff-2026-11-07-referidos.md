@@ -27,6 +27,11 @@
 11 OK  ledger registra 0118 y 0119
 ```
 
+Esa salida es de `supabase/tests/verificar_0118.sql` (14 líneas, cubre 0118 + 0119 + bonus).
+El específico `supabase/tests/verificar_0119.sql` (11 líneas) es opcional pero más fino: su cheque 5
+oculta el perfil del referente y exige que el INSERT pase igual — es el que reproduce el bug de
+producción. En staging dio 11 líneas OK.
+
 ## Qué pasó con la 0118 en producción
 
 El verificador, apenas se aplicó la 0118, salió con dos CRÍTICOS:
@@ -63,9 +68,11 @@ Evidencia: `02-DOCS/wiki/ftd/evidencia/2026-11-07-e2e-referidos/` (`staging-e2e-
 
 1. Aplicar `0119_referrals_policy_fix.sql` en producción — **hecho**. Verificador: 14 líneas OK.
 2. Correr `verificar_0118.sql` en producción — **hecho**, sin CRÍTICOS.
-3. Prueba manual en la web: enlace `?ref=`, compra del mínimo, aprobar reserva, ver el número premio.
-4. **Backup manual** (Supabase backup) después de validar.
-5. Cosmético: la 0119 deja la política limpia; no hay más cambios de código abiertos en este hilo.
+3. Opcional: correr `verificar_0119.sql` (11 líneas). El cheque 5 es el que de verdad reproduce el
+   escenario de producción.
+4. Prueba manual en la web: enlace `?ref=`, compra del mínimo, aprobar reserva, ver el número premio.
+5. **Backup manual** (Supabase backup) después de validar.
+6. Cosmético: la 0119 deja la política limpia; no hay más cambios de código abiertos en este hilo.
 
 Nota: el verificador ahora exige que el ledger registre **0118 y 0119** (cheque 11). Si vuelve a fallar
 la captura, correrlo primero: las líneas 4 y 8 dicen si el INSERT quedó rechazado.
