@@ -167,6 +167,15 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
   El trigger `enforce_organizer_kyc` sigue bloqueando el alta de sorteos en la base.
   **El circuito de organizadores queda 100 % cerrado: no existe ninguna vía a `admin` sin
   aprobación manual y KYC.**
+- **Verificado en producción:** la cuenta nueva `hackedigma@gmail.com` entró con `role = user` y
+  `plan = free`. El `prosrc` de `handle_new_user` no contiene la palabra `admin`.
+- **Normalización pendiente (la corre el dueño):** `jacintocards@gmail.com` y
+  `auja.costura@gmail.com` tenían `role = 'user'` con `plan = 'organizador'` (plan pago sin permiso
+  para publicar). Se pasan a `free` para que la ficha quede coherente y no infle métricas de
+  facturación. SQL en la sección «Limpieza de datos» de abajo.
+- **Invitaciones:** el panel **no tiene** una sección "Invitaciones pendientes". Lo único que queda
+  es el botón «Crear organizador» (`createOrganizer`), que envía una invitación y ya no otorga
+  privilegios; conviene retirarlo en una próxima pasada para no confundir.
 - **Pendiente manual:** flujo completo de referidos en la web (reserva del invitado → aprobación →
   bono en el sorteo exclusivo).
 - **Postergado:** integración de Mercado Pago vía OAuth (Marketplace).
