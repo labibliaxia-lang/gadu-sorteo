@@ -133,6 +133,22 @@ Se repitió el Escenario E desde cero con cuentas nuevas (`--fresh`): organizado
 **Veredicto final: el premio de referidos sí se otorga**, automáticamente al aprobar la reserva,
 con la migración 0118 aplicada. Evidencia: `staging-escenario-E-fresh.json` y `pasos.json`.
 
+### Corrección 0119 (la 0118 sola no alcanzaba en producción)
+
+Al correr `verificar_0118.sql` en producción, los chequeos 4 y 8 salieron CRÍTICOS: el INSERT legítimo
+era rechazado por RLS. Causa: la política de la 0118 validaba al referente con
+`exists (select 1 from public.profiles ...)`, que corre con la RLS del invitado; en producción
+`profiles` sólo deja ver la fila propia. En staging el bug quedaba tapado por dos políticas viejas
+permisivas que se suman con OR.
+
+`0119_referrals_policy_fix.sql` reemplaza ese chequeo por `public.perfil_existe(uuid)`
+(**SECURITY DEFINER**). El verificador suma el cheque `2b` para detectar una regresión a la forma vieja.
+
+### Corrida final (staging, con 0118 y 0119)
+
+Cuentas frescas, compra de 2 números, aprobación → premio **número 1** con `origin='premio'`, RPC
+repetida `null`, **sin errores de consola**. Evidencia: `staging-e2e-final.json`.
+
 Correcciones aplicadas al script para esta corrida: plan `premium` para la cuenta de prueba, cobro
 `transferencia` elegido por `value` (no por posición del radio), verificación SQL por `pg` con
 `DATABASE_URL` del entorno (el token de gestión no ve staging) y `--env-file` con candado que rechaza

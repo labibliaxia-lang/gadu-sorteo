@@ -121,6 +121,43 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
+-- 2b) La política no depende de la RLS de `profiles`
+--     (el error que apareció en producción con la 0118: el EXISTS corría con
+--     la RLS del invitado, que sólo ve su propio perfil)
+-- ---------------------------------------------------------------------
+do $$
+declare
+  v_chk text;
+  v_func boolean;
+  v_definer boolean;
+begin
+  select coalesce(with_check, '') into v_chk
+    from pg_policies
+   where schemaname = 'public' and tablename = 'referrals'
+     and policyname = 'referrals_insert_propio';
+
+  select exists (
+    select 1 from pg_proc
+     where proname = 'perfil_existe'
+       and pronamespace = 'public'::regnamespace
+  ) into v_func;
+
+  select coalesce((
+    select prosecdef from pg_proc
+     where proname = 'perfil_existe'
+       and pronamespace = 'public'::regnamespace
+  ), false) into v_definer;
+
+  if v_chk ilike '%perfil_existe%' and v_func and v_definer then
+    perform pg_temp.anota('2b OK       el chequeo de referente usa perfil_existe (SECURITY DEFINER)');
+  elsif v_chk ilike '%from profiles%' then
+    perform pg_temp.anota('2b CRÍTICO  la política consulta profiles y la RLS la bloquea: aplicá 0119');
+  else
+    perform pg_temp.anota('2b CRÍTICO  la política no valida la existencia del referente');
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------
 -- 3) Unique del par
 -- ---------------------------------------------------------------------
 do $$

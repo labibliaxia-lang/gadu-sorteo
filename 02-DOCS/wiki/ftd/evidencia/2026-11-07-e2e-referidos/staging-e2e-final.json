@@ -1,0 +1,33 @@
+{
+  "corrida": "E2E final — staging, con 0119 aplicada",
+  "proyecto": "dolxvoxyespguvixhkku",
+  "base": "http://localhost:3001",
+  "fecha": "2026-11-07T17:03:32.041Z",
+  "migraciones": [
+    "0118",
+    "0119 (política de captura sin depender de la RLS de profiles)"
+  ],
+  "cuentas": {
+    "organizador": "a9d531aa-ff5b-4448-914e-51e881c4e142",
+    "invitado": "12652f22-394b-4603-b2b7-1b5c1f808327",
+    "plan": "premium"
+  },
+  "sorteos": {
+    "principal": "ecdd6682-738a-4e5d-9478-460fcdadd3a4",
+    "bonus": "96ffdbdf-d13a-4b79-9b9e-c68d9e545445",
+    "slug": "e2e-referidos-principal-940e"
+  },
+  "circuito": {
+    "captura": "ok, sin errores de consola",
+    "compra": "números 1 y 2 reserved",
+    "aprobacion": "sold + rewarded=true en el mismo paso",
+    "premio": {
+      "numero": 1,
+      "origin": "premio",
+      "status": "sold"
+    },
+    "rpc_repetida": null,
+    "consola": []
+  },
+  "veredicto": "E2E completo sin errores de consola en staging."
+}

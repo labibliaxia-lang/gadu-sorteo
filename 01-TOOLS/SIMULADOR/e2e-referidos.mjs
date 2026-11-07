@@ -462,7 +462,18 @@ async function numerosDe(raffleId) {
 }
 
 async function faseCrear(navegador, cuentas = {}) {
-  const { orgId, invId } = cuentas.orgId ? cuentas : await prepararCuentas();
+  // Las cuentas se crean en `setup`; acá se reutilizan las del estado. Si no
+  // hay estado (corrida suelta), se crean con el email configurado.
+  const guardado = leerEstado();
+  const orgId = cuentas.orgId ?? guardado.orgId;
+  const invId = cuentas.invId ?? guardado.invId;
+  if (!orgId || !invId) {
+    const nuevas = await prepararCuentas();
+    guardarEstado(nuevas);
+    Object.assign(cuentas, nuevas);
+  }
+  const org = orgId ?? cuentas.orgId;
+  const inv = invId ?? cuentas.invId;
   const { contexto } = await contextoConSesion(navegador, emailDe("org"));
   const page = await contexto.newPage();
 
@@ -492,13 +503,13 @@ async function faseCrear(navegador, cuentas = {}) {
     observado: `principal ${principal.slug} (${principalId.slice(0, 8)}) con bonus ${bonusId.slice(0, 8)}; referral_enabled=${principal.referral_enabled}, min=${principal.referral_min_numbers}, max=${principal.referral_max_per_user}`,
     resultado: "ok",
     archivos: ["capturas/01-principal-creado.png", "capturas/02-bonus-creado.png"],
-    nota: `laboratorio: referral_* y bonus_raffle_id escritos por service_role; no existe UI de administración. organizador=${orgId.slice(0, 8)} invitado=${invId.slice(0, 8)}`,
+    nota: `laboratorio: referral_* y bonus_raffle_id escritos por service_role; no existe UI de administración. organizador=${String(org).slice(0, 8)} invitado=${String(inv).slice(0, 8)}`,
   });
 
   console.log(JSON.stringify({ principalId, bonusId, slug: principal.slug }));
-  guardarEstado({ orgId, invId, principalId, bonusId, slug: principal.slug });
+  guardarEstado({ orgId: org, invId: inv, principalId, bonusId, slug: principal.slug });
   await contexto.close();
-  return { principalId, bonusId, slug: principal.slug, orgId, invId };
+  return { principalId, bonusId, slug: principal.slug, orgId: org, invId: inv };
 }
 
 async function faseComprar(navegador) {
