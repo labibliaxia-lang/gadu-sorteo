@@ -61,6 +61,8 @@ export interface Raffle {
   description: string | null;
   draw_date: string;
   price_per_number: number;
+  /** Moneda del precio (0107/0108). */
+  currency: "ARS" | "MXN" | "COP" | "CLP" | "USD";
   cover_image_url: string | null;
   payment_type: "mercadopago" | "transferencia";
   transfer_alias: string | null;

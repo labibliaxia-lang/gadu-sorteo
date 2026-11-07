@@ -11,13 +11,21 @@ export function formatNumber(n: number): string {
 }
 
 /** Formatea un precio en pesos argentinos. */
-export function formatPrice(value: number): string {
+/** Precio en la moneda del sorteo (LATAM). */
+export function formatPriceIn(
+  value: number,
+  currency: string = "ARS",
+): string {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
-    currency: "ARS",
+    currency: currency || "ARS",
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+export function formatPrice(value: number): string {
+  return formatPriceIn(value, "ARS");
 }
 
 /**
