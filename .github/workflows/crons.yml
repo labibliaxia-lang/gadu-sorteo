@@ -20,7 +20,10 @@ name: crons
 
 on:
   schedule:
+    # Cada 5 minutos: reservas vencidas y sorteos automáticos.
     - cron: "*/5 * * * *"
+    # Una vez por día (06:00 UTC): cotizaciones LATAM y precios de planes.
+    - cron: "0 6 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -58,4 +61,26 @@ jobs:
             https://gadu-sorteo-doci.vercel.app/api/cron/auto-draw)
           echo "auto-draw -> $code"
           cat /tmp/autodraw.json || true
+          test "$code" = "200"
+
+  # Corre solo en el disparo diario (o manual), no en cada tick de 5 minutos.
+  rates:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 6 * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Actualizar cotizaciones y precios de planes
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "Falta el secreto CRON_SECRET en GitHub Actions."
+            exit 1
+          fi
+          code=$(curl -sS -o /tmp/rates.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            --max-time 60 \
+            https://gadu-sorteo-doci.vercel.app/api/cron/update-rates)
+          echo "update-rates -> $code"
+          cat /tmp/rates.json || true
           test "$code" = "200"

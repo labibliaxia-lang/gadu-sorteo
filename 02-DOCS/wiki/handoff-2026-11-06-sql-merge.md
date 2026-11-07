@@ -207,6 +207,34 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
   que el candado de KYC. Los sorteos ya activos se editan sin problema mientras no cambien de estado.
   Verificador `verificar_0114.sql`: 7/7.
 
+## Cierre: slugs, precios públicos y multimoneda
+
+- **0115 — Slugs de sorteo:** `raffles.slug` único, backfill desde el título y generación automática
+  en altas (trigger `asignar_slug_sorteo`). La ruta pública pasó a `app/sorteos/[slug]` y resuelve
+  **por slug o por UUID viejo**; los enlaces ya compartidos siguen funcionando. El slug no cambia al
+  editar el título. Compartir y copiar enlace usan el slug.
+  - Panel: banner pulsante de **acción obligatoria** cuando falta el compromiso, botón de publicar
+    compromiso animado y tarjeta **"Tu enlace de referidos"** (`?ref=<id>`) con copiar o acceso a
+    activar *Invitá y Ganá*.
+- **/planes sincronizado:** la página pública lee **`plan_configs`** (con cliente admin en servidor,
+  solo precios y límites públicos) en lugar de `plan_prices`. Free muestra **Gratis** y botón
+  **Empezar gratis**; los planes pagos muestran USD + equivalencia ARS con `formatPriceIn`.
+- **0116 — Multimoneda LATAM:** tabla `exchange_rates` (ARS/MXN/COP/CLP, con respaldo y lectura
+  pública), columnas `plan_configs.price_mxn/price_cop/price_clp`. Cron
+  `GET/POST /api/cron/update-rates` protegido con `CRON_SECRET`: consulta
+  `open.er-api.com/v6/latest/USD`, actualiza cotizaciones y recalcula los precios locales desde
+  `price_usd`. Si la API externa falla responde 200 con `stale: true`.
+  - **GitHub Actions**: el workflow `crons.yml` suma el disparo diario `0 6 * * *` y un job `rates`
+    que llama al endpoint solo en ese horario (o manual).
+  - **Superadmin**: banner con cotización actual y última corrida; precios locales de solo lectura.
+  - **Pública**: selector USD/ARS/MXN/COP/CLP; precios desde `plan_configs`.
+  - Verificador `verificar_0116.sql`: 8 comprobaciones (tabla, monedas, RLS, columnas, checks,
+    planes pagos, coherencia con la cotización y ledger).
+- **Cotizaciones reales verificadas:** ARS 1545 · MXN 18,65 · COP 3240 · CLP 974; el cron actualizó
+  los 3 planes pagos con `ok: true`.
+- **Pendiente manual:** backup de la base; prueba completa de referidos en la web. No hay verificador
+  escrito para 0115.
+
 ## Backup
 
 Hecho el 2026-11-06 14:27 y repetido a las 14:46 con `01-TOOLS/backup/backup-db.ps1` (pg_dump 17.6
