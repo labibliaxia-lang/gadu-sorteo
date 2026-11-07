@@ -1,0 +1,26 @@
+
+<--- Last few GCs --->
+f marking 482 ms) (average mu = 0.952, curre[4236:000001BAF246F000]   109129 ms: Mark-Compact 930.1 (1075.2) -> 845.1 (1032.3) MB, pooled: 16 MB, 384.88 / 0.18 ms  (+ 0.1 ms in 13 steps since start of marking, biggest step 0.0 ms, walltime since start of marking 431 ms) (average mu = 0.910, current[4236:000001BAF246F000]   109676 ms: Mark-Compact 845.1 (1032.3) -> 807.2 (1002.1) MB, pooled: 16 MB, 546.20 / 0.00 ms  (average mu = 0.781, current mu = 0.002) external memory pressure; GC in old space requested
+
+FATAL ERROR: Zone Allocation failed - process out of memory
+----- Native stack trace -----
+
+ 1: 00007FF77C4E90C6 
+ 2: 00007FF77C4E9604 
+ 3: 00007FF77B0F3617 
+ 4: 00007FF77AA6B506 
+ 5: 00007FF77BFF7887 
+ 6: 00007FF77BFF742B 
+ 7: 00007FF77BB30715 
+ 8: 00007FF77BB09BB0 
+ 9: 00007FF77BB06BED 
+10: 00007FF77BB0658D 
+11: 00007FF77B0672CF 
+12: 00007FF77B02C31D 
+13: 00007FF77B02C015 
+14: 00007FF77B8F2CEF 
+15: 00007FF77C429BDB 
+16: 00007FF77B148A26 
+17: 00007FF77C82F483 
+18: 00007FFE744F7124 BaseThreadInitThunk+20
+19: 00007FFE7515CC91 

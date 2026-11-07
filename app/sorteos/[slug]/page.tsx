@@ -411,7 +411,7 @@ export default async function RafflePage({
 
   return (
     <div className="space-y-10">
-      <RaffleVisitTracker raffleId={raffle.id} />
+      <RaffleVisitTracker raffleId={raffle.id} status={raffle.status} />
       <PageViewTracker path={`/sorteos/${raffle.id}`} />
       <section className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
         <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-hairline bg-panel-2">
@@ -437,6 +437,13 @@ export default async function RafflePage({
                   : raffle.status === "closed"
                     ? "warning"
                     : "secondary"
+              }
+              className={
+                raffle.status === "active"
+                  ? "border-emerald-400/40 bg-emerald-700 text-white"
+                  : raffle.status === "closed"
+                    ? "border-amber-300/60 bg-amber-400 text-black"
+                    : "border-hairline bg-canvas/90 text-fg"
               }
             >
               {statusLabel[raffle.status as Raffle["status"]]}

@@ -1,0 +1,686 @@
+[
+  {
+    "paso": "home-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:15:28.313Z",
+    "fin": "2026-11-07T13:15:34.667Z",
+    "duracionMs": 6354,
+    "esperado": "landing con hero y sorteos destacados",
+    "observado": "HTTP 200 · / · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/home-375.jpg",
+      "capturas/home-375-entera.jpg"
+    ],
+    "nota": "ancho 375px · 6353ms"
+  },
+  {
+    "paso": "home-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:15:34.806Z",
+    "fin": "2026-11-07T13:15:39.222Z",
+    "duracionMs": 4416,
+    "esperado": "landing con hero y sorteos destacados",
+    "observado": "HTTP 200 · / · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/home-768.jpg"
+    ],
+    "nota": "ancho 768px · 4416ms"
+  },
+  {
+    "paso": "home-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:15:39.365Z",
+    "fin": "2026-11-07T13:15:43.483Z",
+    "duracionMs": 4118,
+    "esperado": "landing con hero y sorteos destacados",
+    "observado": "HTTP 200 · / · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/home-1280.jpg",
+      "capturas/home-1280-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 4118ms"
+  },
+  {
+    "paso": "como-funciona-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:15:43.601Z",
+    "fin": "2026-11-07T13:15:55.247Z",
+    "duracionMs": 11646,
+    "esperado": "explicación del ciclo de compra",
+    "observado": "HTTP 200 · /como-funciona · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/como-funciona-375.jpg"
+    ],
+    "nota": "ancho 375px · 11646ms"
+  },
+  {
+    "paso": "como-funciona-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:15:55.351Z",
+    "fin": "2026-11-07T13:15:57.981Z",
+    "duracionMs": 2630,
+    "esperado": "explicación del ciclo de compra",
+    "observado": "HTTP 200 · /como-funciona · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/como-funciona-768.jpg"
+    ],
+    "nota": "ancho 768px · 2630ms"
+  },
+  {
+    "paso": "como-funciona-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:15:58.065Z",
+    "fin": "2026-11-07T13:16:00.799Z",
+    "duracionMs": 2734,
+    "esperado": "explicación del ciclo de compra",
+    "observado": "HTTP 200 · /como-funciona · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/como-funciona-1280.jpg"
+    ],
+    "nota": "ancho 1280px · 2734ms"
+  },
+  {
+    "paso": "ayuda-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:00.897Z",
+    "fin": "2026-11-07T13:16:04.895Z",
+    "duracionMs": 3998,
+    "esperado": "preguntas frecuentes",
+    "observado": "HTTP 200 · /ayuda · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/ayuda-375.jpg"
+    ],
+    "nota": "ancho 375px · 3998ms"
+  },
+  {
+    "paso": "ayuda-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:04.977Z",
+    "fin": "2026-11-07T13:16:07.333Z",
+    "duracionMs": 2356,
+    "esperado": "preguntas frecuentes",
+    "observado": "HTTP 200 · /ayuda · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/ayuda-768.jpg"
+    ],
+    "nota": "ancho 768px · 2356ms"
+  },
+  {
+    "paso": "ayuda-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:07.418Z",
+    "fin": "2026-11-07T13:16:10.917Z",
+    "duracionMs": 3499,
+    "esperado": "preguntas frecuentes",
+    "observado": "HTTP 200 · /ayuda · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/ayuda-1280.jpg"
+    ],
+    "nota": "ancho 1280px · 3499ms"
+  },
+  {
+    "paso": "planes-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:11.004Z",
+    "fin": "2026-11-07T13:16:16.749Z",
+    "duracionMs": 5745,
+    "esperado": "planes y precios visibles",
+    "observado": "HTTP 200 · /planes · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/planes-375.jpg"
+    ],
+    "nota": "ancho 375px · 5745ms"
+  },
+  {
+    "paso": "planes-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:16.839Z",
+    "fin": "2026-11-07T13:16:19.537Z",
+    "duracionMs": 2698,
+    "esperado": "planes y precios visibles",
+    "observado": "HTTP 200 · /planes · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/planes-768.jpg"
+    ],
+    "nota": "ancho 768px · 2698ms"
+  },
+  {
+    "paso": "planes-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:19.628Z",
+    "fin": "2026-11-07T13:16:23.003Z",
+    "duracionMs": 3375,
+    "esperado": "planes y precios visibles",
+    "observado": "HTTP 200 · /planes · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/planes-1280.jpg"
+    ],
+    "nota": "ancho 1280px · 3375ms"
+  },
+  {
+    "paso": "ganadores-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:23.091Z",
+    "fin": "2026-11-07T13:16:27.179Z",
+    "duracionMs": 4088,
+    "esperado": "lista de ganadores o estado vacío",
+    "observado": "HTTP 200 · /ganadores · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/ganadores-375.jpg"
+    ],
+    "nota": "ancho 375px · 4088ms"
+  },
+  {
+    "paso": "ganadores-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:27.261Z",
+    "fin": "2026-11-07T13:16:30.120Z",
+    "duracionMs": 2859,
+    "esperado": "lista de ganadores o estado vacío",
+    "observado": "HTTP 200 · /ganadores · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/ganadores-768.jpg"
+    ],
+    "nota": "ancho 768px · 2859ms"
+  },
+  {
+    "paso": "ganadores-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:30.207Z",
+    "fin": "2026-11-07T13:16:33.466Z",
+    "duracionMs": 3259,
+    "esperado": "lista de ganadores o estado vacío",
+    "observado": "HTTP 200 · /ganadores · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/ganadores-1280.jpg"
+    ],
+    "nota": "ancho 1280px · 3259ms"
+  },
+  {
+    "paso": "privacidad-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:33.552Z",
+    "fin": "2026-11-07T13:16:37.100Z",
+    "duracionMs": 3548,
+    "esperado": "texto legal",
+    "observado": "HTTP 200 · /privacidad · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/privacidad-375.jpg"
+    ],
+    "nota": "ancho 375px · 3548ms"
+  },
+  {
+    "paso": "privacidad-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:37.186Z",
+    "fin": "2026-11-07T13:16:39.561Z",
+    "duracionMs": 2375,
+    "esperado": "texto legal",
+    "observado": "HTTP 200 · /privacidad · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/privacidad-768.jpg"
+    ],
+    "nota": "ancho 768px · 2375ms"
+  },
+  {
+    "paso": "privacidad-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:39.648Z",
+    "fin": "2026-11-07T13:16:42.034Z",
+    "duracionMs": 2386,
+    "esperado": "texto legal",
+    "observado": "HTTP 200 · /privacidad · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/privacidad-1280.jpg"
+    ],
+    "nota": "ancho 1280px · 2386ms"
+  },
+  {
+    "paso": "terminos-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:42.129Z",
+    "fin": "2026-11-07T13:16:46.598Z",
+    "duracionMs": 4469,
+    "esperado": "texto legal",
+    "observado": "HTTP 200 · /terminos · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/terminos-375.jpg"
+    ],
+    "nota": "ancho 375px · 4468ms"
+  },
+  {
+    "paso": "terminos-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:46.681Z",
+    "fin": "2026-11-07T13:16:49.063Z",
+    "duracionMs": 2382,
+    "esperado": "texto legal",
+    "observado": "HTTP 200 · /terminos · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/terminos-768.jpg"
+    ],
+    "nota": "ancho 768px · 2382ms"
+  },
+  {
+    "paso": "terminos-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:49.151Z",
+    "fin": "2026-11-07T13:16:51.567Z",
+    "duracionMs": 2416,
+    "esperado": "texto legal",
+    "observado": "HTTP 200 · /terminos · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/terminos-1280.jpg"
+    ],
+    "nota": "ancho 1280px · 2416ms"
+  },
+  {
+    "paso": "seguridad-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:51.663Z",
+    "fin": "2026-11-07T13:16:56.510Z",
+    "duracionMs": 4847,
+    "esperado": "texto de seguridad",
+    "observado": "HTTP 200 · /login?next=%2Fseguridad · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/seguridad-375.jpg"
+    ],
+    "nota": "ancho 375px · 4847ms"
+  },
+  {
+    "paso": "seguridad-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:56.609Z",
+    "fin": "2026-11-07T13:16:59.877Z",
+    "duracionMs": 3268,
+    "esperado": "texto de seguridad",
+    "observado": "HTTP 200 · /login?next=%2Fseguridad · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/seguridad-768.jpg"
+    ],
+    "nota": "ancho 768px · 3268ms"
+  },
+  {
+    "paso": "seguridad-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:16:59.975Z",
+    "fin": "2026-11-07T13:17:02.938Z",
+    "duracionMs": 2963,
+    "esperado": "texto de seguridad",
+    "observado": "HTTP 200 · /login?next=%2Fseguridad · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/seguridad-1280.jpg"
+    ],
+    "nota": "ancho 1280px · 2963ms"
+  },
+  {
+    "paso": "login-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:17:03.050Z",
+    "fin": "2026-11-07T13:17:06.396Z",
+    "duracionMs": 3346,
+    "esperado": "formulario de ingreso",
+    "observado": "HTTP 200 · /login · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/login-375.jpg",
+      "capturas/login-375-entera.jpg"
+    ],
+    "nota": "ancho 375px · 3346ms"
+  },
+  {
+    "paso": "login-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:17:06.496Z",
+    "fin": "2026-11-07T13:17:08.854Z",
+    "duracionMs": 2358,
+    "esperado": "formulario de ingreso",
+    "observado": "HTTP 200 · /login · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/login-768.jpg"
+    ],
+    "nota": "ancho 768px · 2358ms"
+  },
+  {
+    "paso": "login-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:17:08.958Z",
+    "fin": "2026-11-07T13:17:11.470Z",
+    "duracionMs": 2512,
+    "esperado": "formulario de ingreso",
+    "observado": "HTTP 200 · /login · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/login-1280.jpg",
+      "capturas/login-1280-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 2512ms"
+  },
+  {
+    "paso": "register-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:17:11.563Z",
+    "fin": "2026-11-07T13:17:15.228Z",
+    "duracionMs": 3665,
+    "esperado": "formulario de registro",
+    "observado": "HTTP 200 · /register · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/register-375.jpg"
+    ],
+    "nota": "ancho 375px · 3665ms"
+  },
+  {
+    "paso": "register-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:17:15.375Z",
+    "fin": "2026-11-07T13:17:18.400Z",
+    "duracionMs": 3025,
+    "esperado": "formulario de registro",
+    "observado": "HTTP 200 · /register · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/register-768.jpg"
+    ],
+    "nota": "ancho 768px · 3025ms"
+  },
+  {
+    "paso": "register-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:17:18.498Z",
+    "fin": "2026-11-07T13:17:20.969Z",
+    "duracionMs": 2471,
+    "esperado": "formulario de registro",
+    "observado": "HTTP 200 · /register · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/register-1280.jpg"
+    ],
+    "nota": "ancho 1280px · 2471ms"
+  },
+  {
+    "paso": "sorteo-activo-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:17:21.067Z",
+    "fin": "2026-11-07T13:17:31.814Z",
+    "duracionMs": 10747,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/auto-2-demo · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/sorteo-activo-375.jpg",
+      "capturas/sorteo-activo-375-entera.jpg"
+    ],
+    "nota": "ancho 375px · 10747ms"
+  },
+  {
+    "paso": "sorteo-activo-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:17:31.947Z",
+    "fin": "2026-11-07T13:17:53.801Z",
+    "duracionMs": 21854,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/auto-2-demo · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/sorteo-activo-768.jpg"
+    ],
+    "nota": "ancho 768px · 21854ms"
+  },
+  {
+    "paso": "sorteo-activo-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:17:53.950Z",
+    "fin": "2026-11-07T13:18:00.776Z",
+    "duracionMs": 6826,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/auto-2-demo · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/sorteo-activo-1280.jpg",
+      "capturas/sorteo-activo-1280-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 6826ms"
+  },
+  {
+    "paso": "sorteo-activo-2-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:18:00.881Z",
+    "fin": "2026-11-07T13:18:05.913Z",
+    "duracionMs": 5032,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/sorteo-auto-demo · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/sorteo-activo-2-375.jpg"
+    ],
+    "nota": "ancho 375px · 5032ms"
+  },
+  {
+    "paso": "sorteo-activo-2-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:18:06.018Z",
+    "fin": "2026-11-07T13:18:12.731Z",
+    "duracionMs": 6713,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/sorteo-auto-demo · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/sorteo-activo-2-768.jpg"
+    ],
+    "nota": "ancho 768px · 6713ms"
+  },
+  {
+    "paso": "sorteo-activo-2-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:18:13.006Z",
+    "fin": "2026-11-07T13:18:19.459Z",
+    "duracionMs": 6453,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/sorteo-auto-demo · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/sorteo-activo-2-1280.jpg"
+    ],
+    "nota": "ancho 1280px · 6453ms"
+  },
+  {
+    "paso": "sorteo-sorteado-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:18:19.619Z",
+    "fin": "2026-11-07T13:18:27.739Z",
+    "duracionMs": 8120,
+    "esperado": "detalle con resultado",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo · 2 error(es) de consola; 1 respuesta(s) 4xx",
+    "resultado": "falla",
+    "evidencia": [
+      "capturas/sorteo-sorteado-375.jpg",
+      "capturas/sorteo-sorteado-375-entera.jpg"
+    ],
+    "nota": "ancho 375px · 8120ms"
+  },
+  {
+    "paso": "sorteo-sorteado-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:18:27.853Z",
+    "fin": "2026-11-07T13:18:40.391Z",
+    "duracionMs": 12538,
+    "esperado": "detalle con resultado",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo · 2 error(es) de consola; 1 respuesta(s) 4xx",
+    "resultado": "falla",
+    "evidencia": [
+      "capturas/sorteo-sorteado-768.jpg"
+    ],
+    "nota": "ancho 768px · 12538ms"
+  },
+  {
+    "paso": "sorteo-sorteado-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:18:40.486Z",
+    "fin": "2026-11-07T13:18:47.514Z",
+    "duracionMs": 7028,
+    "esperado": "detalle con resultado",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo · 2 error(es) de consola; 1 respuesta(s) 4xx",
+    "resultado": "falla",
+    "evidencia": [
+      "capturas/sorteo-sorteado-1280.jpg",
+      "capturas/sorteo-sorteado-1280-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 7028ms"
+  },
+  {
+    "paso": "verificar-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:18:47.637Z",
+    "fin": "2026-11-07T13:18:57.899Z",
+    "duracionMs": 10262,
+    "esperado": "verificación del resultado",
+    "observado": "HTTP 404 · /sorteos/auto-2026-demo/verificar · HTTP 404 en la página; 1 error(es) de consola; 1 respuesta(s) 4xx",
+    "resultado": "falla",
+    "evidencia": [
+      "capturas/verificar-375.jpg",
+      "capturas/verificar-375-entera.jpg"
+    ],
+    "nota": "ancho 375px · 10262ms"
+  },
+  {
+    "paso": "verificar-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:18:58.015Z",
+    "fin": "2026-11-07T13:19:01.415Z",
+    "duracionMs": 3400,
+    "esperado": "verificación del resultado",
+    "observado": "HTTP 404 · /sorteos/auto-2026-demo/verificar · HTTP 404 en la página; 1 error(es) de consola; 1 respuesta(s) 4xx",
+    "resultado": "falla",
+    "evidencia": [
+      "capturas/verificar-768.jpg"
+    ],
+    "nota": "ancho 768px · 3400ms"
+  },
+  {
+    "paso": "verificar-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:19:01.523Z",
+    "fin": "2026-11-07T13:19:05.806Z",
+    "duracionMs": 4283,
+    "esperado": "verificación del resultado",
+    "observado": "HTTP 404 · /sorteos/auto-2026-demo/verificar · HTTP 404 en la página; 1 error(es) de consola; 1 respuesta(s) 4xx",
+    "resultado": "falla",
+    "evidencia": [
+      "capturas/verificar-1280.jpg",
+      "capturas/verificar-1280-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 4283ms"
+  },
+  {
+    "paso": "en-vivo-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:19:05.903Z",
+    "fin": "2026-11-07T13:19:21.655Z",
+    "duracionMs": 15752,
+    "esperado": "sala en vivo o redirección honesta",
+    "observado": "HTTP 404 · /sorteos/auto-2026-demo/en-vivo · HTTP 404 en la página; 1 error(es) de consola; 1 respuesta(s) 4xx",
+    "resultado": "falla",
+    "evidencia": [
+      "capturas/en-vivo-375.jpg"
+    ],
+    "nota": "ancho 375px · 15752ms"
+  },
+  {
+    "paso": "en-vivo-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:19:21.772Z",
+    "fin": "2026-11-07T13:19:27.283Z",
+    "duracionMs": 5511,
+    "esperado": "sala en vivo o redirección honesta",
+    "observado": "HTTP 404 · /sorteos/auto-2026-demo/en-vivo · HTTP 404 en la página; 1 error(es) de consola; 1 respuesta(s) 4xx",
+    "resultado": "falla",
+    "evidencia": [
+      "capturas/en-vivo-768.jpg"
+    ],
+    "nota": "ancho 768px · 5511ms"
+  },
+  {
+    "paso": "en-vivo-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:19:27.365Z",
+    "fin": "2026-11-07T13:19:35.364Z",
+    "duracionMs": 7999,
+    "esperado": "sala en vivo o redirección honesta",
+    "observado": "HTTP 404 · /sorteos/auto-2026-demo/en-vivo · HTTP 404 en la página; 1 error(es) de consola; 1 respuesta(s) 4xx",
+    "resultado": "falla",
+    "evidencia": [
+      "capturas/en-vivo-1280.jpg"
+    ],
+    "nota": "ancho 1280px · 7999ms"
+  },
+  {
+    "paso": "organizador-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:19:35.454Z",
+    "fin": "2026-11-07T13:19:48.062Z",
+    "duracionMs": 12608,
+    "esperado": "perfil público del organizador",
+    "observado": "HTTP 200 · /organizador/franco-maldonado-gadu · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/organizador-375.jpg",
+      "capturas/organizador-375-entera.jpg"
+    ],
+    "nota": "ancho 375px · 12608ms"
+  },
+  {
+    "paso": "organizador-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:19:48.212Z",
+    "fin": "2026-11-07T13:19:52.457Z",
+    "duracionMs": 4245,
+    "esperado": "perfil público del organizador",
+    "observado": "HTTP 200 · /organizador/franco-maldonado-gadu · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/organizador-768.jpg"
+    ],
+    "nota": "ancho 768px · 4245ms"
+  },
+  {
+    "paso": "organizador-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:19:52.569Z",
+    "fin": "2026-11-07T13:19:56.285Z",
+    "duracionMs": 3716,
+    "esperado": "perfil público del organizador",
+    "observado": "HTTP 200 · /organizador/franco-maldonado-gadu · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/organizador-1280.jpg",
+      "capturas/organizador-1280-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 3716ms"
+  }
+]

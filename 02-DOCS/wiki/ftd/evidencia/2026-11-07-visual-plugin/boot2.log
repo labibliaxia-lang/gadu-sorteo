@@ -1,0 +1,15 @@
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3001
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · instrumentationHook
+
+ ✓ Starting...
+ ○ Compiling /instrumentation ...
+ ✓ Compiled /instrumentation in 10.9s (1051 modules)
+ ✓ Ready in 23s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 14.3s (946 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 52.5s (3471 modules)
+ GET / 200 in 13237ms

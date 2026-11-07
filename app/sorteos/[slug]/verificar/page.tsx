@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { MultiPrizeVerifier } from "@/components/MultiPrizeVerifier";
 import { WinnerCertificate } from "@/components/WinnerCertificate";
 import { collectSoldNumbers } from "@/lib/raffle-numbers";
+import { resolverColumna } from "@/lib/raffle-slug";
 import { formatDateTime } from "@/lib/utils";
 import type { Raffle, RaffleWinner } from "@/lib/types";
 
@@ -49,13 +50,34 @@ export default async function VerifyPage({
 }) {
   const supabase = createClient();
 
-  const { data: raffle } = await supabase
+  // 0115: la ruta acepta slug o UUID viejo. Sin esto, `/sorteos/<slug>/verificar`
+  // respondía 404: la consulta iba contra `id` con el slug adentro.
+  const parametro = params.slug.trim();
+  const columna = resolverColumna(parametro);
+  let { data: raffle } = await supabase
     .from("raffles")
     .select("*")
-    .eq("id", params.slug)
+    .eq(columna, parametro)
     .maybeSingle();
 
+  // Compatibilidad: un slug inexistente con forma de UUID no debe romper; si la
+  // primera búsqueda no trae nada, se intenta por id igual que la página madre.
+  if (!raffle && columna === "slug") {
+    const { data: porId } = await supabase
+      .from("raffles")
+      .select("*")
+      .eq("id", parametro)
+      .maybeSingle();
+    raffle = porId;
+  }
+
   if (!raffle) notFound();
+
+  // A partir de acá todo va por id: los números, los ganadores y la RPC no
+  // aceptan slug.
+  const raffleId = raffle.id;
+  // Para los enlaces se conserva la forma pública (slug cuando existe).
+  const clavePublica = raffle.slug ?? raffle.id;
 
   // Listado completo: PostgREST corta en 1000 filas por respuesta, así que se
   // pagina. Con la lista truncada el verificador recalcula el hash con menos
@@ -64,7 +86,7 @@ export default async function VerifyPage({
     const { data, error } = await supabase
       .from("raffle_numbers")
       .select("number")
-      .eq("raffle_id", params.slug)
+      .eq("raffle_id", raffleId)
       .eq("status", "sold")
       .order("number", { ascending: true })
       .range(from, to);
@@ -77,22 +99,22 @@ export default async function VerifyPage({
       ? await supabase
           .from("raffle_winners")
           .select("position, number, user_name, prize_title, winner_hash")
-          .eq("raffle_id", params.slug)
+          .eq("raffle_id", raffleId)
           .order("position", { ascending: true })
       : { data: null };
   const winners = (winnerRows ?? []) as RaffleWinner[];
 
   const base = siteUrl();
   const verifyUrl = base
-    ? `${base}/sorteos/${params.slug}/verificar`
-    : `/sorteos/${params.slug}/verificar`;
+    ? `${base}/sorteos/${clavePublica}/verificar`
+    : `/sorteos/${clavePublica}/verificar`;
 
   const drawn = raffle.status === "drawn" && raffle.winner_number != null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <Link
-        href={`/sorteos/${params.slug}`}
+        href={`/sorteos/${clavePublica}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -141,7 +163,7 @@ export default async function VerifyPage({
               </p>
             )}
             <Link
-              href={`/sorteos/${params.slug}/en-vivo`}
+              href={`/sorteos/${clavePublica}/en-vivo`}
               className="inline-flex items-center gap-1.5 text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
             >
               Ir a la sala en vivo
@@ -325,13 +347,13 @@ export default async function VerifyPage({
 
       <div className="flex flex-wrap gap-3 text-sm">
         <Link
-          href={`/sorteos/${params.slug}`}
+          href={`/sorteos/${clavePublica}`}
           className="text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
         >
           Página pública del sorteo
         </Link>
         <Link
-          href={`/sorteos/${params.slug}/en-vivo`}
+          href={`/sorteos/${clavePublica}/en-vivo`}
           className="text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
         >
           Sala en vivo

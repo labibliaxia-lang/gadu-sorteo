@@ -6,6 +6,7 @@ import { ArrowLeft, Radio } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { LiveDrawAnimation } from "@/components/LiveDrawAnimation";
+import { resolverColumna } from "@/lib/raffle-slug";
 import { formatDateTime } from "@/lib/utils";
 import type { Raffle } from "@/lib/types";
 
@@ -31,26 +32,43 @@ export default async function LiveDrawPage({
 }) {
   const supabase = createClient();
 
-  const { data: raffle } = await supabase
+  // 0115: la ruta acepta slug o UUID viejo. Sin esto, `/sorteos/<slug>/en-vivo`
+  // respondía 404 porque buscaba el slug en la columna `id`.
+  const parametro = params.slug.trim();
+  const columna = resolverColumna(parametro);
+  let { data: raffle } = await supabase
     .from("raffles")
     .select("*")
-    .eq("id", params.slug)
+    .eq(columna, parametro)
     .maybeSingle();
 
+  if (!raffle && columna === "slug") {
+    const { data: porId } = await supabase
+      .from("raffles")
+      .select("*")
+      .eq("id", parametro)
+      .maybeSingle();
+    raffle = porId;
+  }
+
   if (!raffle) notFound();
+
+  // De acá para abajo todo va por id; los enlaces conservan la forma pública.
+  const raffleId = raffle.id;
+  const clavePublica = raffle.slug ?? raffle.id;
 
   const [soldResult, soldCountResult] = await Promise.all([
     supabase
       .from("raffle_numbers")
       .select("number")
-      .eq("raffle_id", params.slug)
+      .eq("raffle_id", raffleId)
       .eq("status", "sold")
       .order("number")
       .limit(300),
     supabase
       .from("raffle_numbers")
       .select("*", { count: "exact", head: true })
-      .eq("raffle_id", params.slug)
+      .eq("raffle_id", raffleId)
       .eq("status", "sold"),
   ]);
 
@@ -68,7 +86,7 @@ export default async function LiveDrawPage({
   if (user) {
     const [{ data: profile }, { data: owns }] = await Promise.all([
       supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
-      supabase.rpc("owns_raffle", { p_raffle_id: params.slug }),
+      supabase.rpc("owns_raffle", { p_raffle_id: raffleId }),
     ]);
 
     canDraw =
@@ -79,7 +97,7 @@ export default async function LiveDrawPage({
   return (
     <div className="space-y-6">
       <Link
-        href={`/sorteos/${params.slug}`}
+        href={`/sorteos/${clavePublica}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -117,13 +135,13 @@ export default async function LiveDrawPage({
 
       <div className="flex flex-wrap gap-2 text-sm">
         <Link
-          href={`/sorteos/${params.slug}`}
+          href={`/sorteos/${clavePublica}`}
           className="text-brand-800 underline-offset-4 hover:underline dark:text-brand-300"
         >
           Ver el sorteo
         </Link>
         <Link
-          href={`/sorteos/${params.slug}/verificar`}
+          href={`/sorteos/${clavePublica}/verificar`}
           className="text-brand-800 underline-offset-4 hover:underline dark:text-brand-300"
         >
           Página de verificación

@@ -1,0 +1,218 @@
+[
+  {
+    "paso": "home-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:10.529Z",
+    "fin": "2026-11-07T13:26:16.090Z",
+    "duracionMs": 5561,
+    "esperado": "landing con hero y sorteos destacados",
+    "observado": "HTTP 200 · / · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/home-375-light.jpg",
+      "capturas/home-375-light-entera.jpg"
+    ],
+    "nota": "ancho 375px · 5561ms"
+  },
+  {
+    "paso": "home-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:16.204Z",
+    "fin": "2026-11-07T13:26:19.710Z",
+    "duracionMs": 3506,
+    "esperado": "landing con hero y sorteos destacados",
+    "observado": "HTTP 200 · / · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/home-768-light.jpg"
+    ],
+    "nota": "ancho 768px · 3506ms"
+  },
+  {
+    "paso": "home-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:19.826Z",
+    "fin": "2026-11-07T13:26:24.217Z",
+    "duracionMs": 4391,
+    "esperado": "landing con hero y sorteos destacados",
+    "observado": "HTTP 200 · / · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/home-1280-light.jpg",
+      "capturas/home-1280-light-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 4391ms"
+  },
+  {
+    "paso": "ayuda-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:24.329Z",
+    "fin": "2026-11-07T13:26:29.935Z",
+    "duracionMs": 5606,
+    "esperado": "preguntas frecuentes",
+    "observado": "HTTP 200 · /ayuda · 6 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/ayuda-375-light.jpg"
+    ],
+    "nota": "ancho 375px · 5606ms"
+  },
+  {
+    "paso": "ayuda-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:30.030Z",
+    "fin": "2026-11-07T13:26:33.055Z",
+    "duracionMs": 3025,
+    "esperado": "preguntas frecuentes",
+    "observado": "HTTP 200 · /ayuda · 6 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/ayuda-768-light.jpg"
+    ],
+    "nota": "ancho 768px · 3025ms"
+  },
+  {
+    "paso": "ayuda-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:33.150Z",
+    "fin": "2026-11-07T13:26:35.825Z",
+    "duracionMs": 2675,
+    "esperado": "preguntas frecuentes",
+    "observado": "HTTP 200 · /ayuda · 6 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/ayuda-1280-light.jpg"
+    ],
+    "nota": "ancho 1280px · 2675ms"
+  },
+  {
+    "paso": "planes-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:35.924Z",
+    "fin": "2026-11-07T13:26:42.148Z",
+    "duracionMs": 6224,
+    "esperado": "planes y precios visibles",
+    "observado": "HTTP 200 · /planes · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/planes-375-light.jpg"
+    ],
+    "nota": "ancho 375px · 6224ms"
+  },
+  {
+    "paso": "planes-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:42.278Z",
+    "fin": "2026-11-07T13:26:45.369Z",
+    "duracionMs": 3091,
+    "esperado": "planes y precios visibles",
+    "observado": "HTTP 200 · /planes · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/planes-768-light.jpg"
+    ],
+    "nota": "ancho 768px · 3091ms"
+  },
+  {
+    "paso": "planes-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:45.461Z",
+    "fin": "2026-11-07T13:26:48.573Z",
+    "duracionMs": 3112,
+    "esperado": "planes y precios visibles",
+    "observado": "HTTP 200 · /planes · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/planes-1280-light.jpg"
+    ],
+    "nota": "ancho 1280px · 3112ms"
+  },
+  {
+    "paso": "login-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:48.672Z",
+    "fin": "2026-11-07T13:26:51.307Z",
+    "duracionMs": 2635,
+    "esperado": "formulario de ingreso",
+    "observado": "HTTP 200 · /login · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/login-375-light.jpg",
+      "capturas/login-375-light-entera.jpg"
+    ],
+    "nota": "ancho 375px · 2635ms"
+  },
+  {
+    "paso": "login-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:51.405Z",
+    "fin": "2026-11-07T13:26:54.360Z",
+    "duracionMs": 2955,
+    "esperado": "formulario de ingreso",
+    "observado": "HTTP 200 · /login · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/login-768-light.jpg"
+    ],
+    "nota": "ancho 768px · 2954ms"
+  },
+  {
+    "paso": "login-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:54.453Z",
+    "fin": "2026-11-07T13:26:57.165Z",
+    "duracionMs": 2712,
+    "esperado": "formulario de ingreso",
+    "observado": "HTTP 200 · /login · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/login-1280-light.jpg",
+      "capturas/login-1280-light-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 2712ms"
+  },
+  {
+    "paso": "sorteo-activo-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:26:57.290Z",
+    "fin": "2026-11-07T13:27:02.854Z",
+    "duracionMs": 5564,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/auto-2-demo · 3 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/sorteo-activo-375-light.jpg",
+      "capturas/sorteo-activo-375-light-entera.jpg"
+    ],
+    "nota": "ancho 375px · 5564ms"
+  },
+  {
+    "paso": "sorteo-activo-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:27:02.979Z",
+    "fin": "2026-11-07T13:27:09.614Z",
+    "duracionMs": 6635,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/auto-2-demo · 3 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/sorteo-activo-768-light.jpg"
+    ],
+    "nota": "ancho 768px · 6635ms"
+  },
+  {
+    "paso": "sorteo-activo-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:27:09.737Z",
+    "fin": "2026-11-07T13:27:16.199Z",
+    "duracionMs": 6462,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/auto-2-demo · 3 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/sorteo-activo-1280-light.jpg",
+      "capturas/sorteo-activo-1280-light-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 6462ms"
+  }
+]

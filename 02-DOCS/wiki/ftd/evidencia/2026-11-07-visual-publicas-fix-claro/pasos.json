@@ -1,0 +1,176 @@
+[
+  {
+    "paso": "sorteo-activo-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:46:09.181Z",
+    "fin": "2026-11-07T13:46:18.436Z",
+    "duracionMs": 9255,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/auto-2-demo · 2 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/sorteo-activo-375-light.jpg",
+      "capturas/sorteo-activo-375-light-entera.jpg"
+    ],
+    "nota": "ancho 375px · 9255ms"
+  },
+  {
+    "paso": "sorteo-activo-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:46:18.547Z",
+    "fin": "2026-11-07T13:46:23.640Z",
+    "duracionMs": 5093,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/auto-2-demo · 2 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/sorteo-activo-768-light.jpg"
+    ],
+    "nota": "ancho 768px · 5093ms"
+  },
+  {
+    "paso": "sorteo-activo-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:46:23.804Z",
+    "fin": "2026-11-07T13:46:30.755Z",
+    "duracionMs": 6951,
+    "esperado": "detalle con grilla de números",
+    "observado": "HTTP 200 · /sorteos/auto-2-demo · 2 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/sorteo-activo-1280-light.jpg",
+      "capturas/sorteo-activo-1280-light-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 6951ms"
+  },
+  {
+    "paso": "sorteo-sorteado-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:46:30.930Z",
+    "fin": "2026-11-07T13:46:37.046Z",
+    "duracionMs": 6116,
+    "esperado": "detalle con resultado",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo · 2 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/sorteo-sorteado-375-light.jpg",
+      "capturas/sorteo-sorteado-375-light-entera.jpg"
+    ],
+    "nota": "ancho 375px · 6116ms"
+  },
+  {
+    "paso": "sorteo-sorteado-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:46:37.163Z",
+    "fin": "2026-11-07T13:46:43.571Z",
+    "duracionMs": 6408,
+    "esperado": "detalle con resultado",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo · 2 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/sorteo-sorteado-768-light.jpg"
+    ],
+    "nota": "ancho 768px · 6408ms"
+  },
+  {
+    "paso": "sorteo-sorteado-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:46:43.673Z",
+    "fin": "2026-11-07T13:46:49.305Z",
+    "duracionMs": 5632,
+    "esperado": "detalle con resultado",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo · 2 texto(s) bajo contraste",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/sorteo-sorteado-1280-light.jpg",
+      "capturas/sorteo-sorteado-1280-light-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 5632ms"
+  },
+  {
+    "paso": "verificar-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:46:49.418Z",
+    "fin": "2026-11-07T13:46:52.594Z",
+    "duracionMs": 3176,
+    "esperado": "verificación del resultado",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo/verificar · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/verificar-375-light.jpg",
+      "capturas/verificar-375-light-entera.jpg"
+    ],
+    "nota": "ancho 375px · 3176ms"
+  },
+  {
+    "paso": "verificar-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:46:52.694Z",
+    "fin": "2026-11-07T13:46:56.307Z",
+    "duracionMs": 3613,
+    "esperado": "verificación del resultado",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo/verificar · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/verificar-768-light.jpg"
+    ],
+    "nota": "ancho 768px · 3613ms"
+  },
+  {
+    "paso": "verificar-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:46:56.420Z",
+    "fin": "2026-11-07T13:46:59.611Z",
+    "duracionMs": 3191,
+    "esperado": "verificación del resultado",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo/verificar · sin hallazgos",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/verificar-1280-light.jpg",
+      "capturas/verificar-1280-light-entera.jpg"
+    ],
+    "nota": "ancho 1280px · 3191ms"
+  },
+  {
+    "paso": "en-vivo-375",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:46:59.710Z",
+    "fin": "2026-11-07T13:47:02.942Z",
+    "duracionMs": 3232,
+    "esperado": "sala en vivo o redirección honesta",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo/en-vivo · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/en-vivo-375-light.jpg"
+    ],
+    "nota": "ancho 375px · 3232ms"
+  },
+  {
+    "paso": "en-vivo-768",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:47:03.026Z",
+    "fin": "2026-11-07T13:47:06.064Z",
+    "duracionMs": 3038,
+    "esperado": "sala en vivo o redirección honesta",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo/en-vivo · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/en-vivo-768-light.jpg"
+    ],
+    "nota": "ancho 768px · 3038ms"
+  },
+  {
+    "paso": "en-vivo-1280",
+    "rol": "visitante anónimo",
+    "inicio": "2026-11-07T13:47:06.170Z",
+    "fin": "2026-11-07T13:47:09.380Z",
+    "duracionMs": 3210,
+    "esperado": "sala en vivo o redirección honesta",
+    "observado": "HTTP 200 · /sorteos/auto-2026-demo/en-vivo · 1 salto(s) de título",
+    "resultado": "parcial",
+    "evidencia": [
+      "capturas/en-vivo-1280-light.jpg"
+    ],
+    "nota": "ancho 1280px · 3210ms"
+  }
+]

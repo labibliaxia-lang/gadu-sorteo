@@ -1,0 +1,44 @@
+{
+  "fecha": "2026-11-07T14:24:03.166Z",
+  "base": "http://localhost:3001",
+  "slug": "contraprueba-aprobacion",
+  "raffleId": "1390233b-d18a-4d2e-874c-6b8687b74333",
+  "pasos": [
+    {
+      "paso": "A1-bruno-reserva",
+      "rol": "bruno",
+      "inicio": "2026-11-07T14:23:36.661Z",
+      "esperado": "número 7 reserved",
+      "observado": "page.reload: net::ERR_CONNECTION_REFUSED\nCall log:\n\u001b[2m  - waiting for navigation until \"networkidle\"\u001b[22m\n",
+      "resultado": "falla",
+      "fin": "2026-11-07T14:24:01.354Z"
+    },
+    {
+      "paso": "A2-carla-aprueba-bandeja",
+      "rol": "carla",
+      "inicio": "2026-11-07T14:24:01.354Z",
+      "esperado": "rewarded=true",
+      "observado": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/admin/notificaciones\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/admin/notificaciones\", waiting until \"networkidle\"\u001b[22m\n",
+      "resultado": "falla",
+      "fin": "2026-11-07T14:24:02.114Z"
+    },
+    {
+      "paso": "B1-eva-reserva",
+      "rol": "eva",
+      "inicio": "2026-11-07T14:24:02.114Z",
+      "esperado": "número 12 reserved",
+      "observado": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/sorteos/contraprueba-aprobacion?ref=7c729f01-451b-461e-8a46-e13b90c72088\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/sorteos/contraprueba-aprobacion?ref=7c729f01-451b-461e-8a46-e13b90c72088\", waiting until \"networkidle\"\u001b[22m\n",
+      "resultado": "falla",
+      "fin": "2026-11-07T14:24:02.523Z"
+    },
+    {
+      "paso": "B2-carla-aprueba-panel",
+      "rol": "carla",
+      "inicio": "2026-11-07T14:24:02.523Z",
+      "esperado": "rewarded SIGUE en false",
+      "observado": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3001/admin/sorteos/1390233b-d18a-4d2e-874c-6b8687b74333/numeros\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/admin/sorteos/1390233b-d18a-4d2e-874c-6b8687b74333/numeros\", waiting until \"networkidle\"\u001b[22m\n",
+      "resultado": "falla",
+      "fin": "2026-11-07T14:24:02.908Z"
+    }
+  ]
+}

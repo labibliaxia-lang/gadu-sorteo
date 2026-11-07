@@ -1,0 +1,1427 @@
+{
+  "base": "http://localhost:3000",
+  "tema": "light",
+  "corrida": "C:\\Users\\Usuario\\Desktop\\sorteos herramientas\\02-DOCS\\wiki\\ftd\\evidencia\\2026-11-07-visual-publicas-claro",
+  "fecha": "2026-11-07T13:27:16.309Z",
+  "total": 15,
+  "cuenta": {
+    "ok": 3,
+    "parcial": 12
+  },
+  "porPagina": [
+    {
+      "pagina": "home",
+      "ruta": "/",
+      "resultados": "375px:ok 768px:ok 1280px:ok",
+      "problemas": []
+    },
+    {
+      "pagina": "ayuda",
+      "ruta": "/ayuda",
+      "resultados": "375px:parcial 768px:parcial 1280px:parcial",
+      "problemas": [
+        "6 texto(s) bajo contraste"
+      ]
+    },
+    {
+      "pagina": "planes",
+      "ruta": "/planes",
+      "resultados": "375px:parcial 768px:parcial 1280px:parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ]
+    },
+    {
+      "pagina": "login",
+      "ruta": "/login",
+      "resultados": "375px:parcial 768px:parcial 1280px:parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ]
+    },
+    {
+      "pagina": "sorteo-activo",
+      "ruta": "/sorteos/auto-2-demo",
+      "resultados": "375px:parcial 768px:parcial 1280px:parcial",
+      "problemas": [
+        "3 texto(s) bajo contraste"
+      ]
+    }
+  ],
+  "resultados": [
+    {
+      "pagina": "home",
+      "ruta": "/",
+      "urlFinal": "/",
+      "ancho": 375,
+      "estado": 200,
+      "duracionMs": 5562,
+      "resultado": "ok",
+      "problemas": [],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Gadu Sorteos",
+        "metaDescripcion": "Participa en sorteos con premios de todo tipo, elige tus números y paga por transferencia con comprobante por WhatsApp.",
+        "anchoDoc": 375,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Sorteos que se pueden verificar."
+          },
+          {
+            "nivel": 2,
+            "texto": "sorteo auto (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "sorteo  auto (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Sorteos en juego"
+          },
+          {
+            "nivel": 3,
+            "texto": "auto 2 (DEMO)"
+          },
+          {
+            "nivel": 3,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Tres pasos, sin letra chica."
+          },
+          {
+            "nivel": 3,
+            "texto": "Elegí tus números"
+          },
+          {
+            "nivel": 3,
+            "texto": "Transferí y avisá"
+          },
+          {
+            "nivel": 3,
+            "texto": "Sorteo verificable"
+          },
+          {
+            "nivel": 3,
+            "texto": "Resultados públicos"
+          },
+          {
+            "nivel": 3,
+            "texto": "Pago claro"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/home-375-light.jpg",
+        "capturas/home-375-light-entera.jpg"
+      ]
+    },
+    {
+      "pagina": "home",
+      "ruta": "/",
+      "urlFinal": "/",
+      "ancho": 768,
+      "estado": 200,
+      "duracionMs": 3508,
+      "resultado": "ok",
+      "problemas": [],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Gadu Sorteos",
+        "metaDescripcion": "Participa en sorteos con premios de todo tipo, elige tus números y paga por transferencia con comprobante por WhatsApp.",
+        "anchoDoc": 768,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Sorteos que se pueden verificar."
+          },
+          {
+            "nivel": 2,
+            "texto": "sorteo auto (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "sorteo  auto (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Sorteos en juego"
+          },
+          {
+            "nivel": 3,
+            "texto": "auto 2 (DEMO)"
+          },
+          {
+            "nivel": 3,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Tres pasos, sin letra chica."
+          },
+          {
+            "nivel": 3,
+            "texto": "Elegí tus números"
+          },
+          {
+            "nivel": 3,
+            "texto": "Transferí y avisá"
+          },
+          {
+            "nivel": 3,
+            "texto": "Sorteo verificable"
+          },
+          {
+            "nivel": 3,
+            "texto": "Resultados públicos"
+          },
+          {
+            "nivel": 3,
+            "texto": "Pago claro"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/home-768-light.jpg"
+      ]
+    },
+    {
+      "pagina": "home",
+      "ruta": "/",
+      "urlFinal": "/",
+      "ancho": 1280,
+      "estado": 200,
+      "duracionMs": 4393,
+      "resultado": "ok",
+      "problemas": [],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Gadu Sorteos",
+        "metaDescripcion": "Participa en sorteos con premios de todo tipo, elige tus números y paga por transferencia con comprobante por WhatsApp.",
+        "anchoDoc": 1280,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Sorteos que se pueden verificar."
+          },
+          {
+            "nivel": 2,
+            "texto": "sorteo  auto (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "sorteo auto (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Sorteos en juego"
+          },
+          {
+            "nivel": 3,
+            "texto": "auto 2 (DEMO)"
+          },
+          {
+            "nivel": 3,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Tres pasos, sin letra chica."
+          },
+          {
+            "nivel": 3,
+            "texto": "Elegí tus números"
+          },
+          {
+            "nivel": 3,
+            "texto": "Transferí y avisá"
+          },
+          {
+            "nivel": 3,
+            "texto": "Sorteo verificable"
+          },
+          {
+            "nivel": 3,
+            "texto": "Resultados públicos"
+          },
+          {
+            "nivel": 3,
+            "texto": "Pago claro"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/home-1280-light.jpg",
+        "capturas/home-1280-light-entera.jpg"
+      ]
+    },
+    {
+      "pagina": "ayuda",
+      "ruta": "/ayuda",
+      "urlFinal": "/ayuda",
+      "ancho": 375,
+      "estado": 200,
+      "duracionMs": 5608,
+      "resultado": "parcial",
+      "problemas": [
+        "6 texto(s) bajo contraste"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Centro de ayuda | Gadu Sorteos",
+        "metaDescripcion": "Cómo comprar números, cómo pagar por transferencia, cómo se elige el ganador y qué hacer si algo no funciona.",
+        "anchoDoc": 375,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(1) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Comprar números",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(2) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Pagar",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(3) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "El sorteo y la transparencia",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(4) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Si ganaste",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(5) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Organizadores y planes",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(6) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Problemas frecuentes",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          }
+        ],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Todo lo que necesitás saber"
+          },
+          {
+            "nivel": 2,
+            "texto": "Comprar números"
+          },
+          {
+            "nivel": 2,
+            "texto": "Pagar"
+          },
+          {
+            "nivel": 2,
+            "texto": "El sorteo y la transparencia"
+          },
+          {
+            "nivel": 2,
+            "texto": "Si ganaste"
+          },
+          {
+            "nivel": 2,
+            "texto": "Organizadores y planes"
+          },
+          {
+            "nivel": 2,
+            "texto": "Problemas frecuentes"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Seguís con dudas?"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/ayuda-375-light.jpg"
+      ]
+    },
+    {
+      "pagina": "ayuda",
+      "ruta": "/ayuda",
+      "urlFinal": "/ayuda",
+      "ancho": 768,
+      "estado": 200,
+      "duracionMs": 3027,
+      "resultado": "parcial",
+      "problemas": [
+        "6 texto(s) bajo contraste"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Centro de ayuda | Gadu Sorteos",
+        "metaDescripcion": "Cómo comprar números, cómo pagar por transferencia, cómo se elige el ganador y qué hacer si algo no funciona.",
+        "anchoDoc": 768,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(1) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Comprar números",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(2) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Pagar",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(3) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "El sorteo y la transparencia",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(4) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Si ganaste",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(5) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Organizadores y planes",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(6) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Problemas frecuentes",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          }
+        ],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Todo lo que necesitás saber"
+          },
+          {
+            "nivel": 2,
+            "texto": "Comprar números"
+          },
+          {
+            "nivel": 2,
+            "texto": "Pagar"
+          },
+          {
+            "nivel": 2,
+            "texto": "El sorteo y la transparencia"
+          },
+          {
+            "nivel": 2,
+            "texto": "Si ganaste"
+          },
+          {
+            "nivel": 2,
+            "texto": "Organizadores y planes"
+          },
+          {
+            "nivel": 2,
+            "texto": "Problemas frecuentes"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Seguís con dudas?"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/ayuda-768-light.jpg"
+      ]
+    },
+    {
+      "pagina": "ayuda",
+      "ruta": "/ayuda",
+      "urlFinal": "/ayuda",
+      "ancho": 1280,
+      "estado": 200,
+      "duracionMs": 2677,
+      "resultado": "parcial",
+      "problemas": [
+        "6 texto(s) bajo contraste"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Centro de ayuda | Gadu Sorteos",
+        "metaDescripcion": "Cómo comprar números, cómo pagar por transferencia, cómo se elige el ganador y qué hacer si algo no funciona.",
+        "anchoDoc": 1280,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(1) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Comprar números",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(2) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Pagar",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(3) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "El sorteo y la transparencia",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(4) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Si ganaste",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(5) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Organizadores y planes",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          },
+          {
+            "selector": "nav.rounded-xl.border:nth-child(2) > ul.flex.flex-wrap:nth-child(2) > li:nth-child(6) > a.text-amber-700.underline-offset-4:nth-child(1)",
+            "texto": "Problemas frecuentes",
+            "color": "rgb(180, 83, 9)",
+            "fondo": "rgb(243,242,237)",
+            "ratio": 4.47,
+            "minimo": 4.5,
+            "tamanoPx": 14
+          }
+        ],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Todo lo que necesitás saber"
+          },
+          {
+            "nivel": 2,
+            "texto": "Comprar números"
+          },
+          {
+            "nivel": 2,
+            "texto": "Pagar"
+          },
+          {
+            "nivel": 2,
+            "texto": "El sorteo y la transparencia"
+          },
+          {
+            "nivel": 2,
+            "texto": "Si ganaste"
+          },
+          {
+            "nivel": 2,
+            "texto": "Organizadores y planes"
+          },
+          {
+            "nivel": 2,
+            "texto": "Problemas frecuentes"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Seguís con dudas?"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/ayuda-1280-light.jpg"
+      ]
+    },
+    {
+      "pagina": "planes",
+      "ruta": "/planes",
+      "urlFinal": "/planes",
+      "ancho": 375,
+      "estado": 200,
+      "duracionMs": 6225,
+      "resultado": "parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Gadu Sorteos",
+        "metaDescripcion": "Participa en sorteos con premios de todo tipo, elige tus números y paga por transferencia con comprobante por WhatsApp.",
+        "anchoDoc": 375,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [
+          {
+            "de": "h1",
+            "a": "h3",
+            "texto": "Free"
+          }
+        ],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Planes para organizadores"
+          },
+          {
+            "nivel": 3,
+            "texto": "Free"
+          },
+          {
+            "nivel": 3,
+            "texto": "Starter"
+          },
+          {
+            "nivel": 3,
+            "texto": "Pro"
+          },
+          {
+            "nivel": 3,
+            "texto": "Premium"
+          },
+          {
+            "nivel": 3,
+            "texto": "Social / ONG"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Preferís pagar por comisión?"
+          },
+          {
+            "nivel": 3,
+            "texto": "¿Ya compraste? Canjeá tu código"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/planes-375-light.jpg"
+      ]
+    },
+    {
+      "pagina": "planes",
+      "ruta": "/planes",
+      "urlFinal": "/planes",
+      "ancho": 768,
+      "estado": 200,
+      "duracionMs": 3093,
+      "resultado": "parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Gadu Sorteos",
+        "metaDescripcion": "Participa en sorteos con premios de todo tipo, elige tus números y paga por transferencia con comprobante por WhatsApp.",
+        "anchoDoc": 768,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [
+          {
+            "de": "h1",
+            "a": "h3",
+            "texto": "Free"
+          }
+        ],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Planes para organizadores"
+          },
+          {
+            "nivel": 3,
+            "texto": "Free"
+          },
+          {
+            "nivel": 3,
+            "texto": "Starter"
+          },
+          {
+            "nivel": 3,
+            "texto": "Pro"
+          },
+          {
+            "nivel": 3,
+            "texto": "Premium"
+          },
+          {
+            "nivel": 3,
+            "texto": "Social / ONG"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Preferís pagar por comisión?"
+          },
+          {
+            "nivel": 3,
+            "texto": "¿Ya compraste? Canjeá tu código"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/planes-768-light.jpg"
+      ]
+    },
+    {
+      "pagina": "planes",
+      "ruta": "/planes",
+      "urlFinal": "/planes",
+      "ancho": 1280,
+      "estado": 200,
+      "duracionMs": 3113,
+      "resultado": "parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Gadu Sorteos",
+        "metaDescripcion": "Participa en sorteos con premios de todo tipo, elige tus números y paga por transferencia con comprobante por WhatsApp.",
+        "anchoDoc": 1280,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [
+          {
+            "de": "h1",
+            "a": "h3",
+            "texto": "Free"
+          }
+        ],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Planes para organizadores"
+          },
+          {
+            "nivel": 3,
+            "texto": "Free"
+          },
+          {
+            "nivel": 3,
+            "texto": "Starter"
+          },
+          {
+            "nivel": 3,
+            "texto": "Pro"
+          },
+          {
+            "nivel": 3,
+            "texto": "Premium"
+          },
+          {
+            "nivel": 3,
+            "texto": "Social / ONG"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Preferís pagar por comisión?"
+          },
+          {
+            "nivel": 3,
+            "texto": "¿Ya compraste? Canjeá tu código"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/planes-1280-light.jpg"
+      ]
+    },
+    {
+      "pagina": "login",
+      "ruta": "/login",
+      "urlFinal": "/login",
+      "ancho": 375,
+      "estado": 200,
+      "duracionMs": 2637,
+      "resultado": "parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Gadu Sorteos",
+        "metaDescripcion": "Participa en sorteos con premios de todo tipo, elige tus números y paga por transferencia con comprobante por WhatsApp.",
+        "anchoDoc": 375,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [
+          {
+            "de": "h1",
+            "a": "h3",
+            "texto": "TU CUENTA"
+          }
+        ],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Bienvenido a Gadu Sorteos"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/login-375-light.jpg",
+        "capturas/login-375-light-entera.jpg"
+      ]
+    },
+    {
+      "pagina": "login",
+      "ruta": "/login",
+      "urlFinal": "/login",
+      "ancho": 768,
+      "estado": 200,
+      "duracionMs": 2955,
+      "resultado": "parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Gadu Sorteos",
+        "metaDescripcion": "Participa en sorteos con premios de todo tipo, elige tus números y paga por transferencia con comprobante por WhatsApp.",
+        "anchoDoc": 768,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [
+          {
+            "de": "h1",
+            "a": "h3",
+            "texto": "TU CUENTA"
+          }
+        ],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Bienvenido a Gadu Sorteos"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/login-768-light.jpg"
+      ]
+    },
+    {
+      "pagina": "login",
+      "ruta": "/login",
+      "urlFinal": "/login",
+      "ancho": 1280,
+      "estado": 200,
+      "duracionMs": 2713,
+      "resultado": "parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Gadu Sorteos",
+        "metaDescripcion": "Participa en sorteos con premios de todo tipo, elige tus números y paga por transferencia con comprobante por WhatsApp.",
+        "anchoDoc": 1280,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [
+          {
+            "de": "h1",
+            "a": "h3",
+            "texto": "TU CUENTA"
+          }
+        ],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "Bienvenido a Gadu Sorteos"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/login-1280-light.jpg",
+        "capturas/login-1280-light-entera.jpg"
+      ]
+    },
+    {
+      "pagina": "sorteo-activo",
+      "ruta": "/sorteos/auto-2-demo",
+      "urlFinal": "/sorteos/auto-2-demo",
+      "ancho": 375,
+      "estado": 200,
+      "duracionMs": 5567,
+      "resultado": "parcial",
+      "problemas": [
+        "3 texto(s) bajo contraste"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "auto 2 (DEMO) | Gadu Sorteos",
+        "metaDescripcion": "auto 2 (DEMO)",
+        "anchoDoc": 375,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [
+          {
+            "selector": "section.grid.gap-8:nth-child(1) > div.relative.aspect-video:nth-child(1) > div.absolute.left-3:nth-child(2) > div.inline-flex.items-center:nth-child(1)",
+            "texto": "ACTIVO",
+            "color": "rgb(4, 120, 87)",
+            "fondo": "rgb(217,231,221)",
+            "ratio": 4.28,
+            "minimo": 4.5,
+            "tamanoPx": 11
+          },
+          {
+            "selector": "section.grid.gap-8:nth-child(1) > div.space-y-5:nth-child(2) > div.space-y-2.rounded-xl:nth-child(10) > a.inline-flex.items-center:nth-child(4)",
+            "texto": "Ver reseñas y sorteos del organizador",
+            "color": "rgb(179, 127, 0)",
+            "fondo": "rgb(254,252,246)",
+            "ratio": 3.44,
+            "minimo": 4.5,
+            "tamanoPx": 12
+          },
+          {
+            "selector": "section#elegir-numeros > div.flex.flex-wrap:nth-child(1) > span.rounded-full.bg-yellow-500/20:nth-child(2)",
+            "texto": "Modo simulación de pagos activo",
+            "color": "rgb(161, 98, 7)",
+            "fondo": "rgb(243,231,193)",
+            "ratio": 3.99,
+            "minimo": 4.5,
+            "tamanoPx": 12
+          }
+        ],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Elegí tus números"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Preguntas de usuarios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Seguí participando"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Tienes dudas? Contactá al organizador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/sorteo-activo-375-light.jpg",
+        "capturas/sorteo-activo-375-light-entera.jpg"
+      ]
+    },
+    {
+      "pagina": "sorteo-activo",
+      "ruta": "/sorteos/auto-2-demo",
+      "urlFinal": "/sorteos/auto-2-demo",
+      "ancho": 768,
+      "estado": 200,
+      "duracionMs": 6637,
+      "resultado": "parcial",
+      "problemas": [
+        "3 texto(s) bajo contraste"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "auto 2 (DEMO) | Gadu Sorteos",
+        "metaDescripcion": "auto 2 (DEMO)",
+        "anchoDoc": 768,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [
+          {
+            "selector": "section.grid.gap-8:nth-child(1) > div.relative.aspect-video:nth-child(1) > div.absolute.left-3:nth-child(2) > div.inline-flex.items-center:nth-child(1)",
+            "texto": "ACTIVO",
+            "color": "rgb(4, 120, 87)",
+            "fondo": "rgb(217,231,221)",
+            "ratio": 4.28,
+            "minimo": 4.5,
+            "tamanoPx": 11
+          },
+          {
+            "selector": "section.grid.gap-8:nth-child(1) > div.space-y-5:nth-child(2) > div.space-y-2.rounded-xl:nth-child(10) > a.inline-flex.items-center:nth-child(4)",
+            "texto": "Ver reseñas y sorteos del organizador",
+            "color": "rgb(179, 127, 0)",
+            "fondo": "rgb(254,252,246)",
+            "ratio": 3.44,
+            "minimo": 4.5,
+            "tamanoPx": 12
+          },
+          {
+            "selector": "section#elegir-numeros > div.flex.flex-wrap:nth-child(1) > span.rounded-full.bg-yellow-500/20:nth-child(2)",
+            "texto": "Modo simulación de pagos activo",
+            "color": "rgb(161, 98, 7)",
+            "fondo": "rgb(243,231,193)",
+            "ratio": 3.99,
+            "minimo": 4.5,
+            "tamanoPx": 12
+          }
+        ],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Elegí tus números"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Preguntas de usuarios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Seguí participando"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Tienes dudas? Contactá al organizador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/sorteo-activo-768-light.jpg"
+      ]
+    },
+    {
+      "pagina": "sorteo-activo",
+      "ruta": "/sorteos/auto-2-demo",
+      "urlFinal": "/sorteos/auto-2-demo",
+      "ancho": 1280,
+      "estado": 200,
+      "duracionMs": 6463,
+      "resultado": "parcial",
+      "problemas": [
+        "3 texto(s) bajo contraste"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "auto 2 (DEMO) | Gadu Sorteos",
+        "metaDescripcion": "auto 2 (DEMO)",
+        "anchoDoc": 1280,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [
+          {
+            "selector": "section.grid.gap-8:nth-child(1) > div.relative.aspect-video:nth-child(1) > div.absolute.left-3:nth-child(2) > div.inline-flex.items-center:nth-child(1)",
+            "texto": "ACTIVO",
+            "color": "rgb(4, 120, 87)",
+            "fondo": "rgb(217,231,221)",
+            "ratio": 4.28,
+            "minimo": 4.5,
+            "tamanoPx": 11
+          },
+          {
+            "selector": "section.grid.gap-8:nth-child(1) > div.space-y-5:nth-child(2) > div.space-y-2.rounded-xl:nth-child(10) > a.inline-flex.items-center:nth-child(4)",
+            "texto": "Ver reseñas y sorteos del organizador",
+            "color": "rgb(179, 127, 0)",
+            "fondo": "rgb(254,252,246)",
+            "ratio": 3.44,
+            "minimo": 4.5,
+            "tamanoPx": 12
+          },
+          {
+            "selector": "section#elegir-numeros > div.flex.flex-wrap:nth-child(1) > span.rounded-full.bg-yellow-500/20:nth-child(2)",
+            "texto": "Modo simulación de pagos activo",
+            "color": "rgb(161, 98, 7)",
+            "fondo": "rgb(243,231,193)",
+            "ratio": 3.99,
+            "minimo": 4.5,
+            "tamanoPx": 12
+          }
+        ],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Elegí tus números"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Preguntas de usuarios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Seguí participando"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Tienes dudas? Contactá al organizador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/sorteo-activo-1280-light.jpg",
+        "capturas/sorteo-activo-1280-light-entera.jpg"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+ok   entorno-prueba — https://dolxvoxyespguvixhkku.supabase.co · objetivo http://localhost:3001
+ok   override-proceso — el proceso ya lleva las variables de prueba
+ok   env-local-presente — existe y apunta a producción: por eso hay que exportar las variables antes de `next dev`
+ok   migraciones — 89 migraciones, última 0117 (esperada 0117)
+ok   servidor-habla-con-prueba — salteado (falta --server)
+
+5/5 listos
+
+arrancando next dev en el puerto 3001 con el entorno de prueba exportado…
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3001
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · instrumentationHook
+
+ ✓ Starting...
+ ○ Compiling /instrumentation ...
+ ✓ Compiled /instrumentation in 27s (1051 modules)
+ ✓ Ready in 45.6s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 8.9s (946 modules)
+ ○ Compiling / ...
+[?25h

@@ -1,0 +1,889 @@
+{
+  "base": "http://localhost:3000",
+  "tema": "por defecto",
+  "corrida": "C:\\Users\\Usuario\\Desktop\\sorteos herramientas\\02-DOCS\\wiki\\ftd\\evidencia\\2026-11-07-visual-publicas-fix",
+  "fecha": "2026-11-07T13:46:07.923Z",
+  "total": 12,
+  "cuenta": {
+    "parcial": 6,
+    "ok": 6
+  },
+  "porPagina": [
+    {
+      "pagina": "sorteo-activo",
+      "ruta": "/sorteos/auto-2-demo",
+      "resultados": "375px:parcial 768px:parcial 1280px:parcial",
+      "problemas": [
+        "1 texto(s) bajo contraste"
+      ]
+    },
+    {
+      "pagina": "sorteo-sorteado",
+      "ruta": "/sorteos/auto-2026-demo",
+      "resultados": "375px:ok 768px:ok 1280px:ok",
+      "problemas": []
+    },
+    {
+      "pagina": "verificar",
+      "ruta": "/sorteos/auto-2026-demo/verificar",
+      "resultados": "375px:ok 768px:ok 1280px:ok",
+      "problemas": []
+    },
+    {
+      "pagina": "en-vivo",
+      "ruta": "/sorteos/auto-2026-demo/en-vivo",
+      "resultados": "375px:parcial 768px:parcial 1280px:parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ]
+    }
+  ],
+  "resultados": [
+    {
+      "pagina": "sorteo-activo",
+      "ruta": "/sorteos/auto-2-demo",
+      "urlFinal": "/sorteos/auto-2-demo",
+      "ancho": 375,
+      "estado": 200,
+      "duracionMs": 6819,
+      "resultado": "parcial",
+      "problemas": [
+        "1 texto(s) bajo contraste"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "auto 2 (DEMO) | Gadu Sorteos",
+        "metaDescripcion": "auto 2 (DEMO)",
+        "anchoDoc": 375,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [
+          {
+            "selector": "section.grid.gap-8:nth-child(1) > div.relative.aspect-video:nth-child(1) > div.absolute.left-3:nth-child(2) > div.inline-flex.items-center:nth-child(1)",
+            "texto": "ACTIVO",
+            "color": "rgb(110, 231, 183)",
+            "fondo": "rgb(4,120,87)",
+            "ratio": 3.6,
+            "minimo": 4.5,
+            "tamanoPx": 11
+          }
+        ],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Elegí tus números"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Preguntas de usuarios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Seguí participando"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Tienes dudas? Contactá al organizador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/sorteo-activo-375.jpg",
+        "capturas/sorteo-activo-375-entera.jpg"
+      ]
+    },
+    {
+      "pagina": "sorteo-activo",
+      "ruta": "/sorteos/auto-2-demo",
+      "urlFinal": "/sorteos/auto-2-demo",
+      "ancho": 768,
+      "estado": 200,
+      "duracionMs": 7154,
+      "resultado": "parcial",
+      "problemas": [
+        "1 texto(s) bajo contraste"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "auto 2 (DEMO) | Gadu Sorteos",
+        "metaDescripcion": "auto 2 (DEMO)",
+        "anchoDoc": 768,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [
+          {
+            "selector": "section.grid.gap-8:nth-child(1) > div.relative.aspect-video:nth-child(1) > div.absolute.left-3:nth-child(2) > div.inline-flex.items-center:nth-child(1)",
+            "texto": "ACTIVO",
+            "color": "rgb(110, 231, 183)",
+            "fondo": "rgb(4,120,87)",
+            "ratio": 3.6,
+            "minimo": 4.5,
+            "tamanoPx": 11
+          }
+        ],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Elegí tus números"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Preguntas de usuarios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Seguí participando"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Tienes dudas? Contactá al organizador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/sorteo-activo-768.jpg"
+      ]
+    },
+    {
+      "pagina": "sorteo-activo",
+      "ruta": "/sorteos/auto-2-demo",
+      "urlFinal": "/sorteos/auto-2-demo",
+      "ancho": 1280,
+      "estado": 200,
+      "duracionMs": 12140,
+      "resultado": "parcial",
+      "problemas": [
+        "1 texto(s) bajo contraste"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "auto 2 (DEMO) | Gadu Sorteos",
+        "metaDescripcion": "auto 2 (DEMO)",
+        "anchoDoc": 1280,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [
+          {
+            "selector": "section.grid.gap-8:nth-child(1) > div.relative.aspect-video:nth-child(1) > div.absolute.left-3:nth-child(2) > div.inline-flex.items-center:nth-child(1)",
+            "texto": "ACTIVO",
+            "color": "rgb(110, 231, 183)",
+            "fondo": "rgb(4,120,87)",
+            "ratio": 3.6,
+            "minimo": 4.5,
+            "tamanoPx": 11
+          }
+        ],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Elegí tus números"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Preguntas de usuarios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Seguí participando"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Tienes dudas? Contactá al organizador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/sorteo-activo-1280.jpg",
+        "capturas/sorteo-activo-1280-entera.jpg"
+      ]
+    },
+    {
+      "pagina": "sorteo-sorteado",
+      "ruta": "/sorteos/auto-2026-demo",
+      "urlFinal": "/sorteos/auto-2026-demo",
+      "ancho": 375,
+      "estado": 200,
+      "duracionMs": 5740,
+      "resultado": "ok",
+      "problemas": [],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "¡Franco G. ganó auto 2026 (DEMO) en Gadu Sorteos!",
+        "metaDescripcion": "Mirá el número ganador y verificá el resultado del sorteo. Franco G. ganó con el número 11.",
+        "anchoDoc": 375,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios entregados"
+          },
+          {
+            "nivel": 2,
+            "texto": "Huellas del sorteo (verificable)"
+          },
+          {
+            "nivel": 3,
+            "texto": "Verificador automático"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios"
+          },
+          {
+            "nivel": 3,
+            "texto": "Premio simbólico (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Preguntas de usuarios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Seguí participando"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Tienes dudas? Contactá al organizador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/sorteo-sorteado-375.jpg",
+        "capturas/sorteo-sorteado-375-entera.jpg"
+      ]
+    },
+    {
+      "pagina": "sorteo-sorteado",
+      "ruta": "/sorteos/auto-2026-demo",
+      "urlFinal": "/sorteos/auto-2026-demo",
+      "ancho": 768,
+      "estado": 200,
+      "duracionMs": 5976,
+      "resultado": "ok",
+      "problemas": [],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "¡Franco G. ganó auto 2026 (DEMO) en Gadu Sorteos!",
+        "metaDescripcion": "Mirá el número ganador y verificá el resultado del sorteo. Franco G. ganó con el número 11.",
+        "anchoDoc": 768,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios entregados"
+          },
+          {
+            "nivel": 2,
+            "texto": "Huellas del sorteo (verificable)"
+          },
+          {
+            "nivel": 3,
+            "texto": "Verificador automático"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios"
+          },
+          {
+            "nivel": 3,
+            "texto": "Premio simbólico (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Preguntas de usuarios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Seguí participando"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Tienes dudas? Contactá al organizador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/sorteo-sorteado-768.jpg"
+      ]
+    },
+    {
+      "pagina": "sorteo-sorteado",
+      "ruta": "/sorteos/auto-2026-demo",
+      "urlFinal": "/sorteos/auto-2026-demo",
+      "ancho": 1280,
+      "estado": 200,
+      "duracionMs": 5845,
+      "resultado": "ok",
+      "problemas": [],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "¡Franco G. ganó auto 2026 (DEMO) en Gadu Sorteos!",
+        "metaDescripcion": "Mirá el número ganador y verificá el resultado del sorteo. Franco G. ganó con el número 11.",
+        "anchoDoc": 1280,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios entregados"
+          },
+          {
+            "nivel": 2,
+            "texto": "Huellas del sorteo (verificable)"
+          },
+          {
+            "nivel": 3,
+            "texto": "Verificador automático"
+          },
+          {
+            "nivel": 2,
+            "texto": "Premios"
+          },
+          {
+            "nivel": 3,
+            "texto": "Premio simbólico (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Preguntas de usuarios"
+          },
+          {
+            "nivel": 2,
+            "texto": "Seguí participando"
+          },
+          {
+            "nivel": 2,
+            "texto": "¿Tienes dudas? Contactá al organizador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/sorteo-sorteado-1280.jpg",
+        "capturas/sorteo-sorteado-1280-entera.jpg"
+      ]
+    },
+    {
+      "pagina": "verificar",
+      "ruta": "/sorteos/auto-2026-demo/verificar",
+      "urlFinal": "/sorteos/auto-2026-demo/verificar",
+      "ancho": 375,
+      "estado": 200,
+      "duracionMs": 3678,
+      "resultado": "ok",
+      "problemas": [],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Verificación del sorteo | Gadu Sorteos",
+        "metaDescripcion": "Hash, números vendidos y ganador para verificar el resultado del sorteo.",
+        "anchoDoc": 375,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Huellas del sorteo"
+          },
+          {
+            "nivel": 2,
+            "texto": "Números vendidos que participaron (32)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Certificado de ganador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/verificar-375.jpg",
+        "capturas/verificar-375-entera.jpg"
+      ]
+    },
+    {
+      "pagina": "verificar",
+      "ruta": "/sorteos/auto-2026-demo/verificar",
+      "urlFinal": "/sorteos/auto-2026-demo/verificar",
+      "ancho": 768,
+      "estado": 200,
+      "duracionMs": 3398,
+      "resultado": "ok",
+      "problemas": [],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Verificación del sorteo | Gadu Sorteos",
+        "metaDescripcion": "Hash, números vendidos y ganador para verificar el resultado del sorteo.",
+        "anchoDoc": 768,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Huellas del sorteo"
+          },
+          {
+            "nivel": 2,
+            "texto": "Números vendidos que participaron (32)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Certificado de ganador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/verificar-768.jpg"
+      ]
+    },
+    {
+      "pagina": "verificar",
+      "ruta": "/sorteos/auto-2026-demo/verificar",
+      "urlFinal": "/sorteos/auto-2026-demo/verificar",
+      "ancho": 1280,
+      "estado": 200,
+      "duracionMs": 3323,
+      "resultado": "ok",
+      "problemas": [],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Verificación del sorteo | Gadu Sorteos",
+        "metaDescripcion": "Hash, números vendidos y ganador para verificar el resultado del sorteo.",
+        "anchoDoc": 1280,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Huellas del sorteo"
+          },
+          {
+            "nivel": 2,
+            "texto": "Números vendidos que participaron (32)"
+          },
+          {
+            "nivel": 2,
+            "texto": "Certificado de ganador"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/verificar-1280.jpg",
+        "capturas/verificar-1280-entera.jpg"
+      ]
+    },
+    {
+      "pagina": "en-vivo",
+      "ruta": "/sorteos/auto-2026-demo/en-vivo",
+      "urlFinal": "/sorteos/auto-2026-demo/en-vivo",
+      "ancho": 375,
+      "estado": 200,
+      "duracionMs": 4103,
+      "resultado": "parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Sorteo en vivo | Gadu Sorteos",
+        "metaDescripcion": "Seguí el sorteo en vivo y verificá el resultado.",
+        "anchoDoc": 375,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [
+          {
+            "de": "h1",
+            "a": "h3",
+            "texto": "TU CUENTA"
+          }
+        ],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/en-vivo-375.jpg"
+      ]
+    },
+    {
+      "pagina": "en-vivo",
+      "ruta": "/sorteos/auto-2026-demo/en-vivo",
+      "urlFinal": "/sorteos/auto-2026-demo/en-vivo",
+      "ancho": 768,
+      "estado": 200,
+      "duracionMs": 3294,
+      "resultado": "parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Sorteo en vivo | Gadu Sorteos",
+        "metaDescripcion": "Seguí el sorteo en vivo y verificá el resultado.",
+        "anchoDoc": 768,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [
+          {
+            "de": "h1",
+            "a": "h3",
+            "texto": "TU CUENTA"
+          }
+        ],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/en-vivo-768.jpg"
+      ]
+    },
+    {
+      "pagina": "en-vivo",
+      "ruta": "/sorteos/auto-2026-demo/en-vivo",
+      "urlFinal": "/sorteos/auto-2026-demo/en-vivo",
+      "ancho": 1280,
+      "estado": 200,
+      "duracionMs": 3057,
+      "resultado": "parcial",
+      "problemas": [
+        "1 salto(s) de título"
+      ],
+      "consola": [],
+      "excepciones": [],
+      "fallidos": [],
+      "http": [],
+      "metricas": {
+        "titulo": "Sorteo en vivo | Gadu Sorteos",
+        "metaDescripcion": "Seguí el sorteo en vivo y verificá el resultado.",
+        "anchoDoc": 1280,
+        "h1": 1,
+        "desborde": false,
+        "desbordes": [],
+        "sinAlt": [],
+        "sinNombre": [],
+        "sinEtiqueta": [],
+        "saltosTitulos": [
+          {
+            "de": "h1",
+            "a": "h3",
+            "texto": "TU CUENTA"
+          }
+        ],
+        "fallosContraste": [],
+        "noMedibles": [],
+        "titulos": [
+          {
+            "nivel": 1,
+            "texto": "auto 2026 (DEMO)"
+          },
+          {
+            "nivel": 3,
+            "texto": "TU CUENTA"
+          },
+          {
+            "nivel": 3,
+            "texto": "LEGAL"
+          },
+          {
+            "nivel": 3,
+            "texto": "CONTACTO"
+          }
+        ]
+      },
+      "capturas": [
+        "capturas/en-vivo-1280.jpg"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3001
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · instrumentationHook
+
+ ✓ Starting...
+ ○ Compiling /instrumentation ...
+ ✓ Compiled /instrumentation in 5.3s (1051 modules)
+ ✓ Ready in 10.7s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1694ms (946 modules)
+ ○ Compiling /sorteos/[slug] ...
+ ✓ Compiled /sorteos/[slug] in 52.2s (3573 modules)
+ ✓ Compiled in 1813ms (855 modules)
+ GET /sorteos/nada 200 in 11982ms
+ GET /sorteos/nada 404 in 1020ms
+ GET /sorteos/contraprueba-aprobacion?ref=7c729f01-451b-461e-8a46-e13b90c72088 200 in 4896ms
+ ○ Compiling /api/track-visit ...
+[?25h
