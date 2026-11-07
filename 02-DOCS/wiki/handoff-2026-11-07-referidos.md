@@ -4,13 +4,32 @@
 
 - **Staging** (`dolxvoxyespguvixhkku`): migraciones `0118` y `0119` aplicadas. E2E completo pasa,
   premio otorgado al aprobar, **consola limpia**.
-- **Producción** (`mjgcoeikcyzwojbqtuakh` en `.env.local`): `0118` aplicada y verificada con
-  `supabase/tests/verificar_0118.sql`, que destapó un fallo de la política → **falta aplicar
-  `0119_referrals_policy_fix.sql`**. Hasta entonces, la captura de referidos sigue rechazada en prod.
+- **Producción** (`mjgcoeikcyzwojbqtuakh` en `.env.local`): `0118` y `0119` aplicadas.
+  **Verificador corrido por el dueño: 14 líneas OK** (ver más abajo). Falta la prueba manual en la web
+  y el backup.
+
+### Verificador en producción (después de la 0119)
+
+```
+1 OK   authenticated puede INSERT y SELECT en referrals
+2 OK   políticas de INSERT y SELECT atadas a auth.uid()
+2b OK  el chequeo de referente usa perfil_existe (SECURITY DEFINER)
+3 OK   unique (referrer_id, referred_id) presente
+4 OK   el invitado registró su propio vínculo
+5 OK   auto-referido bloqueado
+6 OK   no se puede registrar a nombre de otro
+7 OK   referente inexistente bloqueado
+8 OK   ve las filas donde es el invitado
+8 OK   no ve el vínculo ajeno
+9 OK   trigger y función del bonus presentes
+9b OK  elegir un bonus lo activa
+10 OK  el cupo excluye los sorteos usados como bonus
+11 OK  ledger registra 0118 y 0119
+```
 
 ## Qué pasó con la 0118 en producción
 
-El verificador salió con dos CRÍTICOS:
+El verificador, apenas se aplicó la 0118, salió con dos CRÍTICOS:
 
 ```
 4 CRÍTICO  el INSERT legítimo fue rechazado: new row violates row-level security policy
@@ -42,14 +61,14 @@ Evidencia: `02-DOCS/wiki/ftd/evidencia/2026-11-07-e2e-referidos/` (`staging-e2e-
 
 ## Pendiente (orden sugerido)
 
-1. Aplicar `0119_referrals_policy_fix.sql` en producción (SQL Editor).
-2. Correr `verificar_0118.sql` de nuevo en producción: las 14 líneas deben salir OK (la 9b puede dar
-   AVISO si no hay un KYC aprobado).
+1. Aplicar `0119_referrals_policy_fix.sql` en producción — **hecho**. Verificador: 14 líneas OK.
+2. Correr `verificar_0118.sql` en producción — **hecho**, sin CRÍTICOS.
 3. Prueba manual en la web: enlace `?ref=`, compra del mínimo, aprobar reserva, ver el número premio.
-4. **Backup manual** (MySQL/Supabase backup) después de validar.
-5. Cosmético pendiente: la 0119 deja la política limpia; no hay más cambios de código abiertos en este
-   hilo.
+4. **Backup manual** (Supabase backup) después de validar.
+5. Cosmético: la 0119 deja la política limpia; no hay más cambios de código abiertos en este hilo.
 
+Nota: el verificador ahora exige que el ledger registre **0118 y 0119** (cheque 11). Si vuelve a fallar
+la captura, correrlo primero: las líneas 4 y 8 dicen si el INSERT quedó rechazado.
 ## Comandos
 
 ```powershell

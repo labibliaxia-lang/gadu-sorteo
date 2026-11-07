@@ -392,18 +392,21 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- 11) Ledger
+-- 11) Ledger: 0118 y su corrección 0119
 -- ---------------------------------------------------------------------
 do $$
 declare
-  v_ok boolean;
+  v_hay int;
 begin
-  select exists (select 1 from public._applied_migrations where version = '0118')
-    into v_ok;
+  select count(*) into v_hay
+    from public._applied_migrations
+   where version in ('0118', '0119');
 
-  perform pg_temp.anota('11 ' || case when v_ok
-    then 'OK       ledger registra 0118'
-    else 'CRÍTICO  falta la fila 0118' end);
+  perform pg_temp.anota('11 ' || case when v_hay = 2
+    then 'OK       ledger registra 0118 y 0119'
+    when v_hay = 1
+      then 'CRÍTICO  falta una fila del ledger (0118/0119): aplicá la 0119'
+    else 'CRÍTICO  faltan las filas 0118 y 0119' end);
 end $$;
 
 select current_setting('test.v118', true) as resultado;
