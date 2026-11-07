@@ -83,25 +83,33 @@ export default async function OpengraphImage({
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {principal ? (
-            <>
-              <div style={{ fontSize: 34, opacity: 0.75 }}>
-                ¡Tenemos ganador!
-              </div>
-              <div style={{ fontSize: 84, fontWeight: 800, lineHeight: 1.05 }}>
-                {nombreCorto(principal.nombre)}
-              </div>
-              <div style={{ fontSize: 36, opacity: 0.9 }}>
-                ganó «{principal.premio ?? raffle?.title}» con el número{" "}
-                {principal.numero}
-              </div>
-            </>
-          ) : (
-            <div style={{ fontSize: 64, fontWeight: 800 }}>
-              {raffle?.title ?? "Resultados del sorteo"}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 18,
+          }}
+        >
+          <div style={{ display: "flex", fontSize: 32, opacity: 0.75 }}>
+            {principal ? "¡Tenemos ganador!" : (raffle?.title ?? "Resultados")}
+          </div>
+          {principal && (
+            <div
+              style={{
+                display: "flex",
+                fontSize: 72,
+                fontWeight: 800,
+                lineHeight: 1.05,
+              }}
+            >
+              {nombreCorto(principal.nombre)}
             </div>
           )}
+          <div style={{ display: "flex", fontSize: 32, opacity: 0.9 }}>
+            {principal
+              ? `ganó «${principal.premio ?? raffle?.title}» con el número ${principal.numero}`
+              : "Resultado verificable"}
+          </div>
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between" }}>

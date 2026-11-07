@@ -252,8 +252,13 @@ en sorteos ajenos sigue permitido. El grid muestra un aviso y deshabilita los bo
   secuencia y podio correctos, sin tocar datos.
 - **Fase 2 (Simulador unificado): PENDIENTE.** `/como-funciona` sigue usando `SandboxDraw`; falta
   extraer una animación reutilizable con 3 premios falsos sin tocar el sandbox real.
-- **Fase 3 (Página de Resultados): PENDIENTE.** No existe `/sorteos/[slug]/resultados` ni su
-  `opengraph-image.tsx`; el podio final hoy se ve solo en `/en-vivo` y en el muro `/ganadores`.
+- **Fase 3 (Página de Resultados): HECHA.** `/sorteos/[slug]/resultados` pública con podio (foto
+  del premio, nombre recortado, número), compatible con sorteos de un ganador; botón
+  **Compartir Resultados** (Web Share API con fallback a copiar enlace) y `opengraph-image.tsx`
+  propio con «¡Nombre ganó Premio en Gadu Sorteos!». `LiveDrawAnimation` agrega el botón
+  **Ver Resultados Oficiales** al terminar. Notas técnicas: `next/og` debe usar `runtime = "edge"`
+  y Satori exige `display: flex` en divs con más de un hijo (los textos interpolados deben ir como
+  un único string). Verificado en local: ambos endpoints OG devuelven `image/png` 1200×630.
 - **Deuda menor:** `/en-vivo` toma el título del sorteo desde `raffles.status`; un sorteo
   multipremio ya sorteado muestra «Sorteo finalizado» correctamente, pero el subtítulo podría
   detallar «3 premios».
