@@ -22,7 +22,6 @@ import type { Session } from "@supabase/supabase-js";
 
 import {
   Link as LocaleLink,
-  usePathname as useLocalePathname,
   useRouter as useLocaleRouter,
 } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -75,8 +74,11 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
   const locale = useLocale();
   const router = useLocaleRouter();
   const pathname = usePathname();
-  const localePathname = useLocalePathname();
   const inPanel = pathname.startsWith("/admin");
+  // Se calcula desde el pathname real para que el selector no desaparezca
+  // cuando la navegación pasa por /es antes del redirect a la ruta sin prefijo.
+  const localePathname =
+    pathname.replace(/^\/(?:es|en|pt)(?=\/|$)/, "") || "/";
   const showLocaleSwitcher = !inPanel && supportsLocale(localePathname);
   const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(initialUser?.id ?? null);
@@ -297,7 +299,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
         <div className="flex shrink-0 items-center gap-1">
           {showLocaleSwitcher && (
             <div
-              className="hidden items-center gap-0.5 rounded-md border border-hairline p-0.5 sm:flex"
+              className="flex items-center gap-0.5 rounded-md border border-hairline p-0.5"
               role="group"
               aria-label={t("language")}
             >
