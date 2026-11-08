@@ -1,14 +1,14 @@
----
+﻿---
 author: Gadu
 branch: main
-status: in-progress
+status: done
 ---
-# i18n del admin — parte 2 (páginas de gestión y Superadmin)
+# i18n del admin â€” parte 2 (pÃ¡ginas de gestiÃ³n y Superadmin)
 
 ## Intent
 
-Terminar la internacionalización del admin: traducir las páginas de Sorteos,
-Premios, Ventas, Analíticas, Superadmin y `AdvancedAnalytics`, y hacer que los
+Terminar la internacionalizaciÃ³n del admin: traducir las pÃ¡ginas de Sorteos,
+Premios, Ventas, AnalÃ­ticas, Superadmin y `AdvancedAnalytics`, y hacer que los
 links internos conserven el prefijo del locale (`/en/admin`, `/pt/admin`).
 
 ## Scope
@@ -16,46 +16,46 @@ links internos conserven el prefijo del locale (`/en/admin`, `/pt/admin`).
 Dentro:
 
 - `app/[locale]/admin/sorteos/**` (lista, alta, detalle, premios, ventas,
-  analítica, editar, landing, preguntas, números).
+  analÃ­tica, editar, landing, preguntas, nÃºmeros).
 - `app/[locale]/admin/super/**` (consola, bajas, planes, usuarios, sandbox,
   error).
 - `components/admin/AdvancedAnalytics.tsx`.
 - `messages/{es,en,pt}.json`.
-- Links de esos árboles: `next/link` → `Link` de `@/src/i18n/navigation`.
-- Ajustes mínimos de links/router en componentes del admin que redirigían a
+- Links de esos Ã¡rboles: `next/link` â†’ `Link` de `@/src/i18n/navigation`.
+- Ajustes mÃ­nimos de links/router en componentes del admin que redirigÃ­an a
   `/admin` o `/admin/super` (`RaffleCloneButton`, `RaffleDeleteButton`,
   `ImpersonationBanner`, `SuperAdminDashboard`, `NotificationsPanel`,
   `AutoDrawToggle`).
 
 Fuera:
 
-- Lógica de pagos, checkout, RPCs, motor de sorteos, validación de roles,
+- LÃ³gica de pagos, checkout, RPCs, motor de sorteos, validaciÃ³n de roles,
   middleware y `actions.ts`.
-- Componentes anidados no incluidos en el alcance (siguen en español):
+- Componentes anidados no incluidos en el alcance (siguen en espaÃ±ol):
   `SuperAdminDashboard` (textos), `PlanConfigEditor`, `PlanPricesPanel`,
   `LicenseCodesPanel`, `SandboxDraw`, `ReportActions`, `VerificationActions`,
   `FeatureRaffleButton`, `RoleRequestActions`, `SupportUserActions`,
   `PlanSupportActions`, `TrafficChart`, `MetricBarChart`, `RaffleActions`,
   `ImageUploader`, `PrizeCard`, `VentasAcciones`, etc.
-- Mensajes de validación Zod y errores de Server Actions.
-- `lib/raffle-terms.ts` (bases legales en español por diseño).
+- Mensajes de validaciÃ³n Zod y errores de Server Actions.
+- `lib/raffle-terms.ts` (bases legales en espaÃ±ol por diseÃ±o).
 
 ## Checklist
 
-- [x] Sorteos (lista, alta, detalle, premios, ventas, analítica, editar,
-      landing, preguntas, números) traducidos.
+- [x] Sorteos (lista, alta, detalle, premios, ventas, analÃ­tica, editar,
+      landing, preguntas, nÃºmeros) traducidos.
 - [x] Superadmin (consola, bajas, planes, usuarios, sandbox, error) traducido a
-      nivel de página.
+      nivel de pÃ¡gina.
 - [x] `AdvancedAnalytics` traducido.
 - [x] `next/link` eliminado de `sorteos/**` y `super/**`.
 - [x] Links y routers de componentes del admin conservan el locale.
-- [x] Fragmentos fusionados; 1400 claves, ICU válido y sync exacto.
+- [x] Fragmentos fusionados; 1400 claves, ICU vÃ¡lido y sync exacto.
 - [x] `typecheck`, `lint`, `test` (336) y `build` verdes.
-- [x] `/en/admin/sorteos` y `/pt/admin/sorteos` verificados en local con sesión
+- [x] `/en/admin/sorteos` y `/pt/admin/sorteos` verificados en local con sesiÃ³n
       admin real: textos traducidos, links `/en/...` y `/pt/...`, sin
       `MISSING_MESSAGE`.
-- [ ] `/pt/admin/super` runtime: bloqueado por MFA/superadmin; ver “Límite”.
-- [ ] Commit, push y deploy.
+- [ ] `/pt/admin/super` runtime: bloqueado por MFA/superadmin; ver â€œLÃ­miteâ€.
+- [x] Commit `6a0a526`, push y deploy verificado.
 
 ## Evidence
 
@@ -65,34 +65,44 @@ Fuera:
   interpolaciones, 23 plurales, 38 textos enriquecidos en es/en/pt.
 - `next_intl_sync_locales`: `inSync: true`, 1400 claves, 0 diferencias.
 - `npm run typecheck`, `npm run lint`, `npm test` (336) y `npm run build`: OK.
-- Smoke local (`next start`, base de producción, sesión admin real):
-  - `/en/admin/sorteos`: “Manage / Prizes / View public page”, fechas y precios
+- Smoke local (`next start`, base de producciÃ³n, sesiÃ³n admin real):
+  - `/en/admin/sorteos`: â€œManage / Prizes / View public pageâ€, fechas y precios
     en en-US, links `/en/admin/...` y `/en/sorteos/...`.
-  - `/en/admin/sorteos/nuevo`, detalle, premios, ventas, analítica, editar:
+  - `/en/admin/sorteos/nuevo`, detalle, premios, ventas, analÃ­tica, editar:
     200, sin `MISSING_MESSAGE`.
-  - `/pt/admin/sorteos`: portugués, links `/pt/admin/...`.
-  - No quedan `href="/admin..."` en las páginas de Sorteos (solo `/en`/`/pt`).
-- Auditoría de claves usadas por los traductores: 0 faltantes.
-- No se tocó lógica transaccional, pagos, RPCs ni middleware.
+  - `/pt/admin/sorteos`: portuguÃ©s, links `/pt/admin/...`.
+  - No quedan `href="/admin..."` en las pÃ¡ginas de Sorteos (solo `/en`/`/pt`).
+- AuditorÃ­a de claves usadas por los traductores: 0 faltantes.
+- No se tocÃ³ lÃ³gica transaccional, pagos, RPCs ni middleware.
 
-## Límite de verificación de `/pt/admin/super`
+## LÃ­mite de verificaciÃ³n de `/pt/admin/super`
 
-El panel super exige simultáneamente:
+El panel super exige simultÃ¡neamente:
 
-1. sesión con rol `superadmin`, y
+1. sesiÃ³n con rol `superadmin`, y
 2. cookie `admin_verified` del segundo factor.
 
-No hay una cuenta de prueba `superadmin` sin MFA disponible. En producción
+No hay una cuenta de prueba `superadmin` sin MFA disponible. En producciÃ³n
 `ADMIN_MFA_REQUIRED=true`; con la cuenta admin de prueba el middleware redirige
 a `/seguridad?next=...`. Por eso la consola super no se pudo renderizar en
-runtime sin una sesión MFA de superadmin. Sí se verificaron:
+runtime sin una sesiÃ³n MFA de superadmin. SÃ­ se verificaron:
 
-- `/pt/admin/super` sin sesión → 307 `/pt/login`.
-- `/pt/admin/super` con sesión admin sin MFA → 307 `/pt/admin/verify?next=...`.
-- `typecheck`, `build`, paridad de claves y auditoría de claves usadas.
+- `/pt/admin/super` sin sesiÃ³n â†’ 307 `/pt/login`.
+- `/pt/admin/super` con sesiÃ³n admin sin MFA â†’ 307 `/pt/admin/verify?next=...`.
+- `typecheck`, `build`, paridad de claves y auditorÃ­a de claves usadas.
 
 ## Next
 
-Commit y push. Pendiente para una próxima pasada: traducir los componentes
+Commit y push. Pendiente para una prÃ³xima pasada: traducir los componentes
 anidados del super listados arriba, mensajes Zod/acciones y redirects de
-servidor que aún apuntan a `/admin` sin prefijo.
+servidor que aÃºn apuntan a `/admin` sin prefijo.
+
+
+## Cierre
+
+- Commit `6a0a526` pusheado a `main`.
+- Deploy de producción verificado: `/en/admin/sorteos`, `/pt/admin/sorteos`,
+  `/en/admin`, `/pt/admin/super` y `/en/admin/super` sin sesión redirigen al
+  login del locale (`/en/login` o `/pt/login`).
+- La verificación de contenido del admin se hizo en local con la base de
+  producción y sesión admin real, porque Vercel exige MFA (`ADMIN_MFA_REQUIRED=true`).
