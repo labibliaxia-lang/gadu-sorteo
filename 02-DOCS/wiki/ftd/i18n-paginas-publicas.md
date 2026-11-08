@@ -60,7 +60,7 @@ pública real es `/sorteos/[slug]`; la verificación se hizo contra
 - [x] `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` verdes.
 - [x] Smoke local: `/sorteos/auto-2026-demo` en español y
   `/en/sorteos/auto-2026-demo` en inglés; `/es/...` redirige sin prefijo.
-- [ ] Commit y push a `main`.
+- [x] Commit `e393a05` y push a `main`.
 
 ## Evidence
 
@@ -94,6 +94,16 @@ pública real es `/sorteos/[slug]`; la verificación se hizo contra
   - `/en/sorteos/auto-2026-demo/{verificar,resultados,en-vivo}`: 200.
 - Tests nuevos: `lib/i18n-routing.test.ts` fija `as-needed`, `localeDetection:false`,
   paridad de claves y de placeholders/tags entre los tres catálogos. 336 tests OK.
+- Deploy de producción verificado después del push:
+  - `https://gadu-sorteo-doci.vercel.app/sorteos/auto-2026-demo`: 200, `lang="es"`.
+  - `https://gadu-sorteo-doci.vercel.app/en/sorteos/auto-2026-demo`: 200, `lang="en"`,
+    con “Verifiable raffle”, “Verify result”, “Automatic verifier”.
+  - `/`, `/en`, `/en/como-funciona`, `/en/planes`, `/en/ganadores`: 200 con el
+    `lang` correcto.
+  - `/es/sorteos/auto-2026-demo`: 307 → `/sorteos/auto-2026-demo`.
+  - Rutas no migradas `/login`, `/ayuda`, `/privacidad`, `/terminos`, `/perfil`: 200;
+    `/admin`: 307 → `/login` (protección intacta).
+  - Capturas: `.../evidencia/2026-11-07-i18n-publicas/{es,en}-sorteo.png`.
 
 ## Next
 
