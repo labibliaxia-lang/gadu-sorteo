@@ -401,3 +401,10 @@ Hallazgo   — la base tiene una migracion 0097 ("notificaciones con telefono y 
 Decision   — mi normalizacion de ledger pasa a 0098; ademas anota la fila 0097 para no perder la procedencia.
 Why        — un paso aplicado sin archivo es deuda invisible: una reconstruccion desde el repo no lo tendria.
 Evidence   — 0098_ledger_normalization.sql; la consulta de pg_proc mostro todos los objetos en true.
+
+## 2026-11-07 — Hidratacion de la sala en vivo: el CSS dentro de <style>  (feature: en-vivo)
+Sintoma    — Sentry reporto "There was an error while hydrating" en /sorteos/[slug]/en-vivo; React #425 "Text content did not match".
+Causa      — CEREMONIA_CSS se renderizaba como hijo de texto de <style>. El SSR escapa las comillas (content: &quot;&quot;) y el primer render del cliente las deja crudas (content: ""); el texto no coincide y React tira abajo la hidratacion de todo el arbol ("the entire root will switch to client rendering").
+Fix        — inyectar el CSS crudo con dangerouslySetInnerHTML en components/LiveDrawAnimation.tsx. Ya esta en main desde 62b34e8 y desplegado: no hay cambio de codigo pendiente.
+Verificacion — revertido a <style>{CEREMONIA_CSS}</style> en un worktree aislado: reproduce #425 y el mensaje de Sentry. Con el codigo actual: 0 errores de consola en dev (:3100), en build de produccion (:3000) y en produccion (gadu-sorteo-doci.vercel.app).
+Leccion    — el contenido de <style>/<script> se compara como texto al hidratar: va como HTML crudo con dangerouslySetInnerHTML o no va.
