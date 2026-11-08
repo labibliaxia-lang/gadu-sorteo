@@ -50,7 +50,7 @@ Fuera:
 - [x] Navbar/Footer detectan el panel con prefijo; selector visible en admin.
 - [x] `typecheck`, `lint`, `test`, `build` verdes.
 - [x] Smoke con sesión admin en `/en/admin` y `/pt/admin`; `/admin` sigue en español.
-- [ ] Commit y push.
+- [x] Commit `99a5815`, push y deploy verificado.
 
 ## Evidence
 
@@ -81,6 +81,18 @@ Fuera:
   (`@/app/admin/...` → `@/app/[locale]/admin/...`); no se tocó su lógica.
 - Restricciones mantenidas: no se modificó autenticación, roles, pagos, checkout,
   RPCs ni motor de sorteos.
+- Producción después del push (`99a5815`):
+  - `/en/admin` sin sesión → 307 `/en/login`.
+  - `/pt/admin` sin sesión → 307 `/pt/login`.
+  - `/admin` sin sesión → 307 `/login`.
+  - `/en/admin/super` sin sesión → 307 `/en/login`.
+  - `/en/admin/sorteos` sin sesión → 307 `/en/login`.
+  - Con sesión admin, producción redirige a
+    `/seguridad?next=%2Fen%2Fadmin` (o `/pt/...`) porque
+    `ADMIN_MFA_REQUIRED=true` en Vercel: es el segundo factor esperado, no un
+    error de ruteo. El dashboard traducido se verificó en local con la misma
+    base de producción y el flag apagado.
+  - `/en/login` sigue en inglés.
 
 ## Next
 

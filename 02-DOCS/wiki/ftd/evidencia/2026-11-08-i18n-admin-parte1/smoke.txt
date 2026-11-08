@@ -26,3 +26,13 @@ Con sesiÃ³n admin sin MFA de super:
 
 CatÃ¡logos: 738 claves, ICU vÃ¡lido, sync 0 diferencias.
 Checks: typecheck OK, lint OK, 336 tests OK, build OK.
+
+Producción (commit 99a5815):
+/en/admin sin sesión -> 307 /en/login
+/pt/admin sin sesión -> 307 /pt/login
+/admin sin sesión -> 307 /login
+/en/admin/super sin sesión -> 307 /en/login
+/en/admin/sorteos sin sesión -> 307 /en/login
+/en/login -> 200 inglés
+Con sesión admin -> 307 /seguridad?next=%2Fen%2Fadmin (ADMIN_MFA_REQUIRED=true)
+Dashboard traducido verificado en local con base de producción y flag apagado.
