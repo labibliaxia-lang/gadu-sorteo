@@ -32,6 +32,12 @@ interface LiveDrawAnimationProps {
   /** Simulador público: no toca Supabase y espera un clic para arrancar. */
   isDemo?: boolean;
   simulatedWinners?: LiveWinner[];
+  /**
+   * Solo demo: nombres de los premios para la vista previa. Si no llegan
+   * ganadores ya calculados, la animación elige números únicamente del array
+   * `sampleNumbers` y usa estos nombres.
+   */
+  demoPrizeNames?: string[];
 }
 
 type Phase = "idle" | "countdown" | "spinning" | "done";
@@ -494,6 +500,34 @@ function nombreCorto(fullName: string | null): string {
 }
 
 /**
+ * Vista previa del modo demo: elige números SOLO del array vendido recibido y
+ * les asigna los nombres configurados. Es imposible que invente un número
+ * fuera del límite: nunca lee otro rango ni usa `soldCount` como máximo.
+ */
+function generarGanadoresDemo(
+  sampleNumbers: number[],
+  prizeNames: string[],
+): LiveWinner[] {
+  const pool = [...new Set(sampleNumbers)].filter(
+    (number) => Number.isFinite(number) && number > 0,
+  );
+
+  for (let index = pool.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    [pool[index], pool[swap]] = [pool[swap], pool[index]];
+  }
+
+  const total = Math.min(prizeNames.length || 3, pool.length);
+
+  return Array.from({ length: total }, (_, index) => ({
+    position: index + 1,
+    number: pool[index],
+    name: "Participante simulado",
+    prizeTitle: prizeNames[index]?.trim() || `Premio ${index + 1}`,
+  }));
+}
+
+/**
  * Sala de sorteo en vivo.
  *
  * - Un premio: se comporta como siempre (un único número).
@@ -516,6 +550,7 @@ export function LiveDrawAnimation({
   demoWinners = [],
   isDemo = false,
   simulatedWinners = [],
+  demoPrizeNames = [],
 }: LiveDrawAnimationProps) {
   const supabase = useRef(createClient()).current;
   const animated = useRef(false);
@@ -560,6 +595,18 @@ export function LiveDrawAnimation({
     timers.current.forEach(clearTimeout);
     timers.current = [];
   }, []);
+
+  /**
+   * Demo: si la mesa de pruebas ya calculó ganadores, se usan esos; si no,
+   * se genera una vista previa con el array vendido y los nombres recibidos.
+   */
+  const ganadoresDemo = useCallback(
+    () =>
+      simulatedWinners.length > 0
+        ? simulatedWinners
+        : generarGanadoresDemo(sampleNumbers, demoPrizeNames),
+    [simulatedWinners, sampleNumbers, demoPrizeNames],
+  );
 
   /** Crea o reanuda el AudioContext: siempre después de un gesto del usuario. */
   const asegurarAudio = useCallback((): AudioContext | null => {
@@ -873,7 +920,9 @@ export function LiveDrawAnimation({
     setHolding(false);
     setBeatKey(0);
     setPhase("idle");
-    timers.current.push(setTimeout(() => runSequence(simulatedWinners), 250));
+    timers.current.push(
+      setTimeout(() => runSequence(ganadoresDemo()), 250),
+    );
   }
 
   function alternarSonido() {
@@ -1078,7 +1127,7 @@ export function LiveDrawAnimation({
               onClick={() => {
                 asegurarAudio();
                 animated.current = false;
-                runSequence(simulatedWinners);
+                runSequence(ganadoresDemo());
               }}
             >
               <Play className="mr-2 h-5 w-5" />
@@ -1249,8 +1298,9 @@ export function LiveDrawAnimation({
       )}
 
       <p className="text-center text-xs text-muted-foreground">
-        Los ganadores se calculan en la base con la semilla comprometida antes
-        del sorteo. La animación solo los muestra: no los elige.
+        {isDemo
+          ? "Demo educativa: la ceremonia usa solo los números vendidos y los premios de tu escenario. No toca sorteos reales."
+          : "Los ganadores se calculan en la base con la semilla comprometida antes del sorteo. La animación solo los muestra: no los elige."}
       </p>
     </div>
   );

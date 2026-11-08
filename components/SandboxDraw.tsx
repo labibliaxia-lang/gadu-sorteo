@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Check,
   CheckCircle2,
@@ -23,6 +29,10 @@ import {
 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
+import {
+  LiveDrawAnimation,
+  type LiveWinner,
+} from "@/components/LiveDrawAnimation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MultiPrizeVerifier } from "@/components/MultiPrizeVerifier";
@@ -98,6 +108,33 @@ interface LocalResult {
   winners: MultiPrizeWinner[];
   resultsHash: string;
   list: string;
+}
+
+/**
+ * Escenario que comparten la ceremonia y la mesa de pruebas.
+ * Es la única fuente de verdad del límite de números y de los nombres.
+ */
+interface LocalScenario {
+  numberCount: number;
+  prizeCount: number;
+  prizeNames: string[];
+  sold: Set<number>;
+}
+
+interface LocalResultSnapshot {
+  winners: MultiPrizeWinner[];
+  prizeNames: string[];
+}
+
+type ScenarioUpdater = (updater: (previous: LocalScenario) => LocalScenario) => void;
+
+function initialLocalScenario(): LocalScenario {
+  return {
+    numberCount: DEFAULT_LOCAL_NUMBERS,
+    prizeCount: DEFAULT_LOCAL_PRIZES,
+    prizeNames: Array.from({ length: DEFAULT_LOCAL_PRIZES }, () => ""),
+    sold: allNumbers(DEFAULT_LOCAL_NUMBERS),
+  };
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -219,7 +256,7 @@ const DEMO_TABS = [
   {
     id: "animacion",
     label: "Mirá la animación",
-    hint: "3 premios",
+    hint: "Vista previa",
     icon: Play,
   },
   {
@@ -345,23 +382,132 @@ export function DrawDemoTabs({
 }
 
 /**
+ * Experiencia completa de la demo: el escenario vive acá para que las dos
+ * pestañas hablen del mismo límite de números, de los mismos premios y de los
+ * mismos nombres. La ceremonia recibe ese escenario por props; la mesa de
+ * pruebas lo edita. Si el usuario corre una simulación, la animación reutiliza
+ * esos ganadores exactos.
+ */
+export function DemoExperience() {
+  const [scenario, setScenario] = useState<LocalScenario>(
+    initialLocalScenario,
+  );
+  const [resultado, setResultado] = useState<LocalResultSnapshot | null>(null);
+  // Remonta la ceremonia cuando cambia el escenario para que no quede un
+  // podio viejo con nombres o números de la configuración anterior.
+  const [revision, setRevision] = useState(0);
+
+  const updateScenario: ScenarioUpdater = (updater) => {
+    // Cualquier cambio invalida la corrida anterior: la ceremonia no debe
+    // mostrar premios de un escenario que ya no existe.
+    setResultado(null);
+    setRevision((value) => value + 1);
+    setScenario(updater);
+  };
+
+  function aplicarResultado(result: LocalResultSnapshot) {
+    setResultado(result);
+    setRevision((value) => value + 1);
+  }
+
+  const soldNumbers = useMemo(
+    () => [...scenario.sold].sort((a, b) => a - b),
+    [scenario.sold],
+  );
+
+  const demoWinners = useMemo<LiveWinner[]>(() => {
+    if (!resultado) return [];
+    return resultado.winners.map((winner) => ({
+      position: winner.position,
+      number: winner.number,
+      name: "Participante simulado",
+      prizeTitle: localPrizeLabel(winner.position, resultado.prizeNames),
+    }));
+  }, [resultado]);
+
+  const listoParaAnimar =
+    soldNumbers.length > 0 && soldNumbers.length >= scenario.prizeCount;
+
+  return (
+    <DrawDemoTabs
+      animation={
+        <div className="rounded-xl border border-hairline bg-panel-2 p-4 sm:p-6">
+          {listoParaAnimar ? (
+            <>
+              <p className="mb-4 text-center font-mono text-[10px] uppercase tracking-[0.1em] text-fg-subtle">
+                Ceremonia con {soldNumbers.length.toLocaleString("es-AR")}{" "}
+                número{soldNumbers.length === 1 ? "" : "s"} y{" "}
+                {scenario.prizeCount} premio
+                {scenario.prizeCount === 1 ? "" : "s"} de tu escenario
+              </p>
+              <LiveDrawAnimation
+                key={`demo-${revision}`}
+                raffleId="demo-como-funciona"
+                initialStatus="active"
+                initialWinner={null}
+                soldCount={soldNumbers.length}
+                canDraw={false}
+                hasCommitment
+                sampleNumbers={soldNumbers}
+                isDemo
+                simulatedWinners={demoWinners}
+                demoPrizeNames={scenario.prizeNames}
+              />
+            </>
+          ) : (
+            <div className="rounded-lg border border-dashed border-hairline-strong bg-panel-1/60 p-6 text-center">
+              <FlaskConical
+                className="mx-auto h-6 w-6 text-brand-accent"
+                aria-hidden="true"
+              />
+              <p className="mt-3 text-[13px] font-semibold text-fg">
+                Primero armá el escenario
+              </p>
+              <p className="mx-auto mt-1 max-w-sm text-[12px] leading-relaxed text-fg-subtle">
+                En «Probalo vos mismo» elegí al menos {scenario.prizeCount}{" "}
+                número{scenario.prizeCount === 1 ? "" : "s"} vendido
+                {scenario.prizeCount === 1 ? "" : "s"} para ver la ceremonia
+                con tus premios.
+              </p>
+            </div>
+          )}
+        </div>
+      }
+      sandbox={
+        <div className="rounded-xl border border-hairline bg-panel-2 p-4 sm:p-6">
+          <SandboxDrawLocal
+            scenario={scenario}
+            updateScenario={updateScenario}
+            onResult={aplicarResultado}
+          />
+        </div>
+      }
+    />
+  );
+}
+
+/**
  * Simulador educativo, 100% estado de React.
  *
  * No consulta Supabase ni ejecuta RPCs: genera la semilla con `crypto`, publica
  * el compromiso, deriva los ganadores con la misma fórmula que el motor real y
  * deja que el verificador del navegador recalcule todo.
+ *
+ * El escenario vive en el contenedor (`DemoExperience`) para que la ceremonia
+ * de la otra pestaña use exactamente el mismo límite y los mismos nombres.
  */
-function SandboxDrawLocal() {
+function SandboxDrawLocal({
+  scenario,
+  updateScenario,
+  onResult,
+}: {
+  scenario: LocalScenario;
+  updateScenario: ScenarioUpdater;
+  onResult?: (result: LocalResultSnapshot) => void;
+}) {
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const { numberCount, prizeCount, prizeNames, sold } = scenario;
 
-  const [numberCount, setNumberCount] = useState(DEFAULT_LOCAL_NUMBERS);
-  const [prizeCount, setPrizeCount] = useState(DEFAULT_LOCAL_PRIZES);
-  const [sold, setSold] = useState<Set<number>>(() =>
-    allNumbers(DEFAULT_LOCAL_NUMBERS),
-  );
-  const [prizeNames, setPrizeNames] = useState<string[]>(() =>
-    Array.from({ length: DEFAULT_LOCAL_PRIZES }, () => ""),
-  );
   const [phase, setPhase] = useState<
     "idle" | "committed" | "revealing" | "revealed"
   >("idle");
@@ -375,6 +521,19 @@ function SandboxDrawLocal() {
     () => [...sold].sort((a, b) => a - b),
     [sold],
   );
+
+  // La grilla se lee mejor en bloques de 10: una fila (o dos en celular) por
+  // decena, con fondo alternado para no perder el número.
+  const decadas = useMemo(() => {
+    const bloques: number[][] = [];
+    for (let start = 1; start <= numberCount; start += 10) {
+      const end = Math.min(start + 9, numberCount);
+      bloques.push(
+        Array.from({ length: end - start + 1 }, (_, index) => start + index),
+      );
+    }
+    return bloques;
+  }, [numberCount]);
 
   useEffect(
     () => () => {
@@ -406,72 +565,101 @@ function SandboxDrawLocal() {
     if (frozen) return;
 
     const next = clamp(Math.floor(raw) || 1, 1, MAX_LOCAL_NUMBERS);
-    const nextPrizes = Math.min(prizeCount, MAX_LOCAL_PRIZES, next);
 
-    setNumberCount(next);
-    setPrizeCount(nextPrizes);
-    setPrizeNames((previous) =>
-      Array.from({ length: nextPrizes }, (_, index) => previous[index] ?? ""),
-    );
-    setSold(allNumbers(next));
+    updateScenario((previous) => {
+      const nextPrizes = Math.min(
+        previous.prizeCount,
+        MAX_LOCAL_PRIZES,
+        next,
+      );
+
+      return {
+        ...previous,
+        numberCount: next,
+        prizeCount: nextPrizes,
+        prizeNames: Array.from(
+          { length: nextPrizes },
+          (_, index) => previous.prizeNames[index] ?? "",
+        ),
+        // El sorteo solo puede elegir dentro de 1..next.
+        sold: allNumbers(next),
+      };
+    });
   }
 
   function applyPrizeCount(raw: number) {
     if (frozen) return;
 
-    const max = Math.min(MAX_LOCAL_PRIZES, numberCount);
-    const next = clamp(Math.floor(raw) || 1, 1, max);
+    updateScenario((previous) => {
+      const max = Math.min(MAX_LOCAL_PRIZES, previous.numberCount);
+      const next = clamp(Math.floor(raw) || 1, 1, max);
 
-    setPrizeCount(next);
-    setPrizeNames((previous) =>
-      Array.from({ length: next }, (_, index) => previous[index] ?? ""),
-    );
+      return {
+        ...previous,
+        prizeCount: next,
+        prizeNames: Array.from(
+          { length: next },
+          (_, index) => previous.prizeNames[index] ?? "",
+        ),
+      };
+    });
   }
 
   function toggleNumber(number: number) {
     if (frozen) return;
 
-    setSold((previous) => {
-      const next = new Set(previous);
-      if (next.has(number)) next.delete(number);
-      else next.add(number);
-      return next;
+    updateScenario((previous) => {
+      const sold = new Set(previous.sold);
+      if (sold.has(number)) sold.delete(number);
+      else sold.add(number);
+      return { ...previous, sold };
     });
   }
 
   function sellAll() {
-    if (!frozen) setSold(allNumbers(numberCount));
+    if (frozen) return;
+    updateScenario((previous) => ({
+      ...previous,
+      sold: allNumbers(previous.numberCount),
+    }));
   }
 
   function sellNone() {
-    if (!frozen) setSold(new Set());
+    if (frozen) return;
+    updateScenario((previous) => ({ ...previous, sold: new Set() }));
   }
 
   function sellRandom() {
     if (frozen) return;
 
-    const pool = Array.from({ length: numberCount }, (_, index) => index + 1);
-    for (let index = pool.length - 1; index > 0; index -= 1) {
-      const swap = Math.floor(Math.random() * (index + 1));
-      [pool[index], pool[swap]] = [pool[swap], pool[index]];
-    }
+    updateScenario((previous) => {
+      const pool = Array.from(
+        { length: previous.numberCount },
+        (_, index) => index + 1,
+      );
+      for (let index = pool.length - 1; index > 0; index -= 1) {
+        const swap = Math.floor(Math.random() * (index + 1));
+        [pool[index], pool[swap]] = [pool[swap], pool[index]];
+      }
 
-    const target = clamp(
-      Math.round(numberCount * 0.6),
-      Math.min(prizeCount, numberCount),
-      numberCount,
-    );
-    setSold(new Set(pool.slice(0, target)));
+      const target = clamp(
+        Math.round(previous.numberCount * 0.6),
+        Math.min(previous.prizeCount, previous.numberCount),
+        previous.numberCount,
+      );
+
+      return { ...previous, sold: new Set(pool.slice(0, target)) };
+    });
   }
 
   function updatePrizeName(index: number, value: string) {
-    setPrizeNames((previous) => {
-      const next = Array.from(
-        { length: prizeCount },
-        (_, position) => previous[position] ?? "",
+    updateScenario((previous) => {
+      const prizeNames = Array.from(
+        { length: previous.prizeCount },
+        (_, position) => previous.prizeNames[position] ?? "",
       );
-      next[index] = value.slice(0, 40);
-      return next;
+      prizeNames[index] = value.slice(0, 40);
+      return { ...previous, prizeNames };
     });
   }
 
@@ -562,6 +750,13 @@ function SandboxDrawLocal() {
         winners: computed.winners,
         resultsHash: computed.resultsHash,
         list: computed.list,
+      });
+
+      // La ceremonia de la otra pestaña reutiliza estos ganadores exactos,
+      // siempre dentro del listado vendido y con los nombres comprometidos.
+      onResult?.({
+        winners: computed.winners,
+        prizeNames: commitment.prizeNames,
       });
 
       animate(computed.winners[0]?.number ?? null, commitment.numbers, () => {
@@ -761,42 +956,55 @@ function SandboxDrawLocal() {
           </div>
 
           <div className="max-h-64 overflow-y-auto rounded-lg border border-hairline bg-panel-1/40 p-2">
-            <div className="grid grid-cols-6 gap-1 sm:grid-cols-10">
-              {Array.from({ length: numberCount }, (_, index) => index + 1).map(
-                (number) => {
-                  const isSold = sold.has(number);
-                  const winner = winnersByNumber.get(number);
+            <div className="space-y-1.5">
+              {decadas.map((decena, index) => (
+                <div
+                  key={decena[0]}
+                  role="group"
+                  aria-label={`Números ${decena[0]} a ${decena[decena.length - 1]}`}
+                  className={cn(
+                    "grid grid-cols-5 gap-1 rounded-md px-1 py-1 sm:grid-cols-10",
+                    index % 2 === 1 && "bg-panel-2/60",
+                  )}
+                >
+                  {decena.map((number) => {
+                    const isSold = sold.has(number);
+                    const winner = winnersByNumber.get(number);
 
-                  return (
-                    <button
-                      key={number}
-                      type="button"
-                      onClick={() => toggleNumber(number)}
-                      disabled={frozen}
-                      aria-pressed={isSold}
-                      aria-label={`Número ${number}${
-                        isSold ? ", vendido" : ", fuera del sorteo"
-                      }`}
-                      title={
-                        winner && commitment
-                          ? localPrizeLabel(winner.position, commitment.prizeNames)
-                          : undefined
-                      }
-                      className={cn(
-                        "flex h-8 items-center justify-center rounded-md border font-mono text-[10px] tabular-nums transition-colors",
-                        winner
-                          ? "border-brand-500 bg-brand-500 font-bold text-ink shadow-glow"
-                          : isSold
-                            ? "border-hairline-strong bg-panel-3 text-fg hover:border-brand-500/50"
-                            : "border-hairline bg-panel-1/30 text-fg-faint hover:border-hairline-strong hover:text-fg-subtle",
-                        frozen && "cursor-default",
-                      )}
-                    >
-                      {number}
-                    </button>
-                  );
-                },
-              )}
+                    return (
+                      <button
+                        key={number}
+                        type="button"
+                        onClick={() => toggleNumber(number)}
+                        disabled={frozen}
+                        aria-pressed={isSold}
+                        aria-label={`Número ${number}${
+                          isSold ? ", vendido" : ", fuera del sorteo"
+                        }`}
+                        title={
+                          winner && commitment
+                            ? localPrizeLabel(
+                                winner.position,
+                                commitment.prizeNames,
+                              )
+                            : undefined
+                        }
+                        className={cn(
+                          "flex h-8 items-center justify-center rounded-md border font-mono text-[10px] tabular-nums transition-colors",
+                          winner
+                            ? "border-brand-500 bg-brand-500 font-bold text-ink shadow-glow"
+                            : isSold
+                              ? "border-hairline-strong bg-panel-3 text-fg hover:border-brand-500/50"
+                              : "border-hairline bg-panel-1/30 text-fg-faint hover:border-hairline-strong hover:text-fg-subtle",
+                          frozen && "cursor-default",
+                        )}
+                      >
+                        {number}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -1634,6 +1842,20 @@ function SandboxDrawRemote({
   );
 }
 
+/** `SandboxDraw mode="local"` suelto, sin la pestaña de ceremonia. */
+function SandboxDrawLocalStandalone() {
+  const [scenario, setScenario] = useState<LocalScenario>(
+    initialLocalScenario,
+  );
+
+  return (
+    <SandboxDrawLocal
+      scenario={scenario}
+      updateScenario={(updater) => setScenario(updater)}
+    />
+  );
+}
+
 export interface SandboxDrawProps {
   /**
    * `local`: mesa de pruebas educativa, 100% en el navegador (página pública).
@@ -1653,7 +1875,7 @@ export function SandboxDraw({
   verifyUrl = "/admin/super/sandbox",
 }: SandboxDrawProps = {}) {
   if (mode === "local") {
-    return <SandboxDrawLocal />;
+    return <SandboxDrawLocalStandalone />;
   }
 
   return <SandboxDrawRemote verifyUrl={verifyUrl} />;

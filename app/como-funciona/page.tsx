@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   BadgeCheck,
@@ -12,8 +13,7 @@ import {
 
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LiveDrawAnimation } from "@/components/LiveDrawAnimation";
-import { DrawDemoTabs, SandboxDraw } from "@/components/SandboxDraw";
+import { DemoExperience } from "@/components/SandboxDraw";
 
 export const metadata: Metadata = {
   title: "Cómo funciona | Gadu Sorteos",
@@ -21,42 +21,97 @@ export const metadata: Metadata = {
     "Cómo se eligen los números, cómo se confirma el pago y cómo se define y publica el ganador de cada sorteo.",
 };
 
+/** Resalta un concepto clave dentro de una lista. */
+function Key({ children }: { children: ReactNode }) {
+  return <strong className="font-semibold text-fg">{children}</strong>;
+}
+
 const STEPS = [
   {
     n: "01",
     icon: Ticket,
     title: "Solo números vendidos",
-    text: "Cada sorteo tiene una grilla con todos sus números. Podés elegir los que quieras y reservarlos. Cuando el organizador confirma tu pago, pasan a vendidos. El sorteo se juega únicamente con los números vendidos: nadie participa sin haber pagado.",
+    points: [
+      <>
+        El sorteo se juega únicamente con <Key>números vendidos</Key>: nadie
+        participa sin haber pagado.
+      </>,
+      <>Elegís tus números y quedan reservados a tu nombre.</>,
+      <>
+        Cuando el organizador confirma el pago, pasan a vendidos y entran al
+        sorteo.
+      </>,
+    ],
   },
   {
     n: "02",
     icon: ShieldCheck,
     title: "Pago confirmado",
-    text: "El pago es por transferencia: te mostramos los datos del organizador y enviás el comprobante por WhatsApp. El organizador revisa el comprobante y marca tus números como pagados desde el panel. Hasta que eso pasa, siguen reservados a tu nombre.",
+    points: [
+      <>
+        El pago es por <Key>transferencia</Key>: te mostramos los datos del
+        organizador.
+      </>,
+      <>Enviás el comprobante por WhatsApp.</>,
+      <>
+        El organizador revisa y marca tus números como pagados. Hasta entonces
+        siguen reservados a tu nombre.
+      </>,
+    ],
   },
   {
     n: "03",
     icon: Trophy,
     title: "Sorteo en la fecha publicada",
-    text: "En la fecha y hora que indica el sorteo, el organizador ejecuta el sorteo desde el panel. El sistema elige al azar un número entre los vendidos. El resultado queda registrado y no se puede modificar: una vez sorteado, el ganador y la fecha quedan congelados.",
+    points: [
+      <>
+        El organizador ejecuta el sorteo en la <Key>fecha y hora</Key>{" "}
+        publicadas.
+      </>,
+      <>El sistema elige al azar un número entre los vendidos.</>,
+      <>
+        El <Key>resultado</Key> queda registrado y no se puede modificar: una
+        vez sorteado, el ganador y la fecha quedan congelados.
+      </>,
+    ],
   },
   {
     n: "04",
     icon: Eye,
     title: "Verificación pública",
-    text: "El número ganador y el nombre del ganador se publican en la página del sorteo, a la vista de cualquiera. No hace falta tener cuenta para verlos. Los números vendidos también son públicos, así que podés controlar que el ganador haya estado en juego.",
+    points: [
+      <>
+        El <Key>resultado</Key> se publica a la vista de cualquiera, sin
+        necesidad de cuenta.
+      </>,
+      <>Los <Key>números vendidos</Key> también son públicos.</>,
+      <>
+        El <Key>hash</Key> y la semilla te dejan verificar que el ganador
+        estuvo en juego.
+      </>,
+    ],
   },
 ];
 
 const FORMULA =
   "sha256( gadu:v1 | raffle:<id> | seed:<semilla> | numbers:n1,n2,...,nN )";
 
+const CHECK_ITEMS = [
+  "Mirá la misma puesta en escena del sorteo en vivo.",
+  "Armá tu escenario con tus números y nombres de premios.",
+  "Publicá el hash y verificá el resultado paso a paso.",
+  "Nada de lo que hagas acá toca sorteos reales.",
+];
+
 export default function ComoFuncionaPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-16">
       <header className="space-y-5 border-b border-hairline pb-10">
         <p className="flex items-center gap-2">
-          <ShieldCheck className="h-3.5 w-3.5 text-brand-accent" aria-hidden="true" />
+          <ShieldCheck
+            className="h-3.5 w-3.5 text-brand-accent"
+            aria-hidden="true"
+          />
           <span className="eyebrow-gold">Transparencia total</span>
         </p>
         <h1 className="max-w-2xl text-balance font-display text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.03em] sm:text-5xl">
@@ -110,9 +165,17 @@ export default function ComoFuncionaPage() {
                 <h3 className="font-display text-xl font-semibold tracking-tight">
                   {step.title}
                 </h3>
-                <p className="max-w-2xl text-[13px] leading-relaxed text-fg-subtle">
-                  {step.text}
-                </p>
+                <ul className="space-y-1.5 text-[13px] leading-relaxed text-fg-subtle">
+                  {step.points.map((point, index) => (
+                    <li key={index} className="flex gap-2">
+                      <span
+                        className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-brand-500"
+                        aria-hidden="true"
+                      />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </li>
           ))}
@@ -140,41 +203,76 @@ export default function ComoFuncionaPage() {
         </div>
 
         <p className="mt-4 text-[13px] leading-relaxed text-fg-subtle">
-          Antes de sortear, el organizador publica el compromiso: el hash
-          SHA-256 de una semilla secreta que genera el sistema. Nadie conoce esa
-          semilla hasta el momento del sorteo, y el compromiso queda congelado:
-          no se puede cambiar ni retirar.
-        </p>
-        <p className="mt-3 text-[13px] leading-relaxed text-fg-subtle">
-          Al ejecutarse el sorteo, la base usa esa semilla junto con el listado
-          de números vendidos para calcular al ganador, y revela la semilla.
-          Cualquiera puede entonces recalcular el ganador y comprobar dos cosas:
-          que la semilla era la misma que se había comprometido antes, y que el
-          resultado se deriva de ella.
+          Antes de sortear, el organizador publica el{" "}
+          <Key>compromiso</Key>: el <Key>hash</Key> SHA-256 de una semilla
+          secreta. Ese compromiso queda congelado y no se puede cambiar ni
+          retirar.
         </p>
 
-        <div className="mt-5 rounded-lg border border-hairline bg-panel-2 p-4">
-          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-fg-subtle">
-            La cuenta que hace el sistema
-          </p>
-          <code className="mt-2 block break-all font-mono text-[12px] leading-relaxed text-fg-muted">
-            {FORMULA}
-          </code>
-          <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.14em] text-fg-subtle">
-            primeros 15 caracteres hex ÷ números vendidos → resto = posición del
-            ganador
-          </p>
-        </div>
+        <ul className="mt-4 space-y-2 text-[13px] leading-relaxed text-fg-subtle">
+          {[
+            <>
+              La semilla se genera antes del sorteo y permanece oculta hasta el
+              momento de revelar.
+            </>,
+            <>
+              Al revelar, cualquiera puede recalcular el ganador con la semilla
+              y el listado de <Key>números vendidos</Key>.
+            </>,
+            <>
+              Un <Key>verificador</Key> automático corre en tu navegador y te
+              dice si todo coincide con lo publicado.
+            </>,
+          ].map((item, index) => (
+            <li key={index} className="flex gap-2">
+              <span
+                className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-brand-500"
+                aria-hidden="true"
+              />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
 
-        <p className="mt-4 text-[13px] leading-relaxed text-fg-subtle">
-          Además, la base calcula dos huellas SHA-256: una del listado completo
-          de números vendidos y otra del mismo listado junto con el número
-          ganador. Ambas quedan publicadas y congeladas en la página del sorteo,
-          con el paso a paso exacto para verificarlas. En cada sorteo finalizado
-          hay un verificador automático: se ejecuta en tu navegador, no consulta
-          la base, y te dice si la semilla, el listado y el ganador coinciden con
-          lo publicado.
-        </p>
+        <details className="group mt-5 rounded-xl border border-hairline bg-panel-2 p-4">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-fg">
+            Ver detalles técnicos
+            <span
+              className="text-fg-subtle transition-transform group-open:rotate-180"
+              aria-hidden="true"
+            >
+              ▾
+            </span>
+          </summary>
+          <div className="mt-4 space-y-4 text-[13px] leading-relaxed text-fg-subtle">
+            <p>
+              Al ejecutarse el sorteo, la base usa la semilla junto con el
+              listado de números vendidos para calcular al ganador y revela la
+              semilla. Cualquiera puede recalcular el resultado y comprobar que
+              la semilla era la misma que se había comprometido antes.
+            </p>
+
+            <div className="rounded-lg border border-hairline bg-panel-1 p-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-fg-subtle">
+                La cuenta que hace el sistema
+              </p>
+              <code className="mt-2 block break-all font-mono text-[12px] leading-relaxed text-fg-muted">
+                {FORMULA}
+              </code>
+              <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.14em] text-fg-subtle">
+                primeros 15 caracteres hex ÷ números vendidos → resto = posición
+                del ganador
+              </p>
+            </div>
+
+            <p>
+              Además, la base calcula dos huellas SHA-256: una del listado
+              completo de números vendidos y otra del mismo listado junto con el
+              número ganador. Ambas quedan publicadas y congeladas en la página
+              del sorteo, con el paso a paso exacto para verificarlas.
+            </p>
+          </div>
+        </details>
       </section>
 
       <section
@@ -223,24 +321,43 @@ export default function ComoFuncionaPage() {
           >
             Probalo vos mismo: Simulador de Sorteo
           </h2>
-          <span className="ml-auto hidden font-mono text-[10px] uppercase tracking-[0.08em] text-fg-subtle sm:block">
-            Demo educativa · sin premios reales
-          </span>
         </div>
 
-        <p className="mt-4 text-[13px] leading-relaxed text-fg-subtle">
-          Este es un entorno de pruebas educativo: no se juegan premios reales.
-          Podés mirar la misma puesta en escena del sorteo en vivo, o armar tu
-          propio escenario, publicar el hash y verificar el resultado paso a
-          paso. Nada de lo que hagas acá toca sorteos reales.
-        </p>
+        <div
+          role="note"
+          className="mt-4 flex items-start gap-3 rounded-xl border-2 border-dashed border-violet-500/60 bg-violet-500/[0.09] p-3.5 dark:bg-violet-400/10"
+        >
+          <span aria-hidden="true" className="text-xl leading-none">
+            🧪
+          </span>
+          <div className="min-w-0">
+            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-violet-700 dark:text-violet-300">
+              MODO DEMO - SIMULACIÓN
+            </p>
+            <p className="mt-1 text-[12px] leading-relaxed text-violet-900/80 dark:text-violet-100/80">
+              Estás en un entorno de pruebas. No se juegan premios reales.
+            </p>
+          </div>
+        </div>
+
+        <ul className="mt-4 space-y-2 text-[13px] leading-relaxed text-fg-subtle">
+          {CHECK_ITEMS.map((item) => (
+            <li key={item} className="flex gap-2">
+              <span
+                className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-brand-500"
+                aria-hidden="true"
+              />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
 
         <ol className="mt-5 grid gap-3 sm:grid-cols-3">
           {[
             {
               n: "1",
               title: "Mirá la animación",
-              text: "La misma puesta en escena del sorteo en vivo, con tres premios ficticios.",
+              text: "La misma ceremonia, con los números y premios de tu escenario.",
             },
             {
               n: "2",
@@ -250,7 +367,7 @@ export default function ComoFuncionaPage() {
             {
               n: "3",
               title: "Verificá el hash",
-              text: "El compromiso se publica primero; después recalculás todo en tu navegador.",
+              text: "Publicá el compromiso y recalculá todo en tu navegador.",
             },
           ].map((step) => (
             <li
@@ -271,55 +388,12 @@ export default function ComoFuncionaPage() {
         </ol>
 
         <div className="mt-6">
-          <DrawDemoTabs
-            animation={
-              <div className="rounded-xl border border-hairline bg-panel-2 p-4 sm:p-6">
-                <LiveDrawAnimation
-                  raffleId="demo-como-funciona"
-                  initialStatus="active"
-                  initialWinner={null}
-                  soldCount={240}
-                  canDraw={false}
-                  hasCommitment
-                  sampleNumbers={Array.from(
-                    { length: 60 },
-                    (_, i) => i * 7 + 3,
-                  )}
-                  isDemo
-                  simulatedWinners={[
-                    {
-                      position: 1,
-                      number: 11,
-                      name: "Juan Pérez",
-                      prizeTitle: "Amoladora",
-                    },
-                    {
-                      position: 2,
-                      number: 42,
-                      name: "María Gómez",
-                      prizeTitle: "Taladro",
-                    },
-                    {
-                      position: 3,
-                      number: 7,
-                      name: "Luis Díaz",
-                      prizeTitle: "Cinta métrica",
-                    },
-                  ]}
-                />
-              </div>
-            }
-            sandbox={
-              <div className="rounded-xl border border-hairline bg-panel-2 p-4 sm:p-6">
-                <SandboxDraw mode="local" verifyUrl="/como-funciona#demo" />
-              </div>
-            }
-          />
+          <DemoExperience />
         </div>
 
         <details className="group mt-5 rounded-xl border border-hairline bg-panel-2 p-4">
           <summary className="cursor-pointer text-sm font-semibold text-fg">
-            ¿Cómo se verifica esto?
+            ¿Cómo se verifica esta demo?
           </summary>
           <div className="mt-3 space-y-2 text-[13px] leading-relaxed text-fg-subtle">
             <p>
