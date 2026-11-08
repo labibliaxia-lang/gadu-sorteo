@@ -43,7 +43,7 @@ Fuera:
 - [x] Enlaces legales de footer/login/terms usan navegación localizada.
 - [x] `typecheck`, `lint`, `test`, `build` verdes.
 - [x] Smoke local.
-- [ ] Commit, push y producción.
+- [x] Commit `6af547b`, push y producción verificada.
 
 ## Evidence
 
@@ -72,6 +72,18 @@ Fuera:
   `LocaleLink`.
 - No se tocó lógica de pagos, checkout, RPCs, motor de sorteos, admin,
   `SandboxDraw` ni `LiveDrawAnimation`.
+- Producción verificada después del push (`6af547b`):
+  - `/en/terminos`: 200, inglés (“Terms and Conditions of Use”, “Nature of the
+    Service”, “Refund Policy”).
+  - `/en/privacidad`: 200, inglés (“Privacy Policy”, “Data We Collect”, “ARCO
+    Rights”).
+  - `/pt/terminos`: 200, portugués; `/terminos`: 200, español.
+  - `/es/terminos`: 307 → `/terminos`.
+  - Footer y login en inglés enlazan a `/en/terminos` y `/en/privacidad`.
+  - `/en/login` y el grid del sorteo activo siguen en inglés.
+- `DeliveryAddressForm` no se pudo abrir visualmente en producción (requiere
+  sesión, sorteo activo y reserva); sus labels y errores están traducidos y
+  cubiertos por typecheck/lint/build.
 
 ## Next
 

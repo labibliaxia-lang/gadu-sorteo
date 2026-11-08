@@ -15,3 +15,14 @@ Enlaces:
 Catálogos:
 - 687 claves, ICU válido, sync 0 diferencias.
 - Tests 336/336; typecheck, lint y build OK.
+
+Producci�n (2026-11-08, commit 6af547b):
+200 lang=en /en/terminos
+200 lang=en /en/privacidad
+200 lang=pt /pt/terminos
+200 lang=es /terminos
+200 lang=en /en/login
+200 lang=en /en/sorteos/df7c3431-babd-403b-988d-806373d2365a
+/es/terminos -> 307 /terminos
+Footer en /en: /en/terminos y /en/privacidad.
+Login en /en/login: /en/terminos y /en/privacidad.
