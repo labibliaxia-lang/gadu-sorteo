@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Copy, Loader2, MessageCircle } from "lucide-react";
 
-import { markRefundPaid } from "@/app/admin/sorteos/[id]/actions";
+import { markRefundPaid } from "@/app/[locale]/admin/sorteos/[id]/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
 

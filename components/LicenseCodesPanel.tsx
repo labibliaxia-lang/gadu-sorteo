@@ -19,7 +19,7 @@ import {
   generateLicenseCode,
   revokeLicenseBenefit,
   revokeLicenseCode,
-} from "@/app/admin/super/actions";
+} from "@/app/[locale]/admin/super/actions";
 
 interface LicenseCode {
   code: string;

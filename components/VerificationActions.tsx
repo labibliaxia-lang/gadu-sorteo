@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   approveVerification,
   rejectVerification,
-} from "@/app/admin/verificacion/actions";
+} from "@/app/[locale]/admin/verificacion/actions";
 
 export function VerificationActions({
   userId,

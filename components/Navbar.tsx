@@ -53,6 +53,7 @@ const LOCALIZED_ROOTS = [
   "/register",
   "/terminos",
   "/privacidad",
+  "/admin",
 ];
 
 /** Solo las rutas migradas tienen versión en otro idioma. */
@@ -74,12 +75,12 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
   const locale = useLocale();
   const router = useLocaleRouter();
   const pathname = usePathname();
-  const inPanel = pathname.startsWith("/admin");
   // Se calcula desde el pathname real para que el selector no desaparezca
   // cuando la navegación pasa por /es antes del redirect a la ruta sin prefijo.
   const localePathname =
     pathname.replace(/^\/(?:es|en|pt)(?=\/|$)/, "") || "/";
-  const showLocaleSwitcher = !inPanel && supportsLocale(localePathname);
+  const inPanel = localePathname.startsWith("/admin");
+  const showLocaleSwitcher = supportsLocale(localePathname);
   const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(initialUser?.id ?? null);
   const [email, setEmail] = useState<string | null>(initialUser?.email ?? null);

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { updatePlanPrice } from "@/app/admin/super/actions";
+import { updatePlanPrice } from "@/app/[locale]/admin/super/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

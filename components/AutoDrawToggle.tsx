@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bot, Hand, Loader2 } from "lucide-react";
 
-import { setAutoDraw } from "@/app/admin/sorteos/[id]/actions";
+import { setAutoDraw } from "@/app/[locale]/admin/sorteos/[id]/actions";
 import { cn } from "@/lib/utils";
 
 /**

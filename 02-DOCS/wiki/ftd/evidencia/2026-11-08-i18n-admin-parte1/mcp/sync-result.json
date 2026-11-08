@@ -1,0 +1,8 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"referenceLocale\": \"es\",\n  \"totalKeys\": 738,\n  \"diffs\": [\n    {\n      \"locale\": \"en\",\n      \"missingKeys\": [],\n      \"extraKeys\": [],\n      \"suggestedPatch\": {}\n    },\n    {\n      \"locale\": \"pt\",\n      \"missingKeys\": [],\n      \"extraKeys\": [],\n      \"suggestedPatch\": {}\n    }\n  ],\n  \"inSync\": true,\n  \"summary\": \"All 3 locales are in sync with 738 keys.\"\n}"
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import { Ban, Loader2, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { banUser, unbanUser } from "@/app/admin/super/actions";
+import { banUser, unbanUser } from "@/app/[locale]/admin/super/actions";
 
 /**
  * Acciones de soporte sobre una cuenta. El servidor revalida el rol de

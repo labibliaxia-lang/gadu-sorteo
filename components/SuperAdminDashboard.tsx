@@ -36,7 +36,7 @@ import {
   listUsers,
   setUserRole,
   type SuperAdminUserRow,
-} from "@/app/admin/super/actions";
+} from "@/app/[locale]/admin/super/actions";
 
 type RoleFilter = AssignableRole | "all";
 

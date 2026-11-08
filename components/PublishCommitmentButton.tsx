@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { publishDrawCommitment } from "@/app/admin/sorteos/[id]/actions";
+import { publishDrawCommitment } from "@/app/[locale]/admin/sorteos/[id]/actions";
 
 /**
  * Botón para publicar el compromiso del sorteo (hash de la semilla) desde la

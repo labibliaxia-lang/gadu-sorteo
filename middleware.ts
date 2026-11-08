@@ -5,9 +5,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "@/src/i18n/routing";
 
 /**
- * next-intl solo maneja las rutas migradas a `app/[locale]`. El resto del
- * producto (admin, auth, perfil, legales) sigue existiendo únicamente en
- * español y no debe recibir el prefijo `/es` ni `/en`.
+ * next-intl maneja las rutas migradas a `app/[locale]`. El resto del producto
+ * (perfil, ayuda, seguridad, etc.) sigue existiendo únicamente en español.
+ * `/admin` también está localizado para que `/en/admin` y `/pt/admin` existan.
  */
 const intlMiddleware = createMiddleware(routing);
 const LOCALIZED_PREFIXES = [
@@ -19,6 +19,7 @@ const LOCALIZED_PREFIXES = [
   "/register",
   "/terminos",
   "/privacidad",
+  "/admin",
 ];
 
 function isLocalizedRoute(pathname: string): boolean {
@@ -34,6 +35,10 @@ function isLocalizedRoute(pathname: string): boolean {
 function localeFromPath(pathname: string): "es" | "en" | "pt" {
   const match = pathname.match(/^\/(es|en|pt)(?=\/|$)/);
   return (match?.[1] as "es" | "en" | "pt" | undefined) ?? "es";
+}
+
+function localizedPath(locale: "es" | "en" | "pt", path: string): string {
+  return locale === "es" ? path : `/${locale}${path}`;
 }
 
 const ADMIN_COOKIE = "admin_verified";
@@ -238,6 +243,34 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+  const locale = localeFromPath(pathname);
+  const pathWithoutLocale =
+    pathname.replace(/^\/(?:es|en|pt)(?=\/|$)/, "") || "/";
+
+  // La protección de `/admin/super` va antes del rewrite de next-intl: si se
+  // ejecutara después, las rutas localizadas (`/en/admin/super`) se saltarían
+  // el segundo factor.
+  const isSuperArea =
+    pathWithoutLocale === SUPER_PREFIX ||
+    pathWithoutLocale.startsWith(`${SUPER_PREFIX}/`);
+
+  if (isSuperArea) {
+    if (!user) {
+      return redirectKeepingCookies(
+        request,
+        supabaseResponse,
+        localizedPath(locale, "/login"),
+      );
+    }
+    if (!(await hasValidAdminSession(request, user.id))) {
+      return redirectKeepingCookies(
+        request,
+        supabaseResponse,
+        localizedPath(locale, ADMIN_VERIFY),
+        { next: pathname },
+      );
+    }
+  }
 
   // Rutas públicas localizadas: next-intl negocia/reescribe el locale y
   // conserva las cookies de sesión que Supabase pudo haber refrescado.
@@ -270,25 +303,7 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  const isSuperArea =
-    pathname === SUPER_PREFIX || pathname.startsWith(`${SUPER_PREFIX}/`);
-
-  // Solo el panel de superadmin conserva el segundo factor. Las demás rutas
-  // del panel se autorizan por rol en `app/admin/layout.tsx` y en cada action.
-  if (isSuperArea) {
-    if (!user) {
-      return redirectKeepingCookies(request, supabaseResponse, "/login");
-    }
-    if (!(await hasValidAdminSession(request, user.id))) {
-      return redirectKeepingCookies(
-        request,
-        supabaseResponse,
-        ADMIN_VERIFY,
-        { next: pathname },
-      );
-    }
-  }
-
+  // El resto del panel se autoriza por rol en el layout y en cada action.
   return supabaseResponse;
 }
 

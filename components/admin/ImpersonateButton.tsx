@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Loader2, LogIn } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { startImpersonation } from "@/app/admin/super/actions";
+import { startImpersonation } from "@/app/[locale]/admin/super/actions";
 
 interface Props {
   userId: string;

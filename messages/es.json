@@ -753,5 +753,76 @@
     "acceptedVersion": "Versión aceptada: {accepted} · vigente: {current}",
     "termsRich": "He leído y acepto los <terms>Términos y Condiciones</terms> y la <privacy>Política de Privacidad</privacy>.",
     "accept": "Aceptar versión {version} y continuar"
+  },
+  "AdminLayout": {
+    "eyebrow": "Panel del organizador",
+    "title": "Panel de organizador",
+    "subtitle": "Gestioná sorteos, premios y sorteá ganadores.",
+    "lock": "Bloquear panel",
+    "newRaffle": "Nuevo sorteo",
+    "mfaNudge": "Tu cuenta entra al panel sin segundo factor. Activá el código de la app autenticadora para que una sesión robada no alcance.",
+    "enableMfa": "Activarlo"
+  },
+  "AdminNav": {
+    "aria": "Secciones del panel",
+    "dashboard": "Dashboard",
+    "raffles": "Sorteos",
+    "reviews": "Reseñas",
+    "verification": "Verificación",
+    "super": "Super",
+    "profile": "Perfil"
+  },
+  "AdminDashboard": {
+    "stats": {
+      "total": "Total de sorteos",
+      "active": "Sorteos activos",
+      "revenue": "Recaudación estimada",
+      "sold": "Números vendidos"
+    },
+    "analytics": {
+      "title": "Analíticas avanzadas",
+      "feature": "Analíticas Avanzadas",
+      "description": "Gráficos de tendencia, ticket promedio, tasa de aprobación y exportación a CSV. Disponible con el plan Premium."
+    },
+    "plan": "Plan {name}",
+    "rafflesTitle": "Sorteos",
+    "empty": {
+      "title": "Todavía no creaste ningún sorteo",
+      "description": "Creá el primero para empezar a vender números: definís el premio, el precio y la fecha.",
+      "cta": "Crear el primero"
+    },
+    "actions": {
+      "view": "Ver",
+      "manage": "Gestionar",
+      "prizes": "Premios"
+    }
+  },
+  "AdminOnboarding": {
+    "welcomeTitle": "¡Bienvenido a tu panel!",
+    "welcomeText": "Estos son los tres pasos para tu primer sorteo. Te los muestro una sola vez.",
+    "closeAria": "Cerrar tutorial",
+    "step1Title": "1. Creá tu sorteo",
+    "step1Text": "Definí el premio, el precio del número y la fecha del sorteo. Después generá los números.",
+    "step2Title": "2. Compartí el link",
+    "step2Text": "Mandá el enlace del sorteo por WhatsApp o redes. Cada visita y cada número vendido queda registrado.",
+    "step3Title": "3. Validá los pagos y sorteá",
+    "step3Text": "Revisá los comprobantes, marcá los números como pagados y publicá el compromiso antes de sortear.",
+    "createFirst": "Crear mi primer sorteo",
+    "understood": "Entendido"
+  },
+  "AdminNotifications": {
+    "label": "Avisos",
+    "ariaCount": "Avisos: {count} decisiones pendientes"
+  },
+  "AdminPremiumGate": {
+    "featureTitle": "Función Premium",
+    "featureTitleWith": "Función Premium: {feature}",
+    "compactTitle": "{feature} es Premium",
+    "compactTitleFallback": "Esta función es Premium",
+    "compactDescription": "Canjeá un código premium para desbloquear esta función.",
+    "description": "Esta función está disponible solo con el plan Premium. Mejorá tu plan para desbloquearla.",
+    "redeem": "Canjear código",
+    "redeemPremium": "Canjear código premium",
+    "alreadyHave": "¿Ya tenés un código? Canjealo en {path}."
   }
 }

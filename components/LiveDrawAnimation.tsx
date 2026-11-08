@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ExternalLink, Play, Trophy, Volume2, VolumeX } from "lucide-react";
 
-import { drawWinner } from "@/app/admin/sorteos/[id]/actions";
+import { drawWinner } from "@/app/[locale]/admin/sorteos/[id]/actions";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 

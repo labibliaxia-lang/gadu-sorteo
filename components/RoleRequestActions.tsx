@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   approveRoleRequest,
   rejectRoleRequest,
-} from "@/app/admin/super/actions";
+} from "@/app/[locale]/admin/super/actions";
 
 export function RoleRequestActions({ userId }: { userId: string }) {
   const router = useRouter();

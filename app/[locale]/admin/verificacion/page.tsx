@@ -25,7 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { saveKycData, submitKyc } from "@/app/admin/verificacion/actions";
+import { saveKycData, submitKyc } from "@/app/[locale]/admin/verificacion/actions";
 
 type VerificationStatus = "pending" | "approved" | "rejected";
 

@@ -7,7 +7,7 @@ import { Banknote, Loader2, Undo2 } from "lucide-react";
 import {
   refundAndRelease,
   registerPayment,
-} from "@/app/admin/sorteos/[id]/ventas/actions";
+} from "@/app/[locale]/admin/sorteos/[id]/ventas/actions";
 import { Button } from "@/components/ui/button";
 
 /**

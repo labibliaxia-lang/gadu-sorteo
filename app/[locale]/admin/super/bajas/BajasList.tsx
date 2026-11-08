@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import {
   approveAccountDeletion,
   rejectAccountDeletion,
-} from "@/app/admin/super/bajas/actions";
+} from "@/app/[locale]/admin/super/bajas/actions";
 import { Button } from "@/components/ui/button";
 
 export interface BajaItem {

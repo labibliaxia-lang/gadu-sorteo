@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Copy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { cloneRaffle } from "@/app/admin/sorteos/[id]/actions";
+import { cloneRaffle } from "@/app/[locale]/admin/sorteos/[id]/actions";
 
 export function RaffleCloneButton({ raffleId }: { raffleId: string }) {
   const router = useRouter();

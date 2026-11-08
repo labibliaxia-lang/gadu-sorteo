@@ -22,10 +22,12 @@ export function Footer() {
   const t = useTranslations("Footer");
   const pathname = usePathname();
   const salesHref = whatsappHref(t("whatsappMessage"));
+  const pathWithoutLocale =
+    pathname.replace(/^\/(?:es|en|pt)(?=\/|$)/, "") || "/";
 
   // El panel es una herramienta, no una página de marketing: sin footer
   // público, sin Instagram y sin legales al pie de cada acción.
-  if (pathname.startsWith("/admin")) return null;
+  if (pathWithoutLocale.startsWith("/admin")) return null;
 
   return (
     <footer className="mt-24 border-t border-hairline bg-panel-1">

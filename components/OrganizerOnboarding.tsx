@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   CheckCircle2,
   MessageCircle,
@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useFocusTrap } from "@/lib/use-focus-trap";
@@ -22,22 +23,10 @@ interface OrganizerOnboardingProps {
 }
 
 const STEPS = [
-  {
-    icon: Trophy,
-    title: "1. Creá tu sorteo",
-    text: "Definí el premio, el precio del número y la fecha del sorteo. Después generá los números.",
-  },
-  {
-    icon: Share2,
-    title: "2. Compartí el link",
-    text: "Mandá el enlace del sorteo por WhatsApp o redes. Cada visita y cada número vendido queda registrado.",
-  },
-  {
-    icon: MessageCircle,
-    title: "3. Validá los pagos y sorteá",
-    text: "Revisá los comprobantes, marcá los números como pagados y publicá el compromiso antes de sortear.",
-  },
-];
+  { icon: Trophy, title: "step1Title", text: "step1Text" },
+  { icon: Share2, title: "step2Title", text: "step2Text" },
+  { icon: MessageCircle, title: "step3Title", text: "step3Text" },
+] as const;
 
 /**
  * Tutorial de bienvenida del organizador. Se muestra una sola vez por cuenta
@@ -47,6 +36,7 @@ export function OrganizerOnboarding({
   userId,
   show,
 }: OrganizerOnboardingProps) {
+  const t = useTranslations("AdminOnboarding");
   const storageKey = `gadu:onboarding:${userId}`;
   const [visible, setVisible] = useState(false);
 
@@ -92,17 +82,16 @@ export function OrganizerOnboarding({
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 id="onboarding-title" className="text-xl font-bold">
-              ¡Bienvenido a tu panel!
+              {t("welcomeTitle")}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Estos son los tres pasos para tu primer sorteo. Te los muestro una
-              sola vez.
+              {t("welcomeText")}
             </p>
           </div>
           <button
             type="button"
             onClick={dismiss}
-            aria-label="Cerrar tutorial"
+            aria-label={t("closeAria")}
             className="rounded-md p-1 text-muted-foreground transition hover:bg-accent hover:text-foreground"
           >
             <X className="h-4 w-4" />
@@ -116,24 +105,24 @@ export function OrganizerOnboarding({
                 <step.icon className="h-5 w-5" />
               </span>
               <div className="space-y-0.5">
-                <p className="font-semibold">{step.title}</p>
-                <p className="text-sm text-muted-foreground">{step.text}</p>
+                <p className="font-semibold">{t(step.title)}</p>
+                <p className="text-sm text-muted-foreground">{t(step.text)}</p>
               </div>
             </li>
           ))}
         </ol>
 
         <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
-          <Link
+          <LocaleLink
             href="/admin/sorteos/nuevo"
             onClick={dismiss}
             className={cn(buttonVariants(), "bg-amber-600 hover:bg-amber-700")}
           >
-            Crear mi primer sorteo
-          </Link>
+            {t("createFirst")}
+          </LocaleLink>
           <Button variant="outline" onClick={dismiss}>
             <CheckCircle2 className="mr-1.5 h-4 w-4" />
-            Entendido
+            {t("understood")}
           </Button>
         </div>
       </div>

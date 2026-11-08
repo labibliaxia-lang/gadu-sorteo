@@ -14,7 +14,7 @@ import {
 import {
   markReservationPaid,
   undoMarkReservationPaid,
-} from "@/app/admin/sorteos/[id]/actions";
+} from "@/app/[locale]/admin/sorteos/[id]/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";

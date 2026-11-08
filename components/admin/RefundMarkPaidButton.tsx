@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
-import { markRefundPaid } from "@/app/admin/sorteos/[id]/actions";
+import { markRefundPaid } from "@/app/[locale]/admin/sorteos/[id]/actions";
 import { Button } from "@/components/ui/button";
 
 export function RefundMarkPaidButton({

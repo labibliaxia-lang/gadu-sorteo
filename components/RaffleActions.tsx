@@ -12,7 +12,7 @@ import {
   cancelRaffle,
   closeRaffle as closeRaffleAction,
   reopenRaffle as reopenRaffleAction,
-} from "@/app/admin/sorteos/[id]/actions";
+} from "@/app/[locale]/admin/sorteos/[id]/actions";
 
 interface RaffleActionsProps {
   raffleId: string;

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Eye, Loader2, LogOut } from "lucide-react";
 
-import { stopImpersonation } from "@/app/admin/super/actions";
+import { stopImpersonation } from "@/app/[locale]/admin/super/actions";
 import { Button } from "@/components/ui/button";
 
 interface Props {

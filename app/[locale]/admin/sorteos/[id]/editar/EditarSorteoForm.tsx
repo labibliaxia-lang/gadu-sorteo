@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUploader } from "@/components/ImageUploader";
 import { cn, formatDateTime } from "@/lib/utils";
-import { updateRaffle } from "@/app/admin/sorteos/[id]/actions";
+import { updateRaffle } from "@/app/[locale]/admin/sorteos/[id]/actions";
 import type { Raffle } from "@/lib/types";
 
 const schema = z.object({

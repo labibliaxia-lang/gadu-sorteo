@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Crown,
   LayoutDashboard,
@@ -11,6 +10,10 @@ import {
   User,
 } from "lucide-react";
 
+import {
+  Link as LocaleLink,
+  usePathname,
+} from "@/src/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 type AdminRole = "admin" | "superadmin" | undefined;
@@ -21,24 +24,31 @@ type AdminRole = "admin" | "superadmin" | undefined;
  * parado el organizador sin adivinar.
  */
 export function AdminNav({ role }: { role: AdminRole }) {
+  const t = useTranslations("AdminNav");
   const pathname = usePathname();
 
   const items = [
-    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/sorteos", label: "Sorteos", icon: Ticket },
-    { href: "/admin/resenas", label: "Reseñas", icon: Star },
+    { href: "/admin", labelKey: "dashboard", icon: LayoutDashboard },
+    { href: "/admin/sorteos", labelKey: "raffles", icon: Ticket },
+    { href: "/admin/resenas", labelKey: "reviews", icon: Star },
     ...(role === "admin"
-      ? [{ href: "/admin/verificacion", label: "Verificación", icon: ShieldCheck }]
+      ? [
+          {
+            href: "/admin/verificacion",
+            labelKey: "verification",
+            icon: ShieldCheck,
+          },
+        ]
       : []),
     ...(role === "superadmin"
-      ? [{ href: "/admin/super", label: "Super", icon: Crown }]
+      ? [{ href: "/admin/super", labelKey: "super", icon: Crown }]
       : []),
-    { href: "/admin/perfil", label: "Perfil", icon: User },
+    { href: "/admin/perfil", labelKey: "profile", icon: User },
   ];
 
   return (
     <nav
-      aria-label="Secciones del panel"
+      aria-label={t("aria")}
       className="-mx-4 flex flex-wrap gap-0 border-b border-hairline px-4 [scrollbar-width:none] sm:mx-0 sm:flex-nowrap sm:overflow-x-auto sm:px-0"
     >
       {items.map((item) => {
@@ -47,7 +57,7 @@ export function AdminNav({ role }: { role: AdminRole }) {
             ? pathname === "/admin"
             : pathname.startsWith(item.href);
         return (
-          <Link
+          <LocaleLink
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
@@ -59,8 +69,8 @@ export function AdminNav({ role }: { role: AdminRole }) {
             )}
           >
             <item.icon className="h-4 w-4" aria-hidden="true" />
-            {item.label}
-          </Link>
+            {t(item.labelKey)}
+          </LocaleLink>
         );
       })}
     </nav>

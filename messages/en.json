@@ -753,5 +753,76 @@
     "acceptedVersion": "Accepted version: {accepted} · current: {current}",
     "termsRich": "I have read and accept the <terms>Terms and Conditions</terms> and the <privacy>Privacy Policy</privacy>.",
     "accept": "Accept version {version} and continue"
+  },
+  "AdminLayout": {
+    "eyebrow": "Organizer panel",
+    "title": "Organizer panel",
+    "subtitle": "Manage raffles and prizes, and draw winners.",
+    "lock": "Lock panel",
+    "newRaffle": "New raffle",
+    "mfaNudge": "Your account enters the panel without a second factor. Enable the authenticator app code so a stolen session cannot get in.",
+    "enableMfa": "Enable it"
+  },
+  "AdminNav": {
+    "aria": "Panel sections",
+    "dashboard": "Dashboard",
+    "raffles": "Raffles",
+    "reviews": "Reviews",
+    "verification": "Verification",
+    "super": "Super",
+    "profile": "Profile"
+  },
+  "AdminDashboard": {
+    "stats": {
+      "total": "Total raffles",
+      "active": "Active raffles",
+      "revenue": "Estimated revenue",
+      "sold": "Numbers sold"
+    },
+    "analytics": {
+      "title": "Advanced analytics",
+      "feature": "Advanced analytics",
+      "description": "Trend charts, average ticket, approval rate and CSV export. Available with the Premium plan."
+    },
+    "plan": "{name} plan",
+    "rafflesTitle": "Raffles",
+    "empty": {
+      "title": "You have not created any raffle yet",
+      "description": "Create the first one to start selling numbers: set the prize, the price and the date.",
+      "cta": "Create the first one"
+    },
+    "actions": {
+      "view": "View",
+      "manage": "Manage",
+      "prizes": "Prizes"
+    }
+  },
+  "AdminOnboarding": {
+    "welcomeTitle": "Welcome to your panel!",
+    "welcomeText": "These are the three steps for your first raffle. I will show them only once.",
+    "closeAria": "Close tutorial",
+    "step1Title": "1. Create your raffle",
+    "step1Text": "Set the prize, the price per number and the draw date. Then generate the numbers.",
+    "step2Title": "2. Share the link",
+    "step2Text": "Send the raffle link via WhatsApp or social media. Every visit and every number sold is recorded.",
+    "step3Title": "3. Validate payments and draw",
+    "step3Text": "Review the receipts, mark the numbers as paid and publish the commitment before drawing.",
+    "createFirst": "Create my first raffle",
+    "understood": "Got it"
+  },
+  "AdminNotifications": {
+    "label": "Alerts",
+    "ariaCount": "Alerts: {count} pending decisions"
+  },
+  "AdminPremiumGate": {
+    "featureTitle": "Premium feature",
+    "featureTitleWith": "Premium feature: {feature}",
+    "compactTitle": "{feature} is Premium",
+    "compactTitleFallback": "This feature is Premium",
+    "compactDescription": "Redeem a premium code to unlock this feature.",
+    "description": "This feature is available only with the Premium plan. Upgrade your plan to unlock it.",
+    "redeem": "Redeem code",
+    "redeemPremium": "Redeem premium code",
+    "alreadyHave": "Already have a code? Redeem it at {path}."
   }
 }

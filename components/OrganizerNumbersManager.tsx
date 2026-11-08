@@ -10,7 +10,7 @@ import type { RaffleNumber } from "@/lib/types";
 import {
   markNumbersSold,
   releaseNumbers,
-} from "@/app/admin/sorteos/[id]/numeros/actions";
+} from "@/app/[locale]/admin/sorteos/[id]/numeros/actions";
 
 function useColumnCount() {
   const [cols, setCols] = useState(5);

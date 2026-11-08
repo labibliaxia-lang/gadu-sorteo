@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Bell } from "lucide-react";
+
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 
 import { buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
  * organizador logueado.
  */
 export function NotificationsBell() {
+  const t = useTranslations("AdminNotifications");
   const supabase = createClient();
   const [count, setCount] = useState(0);
 
@@ -46,20 +49,18 @@ export function NotificationsBell() {
   }, [supabase]);
 
   return (
-    <Link
+    <LocaleLink
       href="/admin/notificaciones"
       className={buttonVariants({ variant: "outline", size: "sm" })}
-      aria-label={
-        count > 0 ? `Avisos: ${count} decisiones pendientes` : "Avisos"
-      }
+      aria-label={count > 0 ? t("ariaCount", { count }) : t("label")}
     >
       <Bell className="mr-1.5 h-4 w-4" aria-hidden="true" />
-      Avisos
+      {t("label")}
       {count > 0 && (
         <span className="ml-1.5 rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-semibold text-destructive-foreground">
           {count}
         </span>
       )}
-    </Link>
+    </LocaleLink>
   );
 }

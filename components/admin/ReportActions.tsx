@@ -15,7 +15,7 @@ import {
   pauseReportedRaffle,
   resolveReport,
   type ReportActionResult,
-} from "@/app/admin/super/actions";
+} from "@/app/[locale]/admin/super/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

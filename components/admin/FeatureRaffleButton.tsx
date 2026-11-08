@@ -6,7 +6,7 @@ import { Star } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { canFeature } from "@/lib/featured";
-import { setRaffleFeatured } from "@/app/admin/super/actions";
+import { setRaffleFeatured } from "@/app/[locale]/admin/super/actions";
 
 /**
  * Destaca o quita un sorteo de la cartelera (migración 0066). Solo aparece en

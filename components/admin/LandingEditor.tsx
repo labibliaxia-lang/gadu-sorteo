@@ -20,7 +20,7 @@ import {
   videoEmbedUrl,
 } from "@/lib/landing";
 import { createClient } from "@/lib/supabase/client";
-import { saveLandingContent } from "@/app/admin/sorteos/[id]/landing/actions";
+import { saveLandingContent } from "@/app/[locale]/admin/sorteos/[id]/landing/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

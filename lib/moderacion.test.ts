@@ -18,7 +18,10 @@ import { describe, expect, it } from "vitest";
  */
 
 const RAIZ = fileURLToPath(new URL("..", import.meta.url));
-const ACCIONES = readFileSync(join(RAIZ, "app/admin/super/actions.ts"), "utf8");
+const ACCIONES = readFileSync(
+  join(RAIZ, "app/[locale]/admin/super/actions.ts"),
+  "utf8",
+);
 
 /** Recorta el cuerpo de una función por su firma hasta la llave que la cierra. */
 function cuerpoDe(nombre: string): string {

@@ -1,17 +1,17 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   BarChart3,
   CalendarDays,
   Coins,
   Eye,
   Gift,
-  Plus,
   Settings,
   Ticket,
   Wrench,
 } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -32,14 +32,6 @@ import type { Raffle } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-const statusLabel: Record<Raffle["status"], string> = {
-  active: "Activo",
-  closed: "Cerrado",
-  drawn: "Sorteado",
-  cancelled: "Cancelado",
-  paused: "Pausado",
-};
-
 const statusVariant: Record<
   Raffle["status"],
   "success" | "warning" | "secondary"
@@ -52,12 +44,17 @@ const statusVariant: Record<
 };
 
 export default async function AdminDashboardPage() {
+  const t = await getTranslations("AdminDashboard");
+  const tc = await getTranslations("Common");
+  const locale = await getLocale();
   const supabase = createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    redirect(locale === "es" ? "/login" : `/${locale}/login`);
+  }
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -129,10 +126,18 @@ export default async function AdminDashboardPage() {
   }
 
   const stats = [
-    { icon: BarChart3, label: "Total de sorteos", value: String(list.length) },
-    { icon: Ticket, label: "Sorteos activos", value: String(activeCount) },
-    { icon: Coins, label: "Recaudación estimada", value: formatPrice(revenue) },
-    { icon: Wrench, label: "Números vendidos", value: String(soldCount ?? 0) },
+    { icon: BarChart3, label: t("stats.total"), value: String(list.length) },
+    { icon: Ticket, label: t("stats.active"), value: String(activeCount) },
+    {
+      icon: Coins,
+      label: t("stats.revenue"),
+      value: formatPrice(revenue, locale),
+    },
+    {
+      icon: Wrench,
+      label: t("stats.sold"),
+      value: String(soldCount ?? 0),
+    },
   ];
 
   return (
@@ -164,40 +169,42 @@ export default async function AdminDashboardPage() {
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-2xl font-semibold tracking-tight">
-            Analíticas avanzadas
+            {t("analytics.title")}
           </h2>
           <Badge variant={planContext.isPremium ? "success" : "secondary"}>
-            Plan {planContext.limits.label}
+            {t("plan", { name: planContext.limits.label })}
           </Badge>
         </div>
 
         <PremiumGate
           plan={planContext.plan}
-          feature="Analíticas Avanzadas"
-          description="Gráficos de tendencia, ticket promedio, tasa de aprobación y exportación a CSV. Disponible con el plan Premium."
+          feature={t("analytics.feature")}
+          description={t("analytics.description")}
         >
-          <AdvancedAnalytics planLabel={`Plan ${planContext.limits.label}`} />
+          <AdvancedAnalytics
+            planLabel={t("plan", { name: planContext.limits.label })}
+          />
         </PremiumGate>
       </section>
 
       {/* Lista de sorteos */}
       <div className="space-y-4">
         <h2 className="font-display text-2xl font-semibold tracking-tight">
-          Sorteos
+          {t("rafflesTitle")}
         </h2>
 
         {list.length === 0 ? (
           <EmptyState
             icon={Wrench}
-            title="Todavía no creaste ningún sorteo"
-            description="Creá el primero para empezar a vender números: definís el premio, el precio y la fecha."
+            title={t("empty.title")}
+            description={t("empty.description")}
             action={
-              <Link
+              <LocaleLink
                 href="/admin/sorteos/nuevo"
                 className={buttonVariants({ variant: "outline" })}
               >
-                Crear el primero
-              </Link>
+                {t("empty.cta")}
+              </LocaleLink>
             }
           />
         ) : (
@@ -208,7 +215,7 @@ export default async function AdminDashboardPage() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <CardTitle className="text-lg">{raffle.title}</CardTitle>
                     <Badge variant={statusVariant[raffle.status]}>
-                      {statusLabel[raffle.status]}
+                      {tc(`status.${raffle.status}`)}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -216,16 +223,16 @@ export default async function AdminDashboardPage() {
                   <div className="flex flex-wrap gap-x-6 gap-y-1 font-mono text-[12px] text-fg-subtle">
                     <span className="flex items-center gap-1.5">
                       <Coins className="h-4 w-4" aria-hidden="true" />
-                      {formatPrice(Number(raffle.price_per_number))}
+                      {formatPrice(Number(raffle.price_per_number), locale)}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <CalendarDays className="h-4 w-4" aria-hidden="true" />
-                      {formatDateTime(raffle.draw_date)}
+                      {formatDateTime(raffle.draw_date, locale)}
                     </span>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link
+                    <LocaleLink
                       href={`/sorteos/${raffle.id}`}
                       className={buttonVariants({
                         variant: "outline",
@@ -233,9 +240,9 @@ export default async function AdminDashboardPage() {
                       })}
                     >
                       <Eye className="mr-1.5 h-4 w-4" />
-                      Ver
-                    </Link>
-                    <Link
+                      {t("actions.view")}
+                    </LocaleLink>
+                    <LocaleLink
                       href={`/admin/sorteos/${raffle.id}`}
                       className={buttonVariants({
                         variant: "outline",
@@ -243,9 +250,9 @@ export default async function AdminDashboardPage() {
                       })}
                     >
                       <Settings className="mr-1.5 h-4 w-4" />
-                      Gestionar
-                    </Link>
-                    <Link
+                      {t("actions.manage")}
+                    </LocaleLink>
+                    <LocaleLink
                       href={`/admin/sorteos/${raffle.id}/premios`}
                       className={buttonVariants({
                         variant: "outline",
@@ -253,8 +260,8 @@ export default async function AdminDashboardPage() {
                       })}
                     >
                       <Gift className="mr-1.5 h-4 w-4" />
-                      Premios
-                    </Link>
+                      {t("actions.prizes")}
+                    </LocaleLink>
                     <RaffleActions
                       raffleId={raffle.id}
                       status={raffle.status}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2, Lock } from "lucide-react";
 
-import { guardarPlanes, type PlanConfigInput } from "@/app/admin/super/planes/actions";
+import { guardarPlanes, type PlanConfigInput } from "@/app/[locale]/admin/super/planes/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatPriceIn } from "@/lib/utils";

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { deleteRaffle } from "@/app/admin/sorteos/[id]/actions";
+import { deleteRaffle } from "@/app/[locale]/admin/sorteos/[id]/actions";
 
 export function RaffleDeleteButton({ raffleId }: { raffleId: string }) {
   const router = useRouter();

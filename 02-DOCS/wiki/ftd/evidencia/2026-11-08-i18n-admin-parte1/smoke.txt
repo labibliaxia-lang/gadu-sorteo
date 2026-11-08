@@ -1,0 +1,28 @@
+Admin parte 1 — smoke local con `next start` en :3100 (2026-11-08)
+
+Sesión admin real: e2e.organizador@gadu.test (magic link de Supabase).
+
+200 /en/admin — Organizer panel, Dashboard, Total raffles, Estimated revenue,
+    Numbers sold, New raffle, Alerts, nav Raffles/Reviews/Verification/Profile.
+200 /pt/admin — Painel do organizador, Total de sorteios, Receita estimada,
+    Novo sorteio, Avisos.
+200 /admin — Panel del organizador, Total de sorteos, Recaudación estimada.
+
+Links del sidebar en /en/admin:
+/en/admin, /en/admin/sorteos, /en/admin/resenas, /en/admin/verificacion,
+/en/admin/perfil. Selector visible: /es/admin, /en/admin, /pt/admin.
+
+15 páginas del admin devuelven 200 (design, notificaciones, perfil, resenas,
+sorteos, sorteos/nuevo, detalle y subrutas).
+
+Sin sesión:
+/en/admin -> 307 /en/login
+/pt/admin -> 307 /pt/login
+/admin -> 307 /login
+/en/admin/super -> 307 /en/login
+
+Con sesión admin sin MFA de super:
+/en/admin/super -> 307 /en/admin/verify?next=%2Fen%2Fadmin%2Fsuper
+
+Catálogos: 738 claves, ICU válido, sync 0 diferencias.
+Checks: typecheck OK, lint OK, 336 tests OK, build OK.

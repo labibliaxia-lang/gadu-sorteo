@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Mail, MessageCircle } from "lucide-react";
 
-import { notifyWinnerManually } from "@/app/admin/sorteos/[id]/actions";
+import { notifyWinnerManually } from "@/app/[locale]/admin/sorteos/[id]/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { telefonoLegible, waLink } from "@/lib/whatsapp";
 

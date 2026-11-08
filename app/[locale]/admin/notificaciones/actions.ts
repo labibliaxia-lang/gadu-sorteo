@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   markNumbersSold,
   releaseNumbers,
-} from "@/app/admin/sorteos/[id]/numeros/actions";
+} from "@/app/[locale]/admin/sorteos/[id]/numeros/actions";
 
 export type NotifActionResult = { ok: true } | { ok: false; error: string };
 

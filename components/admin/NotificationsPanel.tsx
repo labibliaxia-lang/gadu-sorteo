@@ -10,7 +10,7 @@ import {
   extendReservation,
   markNotificationRead,
   releaseReservation,
-} from "@/app/admin/notificaciones/actions";
+} from "@/app/[locale]/admin/notificaciones/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatPrice } from "@/lib/utils";

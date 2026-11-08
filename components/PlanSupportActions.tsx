@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import {
   extendUserPlan,
   type PlanId,
-} from "@/app/admin/super/actions";
+} from "@/app/[locale]/admin/super/actions";
 
 const PLAN_OPTIONS: { value: PlanId; label: string }[] = [
   { value: "free", label: "Free" },

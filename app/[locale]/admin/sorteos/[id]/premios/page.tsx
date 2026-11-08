@@ -20,7 +20,7 @@ import { PrizeCard } from "@/components/PrizeCard";
 import {
   deletePrize,
   upsertPrize,
-} from "@/app/admin/sorteos/[id]/actions";
+} from "@/app/[locale]/admin/sorteos/[id]/actions";
 import type { Prize } from "@/lib/types";
 
 export default function PremiosPage({ params }: { params: { id: string } }) {

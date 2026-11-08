@@ -8,7 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { verifyAdmin } from "@/app/admin/verify/actions";
+import { verifyAdmin } from "@/app/[locale]/admin/verify/actions";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: "Código de administrador incorrecto. Intentá de nuevo.",
