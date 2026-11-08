@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -28,6 +29,8 @@ export default function SuperAdminError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("AdminSuper");
+
   useEffect(() => {
     console.error("[admin/super] error de render", error);
   }, [error]);
@@ -38,25 +41,25 @@ export default function SuperAdminError({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
-            No pudimos mostrar el panel
+            {t("error.title")}
           </CardTitle>
-          <CardDescription>
-            Ocurrió un error al renderizar esta sección. Podés reintentar o
-            volver al panel general; el resto de la app sigue funcionando.
-          </CardDescription>
+          <CardDescription>{t("error.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <Button type="button" onClick={reset}>
-              Reintentar
+              {t("error.retry")}
             </Button>
-            <Link href="/admin" className={buttonVariants({ variant: "outline" })}>
-              Volver al panel
-            </Link>
+            <LocaleLink
+              href="/admin"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              {t("error.back")}
+            </LocaleLink>
           </div>
           {error.digest && (
             <p className="font-mono text-[11px] text-fg-subtle">
-              Código de error: {error.digest}
+              {t("error.code", { code: error.digest })}
             </p>
           )}
         </CardContent>

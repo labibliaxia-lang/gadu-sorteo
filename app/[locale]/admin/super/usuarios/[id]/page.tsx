@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -9,6 +9,7 @@ import {
   Ticket,
 } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { requireSuperadminSession } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,6 @@ import { ResponsiveTable } from "@/components/ui/responsive-table";
 import { SupportUserActions } from "@/components/SupportUserActions";
 import { PlanSupportActions } from "@/components/PlanSupportActions";
 import { formatDateTime, formatPrice } from "@/lib/utils";
-import { roleLabel } from "@/lib/superadmin";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +45,15 @@ export default async function SuperUserSupportPage({
   params: { id: string };
 }) {
   if (!UUID_RE.test(params.id)) notFound();
+
+  const t = await getTranslations("AdminSuperUsers");
+  const locale = await getLocale();
+  const roleLabel = (role: string) =>
+    role === "superadmin"
+      ? t("roles.superadmin")
+      : role === "admin"
+        ? t("roles.admin")
+        : t("roles.user");
 
   const session = await requireSuperadminSession();
   if (!session) notFound();
@@ -157,43 +166,43 @@ export default async function SuperUserSupportPage({
 
   return (
     <div className="space-y-6">
-      <Link
+      <LocaleLink
         href="/admin/super"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver al panel superadmin
-      </Link>
+        {t("back")}
+      </LocaleLink>
 
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {profile.full_name || "Sin nombre"}
+            {profile.full_name || t("noName")}
           </h1>
           <p className="break-all text-sm text-muted-foreground">
-            {profile.email || "Sin email"}
+            {profile.email || t("noEmail")}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Badge variant={profile.role === "superadmin" ? "default" : "secondary"}>
               {roleLabel(profile.role)}
             </Badge>
             {profile.is_banned && (
-              <Badge variant="destructive">Suspendido</Badge>
+              <Badge variant="destructive">{t("suspended")}</Badge>
             )}
             {profile.admin_request_status === "pending" && (
-              <Badge variant="warning">Solicitud pendiente</Badge>
+              <Badge variant="warning">{t("pendingRequest")}</Badge>
             )}
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Link
+          <LocaleLink
             href={`/admin/super/usuarios/${profile.id}/panel`}
             className={buttonVariants({ size: "sm" })}
           >
-            Ver su panel (solo lectura)
+            {t("viewPanel")}
             <ArrowUpRight className="ml-1.5 h-4 w-4" />
-          </Link>
+          </LocaleLink>
         </div>
       </header>
 
@@ -201,15 +210,17 @@ export default async function SuperUserSupportPage({
         <Card>
           <CardContent className="space-y-1 p-4 text-sm">
             <p className="flex items-center gap-1.5 text-muted-foreground">
-              <CalendarDays className="h-4 w-4" /> Alta
+              <CalendarDays className="h-4 w-4" /> {t("joined")}
             </p>
-            <p className="font-medium">{formatDateTime(profile.created_at)}</p>
+            <p className="font-medium">
+              {formatDateTime(profile.created_at, locale)}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="space-y-1 p-4 text-sm">
             <p className="flex items-center gap-1.5 text-muted-foreground">
-              <Ticket className="h-4 w-4" /> Sorteos creados
+              <Ticket className="h-4 w-4" /> {t("rafflesCreated")}
             </p>
             <p className="font-medium">{raffles.length}</p>
           </CardContent>
@@ -217,12 +228,12 @@ export default async function SuperUserSupportPage({
         <Card>
           <CardContent className="space-y-1 p-4 text-sm">
             <p className="flex items-center gap-1.5 text-muted-foreground">
-              <Coins className="h-4 w-4" /> Vencimiento de plan
+              <Coins className="h-4 w-4" /> {t("planExpiry")}
             </p>
             <p className="font-medium">
               {profile.role_expires_at
-                ? formatDateTime(profile.role_expires_at)
-                : "Sin vencimiento"}
+                ? formatDateTime(profile.role_expires_at, locale)
+                : t("noExpiry")}
             </p>
           </CardContent>
         </Card>
@@ -232,20 +243,19 @@ export default async function SuperUserSupportPage({
         <CardContent className="space-y-3 p-5">
           <div className="flex items-center gap-2 font-semibold">
             <Ban className="h-4 w-4 text-destructive" />
-            {profile.is_banned ? "Cuenta suspendida" : "Suspender cuenta"}
+            {profile.is_banned ? t("accountSuspended") : t("suspendAccount")}
           </div>
           {profile.is_banned ? (
             <p className="text-sm text-muted-foreground">
-              Motivo: {profile.ban_reason || "sin motivo registrado"}
+              {t("banReason", {
+                reason: profile.ban_reason || t("banNoReason"),
+              })}
               {profile.banned_at
-                ? ` · ${formatDateTime(profile.banned_at)}`
+                ? ` · ${formatDateTime(profile.banned_at, locale)}`
                 : ""}
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              El ban bloquea el inicio de sesión y las reservas de números. La
-              cuenta no se borra y se puede revertir.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("banExplain")}</p>
           )}
           <SupportUserActions
             userId={profile.id}
@@ -257,29 +267,33 @@ export default async function SuperUserSupportPage({
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold">Plan y pagos</h2>
+          <h2 className="text-lg font-semibold">{t("planAndPayments")}</h2>
           <span className="text-sm text-muted-foreground">
-            Plan actual:{" "}
-            {currentPlan === "premium"
-              ? "Premium"
-              : currentPlan === "organizador"
-                ? "Organizador"
-                : "Sin plan"}{" "}
+            {t("planCurrent", {
+              plan:
+                currentPlan === "premium"
+                  ? t("planPremium")
+                  : currentPlan === "organizador"
+                    ? t("planOrganizer")
+                    : t("planNone"),
+            })}{" "}
             ·{" "}
             {profile.plan_expires_at
-              ? `vence ${formatDateTime(profile.plan_expires_at)}`
+              ? t("planExpires", {
+                  date: formatDateTime(profile.plan_expires_at, locale),
+                })
               : profile.role_expires_at
-                ? `rol vence ${formatDateTime(profile.role_expires_at)}`
-                : "sin vencimiento"}
+                ? t("roleExpires", {
+                    date: formatDateTime(profile.role_expires_at, locale),
+                  })
+                : t("noExpiry")}
           </span>
         </div>
 
         <Card>
           <CardContent className="space-y-3 p-5">
             <p className="text-sm text-muted-foreground">
-              Registrá un pago por transferencia o efectivo. La vigencia se
-              extiende desde el vencimiento actual (o desde hoy si ya venció) y
-              el pago queda en el historial.
+              {t("registerPayment")}
             </p>
             <PlanSupportActions userId={profile.id} currentPlan={currentPlan} />
           </CardContent>
@@ -292,46 +306,46 @@ export default async function SuperUserSupportPage({
             columns={[
               {
                 key: "date",
-                header: "Fecha",
+                header: t("table.date"),
                 render: (order) => (
                   <span className="whitespace-nowrap text-muted-foreground">
-                    {formatDateTime(order.created_at)}
+                    {formatDateTime(order.created_at, locale)}
                   </span>
                 ),
               },
               {
                 key: "plan",
-                header: "Plan",
+                header: t("table.plan"),
                 render: (order) => (
                   <span className="capitalize">{order.plan}</span>
                 ),
               },
               {
                 key: "days",
-                header: "Días",
+                header: t("table.days"),
                 align: "right",
                 render: (order) => order.days,
               },
               {
                 key: "amount",
-                header: "Monto",
+                header: t("table.amount"),
                 align: "right",
                 render: (order) => (
                   <span className="font-mono">
-                    {formatPrice(Number(order.amount_ars))}
+                    {formatPrice(Number(order.amount_ars), locale)}
                   </span>
                 ),
               },
               {
                 key: "method",
-                header: "Medio",
+                header: t("table.method"),
                 render: (order) => (
                   <span className="capitalize">{order.method}</span>
                 ),
               },
               {
                 key: "note",
-                header: "Nota",
+                header: t("table.note"),
                 render: (order) => (
                   <span className="text-muted-foreground">
                     {order.note || "—"}
@@ -340,11 +354,11 @@ export default async function SuperUserSupportPage({
               },
               {
                 key: "expires",
-                header: "Vence",
+                header: t("table.expires"),
                 render: (order) => (
                   <span className="whitespace-nowrap text-muted-foreground">
                     {order.expires_at
-                      ? formatDateTime(order.expires_at)
+                      ? formatDateTime(order.expires_at, locale)
                       : "—"}
                   </span>
                 ),
@@ -357,17 +371,20 @@ export default async function SuperUserSupportPage({
       {isOrganizer && (
         <section className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold">Actividad como organizador</h2>
+            <h2 className="text-lg font-semibold">{t("organizerActivity")}</h2>
             <span className="text-sm text-muted-foreground">
-              {totalSold} vendidos · {totalReserved} reservados ·{" "}
-              {formatPrice(revenue)} estimado
+              {t("activitySummary", {
+                sold: totalSold,
+                reserved: totalReserved,
+                revenue: formatPrice(revenue, locale),
+              })}
             </span>
           </div>
 
           {raffles.length === 0 ? (
             <Card className="border-dashed text-center">
               <CardContent className="py-8 text-sm text-muted-foreground">
-                No creó sorteos.
+                {t("noRaffles")}
               </CardContent>
             </Card>
           ) : (
@@ -377,61 +394,62 @@ export default async function SuperUserSupportPage({
               columns={[
                 {
                   key: "raffle",
-                  header: "Sorteo",
+                  header: t("table.raffle"),
                   render: (raffle) => (
                     <span className="font-medium">{raffle.title}</span>
                   ),
                 },
                 {
                   key: "status",
-                  header: "Estado",
+                  header: t("table.status"),
                   render: (raffle) => (
                     <Badge variant="secondary">{raffle.status}</Badge>
                   ),
                 },
                 {
                   key: "sold",
-                  header: "Vendidos",
+                  header: t("table.sold"),
                   align: "right",
                   render: (raffle) => byId.get(raffle.id)?.sold ?? 0,
                 },
                 {
                   key: "reserved",
-                  header: "Reservados",
+                  header: t("table.reserved"),
                   align: "right",
                   render: (raffle) => byId.get(raffle.id)?.reserved ?? 0,
                 },
                 {
                   key: "revenue",
-                  header: "Recaudación",
+                  header: t("table.revenue"),
                   align: "right",
                   render: (raffle) => (
                     <span className="font-mono">
                       {formatPrice(
                         Number(raffle.price_per_number) *
                           (byId.get(raffle.id)?.sold ?? 0),
+                        locale,
                       )}
                     </span>
                   ),
                 },
                 {
                   key: "links",
-                  header: "Links",
+                  header: t("table.links"),
                   align: "right",
                   render: (raffle) => (
                     <span className="space-x-3 text-xs">
-                      <Link
+                      <LocaleLink
                         href={`/sorteos/${raffle.id}`}
                         className="text-brand-800 hover:underline dark:text-brand-300"
                       >
-                        Público
-                      </Link>
-                      <Link
+                        {t("public")}
+                      </LocaleLink>
+                      <LocaleLink
                         href={`/admin/super/usuarios/${profile.id}/panel`}
                         className="text-muted-foreground hover:underline"
                       >
-                        Panel
-                      </Link>
+                        {t("panel")}
+                      </LocaleLink>
                     </span>
                   ),
                 },
@@ -442,11 +460,11 @@ export default async function SuperUserSupportPage({
       )}
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Actividad como comprador</h2>
+        <h2 className="text-lg font-semibold">{t("buyerActivity")}</h2>
         {bought.length === 0 ? (
           <Card className="border-dashed text-center">
             <CardContent className="py-8 text-sm text-muted-foreground">
-              No tiene números comprados ni reservados.
+              {t("noNumbers")}
             </CardContent>
           </Card>
         ) : (
@@ -456,7 +474,7 @@ export default async function SuperUserSupportPage({
             columns={[
               {
                 key: "raffle",
-                header: "Sorteo",
+                header: t("table.raffle"),
                 render: (row) => (
                   <span className="font-medium">
                     {titleById.get(row.raffle_id as string) ?? "—"}
@@ -465,7 +483,7 @@ export default async function SuperUserSupportPage({
               },
               {
                 key: "number",
-                header: "Número",
+                header: t("table.number"),
                 align: "right",
                 render: (row) => (
                   <span className="font-mono">{row.number}</span>
@@ -473,21 +491,23 @@ export default async function SuperUserSupportPage({
               },
               {
                 key: "status",
-                header: "Estado",
+                header: t("table.status"),
                 render: (row) => (
                   <Badge variant="secondary">{row.status}</Badge>
                 ),
               },
               {
                 key: "date",
-                header: "Fecha",
+                header: t("table.date"),
                 align: "right",
                 render: (row) => (
                   <span className="text-muted-foreground">
                     {row.sold_at
-                      ? formatDateTime(row.sold_at)
+                      ? formatDateTime(row.sold_at, locale)
                       : row.reserved_until
-                        ? `Reserva hasta ${formatDateTime(row.reserved_until)}`
+                        ? t("reservation", {
+                            date: formatDateTime(row.reserved_until, locale),
+                          })
                         : "—"}
                   </span>
                 ),

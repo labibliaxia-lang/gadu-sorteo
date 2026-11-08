@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { requireSuperadminSession } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { blockerMessages } from "@/lib/account-deletion";
@@ -15,6 +16,7 @@ export const dynamic = "force-dynamic";
  * registrados sin dueño (migración 0082).
  */
 export default async function BajasPage() {
+  const t = await getTranslations("AdminSuperBajas");
   const session = await requireSuperadminSession();
   if (!session) notFound();
 
@@ -45,7 +47,7 @@ export default async function BajasPage() {
     const perfil = porId.get(fila.user_id);
     items.push({
       id: fila.id,
-      nombre: perfil?.full_name ?? "Sin nombre",
+      nombre: perfil?.full_name ?? t("noName"),
       email: perfil?.email ?? null,
       requestedAt: fila.requested_at,
       reason: fila.reason,
@@ -55,21 +57,17 @@ export default async function BajasPage() {
 
   return (
     <div className="space-y-6">
-      <Link
+      <LocaleLink
         href="/admin/super"
         className="inline-flex items-center gap-1.5 text-sm text-fg-subtle underline-offset-4 hover:underline"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Volver al panel
-      </Link>
+        {t("back")}
+      </LocaleLink>
 
       <header className="space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight">Bajas de cuenta</h1>
-        <p className="text-sm text-fg-subtle">
-          El usuario pide la baja desde su perfil. Acá se aprueba o se rechaza con
-          un motivo. Aprobar borra datos personales y documentos KYC; los pagos y
-          devoluciones quedan registrados sin nombre.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="text-sm text-fg-subtle">{t("description")}</p>
       </header>
 
       <BajasList items={items} />

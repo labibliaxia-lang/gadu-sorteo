@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { requireAdminSession } from "@/lib/auth";
 import { parseLandingContent } from "@/lib/landing";
 import { createClient } from "@/lib/supabase/server";
@@ -15,6 +16,7 @@ export default async function LandingBuilderPage({
 }: {
   params: { id: string };
 }) {
+  const t = await getTranslations("AdminSorteosLanding");
   const session = await requireAdminSession();
   if (!session) redirect("/login");
 
@@ -36,39 +38,37 @@ export default async function LandingBuilderPage({
 
   return (
     <div className="space-y-6">
-      <Link
+      <LocaleLink
         href={`/admin/sorteos/${params.id}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver al sorteo
-      </Link>
+        {t("back")}
+      </LocaleLink>
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            Landing promocional
+            {t("title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Contenido arriba del grid: texto, imágenes y videos de YouTube o
-            Vimeo. Se guarda como bloques seguros, sin HTML.
+            {t("subtitle")}
           </p>
         </div>
-        <Link
+        <LocaleLink
           href={`/sorteos/${params.id}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-sm text-amber-800 underline-offset-4 hover:underline dark:text-amber-300"
         >
-          Ver página pública
+          {t("viewPublic")}
           <ExternalLink className="h-4 w-4" />
-        </Link>
+        </LocaleLink>
       </header>
 
       <div className="rounded-xl border bg-muted/30 p-3">
         <p className="mb-2 text-xs font-medium text-muted-foreground">
-          Enlace público: la landing ya está generada desde que creaste el
-          sorteo, sin paso de publicación.
+          {t("linkNote")}
         </p>
         <CopyLandingLink raffleId={params.id} />
       </div>

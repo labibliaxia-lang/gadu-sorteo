@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { buttonVariants } from "@/components/ui/button";
 import { OrganizerNumbersManager } from "@/components/OrganizerNumbersManager";
@@ -13,6 +14,7 @@ export default async function SorteoNumerosPage({
 }: {
   params: { id: string };
 }) {
+  const t = await getTranslations("AdminSorteosDetail");
   const supabase = createClient();
 
   const {
@@ -47,18 +49,20 @@ export default async function SorteoNumerosPage({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-xl font-semibold">Números · {raffle.title}</h2>
+          <h2 className="text-xl font-semibold">
+            {t("numbers.title", { title: raffle.title })}
+          </h2>
           <p className="text-sm text-muted-foreground">
-            Aprobá comprobantes (marcar vendido) o liberá reservas.
+            {t("numbers.subtitle")}
           </p>
         </div>
-        <Link
+        <LocaleLink
           href={`/admin/sorteos/${params.id}`}
           className={buttonVariants({ variant: "outline", size: "sm" })}
         >
           <ArrowLeft className="mr-1.5 h-4 w-4" />
-          Volver
-        </Link>
+          {t("numbers.back")}
+        </LocaleLink>
       </div>
 
       <OrganizerNumbersManager raffleId={params.id} />

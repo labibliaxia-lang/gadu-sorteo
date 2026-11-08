@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Ticket } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,14 +18,6 @@ import type { Raffle } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-const statusLabel: Record<Raffle["status"], string> = {
-  active: "Activo",
-  closed: "Cerrado",
-  drawn: "Sorteado",
-  cancelled: "Cancelado",
-  paused: "Pausado",
-};
-
 const statusVariant: Record<
   Raffle["status"],
   "success" | "warning" | "secondary"
@@ -37,6 +30,9 @@ const statusVariant: Record<
 };
 
 export default async function AdminSorteosPage() {
+  const t = await getTranslations("AdminSorteos");
+  const tc = await getTranslations("Common");
+  const locale = await getLocale();
   const supabase = createClient();
 
   const {
@@ -66,11 +62,13 @@ export default async function AdminSorteosPage() {
       {raffles && raffles.length === 0 ? (
         <EmptyState
           icon={Ticket}
-          title="No hay sorteos todavía"
-          description="Creá el primero desde «Nuevo sorteo» para empezar a vender números."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             <Button asChild variant="outline">
-              <Link href="/admin/sorteos/nuevo">Crear el primero</Link>
+              <LocaleLink href="/admin/sorteos/nuevo">
+                {t("createFirst")}
+              </LocaleLink>
             </Button>
           }
         />
@@ -81,27 +79,31 @@ export default async function AdminSorteosPage() {
               <CardHeader className="flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-lg">{raffle.title}</CardTitle>
                 <Badge variant={statusVariant[raffle.status]}>
-                  {statusLabel[raffle.status]}
+                  {tc(`status.${raffle.status}`)}
                 </Badge>
               </CardHeader>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 font-mono text-[12px] text-fg-subtle">
                 <span>
-                  {formatPrice(Number(raffle.price_per_number))} por número ·{" "}
-                  {formatDateTime(raffle.draw_date)}
+                  {t("priceAndDate", {
+                    price: formatPrice(Number(raffle.price_per_number), locale),
+                    date: formatDateTime(raffle.draw_date, locale),
+                  })}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/admin/sorteos/${raffle.id}`}>
-                      Gestionar
-                    </Link>
+                    <LocaleLink href={`/admin/sorteos/${raffle.id}`}>
+                      {t("manage")}
+                    </LocaleLink>
                   </Button>
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/admin/sorteos/${raffle.id}/premios`}>
-                      Premios
-                    </Link>
+                    <LocaleLink href={`/admin/sorteos/${raffle.id}/premios`}>
+                      {t("prizes")}
+                    </LocaleLink>
                   </Button>
                   <Button asChild variant="ghost" size="sm">
-                    <Link href={`/sorteos/${raffle.id}`}>Ver público</Link>
+                    <LocaleLink href={`/sorteos/${raffle.id}`}>
+                      {t("viewPublic")}
+                    </LocaleLink>
                   </Button>
                 </div>
               </CardContent>

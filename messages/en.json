@@ -824,5 +824,845 @@
     "redeem": "Redeem code",
     "redeemPremium": "Redeem premium code",
     "alreadyHave": "Already have a code? Redeem it at {path}."
+  },
+  "AdminSorteos": {
+    "emptyTitle": "No raffles yet",
+    "emptyDescription": "Create the first one from «New raffle» to start selling numbers.",
+    "createFirst": "Create the first one",
+    "priceAndDate": "{price} per number · {date}",
+    "manage": "Manage",
+    "prizes": "Prizes",
+    "viewPublic": "View public page"
+  },
+  "AdminSorteosForm": {
+    "back": "Back to raffle",
+    "verifying": "Verifying identity…",
+    "kyc": {
+      "title": "KYC required to publish raffles",
+      "description": "To create and publish raffles you need to add your personal details (name, phone, location and ID) and have your identity approved with ID + selfie.",
+      "complete": "Complete verification",
+      "editData": "Edit my details"
+    },
+    "stepTitle1": "New raffle · Basic details",
+    "stepTitle2": "New raffle · Payment",
+    "stepTitle3": "New raffle · Cover and review",
+    "steps": {
+      "basics": "Basics",
+      "collection": "Payment",
+      "cover": "Cover",
+      "label": "Step {n}"
+    },
+    "limit": {
+      "freeReached": "Trial limit reached. Upgrade to <strong>Starter</strong> to keep creating raffles.",
+      "planReached": "You already have {count} active raffle(s). Your <strong>{plan}</strong> plan allows up to {max}. Finish one or upgrade your plan."
+    },
+    "fields": {
+      "title": "Title",
+      "titlePlaceholder": "E.g.: Car raffle",
+      "description": "Description",
+      "descriptionPlaceholder": "Tell people what the raffle is about",
+      "pricePerNumber": "Price per number",
+      "drawDate": "Draw date",
+      "currency": "Currency",
+      "currencyHint": "Prices and totals are shown in this currency.",
+      "maxNumbers": "Number of numbers",
+      "maxNumbersHint": "Your <strong>{plan}</strong> plan allows between 10 and {max} numbers per raffle.",
+      "minTicketsRequired": "Minimum numbers sold",
+      "winnersCount": "Number of prizes",
+      "winnersHint": "Your plan allows up to {count} {count, plural, one {prize} other {prizes}}.",
+      "ifNotMet": "If not reached",
+      "ifNotMetExtend": "Reschedule the date",
+      "ifNotMetCancel": "Cancel and refund the money",
+      "drawDateFixedHint": "While the raffle is on sale the date stays fixed: the public countdown cannot be restarted. To move it, close the raffle and publish it again.",
+      "minRuleHint": "The minimum is checked when the draw runs. The number of prizes is limited by your plan (3 or 30) and the engine publishes one winner per prize."
+    },
+    "currency": {
+      "ars": "ARS · Argentine peso",
+      "mxn": "MXN · Mexican peso",
+      "cop": "COP · Colombian peso",
+      "clp": "CLP · Chilean peso",
+      "usd": "USD · Dollar"
+    },
+    "minRule": {
+      "title": "Minimum sales rule",
+      "description": "If the minimum isn’t reached by the draw date, the raffle doesn’t run and the chosen rule applies. Leave it at 0 to require no minimum."
+    },
+    "premiumNumbers": {
+      "feature": "more numbers per raffle",
+      "description": "With Premium you can generate up to 10,000 numbers per raffle."
+    },
+    "premiumPayments": {
+      "feature": "Mercado Pago",
+      "description": "Collect automatically with Mercado Pago and access advanced payment methods."
+    },
+    "payment": {
+      "title": "Payment method",
+      "mercadoPago": "Mercado Pago",
+      "mercadoPagoSub": "Automatic / Test Mock Mode",
+      "transfer": "Bank transfer",
+      "transferSub": "Alias (Manual)",
+      "mockInfo": "If no real Mercado Pago token is configured, the platform will automatically enable <strong>Simulation Mode (Mock)</strong> to run local tests at no cost.",
+      "transferInfo": "Buyers will see your transfer details and send you the receipt via WhatsApp."
+    },
+    "transfer": {
+      "title": "Transfer details",
+      "alias": "Alias",
+      "aliasPlaceholder": "E.g.: my.alias.mp",
+      "cbu": "CBU",
+      "cbuPlaceholder": "22 digits",
+      "bank": "Bank",
+      "bankPlaceholder": "E.g.: Mercado Pago / Banco Nación",
+      "whatsapp": "Contact WhatsApp",
+      "whatsappPlaceholder": "E.g.: 5491123456789"
+    },
+    "review": {
+      "title": "Final review",
+      "titleLabel": "Title:",
+      "dateLabel": "Date:",
+      "priceLabel": "Price:",
+      "perNumber": "per number",
+      "numbers": "numbers",
+      "paymentLabel": "Payment:",
+      "transfer": "Transfer",
+      "transferWithAlias": "Transfer · {alias}",
+      "mercadoPago": "Mercado Pago",
+      "whatsappLabel": "WhatsApp:",
+      "note": "Numbers are generated automatically on creation. Prizes and the raffle commitment are added afterwards."
+    },
+    "terms": {
+      "title": "Raffle Terms and Conditions",
+      "description": "Generated with your name and KYC ID/Tax ID. Players must accept them before reserving numbers.",
+      "accept": "I agree to publish these terms as the legal basis of my raffle",
+      "descriptionEdit": "Legal terms the player will see before reserving. Generated with your KYC details.",
+      "empty": "No legal terms loaded."
+    },
+    "referral": {
+      "title": "Invite and Win (Referrals)",
+      "description": "Every guest who buys the minimum gives you a free number in the bonus raffle.",
+      "enable": "Enable referrals in this raffle",
+      "minNumbers": "Guest’s minimum purchase",
+      "minNumbersHint": "How many numbers your guest must buy.",
+      "maxPerUser": "Prize cap",
+      "maxPerUserHint": "0 = no cap per referrer.",
+      "bonusRaffle": "Bonus raffle",
+      "bonusNone": "Deliver the number in this same raffle",
+      "bonusHint": "Only active raffles from the same organizer.",
+      "enableEdit": "Invite and win in this raffle",
+      "descriptionEdit": "For every guest who buys, whoever invited them gets a free number <strong>from this raffle</strong>. That number comes out of your revenue: choose the minimum and the cap.",
+      "requireBuyerMin": "Minimum bought by you",
+      "requireBuyerMinHint": "0 = the inviter does not need to have bought.",
+      "maxPerUserHintLong": "0 = no cap. It is the maximum number of free numbers per referrer in this raffle.",
+      "bonusQuestion": "Where are the free numbers delivered?",
+      "bonusSame": "In this same raffle",
+      "bonusExclusive": "In an exclusive raffle: {title}",
+      "bonusEditHint": "If you choose an exclusive raffle, the number is delivered there and marked as 🎁 prize. That raffle must have available numbers.",
+      "minNumbersHintEdit": "How many numbers your guest must buy in this raffle.",
+      "maxPerUserEdit": "Cap per person"
+    },
+    "hidden": {
+      "title": "Don’t publish in the listing",
+      "description": "It doesn’t appear on the home page, in Winners or in search engines, but the link still opens it. Useful to test it before announcing it. To publish it later, enable it from the panel."
+    },
+    "cover": {
+      "label": "Cover image",
+      "change": "Click to change the image",
+      "drop": "Drag an image or click to upload",
+      "alt": "Cover",
+      "uploading": "Uploading…"
+    },
+    "buttons": {
+      "back": "Back",
+      "next": "Continue",
+      "creating": "Creating raffle…",
+      "uploadingCover": "Uploading cover…",
+      "create": "Create raffle",
+      "saving": "Saving…",
+      "save": "Save changes"
+    },
+    "preview": {
+      "title": "Preview",
+      "titleFallback": "Raffle title",
+      "dateUndefined": "Date not set",
+      "perNumber": "per number",
+      "numbersGenerated": "<strong>{count} numbers</strong> will be generated automatically when the raffle is created.",
+      "prizes": "Prizes",
+      "prizesHint": "Prizes are added in the next step."
+    },
+    "errors": {
+      "waitUpload": "Wait for the cover to finish uploading before creating the raffle.",
+      "acceptTerms": "You must accept and publish the raffle’s legal terms to create it.",
+      "planActiveLimit": "Your {plan} plan allows up to {max} active raffles. Finish one or upgrade to Premium.",
+      "planNumbersLimit": "Your {plan} plan allows up to {max} numbers per raffle.",
+      "planPrizesLimit": "Your {plan} plan allows up to {max} prize(s) per raffle.",
+      "mercadoPagoPremium": "Mercado Pago is a Premium plan feature. Choose transfer or redeem a premium code.",
+      "notAuthenticated": "You are not signed in.",
+      "noOrganizerRole": "Your session doesn’t have an organizer role right now. Sign out, sign in again and retry.",
+      "rlsRejected": "The database rejected the raffle due to a permissions issue. Sign out, sign in again and retry. If it persists, contact the platform administrator.",
+      "imageType": "The file must be an image.",
+      "imageTooLarge": "The image can’t exceed 5 MB.",
+      "createFailed": "The raffle couldn’t be created.",
+      "acceptTermsSave": "You must accept and publish the raffle’s legal terms to save.",
+      "saveFailed": "The changes couldn’t be saved."
+    },
+    "editTitle": "Edit raffle",
+    "editHint": "The number of numbers cannot be changed once generated."
+  },
+  "AdminSorteosDetail": {
+    "numbers": {
+      "title": "Numbers · {title}",
+      "subtitle": "Approve receipts (mark as sold) or release reservations.",
+      "back": "Back"
+    },
+    "created": {
+      "title": "Raffle created. Your landing page is already live.",
+      "description": "Share it right now: there’s nothing else to publish. You can edit the promotional content later."
+    },
+    "summary": {
+      "pricePerNumber": "Price per number",
+      "sold": "Numbers sold",
+      "reserved": "Reserved"
+    },
+    "drawDate": "Draw date",
+    "winner": {
+      "title": "Winning number",
+      "line": "🎉 {name} — No. {number}",
+      "none": "The draw hasn’t taken place yet."
+    },
+    "delivery": {
+      "title": "Winners’ delivery addresses",
+      "description": "Private: only you, as the organizer of this raffle, can see it. It isn’t shown on the public page.",
+      "positionFirst": "1st prize",
+      "positionOther": "Prize {position}",
+      "line": "{position} · No. {number} · {name}",
+      "noAddress": "The winner hasn’t added a delivery address yet.",
+      "postalCode": "ZIP"
+    },
+    "cancelled": {
+      "title": "Raffle cancelled",
+      "defaultReason": "The minimum sales target wasn’t reached or the organizer cancelled it.",
+      "noBuyers": "There are no buyers with sold numbers to refund.",
+      "refunds": "Refunds ({paid}/{total} paid):"
+    },
+    "refunds": {
+      "title": "Refunds",
+      "description": "Share the link with the buyer so they can confirm they received it, and mark it as paid once you have refunded the money."
+    },
+    "paused": {
+      "title": "Raffle paused by plan",
+      "text": "This raffle is temporarily paused: upgrade your plan to reactivate it. No data was lost."
+    },
+    "bonus": {
+      "title": "This raffle receives referral prizes",
+      "text": "Numbers won by inviting are delivered here, marked as 🎁 prize (they aren’t sales). Source raffle(s): {titles}."
+    },
+    "soldNoPayment": {
+      "title": "{count, plural, one {# number sold without a registered payment} other {# numbers sold without a registered payment}}",
+      "text": "If the raffle is drawn like this, that buyer is left without a linked payment. Record it from <link>Sales</link> before drawing."
+    },
+    "actions": {
+      "manageNumbers": "Manage numbers",
+      "sales": "Sales",
+      "prizes": "Manage prizes",
+      "questions": "Questions",
+      "landing": "Landing",
+      "analytics": "View analytics",
+      "edit": "Edit raffle",
+      "cannotDelete": "Can’t be deleted: it has activity",
+      "cannotDeleteTitle": "It has moved numbers, payments or a published commitment: it is cancelled instead of deleted."
+    },
+    "landing": {
+      "title": "Public landing page",
+      "description": "The raffle page is generated when you create it and stays published at this address. Copy it to share whenever you want.",
+      "edit": "Edit landing content"
+    },
+    "referral": {
+      "title": "Your referral link",
+      "enabledText": "Share this link: every friend who signs up and buys adds a free number for you in this raffle, according to the configured rules.",
+      "disabledText": "This raffle doesn’t have <strong>Invite and Win</strong> enabled yet.",
+      "enable": "Enable Invite and Win",
+      "copy": "Copy link"
+    },
+    "steps": {
+      "title": "Steps to publish and draw",
+      "warningTitle": "⚠️ Required action: you must publish the commitment for the raffle to be valid and verifiable",
+      "warningText": "Without the seed hash you can’t draw or verify the result. It’s step 3.",
+      "step1Label": "1. Raffle details",
+      "step1Detail": "Title, price, date and payment details.",
+      "step2Label": "2. Numbers and prizes",
+      "step2Detail": "Generate the numbers and add the prizes.",
+      "step3Label": "3. Commitment published",
+      "step3Detail": "Publish the seed hash before drawing: without it the draw can’t run.",
+      "step4Label": "4. Draw",
+      "step4Ready": "There are sold numbers already: you can draw.",
+      "step4NoSales": "You need at least one sold number to draw.",
+      "statusReady": "Ready",
+      "statusPending": "Pending"
+    },
+    "reservations": {
+      "title": "Reservations awaiting payment",
+      "description": "Manual prepayment: the buyer reserves their numbers, sends the receipt via WhatsApp and you confirm the payment here."
+    },
+    "buyer": "Buyer",
+    "buyerNoName": "Buyer without name"
+  },
+  "AdminSorteosPremios": {
+    "title": "Raffle prizes",
+    "subtitle": "The prizes that are drawn, in order.",
+    "back": "Back",
+    "listTitle": "Prizes ({count}/10)",
+    "listHint": "Each prize takes a position from 1 to 10. Creating and editing is validated on the server.",
+    "loading": "Loading…",
+    "edit": "Edit",
+    "delete": "Delete",
+    "limitReached": "You have reached the limit of 10 prizes for this raffle.",
+    "addPrize": "Add prize",
+    "editPrize": "Edit prize",
+    "position": "Position (1-10)",
+    "toolNumber": "Associated tool No.",
+    "titleLabel": "Title",
+    "description": "Description",
+    "photo1": "Photo 1 (main)",
+    "photo2": "Photo 2 (optional)",
+    "saving": "Saving…",
+    "saveChanges": "Save changes",
+    "cancelEdit": "Cancel editing",
+    "success": {
+      "updated": "Prize updated.",
+      "created": "Prize added.",
+      "deleted": "Prize deleted."
+    }
+  },
+  "AdminSorteosVentas": {
+    "error": {
+      "title": "The sales sheet couldn’t be loaded.",
+      "text": "Try again in a while. If it persists, migration 0091 may be missing."
+    },
+    "back": "Back to raffle",
+    "title": "Sales · {title}",
+    "subtitle": "Who bought what and how much money came in. {price} per number.",
+    "downloadCsv": "Download CSV",
+    "stats": {
+      "sold": "Numbers sold",
+      "buyers": "Buyers",
+      "collected": "Collected",
+      "refunds": "Refunds: {amount}",
+      "net": "Net",
+      "netHint": "Collected minus refunded",
+      "prize": "{count} from prizes (not sales)"
+    },
+    "anonWarning": "<strong>{count}</strong> number(s) are marked as sold without a registered buyer. This happens when they are marked by hand from «Manage numbers» without a previous reservation. They appear below as «Buyer without name».",
+    "empty": {
+      "title": "There are no sales yet.",
+      "text": "When the organizer confirms a payment, the buyer appears here with their numbers."
+    },
+    "search": {
+      "placeholder": "Search by name, phone or number",
+      "aria": "Search the sales sheet",
+      "submit": "Search",
+      "clear": "Clear"
+    },
+    "noMatches": "No buyers match «{query}».",
+    "table": {
+      "buyer": "Buyer",
+      "phone": "Phone",
+      "numbers": "Numbers",
+      "which": "Which",
+      "status": "Status",
+      "collected": "Collected",
+      "net": "Net",
+      "lastSale": "Last sale",
+      "actions": "Actions",
+      "rows": "{count} row(s)",
+      "prizeLabel": "🎁 Prize:"
+    },
+    "status": {
+      "paid": "Paid",
+      "pending": "Pending",
+      "manual": "No payment recorded"
+    },
+    "footnote": "The sheet shows name and phone, not email or ID: that is what is needed to validate a transfer. «Refund and release» records the refund from the amount collected and makes the number available again; it is audited with the reason."
+  },
+  "AdminSorteosAnalitica": {
+    "back": "Back to raffle",
+    "eyebrow": "Raffle analytics",
+    "subtitle": "From the raffle’s start to today. Visits are counted per browser tab.",
+    "stats": {
+      "visits": "Visits",
+      "sold": "Numbers sold",
+      "revenue": "Revenue",
+      "buyers": "Buyers"
+    },
+    "funnel": {
+      "title": "Conversion funnel",
+      "tracked": "Visits recorded since we enabled tracking",
+      "none": "No visits recorded yet",
+      "visits": "Visits",
+      "participations": "Participations (reservations + sales)",
+      "sales": "Confirmed sales"
+    },
+    "rates": {
+      "visitToSale": "Visits → sale",
+      "participationToSale": "Participations → sale",
+      "avgTicket": "Average ticket"
+    },
+    "daily": {
+      "title": "Numbers sold per day",
+      "last": "Last {days} days",
+      "tooltip": "{day}: {sold} sold · {revenue}"
+    },
+    "blocks": {
+      "title": "Sales by number block"
+    },
+    "noSales": "There are no confirmed sales yet.",
+    "recent": {
+      "title": "Latest confirmed sales",
+      "number": "No. {number}"
+    },
+    "footnote": "Visits are per render/tab, not unique people. The funnel is for comparing trends, not as an exact audience count."
+  },
+  "AdminSorteosLanding": {
+    "back": "Back to raffle",
+    "title": "Promotional landing",
+    "subtitle": "Content above the grid: text, images and YouTube or Vimeo videos. It is stored as safe blocks, no HTML.",
+    "viewPublic": "View public page",
+    "linkNote": "Public link: the landing page has been generated since you created the raffle, with no publishing step."
+  },
+  "AdminSorteosQuestions": {
+    "back": "Back to raffle",
+    "title": "User questions",
+    "subtitle": "Answer {title}’s questions in public. Pending ones appear first.",
+    "viewPublic": "View public section"
+  },
+  "AdminSuper": {
+    "eyebrow": "Console",
+    "title": "Superadmin",
+    "subtitle": "Platform metrics, requests, users, raffles, reports and audit log.",
+    "configurePlans": "Configure plans",
+    "accountDeletions": "Account deletions",
+    "drawSimulator": "Draw simulator",
+    "issuesTitle": "Some data could not be loaded",
+    "navAria": "Panel sections",
+    "whatsappMessage": "Hi! I received your request to become an organizer on Gadu Sorteos. I'd like to talk about commissions and terms.",
+    "sections": {
+      "dashboard": "Dashboard",
+      "usuarios": "Users",
+      "sorteos": "Raffles",
+      "referidos": "Referrals",
+      "notificaciones": "Notifications",
+      "denuncias": "Reports",
+      "auditoria": "Audit log"
+    },
+    "tabs": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "ranges": {
+      "all": "All time",
+      "month": "This month",
+      "week": "Last 7 days"
+    },
+    "roles": {
+      "superadmin": "Superadmin",
+      "admin": "Organizer",
+      "user": "User"
+    },
+    "status": {
+      "active": "Active",
+      "closed": "Closed",
+      "drawn": "Drawn",
+      "cancelled": "Cancelled"
+    },
+    "reportReasons": {
+      "fraud": "Possible fraud",
+      "fakePrize": "Fake or nonexistent prize",
+      "inappropriate": "Inappropriate content",
+      "spam": "Spam",
+      "other": "Other"
+    },
+    "actions": {
+      "approveRole": "Approved organizer role",
+      "rejectRole": "Rejected role request",
+      "changeRole": "Changed role manually",
+      "createOrganizer": "Manually created organizer",
+      "inviteOrganizer": "Invited organizer by email",
+      "suspendUser": "Suspended organizer",
+      "blockUser": "Blocked user",
+      "deleteUser": "Deleted user",
+      "generateLicense": "Generated license code",
+      "revokeLicense": "Voided license code",
+      "revokeLicenseBenefit": "Removed a license benefit",
+      "updatePlanPrice": "Updated plan price",
+      "banUser": "Suspended an account",
+      "unbanUser": "Lifted a suspension",
+      "supportView": "Opened a support view",
+      "planPayment": "Recorded a plan payment",
+      "markPaid": "Marked numbers as paid",
+      "undoMarkPaid": "Reverted a marked payment",
+      "impersonateUser": "Signed in as user (editor mode)",
+      "impersonateEnd": "Exited editor mode",
+      "editProfile": "Edited a profile manually",
+      "reportResolve": "Resolved/dismissed a report",
+      "reportRafflePause": "Paused a reported raffle",
+      "reportDelete": "Deleted a report"
+    },
+    "dashboard": {
+      "mrr": "Estimated MRR (ARS)",
+      "mrrNoCalc": "Could not be calculated",
+      "mrrSubscriptions": "{count} active subscriptions",
+      "totalUsers": "Total users",
+      "totalUsersHint": "{admins} organizers · {supers} superadmin",
+      "activeRaffles": "Active raffles",
+      "activeRafflesHint": "Across the whole platform",
+      "visits30": "Visits · 30 days",
+      "visits30Hint": "{count} authenticated visitors",
+      "revenue30": "Estimated revenue · 30 days",
+      "revenue30Hint": "From numbers sold",
+      "newUsers30": "New users · 30 days",
+      "newUsers30Hint": "Account signups in the period",
+      "revenueRange": "Revenue · {range}",
+      "revenueHint": "{mp} via Mercado Pago · {manual} manual",
+      "soldRange": "Numbers sold · {range}",
+      "soldHint": "{count} from manual sales",
+      "approvedRange": "Approved payments · {range}",
+      "avgTicket": "Average ticket (MP)",
+      "pendingRequests": "Pending role requests",
+      "pendingKyc": "Pending KYC verifications",
+      "manualSales": "Manual sales (amount)",
+      "successfulReferrals": "Successful referrals",
+      "pulseTitle": "Platform pulse",
+      "activityTitle": "Daily activity · last 30 days",
+      "last30": "30 days",
+      "visitsTitle": "Visits · last 30 days",
+      "visitsDescription": "Visits to the home and raffle pages, with the unique authenticated visitors per day.",
+      "newUsersTitle": "New users",
+      "newUsersDescription": "Account signups per day over the last 30 days.",
+      "newUsersLabel": "New users",
+      "newUsersEmptyTitle": "No signups in the period",
+      "newUsersEmptyDescription": "When new accounts register, you'll see the daily series here.",
+      "revenueChartTitle": "Estimated revenue from numbers sold",
+      "revenueChartDescription": "Number price × quantity sold per day (last 30 days, in pesos).",
+      "revenueChartLabel": "Estimated revenue",
+      "revenueEmptyTitle": "No sales in the period",
+      "revenueEmptyDescription": "No numbers were sold in the last 30 days.",
+      "periodTitle": "Period metrics",
+      "periodLabel": "Period:",
+      "planPricesTitle": "Plan prices",
+      "planPricesNote": "/planes · monthly",
+      "licensesTitle": "License codes",
+      "licensesRecent": "{count, plural, one {# recent} other {# recent}}"
+    },
+    "users": {
+      "requestsTitle": "Role requests",
+      "requestsDescription": "Requests to become an organizer. Approving or rejecting is audited.",
+      "requestsEmptyTitle": "No requests in this category",
+      "requestsEmptyDescription": "When someone asks to become an organizer, they appear here with their contact details.",
+      "noName": "No name",
+      "noPhone": "No phone",
+      "wouldRaffle": "🎁 Would raffle: {value}",
+      "social": "🔎 Social: {value}",
+      "message": "💬 {value}",
+      "noMessage": "No message: they left no proposal or written contact.",
+      "userSince": "User since: {date}",
+      "approvedBadge": "Approved",
+      "rejectedBadge": "Rejected",
+      "kycTitle": "Identity verifications",
+      "kycDescription": "Requests with at least one uploaded image. The bucket is private: each image is shown with a signed URL that expires in 1 hour.",
+      "kycPending": "{count, plural, one {# pending} other {# pending}}",
+      "kycEmptyTitle": "No pending verifications",
+      "kycEmptyDescription": "When an organizer uploads their ID or selfie, they appear here to approve or reject.",
+      "docFront": "ID · front",
+      "docBack": "ID · back",
+      "docSelfie": "Selfie",
+      "docFrontAlt": "Front of {name}'s ID",
+      "docBackAlt": "Back of {name}'s ID",
+      "docSelfieAlt": "{name}'s selfie",
+      "organizerFallback": "the organizer",
+      "requestMeta": "Request: {date} · {count}/3 images",
+      "noDate": "no date",
+      "dniLabel": "ID:",
+      "deliveryLabel": "Delivery:",
+      "noDniAddress": "no address on file",
+      "noDeliveryAddress": "no delivery address",
+      "addressMismatch": "They don't match. That's normal: check that the ID address is legible in the photo.",
+      "noImage": "No image",
+      "usersTitle": "Users",
+      "usersDescription": "Search, change roles or sign in as a user. The “Sign in as user” button opens Editor Mode and is audited.",
+      "registered": "{count, number} registered",
+      "loadErrorTitle": "Could not load the list",
+      "loadErrorDescription": "Try reloading the page."
+    },
+    "table": {
+      "raffle": "Raffle",
+      "status": "Status",
+      "links": "Links"
+    },
+    "raffles": {
+      "title": "Raffles",
+      "description": "Latest 50, newest to oldest.",
+      "onScreen": "{count} on screen",
+      "emptyTitle": "No raffles yet",
+      "emptyDescription": "When an organizer publishes the first one, it appears here with its status and links.",
+      "noTitle": "Untitled",
+      "genericTitle": "Raffle",
+      "price": "Price",
+      "drawDate": "Draw date",
+      "noDate": "No date",
+      "bonus": "Referral bonus",
+      "exclusive": "exclusive raffle",
+      "deliveryIn": "Delivered in: {title}",
+      "receivesFrom": "Receives from: {list}",
+      "gifted": "🎁 {count, plural, one {# given away} other {# given away}}",
+      "organizer": "Organizer",
+      "featured": "Featured",
+      "public": "Public",
+      "panel": "Panel"
+    },
+    "referrals": {
+      "title": "Referrals",
+      "description": "Top 10 by invited users who actually bought. Read only.",
+      "emptyTitle": "No referrals yet",
+      "emptyDescription": "When a user invites another, they appear here with their result.",
+      "referrer": "Referrer",
+      "invited": "Invited",
+      "bought": "Bought",
+      "prizes": "Prizes",
+      "id": "ID"
+    },
+    "notifications": {
+      "title": "Critical notifications",
+      "description": "Reports and KYC requests sent to the superadmin (latest 50).",
+      "emptyTitle": "No alerts",
+      "emptyDescription": "When a report or a KYC request comes in, it appears here.",
+      "unread": "Unread",
+      "viewRaffle": "View raffle"
+    },
+    "reports": {
+      "title": "Reports",
+      "description": "Only those pending review. Resolving, pausing or deleting is audited.",
+      "pending": "{count, plural, one {# pending} other {# pending}}",
+      "emptyErrorTitle": "Could not load reports",
+      "emptyErrorDescription": "Check the warning above: if migration 0064 is missing, apply it and reload the page.",
+      "emptyTitle": "No pending reports",
+      "emptyDescription": "When someone reports a raffle, it appears here for review.",
+      "reporter": "Reporter: {who}",
+      "deletedAccount": "deleted account or no email",
+      "meta": "Report: {date} · ID {id}",
+      "viewPublic": "View public raffle",
+      "noComment": "No comment from the reporter.",
+      "deletedRaffle": "Deleted raffle"
+    },
+    "audit": {
+      "title": "Activity / Audit log",
+      "description": "Latest 100 records. Includes Editor Mode and manual profile edits.",
+      "count": "{count, plural, one {# record} other {# records}}",
+      "actionLabel": "Action",
+      "allActions": "All actions",
+      "filter": "Filter",
+      "clearFilter": "Clear filter",
+      "emptyAllTitle": "No activity recorded",
+      "emptyFilteredTitle": "No records for that action",
+      "emptyAllDescription": "Every panel action is recorded here.",
+      "emptyFilteredDescription": "Try another action or clear the filter.",
+      "date": "Date",
+      "superadmin": "Superadmin",
+      "target": "Affected user"
+    },
+    "error": {
+      "title": "We couldn't load the panel",
+      "description": "A query failed while loading this section. The rest of the app keeps working: try again in a few seconds.",
+      "retry": "Try again",
+      "back": "Back to the panel",
+      "code": "Error code: {code}"
+    }
+  },
+  "AdminSuperBajas": {
+    "back": "Back to the panel",
+    "title": "Account deletions",
+    "description": "The user requests deletion from their profile. Here it is approved or rejected with a reason. Approving deletes personal data and KYC documents; payments and refunds remain recorded without a name.",
+    "noName": "No name",
+    "confirmApprove": "Personal data, KYC documents and the account will be deleted. Payments remain recorded without a name. Continue?",
+    "approvedNotice": "Account deleted and audit logged.",
+    "rejectPrompt": "Rejection reason (the user sees it):",
+    "rejectedNotice": "Request rejected.",
+    "empty": "No pending requests.",
+    "noEmail": "no email",
+    "requestedAt": "requested on {date}",
+    "noBlockers": "No blockers: it can be approved.",
+    "approve": "Approve and delete",
+    "reject": "Reject"
+  },
+  "AdminSuperPlanes": {
+    "title": "Configure plans",
+    "description": "Limits, price and features included per plan. Applied instantly in triggers and on the public page."
+  },
+  "AdminSuperSandbox": {
+    "back": "Back to the superadmin panel",
+    "title": "Draw simulator",
+    "description": "Same flow as a real draw: first the commitment is published (seed hash), then prizes run with the revealed seed and fingerprints. You can choose up to 10,000 numbers and 50 prizes; each prize has its hash and there is a combined results_hash. None of this appears on the public site or changes real raffles.",
+    "lastRuns": "Latest simulations",
+    "empty": "You haven't run any simulation yet.",
+    "date": "Date",
+    "numbers": "Numbers",
+    "prizes": "Prizes",
+    "winner1": "Winner 1",
+    "resultsHash": "results_hash",
+    "pending": "Pending",
+    "notRun": "Not run"
+  },
+  "AdminSuperUsers": {
+    "roles": {
+      "superadmin": "Superadmin",
+      "admin": "Organizer",
+      "user": "User"
+    },
+    "back": "Back to the superadmin panel",
+    "noName": "No name",
+    "noEmail": "No email",
+    "suspended": "Suspended",
+    "pendingRequest": "Pending request",
+    "viewPanel": "View their panel (read only)",
+    "joined": "Joined",
+    "rafflesCreated": "Raffles created",
+    "planExpiry": "Plan expiry",
+    "noExpiry": "No expiry",
+    "accountSuspended": "Account suspended",
+    "suspendAccount": "Suspend account",
+    "banReason": "Reason: {reason}",
+    "banNoReason": "no reason recorded",
+    "banExplain": "A ban blocks sign-in and number reservations. The account is not deleted and can be reverted.",
+    "planAndPayments": "Plan and payments",
+    "planCurrent": "Current plan: {plan}",
+    "planPremium": "Premium",
+    "planOrganizer": "Organizer",
+    "planNone": "No plan",
+    "planExpires": "expires {date}",
+    "roleExpires": "role expires {date}",
+    "registerPayment": "Record a payment by transfer or cash. Validity extends from the current expiry (or from today if already expired) and the payment stays in the history.",
+    "table": {
+      "date": "Date",
+      "plan": "Plan",
+      "days": "Days",
+      "amount": "Amount",
+      "method": "Method",
+      "note": "Note",
+      "expires": "Expires",
+      "raffle": "Raffle",
+      "status": "Status",
+      "sold": "Sold",
+      "reserved": "Reserved",
+      "revenue": "Revenue",
+      "links": "Links",
+      "number": "Number",
+      "raffles": "Raffles"
+    },
+    "organizerActivity": "Activity as organizer",
+    "activitySummary": "{sold} sold · {reserved} reserved · {revenue} estimated",
+    "noRaffles": "Has not created raffles.",
+    "public": "Public",
+    "panel": "Panel",
+    "buyerActivity": "Activity as buyer",
+    "noNumbers": "Has no purchased or reserved numbers.",
+    "reservation": "Reserved until {date}",
+    "backToSupport": "Back to the support record",
+    "supportMode": "Support mode — read only",
+    "supportExplain": "You are viewing {name}'s panel as superadmin. No actions are available and the opening was logged in the audit.",
+    "thisAccount": "this account",
+    "userNumbers": "User numbers",
+    "viewRaffle": "View raffle"
+  },
+  "AdminAnalytics": {
+    "ranges": {
+      "today": "Today",
+      "last7": "Last 7 days",
+      "month": "This month",
+      "all": "All time"
+    },
+    "status": {
+      "active": "Active",
+      "closed": "Closed",
+      "drawn": "Drawn",
+      "cancelled": "Cancelled"
+    },
+    "delta": {
+      "noBase": "no previous baseline",
+      "noChange": "no change",
+      "vs": "vs {label}"
+    },
+    "comparison": {
+      "previousDay": "previous day",
+      "previous7d": "previous 7 days",
+      "previousMonth": "previous month"
+    },
+    "ariaRefresh": "Refresh analytics",
+    "exportCsv": "Export CSV",
+    "error": {
+      "load": "Could not load analytics.",
+      "unexpected": "Unexpected error while loading data."
+    },
+    "kpi": {
+      "revenue": "Revenue",
+      "approvedSales": "Confirmed sales",
+      "avgTicket": "Average ticket",
+      "visitConversion": "Visit → sale conversion"
+    },
+    "funnel": {
+      "title": "Funnel: visits → sale",
+      "note": "One visit = one navigation; the same visitor counts multiple times",
+      "trackingOff": "Visit tracking not active (apply migration 0026)",
+      "visits": "Visits (per render)",
+      "sales": "Confirmed sales",
+      "salesPerVisit": "Sales per visit (per render)"
+    },
+    "trend": {
+      "title": "Revenue per day",
+      "description": "Confirmed sales in the period",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "loading": "Loading…",
+      "tooltip": "{date}: {revenue} · {count, plural, one {# sale} other {# sales}}",
+      "mobileNote": "Showing the last {count} days. On larger screens you see the whole period."
+    },
+    "detail": {
+      "title": "Conversion comparison by raffle",
+      "description": "Confirmed sales only; on mobile each row reads as a card.",
+      "top": "Top {count}",
+      "emptyTitle": "No activity in the period",
+      "emptyDescription": "Try another range or publish a raffle to start measuring."
+    },
+    "columns": {
+      "raffle": "Raffle",
+      "status": "Status",
+      "visits": "Visits",
+      "participations": "Particip.",
+      "sales": "Sales",
+      "conversion": "Conv.",
+      "revenue": "Revenue"
+    },
+    "inventory": "Current inventory: {sold} numbers sold · {reserved} reserved · {active} active raffles out of {total}.",
+    "csv": {
+      "reportTitle": "Analytics report",
+      "range": "Range",
+      "generated": "Generated",
+      "kpi": "KPI",
+      "value": "Value",
+      "revenue": "Revenue",
+      "approvedSales": "Confirmed sales",
+      "participations": "Participations (sales + reservations)",
+      "avgTicket": "Average ticket",
+      "conversion": "Visit to sale conversion",
+      "sold": "Numbers sold",
+      "reserved": "Numbers reserved",
+      "visits": "Visits per render",
+      "visitConversion": "Sales per visit (per render)",
+      "activeRaffles": "Active raffles",
+      "totalRaffles": "Total raffles",
+      "comparison": "Comparison vs {label}",
+      "previousRevenue": "Previous revenue",
+      "previousSales": "Previous sales",
+      "previousAvgTicket": "Previous average ticket",
+      "previousConversion": "Previous visit to sale conversion",
+      "dailyHeader": "Date;Revenue;Confirmed sales",
+      "rafflesHeader": "Raffle;Status;Visits;Participations;Sales;Reservation to sale conversion;Revenue"
+    }
   }
 }

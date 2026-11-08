@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "@/src/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -115,6 +116,8 @@ type FormValues = z.infer<typeof schema>;
 const REQUIRE_KYC = true;
 
 export default function NuevoSorteoPage() {
+  const t = useTranslations("AdminSorteosForm");
+  const locale = useLocale();
   const router = useRouter();
   const supabase = createClient();
 
@@ -301,11 +304,11 @@ export default function NuevoSorteoPage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setUploadError("El archivo debe ser una imagen.");
+      setUploadError(t("errors.imageType"));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setUploadError("La imagen no puede superar los 5 MB.");
+      setUploadError(t("errors.imageTooLarge"));
       return;
     }
 
@@ -345,7 +348,7 @@ export default function NuevoSorteoPage() {
     // La portada viaja aparte del sorteo. Si el alta corre mientras el archivo
     // todavía sube, el sorteo queda sin portada y el archivo huérfano.
     if (uploading) {
-      setError("Esperá a que termine de subir la portada antes de crear el sorteo.");
+      setError(t("errors.waitUpload"));
       return;
     }
 
@@ -355,7 +358,7 @@ export default function NuevoSorteoPage() {
     // 0113: las bases legales son obligatorias para publicar.
     if (!termsAccepted) {
       setError(
-        "Tenés que aceptar y publicar las bases legales del sorteo para crearlo.",
+        t("errors.acceptTerms"),
       );
       setLoading(false);
       return;
@@ -378,14 +381,20 @@ export default function NuevoSorteoPage() {
     if (!planContext.isSuperadmin) {
       if (reachedActiveLimit) {
         setError(
-          `Tu plan ${planContext.limits.label} permite hasta ${planContext.limits.maxActiveRaffles} sorteos activos. Finalizá uno o mejorá a Premium.`,
+          t("errors.planActiveLimit", {
+            plan: planContext.limits.label,
+            max: planContext.limits.maxActiveRaffles,
+          }),
         );
         setLoading(false);
         return;
       }
       if (values.max_numbers > numbersLimit) {
         setError(
-          `Tu plan ${planContext.limits.label} permite hasta ${numbersLimit} números por sorteo.`,
+          t("errors.planNumbersLimit", {
+            plan: planContext.limits.label,
+            max: numbersLimit,
+          }),
         );
         setLoading(false);
         return;
@@ -395,14 +404,17 @@ export default function NuevoSorteoPage() {
       // completaba el wizard y la base le rechazaba el alta al final.
       if (values.winners_count > prizesLimit) {
         setError(
-          `Tu plan ${planContext.limits.label} permite hasta ${prizesLimit} premio(s) por sorteo.`,
+          t("errors.planPrizesLimit", {
+            plan: planContext.limits.label,
+            max: prizesLimit,
+          }),
         );
         setLoading(false);
         return;
       }
       if (values.payment_type === "mercadopago" && !canUseMercadoPago) {
         setError(
-          "Mercado Pago es una función del plan Premium. Elegí transferencia o canjeá un código premium.",
+          t("errors.mercadoPagoPremium"),
         );
         setLoading(false);
         return;
@@ -413,7 +425,7 @@ export default function NuevoSorteoPage() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      setError("No estás autenticado.");
+      setError(t("errors.notAuthenticated"));
       setLoading(false);
       return;
     }
@@ -437,7 +449,7 @@ export default function NuevoSorteoPage() {
       submitRole !== "superadmin"
     ) {
       setError(
-        "Tu sesión no tiene rol de organizador en este momento. Cerrá sesión, volvé a entrar y reintentá.",
+        t("errors.noOrganizerRole"),
       );
       setLoading(false);
       return;
@@ -477,7 +489,7 @@ export default function NuevoSorteoPage() {
       .single();
 
     if (insertError || !raffle) {
-      const rawMessage = insertError?.message ?? "No se pudo crear el sorteo.";
+      const rawMessage = insertError?.message ?? t("errors.createFailed");
 
       // El error de Postgres no se le puede mostrar a un organizador: no dice
       // qué hacer. Lo dejamos en consola con el contexto y mostramos la acción.
@@ -489,7 +501,7 @@ export default function NuevoSorteoPage() {
           hint: "Corré supabase/tests/diagnostico_crear_sorteo.sql en el SQL Editor y aplicá 0065 si hay CRÍTICO.",
         });
         setError(
-          "La base rechazó el sorteo por un problema de permisos. Cerrá sesión, volvé a entrar y reintentá. Si sigue, avisá al administrador de la plataforma.",
+          t("errors.rlsRejected"),
         );
       } else {
         setError(rawMessage);
@@ -520,7 +532,7 @@ export default function NuevoSorteoPage() {
   }
 
   if (checkingVerification) {
-    return <p className="text-muted-foreground">Verificando identidad…</p>;
+    return <p className="text-muted-foreground">{t("verifying")}</p>;
   }
 
   if (
@@ -531,22 +543,20 @@ export default function NuevoSorteoPage() {
     return (
       <div className="mx-auto max-w-lg space-y-4 rounded-xl border bg-muted/40 p-8 text-center">
         <h1 className="text-xl font-bold">
-          KYC obligatorio para publicar sorteos
+          {t("kyc.title")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Para crear y publicar sorteos necesitás cargar tus datos personales
-          (nombre, teléfono, ubicación y DNI) y tener la identidad aprobada con
-          DNI + selfie.
+          {t("kyc.description")}
         </p>
         <div className="flex flex-wrap justify-center gap-2">
           <Button onClick={() => router.push("/admin/verificacion")}>
-            Completar verificación
+            {t("kyc.complete")}
           </Button>
           <Button
             variant="outline"
             onClick={() => router.push("/perfil")}
           >
-            Editar mis datos
+            {t("kyc.editData")}
           </Button>
         </div>
       </div>
@@ -560,10 +570,10 @@ export default function NuevoSorteoPage() {
         <CardHeader>
           <CardTitle>
             {step === 1
-              ? "Nuevo sorteo · Datos básicos"
+              ? t("stepTitle1")
               : step === 2
-                ? "Nuevo sorteo · Cobro"
-                : "Nuevo sorteo · Portada y revisión"}
+                ? t("stepTitle2")
+                : t("stepTitle3")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -572,15 +582,18 @@ export default function NuevoSorteoPage() {
               <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
                 {plan === "free" ? (
                   <>
-                    Límite de prueba alcanzado. Actualizá a{" "}
-                    <strong>Starter</strong> para seguir creando sorteos.
+                    {t.rich("limit.freeReached", {
+                      strong: (chunks) => <strong>{chunks}</strong>,
+                    })}
                   </>
                 ) : (
                   <>
-                    Ya tenés {activeRafflesCount} sorteo(s) activo(s). Tu plan{" "}
-                    <strong>{planContext.limits.label}</strong> permite hasta{" "}
-                    {planContext.limits.maxActiveRaffles}. Finalizá uno o mejorá
-                    de plan.
+                    {t.rich("limit.planReached", {
+                      count: activeRafflesCount ?? 0,
+                      plan: planContext.limits.label,
+                      max: planContext.limits.maxActiveRaffles,
+                      strong: (chunks) => <strong>{chunks}</strong>,
+                    })}
                   </>
                 )}
               </div>
@@ -588,9 +601,9 @@ export default function NuevoSorteoPage() {
 
             <div className="grid grid-cols-3 gap-2 text-xs">
               {[
-                { n: 1, label: "Básicos" },
-                { n: 2, label: "Cobro" },
-                { n: 3, label: "Portada" },
+                { n: 1, label: t("steps.basics") },
+                { n: 2, label: t("steps.collection") },
+                { n: 3, label: t("steps.cover") },
               ].map((item) => (
                 <div
                   key={item.n}
@@ -604,7 +617,7 @@ export default function NuevoSorteoPage() {
                   )}
                 >
                   <span className="block text-[10px] uppercase tracking-wide">
-                    Paso {item.n}
+                    {t("steps.label", { n: item.n })}
                   </span>
                   {item.label}
                 </div>
@@ -614,13 +627,13 @@ export default function NuevoSorteoPage() {
             {step === 1 && (
               <>
             <div className="space-y-2">
-              <Label htmlFor="title">Título</Label>
+              <Label htmlFor="title">{t("fields.title")}</Label>
               <div className="relative">
                 <Type className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="title"
                   className="pl-9"
-                  placeholder="Ej: Sorteo de autos"
+                  placeholder={t("fields.titlePlaceholder")}
                   {...register("title")}
                 />
               </div>
@@ -632,13 +645,13 @@ export default function NuevoSorteoPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Descripción</Label>
+              <Label htmlFor="description">{t("fields.description")}</Label>
               <div className="relative">
                 <AlignLeft className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Textarea
                   id="description"
                   className="pl-9"
-                  placeholder="Contá de qué trata el sorteo"
+                  placeholder={t("fields.descriptionPlaceholder")}
                   {...register("description")}
                 />
               </div>
@@ -646,7 +659,7 @@ export default function NuevoSorteoPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="price_per_number">Precio por número</Label>
+                <Label htmlFor="price_per_number">{t("fields.pricePerNumber")}</Label>
                 <div className="relative">
                   <Coins className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -667,7 +680,7 @@ export default function NuevoSorteoPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="draw_date">Fecha del sorteo</Label>
+                <Label htmlFor="draw_date">{t("fields.drawDate")}</Label>
                 <div className="relative">
                   <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -687,24 +700,24 @@ export default function NuevoSorteoPage() {
 
             <div className="space-y-2">
               <div className="space-y-2">
-                <Label htmlFor="currency">Moneda</Label>
+                <Label htmlFor="currency">{t("fields.currency")}</Label>
                 <select
                   id="currency"
                   className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                   {...register("currency")}
                 >
-                  <option value="ARS">ARS · Peso argentino</option>
-                  <option value="MXN">MXN · Peso mexicano</option>
-                  <option value="COP">COP · Peso colombiano</option>
-                  <option value="CLP">CLP · Peso chileno</option>
-                  <option value="USD">USD · Dólar</option>
+                  <option value="ARS">{t("currency.ars")}</option>
+                  <option value="MXN">{t("currency.mxn")}</option>
+                  <option value="COP">{t("currency.cop")}</option>
+                  <option value="CLP">{t("currency.clp")}</option>
+                  <option value="USD">{t("currency.usd")}</option>
                 </select>
                 <p className="text-[11px] text-muted-foreground">
-                  El precio y los totales se muestran en esta moneda.
+                  {t("fields.currencyHint")}
                 </p>
               </div>
 
-              <Label htmlFor="max_numbers">Cantidad de números</Label>
+              <Label htmlFor="max_numbers">{t("fields.maxNumbers")}</Label>
               <div className="relative">
                 <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -727,8 +740,11 @@ export default function NuevoSorteoPage() {
                   ))}
               </datalist>
               <p className="text-xs text-muted-foreground">
-                Tu plan <strong>{planContext.limits.label}</strong> permite entre
-                10 y {numbersLimit.toLocaleString("es-AR")} números por sorteo.
+                {t.rich("fields.maxNumbersHint", {
+                  plan: planContext.limits.label,
+                  max: numbersLimit.toLocaleString(locale),
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </p>
               {errors.max_numbers && (
                 <p className="text-sm text-destructive">
@@ -739,8 +755,8 @@ export default function NuevoSorteoPage() {
                 <PremiumGate
                   compact
                   plan={plan}
-                  feature="más números por sorteo"
-                  description="Con Premium podés generar hasta 10.000 números por sorteo."
+                  feature={t("premiumNumbers.feature")}
+                  description={t("premiumNumbers.description")}
                 >
                   <span />
                 </PremiumGate>
@@ -748,16 +764,14 @@ export default function NuevoSorteoPage() {
             </div>
 
             <div className="space-y-2 rounded-xl border bg-muted/20 p-4">
-              <p className="text-sm font-semibold">Regla de mínimo de venta</p>
+              <p className="text-sm font-semibold">{t("minRule.title")}</p>
               <p className="text-xs text-muted-foreground">
-                Si al llegar la fecha no se alcanza este mínimo, el sorteo no se
-                ejecuta y se aplica la regla elegida. Dejalo en 0 para no exigir
-                mínimo.
+                {t("minRule.description")}
               </p>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="min_tickets_required">
-                    Mínimo de números vendidos
+                    {t("fields.minTicketsRequired")}
                   </Label>
                   <Input
                     id="min_tickets_required"
@@ -774,7 +788,7 @@ export default function NuevoSorteoPage() {
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="winners_count">Cantidad de premios</Label>
+                  <Label htmlFor="winners_count">{t("fields.winnersCount")}</Label>
                   <Input
                     id="winners_count"
                     type="number"
@@ -784,8 +798,7 @@ export default function NuevoSorteoPage() {
                     {...register("winners_count")}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Tu plan permite hasta {prizesLimit}{" "}
-                    {prizesLimit === 1 ? "premio" : "premios"}.
+                    {t("fields.winnersHint", { count: prizesLimit })}
                   </p>
                   {errors.winners_count && (
                     <p className="text-sm text-destructive">
@@ -794,15 +807,15 @@ export default function NuevoSorteoPage() {
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="if_not_met">Si no se alcanza</Label>
+                  <Label htmlFor="if_not_met">{t("fields.ifNotMet")}</Label>
                   <select
                     id="if_not_met"
                     className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm"
                     {...register("if_not_met")}
                   >
-                    <option value="extend_date">Reprogramar la fecha</option>
+                    <option value="extend_date">{t("fields.ifNotMetExtend")}</option>
                     <option value="cancel_and_refund">
-                      Cancelar y devolver el dinero
+                      {t("fields.ifNotMetCancel")}
                     </option>
                   </select>
                 </div>
@@ -815,7 +828,7 @@ export default function NuevoSorteoPage() {
               <>
             {/* Método de pago */}
             <div className="space-y-3">
-              <Label>Método de pago</Label>
+              <Label>{t("payment.title")}</Label>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <label
@@ -837,9 +850,9 @@ export default function NuevoSorteoPage() {
                   <div className="flex items-start gap-3">
                     <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
                     <div className="space-y-0.5">
-                      <p className="font-semibold">Mercado Pago</p>
+                      <p className="font-semibold">{t("payment.mercadoPago")}</p>
                       <p className="text-xs text-muted-foreground">
-                        Automático / Modo Mock de Pruebas
+                        {t("payment.mercadoPagoSub")}
                       </p>
                     </div>
                   </div>
@@ -862,9 +875,9 @@ export default function NuevoSorteoPage() {
                   <div className="flex items-start gap-3">
                     <Landmark className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700 dark:text-emerald-400" />
                     <div className="space-y-0.5">
-                      <p className="font-semibold">Transferencia Bancaria</p>
+                      <p className="font-semibold">{t("payment.transfer")}</p>
                       <p className="text-xs text-muted-foreground">
-                        Alias (Manual)
+                        {t("payment.transferSub")}
                       </p>
                     </div>
                   </div>
@@ -875,8 +888,8 @@ export default function NuevoSorteoPage() {
                 <PremiumGate
                   compact
                   plan={plan}
-                  feature="Mercado Pago"
-                  description="Cobrá automáticamente con Mercado Pago y accedé a los métodos de pago avanzados."
+                  feature={t("premiumPayments.feature")}
+                  description={t("premiumPayments.description")}
                 >
                   <span />
                 </PremiumGate>
@@ -884,32 +897,30 @@ export default function NuevoSorteoPage() {
 
               {paymentType === "mercadopago" ? (
                 <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
-                  Si no hay un token real de Mercado Pago configurado, la
-                  plataforma activará automáticamente el{" "}
-                  <strong className="text-foreground">
-                    Modo Simulación (Mock)
-                  </strong>{" "}
-                  para hacer pruebas locales sin costo.
+                  {t.rich("payment.mockInfo", {
+                    strong: (chunks) => (
+                      <strong className="text-foreground">{chunks}</strong>
+                    ),
+                  })}
                 </p>
               ) : (
                 <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
-                  Los compradores verán tus datos de transferencia y te
-                  enviarán el comprobante por WhatsApp.
+                  {t("payment.transferInfo")}
                 </p>
               )}
             </div>
 
             {paymentType === "transferencia" && (
               <div className="space-y-3 rounded-xl border p-4">
-                <p className="text-sm font-semibold">Datos de transferencia</p>
+                <p className="text-sm font-semibold">{t("transfer.title")}</p>
                 <div className="space-y-2">
-                  <Label htmlFor="transfer_alias">Alias</Label>
+                  <Label htmlFor="transfer_alias">{t("transfer.alias")}</Label>
                   <div className="relative">
                     <Wallet className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="transfer_alias"
                       className="pl-9"
-                      placeholder="Ej: mi.alias.mp"
+                      placeholder={t("transfer.aliasPlaceholder")}
                       {...register("transfer_alias")}
                     />
                   </div>
@@ -920,39 +931,39 @@ export default function NuevoSorteoPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="transfer_cbu">CBU</Label>
+                  <Label htmlFor="transfer_cbu">{t("transfer.cbu")}</Label>
                   <div className="relative">
                     <Wallet className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="transfer_cbu"
                       className="pl-9"
-                      placeholder="22 dígitos"
+                      placeholder={t("transfer.cbuPlaceholder")}
                       {...register("transfer_cbu")}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="transfer_bank">Banco</Label>
+                  <Label htmlFor="transfer_bank">{t("transfer.bank")}</Label>
                   <div className="relative">
                     <Landmark className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="transfer_bank"
                       className="pl-9"
-                      placeholder="Ej: Mercado Pago / Banco Nación"
+                      placeholder={t("transfer.bankPlaceholder")}
                       {...register("transfer_bank")}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="whatsapp_contact">
-                    WhatsApp de contacto
+                    {t("transfer.whatsapp")}
                   </Label>
                   <div className="relative">
                     <MessageCircle className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="whatsapp_contact"
                       className="pl-9"
-                      placeholder="Ej: 5491123456789"
+                      placeholder={t("transfer.whatsappPlaceholder")}
                       {...register("whatsapp_contact")}
                     />
                   </div>
@@ -970,40 +981,42 @@ export default function NuevoSorteoPage() {
             {step === 3 && (
               <>
             <div className="space-y-1 rounded-xl border bg-muted/30 p-4 text-sm">
-              <p className="font-semibold">Revisión final</p>
+              <p className="font-semibold">{t("review.title")}</p>
               <p className="text-muted-foreground">
-                Título: <span className="text-foreground">{title || "—"}</span>
+                {t("review.titleLabel")} <span className="text-foreground">{title || "—"}</span>
               </p>
               <p className="text-muted-foreground">
-                Fecha:{" "}
+                {t("review.dateLabel")}{" "}
                 <span className="text-foreground">
-                  {drawDate ? formatDateTime(drawDate) : "—"}
+                  {drawDate ? formatDateTime(drawDate, locale) : "—"}
                 </span>
               </p>
               <p className="text-muted-foreground">
-                Precio:{" "}
+                {t("review.priceLabel")}{" "}
                 <span className="text-foreground">
-                  {price ? formatPrice(Number(price)) : "$ 0"} por número ·{" "}
-                  {maxNumbers || 0} números
+                  {price ? formatPrice(Number(price), locale) : "$ 0"}{" "}
+                  {t("review.perNumber")} · {maxNumbers || 0}{" "}
+                  {t("review.numbers")}
                 </span>
               </p>
               <p className="text-muted-foreground">
-                Cobro:{" "}
+                {t("review.paymentLabel")}{" "}
                 <span className="text-foreground">
                   {paymentType === "transferencia"
-                    ? `Transferencia${transferAlias ? ` · ${transferAlias}` : ""}`
-                    : "Mercado Pago"}
+                    ? transferAlias
+                      ? t("review.transferWithAlias", { alias: transferAlias })
+                      : t("review.transfer")
+                    : t("review.mercadoPago")}
                 </span>
               </p>
               {whatsappContact && (
                 <p className="text-muted-foreground">
-                  WhatsApp:{" "}
+                  {t("review.whatsappLabel")}{" "}
                   <span className="text-foreground">{whatsappContact}</span>
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                Al crear se generan los números automáticamente. Los premios y
-                el compromiso del sorteo se cargan después.
+                {t("review.note")}
               </p>
             </div>
 
@@ -1011,11 +1024,10 @@ export default function NuevoSorteoPage() {
             <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
               <div>
                 <p className="font-semibold">
-                  Términos y Condiciones del sorteo
+                  {t("terms.title")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Se generan con tu nombre y DNI/CUIT del KYC. El jugador deberá
-                  aceptarlos antes de reservar números.
+                  {t("terms.description")}
                 </p>
               </div>
 
@@ -1042,8 +1054,7 @@ export default function NuevoSorteoPage() {
                   onChange={(e) => setTermsAccepted(e.target.checked)}
                 />
                 <span className="font-medium">
-                  Acepto publicar estos términos como bases legales de mi
-                  sorteo
+                  {t("terms.accept")}
                 </span>
               </label>
             </div>
@@ -1053,11 +1064,10 @@ export default function NuevoSorteoPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">
-                  Invitá y Ganá (Referidos)
+                  {t("referral.title")}
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  Cada invitado que compre el mínimo te da un número gratis en el
-                  sorteo bonus.
+                  {t("referral.description")}
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1072,7 +1082,7 @@ export default function NuevoSorteoPage() {
                     {...register("referral_enabled")}
                   />
                   <span className="font-medium">
-                    Activar referidos en este sorteo
+                    {t("referral.enable")}
                   </span>
                 </label>
 
@@ -1081,7 +1091,7 @@ export default function NuevoSorteoPage() {
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="space-y-1">
                         <Label htmlFor="referral_min_numbers">
-                          Compra mínima del invitado
+                          {t("referral.minNumbers")}
                         </Label>
                         <Input
                           id="referral_min_numbers"
@@ -1090,12 +1100,12 @@ export default function NuevoSorteoPage() {
                           {...register("referral_min_numbers")}
                         />
                         <p className="text-xs text-muted-foreground">
-                          Cuántos números debe comprar tu invitado.
+                          {t("referral.minNumbersHint")}
                         </p>
                       </div>
                       <div className="space-y-1">
                         <Label htmlFor="referral_max_per_user">
-                          Tope de premios
+                          {t("referral.maxPerUser")}
                         </Label>
                         <Input
                           id="referral_max_per_user"
@@ -1104,20 +1114,20 @@ export default function NuevoSorteoPage() {
                           {...register("referral_max_per_user")}
                         />
                         <p className="text-xs text-muted-foreground">
-                          0 = sin tope por referente.
+                          {t("referral.maxPerUserHint")}
                         </p>
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="bonus_raffle_id">Sorteo bonus</Label>
+                      <Label htmlFor="bonus_raffle_id">{t("referral.bonusRaffle")}</Label>
                       <select
                         id="bonus_raffle_id"
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         {...register("bonus_raffle_id")}
                       >
                         <option value="">
-                          Entregar el número en este mismo sorteo
+                          {t("referral.bonusNone")}
                         </option>
                         {sorteosBonus.map((sorteo) => (
                           <option key={sorteo.id} value={sorteo.id}>
@@ -1126,7 +1136,7 @@ export default function NuevoSorteoPage() {
                         ))}
                       </select>
                       <p className="text-xs text-muted-foreground">
-                        Sólo sorteos activos del mismo organizador.
+                        {t("referral.bonusHint")}
                       </p>
                     </div>
                   </>
@@ -1144,20 +1154,17 @@ export default function NuevoSorteoPage() {
                 />
                 <span>
                   <span className="font-medium">
-                    No publicar en el listado
+                    {t("hidden.title")}
                   </span>
                   <span className="block text-xs text-muted-foreground">
-                    No aparece en la home, en Ganadores ni en buscadores, pero se
-                    abre igual con el enlace. Sirve para probarlo antes de
-                    anunciarlo. Para publicarlo después, hay que activarlo desde
-                    el panel.
+                    {t("hidden.description")}
                   </span>
                 </span>
               </label>
             </div>
             {/* Dropzone */}
             <div className="space-y-2">
-              <Label>Imagen de portada</Label>
+              <Label>{t("cover.label")}</Label>
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -1183,18 +1190,18 @@ export default function NuevoSorteoPage() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={previewUrl ?? coverUrl ?? ""}
-                      alt="Portada"
+                      alt={t("cover.alt")}
                       className="max-h-40 rounded-lg object-cover"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Click para cambiar la imagen
+                      {t("cover.change")}
                     </p>
                   </>
                 ) : (
                   <>
                     <UploadCloud className="h-8 w-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
-                      Arrastrá una imagen o hacé click para subir
+                      {t("cover.drop")}
                     </p>
                   </>
                 )}
@@ -1207,7 +1214,7 @@ export default function NuevoSorteoPage() {
                 />
               </div>
               {uploading && (
-                <p className="text-sm text-muted-foreground">Subiendo…</p>
+                <p className="text-sm text-muted-foreground">{t("cover.uploading")}</p>
               )}
               {uploadError && (
                 <p className="text-sm text-destructive">{uploadError}</p>
@@ -1226,7 +1233,7 @@ export default function NuevoSorteoPage() {
                   onClick={() => setStep((current) => Math.max(1, current - 1))}
                   disabled={loading}
                 >
-                  Atrás
+                  {t("buttons.back")}
                 </Button>
               )}
 
@@ -1241,7 +1248,7 @@ export default function NuevoSorteoPage() {
                   onClick={() => void nextStep()}
                   className="flex-1"
                 >
-                  Continuar
+                  {t("buttons.next")}
                 </Button>
               ) : (
                 <Button
@@ -1251,10 +1258,10 @@ export default function NuevoSorteoPage() {
                   disabled={loading || uploading}
                 >
                   {loading
-                    ? "Creando sorteo…"
+                    ? t("buttons.creating")
                     : uploading
-                      ? "Subiendo portada…"
-                      : "Crear sorteo"}
+                      ? t("buttons.uploadingCover")
+                      : t("buttons.create")}
                 </Button>
               )}
             </div>
@@ -1265,7 +1272,7 @@ export default function NuevoSorteoPage() {
       {/* ===== Vista previa en tiempo real ===== */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Vista previa</CardTitle>
+          <CardTitle className="text-lg">{t("preview.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative aspect-video overflow-hidden rounded-xl bg-panel-2">
@@ -1273,7 +1280,7 @@ export default function NuevoSorteoPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={previewUrl ?? coverUrl ?? ""}
-                alt="Portada"
+                alt={t("cover.alt")}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -1285,32 +1292,33 @@ export default function NuevoSorteoPage() {
 
           <div className="space-y-2">
             <h3 className="text-xl font-bold">
-              {title || "Título del sorteo"}
+              {title || t("preview.titleFallback")}
             </h3>
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <CalendarDays className="h-4 w-4" />
-              {drawDate ? formatDateTime(drawDate) : "Fecha sin definir"}
+              {drawDate ? formatDateTime(drawDate, locale) : t("preview.dateUndefined")}
             </p>
             <p className="text-lg font-bold text-amber-800 dark:text-amber-300">
-              {price ? formatPrice(Number(price)) : "$ 0"}{" "}
+              {price ? formatPrice(Number(price), locale) : "$ 0"}{" "}
               <span className="text-sm font-normal text-muted-foreground">
-                por número
+                {t("preview.perNumber")}
               </span>
             </p>
           </div>
 
           <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-            Se generarán{" "}
-            <strong className="text-foreground">
-              {maxNumbers || 0} números
-            </strong>{" "}
-            automáticamente al crear el sorteo.
+            {t.rich("preview.numbersGenerated", {
+              count: maxNumbers || 0,
+              strong: (chunks) => (
+                <strong className="text-foreground">{chunks}</strong>
+              ),
+            })}
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium">Premios</p>
+            <p className="text-sm font-medium">{t("preview.prizes")}</p>
             <p className="text-sm text-muted-foreground">
-              Los premios se cargan en el siguiente paso.
+              {t("preview.prizesHint")}
             </p>
           </div>
         </CardContent>

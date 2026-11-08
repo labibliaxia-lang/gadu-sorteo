@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   ArrowLeft,
   CalendarDays,
@@ -8,6 +8,7 @@ import {
   Ticket,
 } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { requireSuperadminSession } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,8 @@ export default async function SupportPanelPage({
 }) {
   if (!UUID_RE.test(params.id)) notFound();
 
+  const t = await getTranslations("AdminSuperUsers");
+  const locale = await getLocale();
   const session = await requireSuperadminSession();
   if (!session) notFound();
 
@@ -128,49 +131,56 @@ export default async function SupportPanelPage({
 
   return (
     <div className="space-y-6">
-      <Link
+      <LocaleLink
         href={`/admin/super/usuarios/${profile.id}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver a la ficha de soporte
-      </Link>
+        {t("backToSupport")}
+      </LocaleLink>
 
       <div className="rounded-xl border border-amber-400/50 bg-amber-500/10 p-4 text-sm">
         <p className="flex items-center gap-2 font-semibold">
           <Eye className="h-4 w-4" />
-          Modo soporte — solo lectura
+          {t("supportMode")}
         </p>
         <p className="mt-1 text-muted-foreground">
-          Estás viendo el panel de {profile.full_name || profile.email || "esta cuenta"}{" "}
-          como superadmin. No hay acciones disponibles y la apertura quedó
-          registrada en la auditoría.
+          {t("supportExplain", {
+            name:
+              profile.full_name || profile.email || t("thisAccount"),
+          })}
         </p>
       </div>
 
       <header className="flex flex-wrap items-center gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {profile.full_name || "Sin nombre"}
+            {profile.full_name || t("noName")}
           </h1>
           <p className="break-all text-sm text-muted-foreground">
-            {profile.email || "Sin email"}
+            {profile.email || t("noEmail")}
           </p>
         </div>
         <Badge variant={isOrganizer ? "success" : "secondary"}>
-          {isOrganizer ? "Organizador" : "Usuario"}
+          {isOrganizer ? t("roles.admin") : t("roles.user")}
         </Badge>
-        {profile.is_banned && <Badge variant="destructive">Suspendido</Badge>}
+        {profile.is_banned && (
+          <Badge variant="destructive">{t("suspended")}</Badge>
+        )}
       </header>
 
       {isOrganizer ? (
         <>
           <div className="grid gap-4 sm:grid-cols-4">
             {[
-              { label: "Sorteos", value: String(raffles.length), icon: Ticket },
-              { label: "Vendidos", value: String(totalSold), icon: Coins },
-              { label: "Reservados", value: String(totalReserved), icon: CalendarDays },
-              { label: "Recaudación", value: formatPrice(revenue), icon: Coins },
+              { label: t("table.raffles"), value: String(raffles.length), icon: Ticket },
+              { label: t("table.sold"), value: String(totalSold), icon: Coins },
+              { label: t("table.reserved"), value: String(totalReserved), icon: CalendarDays },
+              {
+                label: t("table.revenue"),
+                value: formatPrice(revenue, locale),
+                icon: Coins,
+              },
             ].map((stat) => (
               <Card key={stat.label}>
                 <CardContent className="flex items-center gap-3 p-4">
@@ -189,7 +199,7 @@ export default async function SupportPanelPage({
           {raffles.length === 0 ? (
             <Card className="border-dashed text-center">
               <CardContent className="py-10 text-sm text-muted-foreground">
-                No creó sorteos.
+                {t("noRaffles")}
               </CardContent>
             </Card>
           ) : (
@@ -197,12 +207,12 @@ export default async function SupportPanelPage({
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                   <tr>
-                    <th className="p-3">Sorteo</th>
-                    <th className="p-3">Estado</th>
-                    <th className="p-3">Vendidos</th>
-                    <th className="p-3">Reservados</th>
-                    <th className="p-3">Recaudación</th>
-                    <th className="p-3">Público</th>
+                    <th className="p-3">{t("table.raffle")}</th>
+                    <th className="p-3">{t("table.status")}</th>
+                    <th className="p-3">{t("table.sold")}</th>
+                    <th className="p-3">{t("table.reserved")}</th>
+                    <th className="p-3">{t("table.revenue")}</th>
+                    <th className="p-3">{t("public")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -221,15 +231,16 @@ export default async function SupportPanelPage({
                         <td className="p-3">
                           {formatPrice(
                             Number(raffle.price_per_number) * (row?.sold ?? 0),
+                            locale,
                           )}
                         </td>
                         <td className="p-3">
-                          <Link
+                          <LocaleLink
                             href={`/sorteos/${raffle.id}`}
                             className="text-xs text-amber-800 dark:text-amber-300 hover:underline"
                           >
-                            Ver sorteo
-                          </Link>
+                            {t("viewRaffle")}
+                          </LocaleLink>
                         </td>
                       </tr>
                     );
@@ -241,11 +252,11 @@ export default async function SupportPanelPage({
         </>
       ) : (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Números del usuario</h2>
+          <h2 className="text-lg font-semibold">{t("userNumbers")}</h2>
           {bought.length === 0 ? (
             <Card className="border-dashed text-center">
               <CardContent className="py-10 text-sm text-muted-foreground">
-                No tiene números comprados ni reservados.
+                {t("noNumbers")}
               </CardContent>
             </Card>
           ) : (
@@ -253,10 +264,10 @@ export default async function SupportPanelPage({
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
                   <tr>
-                    <th className="p-3">Sorteo</th>
-                    <th className="p-3">Número</th>
-                    <th className="p-3">Estado</th>
-                    <th className="p-3">Fecha</th>
+                    <th className="p-3">{t("table.raffle")}</th>
+                    <th className="p-3">{t("table.number")}</th>
+                    <th className="p-3">{t("table.status")}</th>
+                    <th className="p-3">{t("table.date")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -269,9 +280,11 @@ export default async function SupportPanelPage({
                       <td className="p-3 text-muted-foreground">{row.status}</td>
                       <td className="p-3 text-muted-foreground">
                         {row.sold_at
-                          ? formatDateTime(row.sold_at)
+                          ? formatDateTime(row.sold_at, locale)
                           : row.reserved_until
-                            ? `Reserva hasta ${formatDateTime(row.reserved_until)}`
+                            ? t("reservation", {
+                                date: formatDateTime(row.reserved_until, locale),
+                              })
                             : "—"}
                       </td>
                     </tr>

@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdminSession } from "@/lib/auth";
 import { buttonVariants } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export default async function EditarSorteoPage({
 }: {
   params: { id: string };
 }) {
+  const t = await getTranslations("AdminSorteosForm");
   const actor = await requireAdminSession();
   if (!actor) redirect("/login");
 
@@ -69,13 +71,13 @@ export default async function EditarSorteoPage({
 
   return (
     <div className="space-y-4">
-      <Link
+      <LocaleLink
         href={`/admin/sorteos/${params.id}`}
         className={buttonVariants({ variant: "outline", size: "sm" })}
       >
         <ArrowLeft className="mr-1.5 h-4 w-4" />
-        Volver al sorteo
-      </Link>
+        {t("back")}
+      </LocaleLink>
       <EditarSorteoForm
         raffle={data as Raffle}
         basesSugeridas={basesSugeridas}

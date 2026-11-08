@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   BarChart3,
   Coins,
@@ -70,28 +71,38 @@ export interface AnalyticsData {
   byRaffle: RaffleRow[];
 }
 
-const RANGES: { value: AnalyticsRange; label: string }[] = [
-  { value: "today", label: "Hoy" },
-  { value: "7d", label: "Últimos 7 días" },
-  { value: "month", label: "Este mes" },
-  { value: "all", label: "Histórico" },
+const RANGES: { value: AnalyticsRange; labelKey: string }[] = [
+  { value: "today", labelKey: "today" },
+  { value: "7d", labelKey: "last7" },
+  { value: "month", labelKey: "month" },
+  { value: "all", labelKey: "all" },
 ];
 
 const STATUS_LABEL: Record<string, string> = {
-  active: "Activo",
-  closed: "Cerrado",
-  drawn: "Sorteado",
-  cancelled: "Cancelado",
+  active: "active",
+  closed: "closed",
+  drawn: "drawn",
+  cancelled: "cancelled",
+};
+
+/** Etiquetas de la ventana comparativa que arma la API (fuera de este alcance). */
+const COMPARISON_LABEL: Record<string, string> = {
+  "día anterior": "previousDay",
+  "7 días previos": "previous7d",
+  "mes anterior": "previousMonth",
 };
 
 function pct(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
 }
 
-function shortDate(date: string): string {
-  // "2026-11-02" → "02/11"
-  const [, month, day] = date.split("-");
-  return `${day}/${month}`;
+function shortDate(date: string, locale: string): string {
+  // "2026-11-02" → "02/11" (es/pt) o "11/02" (en)
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : locale === "pt" ? "pt-BR" : "es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T12:00:00Z`));
 }
 
 /** Variación porcentual contra el período anterior. */
@@ -104,10 +115,13 @@ function Delta({
   previous: number;
   label: string;
 }) {
+  const t = useTranslations("AdminAnalytics");
+
   if (previous === 0) {
     return (
       <span className="text-[11px] text-muted-foreground">
-        {current > 0 ? "sin base previa" : "sin cambios"} · vs {label}
+        {current > 0 ? t("delta.noBase") : t("delta.noChange")} ·{" "}
+        {t("delta.vs", { label })}
       </span>
     );
   }
@@ -124,12 +138,15 @@ function Delta({
           : "text-destructive",
       )}
     >
-      {positive ? "▲" : "▼"} {Math.abs(change).toFixed(1)}% vs {label}
+      {positive ? "▲" : "▼"} {Math.abs(change).toFixed(1)}%{" "}
+      {t("delta.vs", { label })}
     </span>
   );
 }
 
 export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
+  const t = useTranslations("AdminAnalytics");
+  const locale = useLocale();
   const [range, setRange] = useState<AnalyticsRange>("7d");
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,18 +162,18 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(
-          body.message ?? body.error ?? "No se pudieron cargar las analíticas.",
+          body.message ?? body.error ?? t("error.load"),
         );
       }
       setData((await res.json()) as AnalyticsData);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Error inesperado al cargar datos.",
+        e instanceof Error ? e.message : t("error.unexpected"),
       );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     load(range);
@@ -169,60 +186,69 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
 
   const mobileDaily = useMemo(() => data?.daily.slice(-7) ?? [], [data]);
 
+  const comparisonLabel = (label: string) => {
+    const key = COMPARISON_LABEL[label];
+    return key ? t(`comparison.${key}`) : label;
+  };
+
   function exportCsv() {
     if (!data) return;
 
-    const label =
-      RANGES.find((r) => r.value === data.range)?.label ?? data.range;
+    const rangeKey = RANGES.find((r) => r.value === data.range)?.labelKey;
+    const label = rangeKey ? t(`ranges.${rangeKey}`) : data.range;
     const lines: string[] = [];
 
-    lines.push("Reporte de analiticas;Gadu Sorteos");
-    lines.push(`Rango;${label}`);
+    lines.push(`${t("csv.reportTitle")};Gadu Sorteos`);
+    lines.push(`${t("csv.range")};${label}`);
     lines.push(
-      `Generado;${new Date(data.generatedAt).toLocaleString("es-AR")}`,
+      `${t("csv.generated")};${new Date(data.generatedAt).toLocaleString(locale)}`,
     );
     lines.push("");
-    lines.push("KPI;Valor");
-    lines.push(`Recaudacion;${data.kpis.revenue}`);
-    lines.push(`Ventas confirmadas;${data.kpis.approvedPayments}`);
-    lines.push(`Participaciones (ventas + reservas);${data.kpis.totalPayments}`);
-    lines.push(`Ticket promedio;${data.kpis.avgTicket.toFixed(2)}`);
+    lines.push(`${t("csv.kpi")};${t("csv.value")}`);
+    lines.push(`${t("csv.revenue")};${data.kpis.revenue}`);
+    lines.push(`${t("csv.approvedSales")};${data.kpis.approvedPayments}`);
+    lines.push(`${t("csv.participations")};${data.kpis.totalPayments}`);
+    lines.push(`${t("csv.avgTicket")};${data.kpis.avgTicket.toFixed(2)}`);
     lines.push(
-      `Conversion visitas a venta;${(data.kpis.conversion * 100).toFixed(2)}%`,
+      `${t("csv.conversion")};${(data.kpis.conversion * 100).toFixed(2)}%`,
     );
-    lines.push(`Numeros vendidos;${data.kpis.sold}`);
-    lines.push(`Numeros reservados;${data.kpis.reserved}`);
-    lines.push(`Visitas por render;${data.kpis.visits ?? ""}`);
+    lines.push(`${t("csv.sold")};${data.kpis.sold}`);
+    lines.push(`${t("csv.reserved")};${data.kpis.reserved}`);
+    lines.push(`${t("csv.visits")};${data.kpis.visits ?? ""}`);
     lines.push(
-      `Ventas por visita (por render);${
+      `${t("csv.visitConversion")};${
         data.kpis.visitConversion === null
           ? ""
           : (data.kpis.visitConversion * 100).toFixed(2)
       }%`,
     );
-    lines.push(`Sorteos activos;${data.kpis.activeRaffles}`);
-    lines.push(`Sorteos totales;${data.kpis.totalRaffles}`);
+    lines.push(`${t("csv.activeRaffles")};${data.kpis.activeRaffles}`);
+    lines.push(`${t("csv.totalRaffles")};${data.kpis.totalRaffles}`);
     if (data.comparison) {
       lines.push("");
-      lines.push(`Comparativa vs ${data.comparison.label};Valor`);
-      lines.push(`Recaudacion previa;${data.comparison.revenue}`);
-      lines.push(`Ventas previas;${data.comparison.approvedPayments}`);
-      lines.push(`Ticket promedio previo;${data.comparison.avgTicket.toFixed(2)}`);
       lines.push(
-        `Conversion visitas a venta previa;${(
+        `${t("csv.comparison", {
+          label: comparisonLabel(data.comparison.label),
+        })};${t("csv.value")}`,
+      );
+      lines.push(`${t("csv.previousRevenue")};${data.comparison.revenue}`);
+      lines.push(`${t("csv.previousSales")};${data.comparison.approvedPayments}`);
+      lines.push(
+        `${t("csv.previousAvgTicket")};${data.comparison.avgTicket.toFixed(2)}`,
+      );
+      lines.push(
+        `${t("csv.previousConversion")};${(
           data.comparison.conversion * 100
         ).toFixed(2)}%`,
       );
     }
     lines.push("");
-    lines.push("Fecha;Recaudacion;Ventas confirmadas");
+    lines.push(t("csv.dailyHeader"));
     data.daily.forEach((d) => {
       lines.push(`${d.date};${d.revenue};${d.payments}`);
     });
     lines.push("");
-    lines.push(
-      "Sorteo;Estado;Visitas;Participaciones;Ventas;Conversion reserva a venta;Recaudacion",
-    );
+    lines.push(t("csv.rafflesHeader"));
     data.byRaffle.forEach((r) => {
       const title = `"${r.title.replace(/"/g, '""')}"`;
       lines.push(
@@ -266,7 +292,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
                   : "text-muted-foreground hover:bg-accent hover:text-foreground",
               )}
             >
-              {r.label}
+              {t(`ranges.${r.labelKey}`)}
             </button>
           ))}
         </div>
@@ -278,7 +304,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
             variant="outline"
             onClick={() => load(range)}
             disabled={loading}
-            aria-label="Actualizar analíticas"
+            aria-label={t("ariaRefresh")}
           >
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -293,7 +319,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
             disabled={!data || loading}
           >
             <Download className="mr-1.5 h-4 w-4" />
-            Exportar CSV
+            {t("exportCsv")}
           </Button>
         </div>
       </div>
@@ -313,16 +339,16 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm text-muted-foreground">
-                Recaudación
+                {t("kpi.revenue")}
               </p>
               <p className="truncate font-display text-2xl font-bold">
-                {loading || !kpis ? "—" : formatPrice(kpis.revenue)}
+                {loading || !kpis ? "—" : formatPrice(kpis.revenue, locale)}
               </p>
               {data?.comparison && kpis && (
                 <Delta
                   current={kpis.revenue}
                   previous={data.comparison.revenue}
-                  label={data.comparison.label}
+                  label={comparisonLabel(data.comparison.label)}
                 />
               )}
             </div>
@@ -336,7 +362,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm text-muted-foreground">
-                Ventas confirmadas
+                {t("kpi.approvedSales")}
               </p>
               <p className="truncate font-display text-2xl font-bold">
                 {loading || !kpis ? "—" : kpis.approvedPayments}
@@ -345,7 +371,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
                 <Delta
                   current={kpis.approvedPayments}
                   previous={data.comparison.approvedPayments}
-                  label={data.comparison.label}
+                  label={comparisonLabel(data.comparison.label)}
                 />
               )}
             </div>
@@ -359,16 +385,16 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm text-muted-foreground">
-                Ticket promedio
+                {t("kpi.avgTicket")}
               </p>
               <p className="truncate font-display text-2xl font-bold">
-                {loading || !kpis ? "—" : formatPrice(kpis.avgTicket)}
+                {loading || !kpis ? "—" : formatPrice(kpis.avgTicket, locale)}
               </p>
               {data?.comparison && kpis && (
                 <Delta
                   current={kpis.avgTicket}
                   previous={data.comparison.avgTicket}
-                  label={data.comparison.label}
+                  label={comparisonLabel(data.comparison.label)}
                 />
               )}
             </div>
@@ -382,7 +408,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm text-muted-foreground">
-                Conversión visitas→venta
+                {t("kpi.visitConversion")}
               </p>
               <p className="truncate font-display text-2xl font-bold">
                 {loading || !kpis ? "—" : pct(kpis.conversion)}
@@ -391,7 +417,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
                 <Delta
                   current={kpis.conversion}
                   previous={data.comparison.conversion}
-                  label={data.comparison.label}
+                  label={comparisonLabel(data.comparison.label)}
                 />
               )}
             </div>
@@ -403,33 +429,37 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
       <Card>
         <CardContent className="space-y-3 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold">Embudo: visitas → venta</p>
+            <p className="text-sm font-semibold">{t("funnel.title")}</p>
             <span className="text-xs text-muted-foreground">
-              Una visita = una navegación; el mismo visitante cuenta varias veces
+              {t("funnel.note")}
             </span>
             {kpis?.visits === null && (
               <span className="text-xs text-muted-foreground">
-                Tracking de visitas no activo (aplicá la migración 0026)
+                {t("funnel.trackingOff")}
               </span>
             )}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Visitas (por render)</p>
+              <p className="text-xs text-muted-foreground">
+                {t("funnel.visits")}
+              </p>
               <p className="text-lg font-bold">
                 {loading || !kpis ? "—" : (kpis.visits ?? "—")}
               </p>
             </div>
             <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Ventas confirmadas</p>
+              <p className="text-xs text-muted-foreground">
+                {t("funnel.sales")}
+              </p>
               <p className="text-lg font-bold">
                 {loading || !kpis ? "—" : kpis.approvedPayments}
               </p>
             </div>
             <div className="rounded-lg border p-3">
               <p className="text-xs text-muted-foreground">
-                Ventas por visita (por render)
+                {t("funnel.salesPerVisit")}
               </p>
               <p className="text-lg font-bold">
                 {loading || !kpis || kpis.visitConversion === null
@@ -455,20 +485,20 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
         <CardContent className="space-y-3 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-sm font-semibold">Recaudación por día</p>
+              <p className="text-sm font-semibold">{t("trend.title")}</p>
               <p className="text-xs text-muted-foreground">
-                Ventas confirmadas del período
+                {t("trend.description")}
               </p>
             </div>
             <p className="text-xs text-muted-foreground">
-              {data?.daily.length ?? 0} día(s)
+              {t("trend.days", { count: data?.daily.length ?? 0 })}
             </p>
           </div>
 
           {loading && !data ? (
             <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Cargando…
+              {t("trend.loading")}
             </div>
           ) : (
             <>
@@ -483,12 +513,14 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
                       <div
                         className="w-full rounded-t bg-brand-500 transition-all hover:bg-brand-400"
                         style={{ height: `${Math.min(100, height)}%` }}
-                        title={`${shortDate(d.date)}: ${formatPrice(
-                          d.revenue,
-                        )} · ${d.payments} venta(s)`}
+                        title={t("trend.tooltip", {
+                          date: shortDate(d.date, locale),
+                          revenue: formatPrice(d.revenue, locale),
+                          count: d.payments,
+                        })}
                       />
                       <span className="mt-1 text-[9px] text-muted-foreground">
-                        {shortDate(d.date)}
+                        {shortDate(d.date, locale)}
                       </span>
                     </div>
                   );
@@ -506,12 +538,14 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
                       <div
                         className="w-full rounded-t bg-brand-500 transition-all hover:bg-brand-400"
                         style={{ height: `${Math.min(100, height)}%` }}
-                        title={`${shortDate(d.date)}: ${formatPrice(
-                          d.revenue,
-                        )} · ${d.payments} venta(s)`}
+                        title={t("trend.tooltip", {
+                          date: shortDate(d.date, locale),
+                          revenue: formatPrice(d.revenue, locale),
+                          count: d.payments,
+                        })}
                       />
                       <span className="mt-1 text-[10px] text-muted-foreground">
-                        {shortDate(d.date)}
+                        {shortDate(d.date, locale)}
                       </span>
                     </div>
                   );
@@ -519,8 +553,7 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
               </div>
 
               <p className="text-xs text-muted-foreground sm:hidden">
-                Mostrando los últimos {mobileDaily.length} días. En pantallas
-                grandes ves todo el período.
+                {t("trend.mobileNote", { count: mobileDaily.length })}
               </p>
             </>
           )}
@@ -532,15 +565,13 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
         <CardContent className="space-y-3 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-sm font-semibold">
-                Comparativa de conversión por sorteo
-              </p>
+              <p className="text-sm font-semibold">{t("detail.title")}</p>
               <p className="text-xs text-muted-foreground">
-                Solo ventas confirmadas; en móvil cada fila se lee como tarjeta.
+                {t("detail.description")}
               </p>
             </div>
             <span className="text-xs text-muted-foreground">
-              Top {data?.byRaffle.length ?? 0}
+              {t("detail.top", { count: data?.byRaffle.length ?? 0 })}
             </span>
           </div>
 
@@ -549,48 +580,50 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
             getRowKey={(row) => row.id}
             empty={
               <EmptyState
-                title="Sin movimientos en el período"
-                description="Probá con otro rango o publicá un sorteo para empezar a medir."
+                title={t("detail.emptyTitle")}
+                description={t("detail.emptyDescription")}
               />
             }
             columns={[
               {
                 key: "raffle",
-                header: "Sorteo",
+                header: t("columns.raffle"),
                 render: (row) => (
                   <span className="font-medium">{row.title}</span>
                 ),
               },
               {
                 key: "status",
-                header: "Estado",
+                header: t("columns.status"),
                 render: (row) => (
                   <Badge variant="secondary">
-                    {STATUS_LABEL[row.status] ?? row.status}
+                    {STATUS_LABEL[row.status]
+                      ? t(`status.${STATUS_LABEL[row.status]}`)
+                      : row.status}
                   </Badge>
                 ),
               },
               {
                 key: "visits",
-                header: "Visitas",
+                header: t("columns.visits"),
                 align: "right",
                 render: (row) => (row.visits !== null ? row.visits : "—"),
               },
               {
                 key: "participations",
-                header: "Particip.",
+                header: t("columns.participations"),
                 align: "right",
                 render: (row) => row.sold + row.reserved,
               },
               {
                 key: "sales",
-                header: "Ventas",
+                header: t("columns.sales"),
                 align: "right",
                 render: (row) => row.sold,
               },
               {
                 key: "conversion",
-                header: "Conv.",
+                header: t("columns.conversion"),
                 align: "right",
                 render: (row) => (
                   <span className="font-mono">{pct(row.conversion)}</span>
@@ -598,10 +631,12 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
               },
               {
                 key: "revenue",
-                header: "Recaudación",
+                header: t("columns.revenue"),
                 align: "right",
                 render: (row) => (
-                  <span className="font-mono">{formatPrice(row.revenue)}</span>
+                  <span className="font-mono">
+                    {formatPrice(row.revenue, locale)}
+                  </span>
                 ),
               },
             ]}
@@ -611,9 +646,12 @@ export function AdvancedAnalytics({ planLabel }: { planLabel?: string }) {
 
       {kpis && (
         <p className="text-xs text-muted-foreground">
-          Inventario actual: {kpis.sold} números vendidos · {kpis.reserved}{" "}
-          reservados · {kpis.activeRaffles} sorteos activos de{" "}
-          {kpis.totalRaffles}.
+          {t("inventory", {
+            sold: kpis.sold,
+            reserved: kpis.reserved,
+            active: kpis.activeRaffles,
+            total: kpis.totalRaffles,
+          })}
         </p>
       )}
     </div>

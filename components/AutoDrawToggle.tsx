@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+import { Link } from "@/src/i18n/navigation";
 import { Bot, Hand, Loader2 } from "lucide-react";
 
 import { setAutoDraw } from "@/app/[locale]/admin/sorteos/[id]/actions";

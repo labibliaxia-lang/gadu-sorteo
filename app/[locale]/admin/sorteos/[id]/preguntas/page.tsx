@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { requireAdminSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { RaffleQnA } from "@/components/RaffleQnA";
@@ -14,6 +15,7 @@ export default async function AdminRaffleQuestionsPage({
 }: {
   params: { id: string };
 }) {
+  const t = await getTranslations("AdminSorteosQuestions");
   const session = await requireAdminSession();
   if (!session) redirect("/login");
 
@@ -51,33 +53,32 @@ export default async function AdminRaffleQuestionsPage({
 
   return (
     <div className="space-y-6">
-      <Link
+      <LocaleLink
         href={`/admin/sorteos/${params.id}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver al sorteo
-      </Link>
+        {t("back")}
+      </LocaleLink>
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            Preguntas de usuarios
+            {t("title")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Respondé en público las dudas de {raffle.title}. Las pendientes
-            aparecen primero.
+            {t("subtitle", { title: raffle.title })}
           </p>
         </div>
-        <Link
+        <LocaleLink
           href={`/sorteos/${params.id}#preguntas`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-sm text-amber-800 underline-offset-4 hover:underline dark:text-amber-300"
         >
-          Ver sección pública
+          {t("viewPublic")}
           <ExternalLink className="h-4 w-4" />
-        </Link>
+        </LocaleLink>
       </header>
 
       <RaffleQnA

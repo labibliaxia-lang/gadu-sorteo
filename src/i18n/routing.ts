@@ -1,7 +1,7 @@
 import { defineRouting } from "next-intl/routing";
 
 /**
- * Rutas localizadas solo para las páginas públicas migradas.
+ * Rutas localizadas para las páginas públicas, auth, legales y admin migradas.
  *
  * - `as-needed`: el español (default) va sin prefijo; `en` y `pt` llevan
  *   `/en` y `/pt`.

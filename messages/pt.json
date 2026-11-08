@@ -824,5 +824,845 @@
     "redeem": "Resgatar código",
     "redeemPremium": "Resgatar código premium",
     "alreadyHave": "Já tem um código? Resgate-o em {path}."
+  },
+  "AdminSorteos": {
+    "emptyTitle": "Ainda não há sorteios",
+    "emptyDescription": "Crie o primeiro em «Novo sorteio» para começar a vender números.",
+    "createFirst": "Criar o primeiro",
+    "priceAndDate": "{price} por número · {date}",
+    "manage": "Gerenciar",
+    "prizes": "Prêmios",
+    "viewPublic": "Ver página pública"
+  },
+  "AdminSorteosForm": {
+    "back": "Voltar ao sorteio",
+    "verifying": "Verificando identidade…",
+    "kyc": {
+      "title": "KYC obrigatório para publicar sorteios",
+      "description": "Para criar e publicar sorteios você precisa preencher seus dados pessoais (nome, telefone, localização e DNI) e ter a identidade aprovada com DNI + selfie.",
+      "complete": "Completar verificação",
+      "editData": "Editar meus dados"
+    },
+    "stepTitle1": "Novo sorteio · Dados básicos",
+    "stepTitle2": "Novo sorteio · Cobrança",
+    "stepTitle3": "Novo sorteio · Capa e revisão",
+    "steps": {
+      "basics": "Básicos",
+      "collection": "Cobrança",
+      "cover": "Capa",
+      "label": "Etapa {n}"
+    },
+    "limit": {
+      "freeReached": "Limite de teste atingido. Atualize para <strong>Starter</strong> para continuar criando sorteios.",
+      "planReached": "Você já tem {count} sorteio(s) ativo(s). Seu plano <strong>{plan}</strong> permite até {max}. Finalize um ou melhore de plano."
+    },
+    "fields": {
+      "title": "Título",
+      "titlePlaceholder": "Ex.: Sorteio de carros",
+      "description": "Descrição",
+      "descriptionPlaceholder": "Conte do que se trata o sorteio",
+      "pricePerNumber": "Preço por número",
+      "drawDate": "Data do sorteio",
+      "currency": "Moeda",
+      "currencyHint": "O preço e os totais são exibidos nesta moeda.",
+      "maxNumbers": "Quantidade de números",
+      "maxNumbersHint": "Seu plano <strong>{plan}</strong> permite entre 10 e {max} números por sorteio.",
+      "minTicketsRequired": "Mínimo de números vendidos",
+      "winnersCount": "Quantidade de prêmios",
+      "winnersHint": "Seu plano permite até {count} {count, plural, one {prêmio} other {prêmios}}.",
+      "ifNotMet": "Se não for atingido",
+      "ifNotMetExtend": "Reprogramar a data",
+      "ifNotMetCancel": "Cancelar e devolver o dinheiro",
+      "drawDateFixedHint": "Com o sorteio à venda a data fica fixa: a contagem regressiva pública não pode ser reiniciada. Para movê-la, feche o sorteio e publique novamente.",
+      "minRuleHint": "O mínimo é controlado ao executar o sorteio. A quantidade de prêmios é limitada pelo seu plano (3 ou 30) e o motor publica um ganhador por prêmio."
+    },
+    "currency": {
+      "ars": "ARS · Peso argentino",
+      "mxn": "MXN · Peso mexicano",
+      "cop": "COP · Peso colombiano",
+      "clp": "CLP · Peso chileno",
+      "usd": "USD · Dólar"
+    },
+    "minRule": {
+      "title": "Regra de mínimo de venda",
+      "description": "Se na data não for atingido esse mínimo, o sorteio não é realizado e a regra escolhida é aplicada. Deixe em 0 para não exigir mínimo."
+    },
+    "premiumNumbers": {
+      "feature": "mais números por sorteio",
+      "description": "Com o Premium você pode gerar até 10.000 números por sorteio."
+    },
+    "premiumPayments": {
+      "feature": "Mercado Pago",
+      "description": "Cobre automaticamente com o Mercado Pago e acesse métodos de pagamento avançados."
+    },
+    "payment": {
+      "title": "Método de pagamento",
+      "mercadoPago": "Mercado Pago",
+      "mercadoPagoSub": "Automático / Modo Mock de Testes",
+      "transfer": "Transferência bancária",
+      "transferSub": "Alias (Manual)",
+      "mockInfo": "Se não houver um token real do Mercado Pago configurado, a plataforma ativará automaticamente o <strong>Modo Simulação (Mock)</strong> para fazer testes locais sem custo.",
+      "transferInfo": "Os compradores verão seus dados de transferência e enviarão o comprovante por WhatsApp."
+    },
+    "transfer": {
+      "title": "Dados de transferência",
+      "alias": "Alias",
+      "aliasPlaceholder": "Ex.: meu.alias.mp",
+      "cbu": "CBU",
+      "cbuPlaceholder": "22 dígitos",
+      "bank": "Banco",
+      "bankPlaceholder": "Ex.: Mercado Pago / Banco Nación",
+      "whatsapp": "WhatsApp de contato",
+      "whatsappPlaceholder": "Ex.: 5491123456789"
+    },
+    "review": {
+      "title": "Revisão final",
+      "titleLabel": "Título:",
+      "dateLabel": "Data:",
+      "priceLabel": "Preço:",
+      "perNumber": "por número",
+      "numbers": "números",
+      "paymentLabel": "Cobrança:",
+      "transfer": "Transferência",
+      "transferWithAlias": "Transferência · {alias}",
+      "mercadoPago": "Mercado Pago",
+      "whatsappLabel": "WhatsApp:",
+      "note": "Ao criar, os números são gerados automaticamente. Os prêmios e o compromisso do sorteio são adicionados depois."
+    },
+    "terms": {
+      "title": "Termos e Condições do sorteio",
+      "description": "Gerados com seu nome e DNI/CNPJ do KYC. O jogador deverá aceitá-los antes de reservar números.",
+      "accept": "Aceito publicar estes termos como base legal do meu sorteio",
+      "descriptionEdit": "Base legal que o jogador verá antes de reservar. Geradas com seus dados de KYC.",
+      "empty": "Sem base legal cadastrada."
+    },
+    "referral": {
+      "title": "Convide e Ganhe (Indicações)",
+      "description": "Cada convidado que comprar o mínimo te dá um número grátis no sorteio bônus.",
+      "enable": "Ativar indicações neste sorteio",
+      "minNumbers": "Compra mínima do convidado",
+      "minNumbersHint": "Quantos números seu convidado deve comprar.",
+      "maxPerUser": "Teto de prêmios",
+      "maxPerUserHint": "0 = sem teto por indicador.",
+      "bonusRaffle": "Sorteio bônus",
+      "bonusNone": "Entregar o número neste mesmo sorteio",
+      "bonusHint": "Apenas sorteios ativos do mesmo organizador.",
+      "enableEdit": "Convide e ganhe neste sorteio",
+      "descriptionEdit": "Para cada convidado que comprar, quem o convidou recebe um número grátis <strong>deste sorteio</strong>. Esse número sai da sua arrecadação: escolha o mínimo e o teto.",
+      "requireBuyerMin": "Mínimo comprado por você",
+      "requireBuyerMinHint": "0 = não é preciso que quem convida tenha comprado.",
+      "maxPerUserHintLong": "0 = sem teto. É a quantidade máxima de números grátis por indicador neste sorteio.",
+      "bonusQuestion": "Onde são entregues os números grátis?",
+      "bonusSame": "Neste mesmo sorteio",
+      "bonusExclusive": "Em um sorteio exclusivo: {title}",
+      "bonusEditHint": "Se escolher um sorteio exclusivo, o número é entregue lá e fica marcado como 🎁 prêmio. Esse sorteio deve ter números disponíveis.",
+      "minNumbersHintEdit": "Quantos números seu convidado deve comprar neste sorteio.",
+      "maxPerUserEdit": "Teto por pessoa"
+    },
+    "hidden": {
+      "title": "Não publicar na listagem",
+      "description": "Não aparece na home, em Ganhadores nem em buscadores, mas abre normalmente com o link. Serve para testar antes de anunciar. Para publicar depois, é preciso ativá-lo no painel."
+    },
+    "cover": {
+      "label": "Imagem de capa",
+      "change": "Clique para trocar a imagem",
+      "drop": "Arraste uma imagem ou clique para enviar",
+      "alt": "Capa",
+      "uploading": "Enviando…"
+    },
+    "buttons": {
+      "back": "Voltar",
+      "next": "Continuar",
+      "creating": "Criando sorteio…",
+      "uploadingCover": "Enviando capa…",
+      "create": "Criar sorteio",
+      "saving": "Salvando…",
+      "save": "Salvar alterações"
+    },
+    "preview": {
+      "title": "Prévia",
+      "titleFallback": "Título do sorteio",
+      "dateUndefined": "Data a definir",
+      "perNumber": "por número",
+      "numbersGenerated": "<strong>{count} números</strong> serão gerados automaticamente ao criar o sorteio.",
+      "prizes": "Prêmios",
+      "prizesHint": "Os prêmios são adicionados na próxima etapa."
+    },
+    "errors": {
+      "waitUpload": "Espere o upload da capa terminar antes de criar o sorteio.",
+      "acceptTerms": "Você precisa aceitar e publicar os termos legais do sorteio para criá-lo.",
+      "planActiveLimit": "Seu plano {plan} permite até {max} sorteios ativos. Finalize um ou melhore para Premium.",
+      "planNumbersLimit": "Seu plano {plan} permite até {max} números por sorteio.",
+      "planPrizesLimit": "Seu plano {plan} permite até {max} prêmio(s) por sorteio.",
+      "mercadoPagoPremium": "O Mercado Pago é um recurso do plano Premium. Escolha transferência ou resgate um código premium.",
+      "notAuthenticated": "Você não está autenticado.",
+      "noOrganizerRole": "Sua sessão não tem papel de organizador neste momento. Saia, entre novamente e tente de novo.",
+      "rlsRejected": "O banco recusou o sorteio por um problema de permissões. Saia, entre novamente e tente de novo. Se persistir, avise o administrador da plataforma.",
+      "imageType": "O arquivo deve ser uma imagem.",
+      "imageTooLarge": "A imagem não pode exceder 5 MB.",
+      "createFailed": "Não foi possível criar o sorteio.",
+      "acceptTermsSave": "Você precisa aceitar e publicar os termos legais do sorteio para salvar.",
+      "saveFailed": "Não foi possível salvar as alterações."
+    },
+    "editTitle": "Editar sorteio",
+    "editHint": "A quantidade de números não pode ser alterada depois de gerados."
+  },
+  "AdminSorteosDetail": {
+    "numbers": {
+      "title": "Números · {title}",
+      "subtitle": "Aprove comprovantes (marcar como vendido) ou libere reservas.",
+      "back": "Voltar"
+    },
+    "created": {
+      "title": "Sorteio criado. Sua landing já está publicada.",
+      "description": "Compartilhe agora mesmo: não é preciso publicar mais nada. O conteúdo promocional você pode editar depois."
+    },
+    "summary": {
+      "pricePerNumber": "Preço por número",
+      "sold": "Números vendidos",
+      "reserved": "Reservados"
+    },
+    "drawDate": "Data do sorteio",
+    "winner": {
+      "title": "Número ganhador",
+      "line": "🎉 {name} — Nº {number}",
+      "none": "O sorteio ainda não foi realizado."
+    },
+    "delivery": {
+      "title": "Endereços de entrega dos ganhadores",
+      "description": "Privado: só você vê, como organizador deste sorteio. Não é exibido na página pública.",
+      "positionFirst": "1º prêmio",
+      "positionOther": "{position}º prêmio",
+      "line": "{position} · Nº {number} · {name}",
+      "noAddress": "O ganhador ainda não cadastrou um endereço de entrega.",
+      "postalCode": "CEP"
+    },
+    "cancelled": {
+      "title": "Sorteio cancelado",
+      "defaultReason": "O mínimo de vendas não foi atingido ou o organizador cancelou.",
+      "noBuyers": "Não há compradores com números vendidos para devolver.",
+      "refunds": "Devoluções ({paid}/{total} pagas):"
+    },
+    "refunds": {
+      "title": "Devoluções",
+      "description": "Compartilhe o link com o comprador para que ele avise que recebeu, e marque como paga quando tiver devolvido o dinheiro."
+    },
+    "paused": {
+      "title": "Sorteio pausado pelo plano",
+      "text": "Este sorteio está temporariamente pausado: atualize seu plano para reativá-lo. Nenhum dado foi perdido."
+    },
+    "bonus": {
+      "title": "Este sorteio recebe prêmios de indicações",
+      "text": "Os números ganhos por convidar são entregues aqui, marcados como 🎁 prêmio (não são vendas). Sorteio(s) de origem: {titles}."
+    },
+    "soldNoPayment": {
+      "title": "{count, plural, one {# número vendido sem pagamento registrado} other {# números vendidos sem pagamento registrado}}",
+      "text": "Se o sorteio for realizado assim, esse comprador fica sem pagamento vinculado. Registre em <link>Vendas</link> antes de sortear."
+    },
+    "actions": {
+      "manageNumbers": "Gerenciar números",
+      "sales": "Vendas",
+      "prizes": "Gerenciar prêmios",
+      "questions": "Perguntas",
+      "landing": "Landing",
+      "analytics": "Ver análise",
+      "edit": "Editar sorteio",
+      "cannotDelete": "Não pode ser excluído: tem atividade",
+      "cannotDeleteTitle": "Tem números movimentados, pagamentos ou compromisso publicado: é cancelado em vez de excluído."
+    },
+    "landing": {
+      "title": "Landing pública",
+      "description": "A página do sorteio é gerada ao criá-lo e fica publicada neste endereço. Copie para divulgar quando quiser.",
+      "edit": "Editar conteúdo da landing"
+    },
+    "referral": {
+      "title": "Seu link de indicações",
+      "enabledText": "Compartilhe este link: cada amigo que se registrar e comprar soma um número grátis para você neste sorteio, conforme as regras configuradas.",
+      "disabledText": "Este sorteio ainda não tem <strong>Convide e Ganhe</strong> ativado.",
+      "enable": "Ativar Convide e Ganhe",
+      "copy": "Copiar link"
+    },
+    "steps": {
+      "title": "Passos para publicar e sortear",
+      "warningTitle": "⚠️ Ação obrigatória: você deve publicar o compromisso para que o sorteio seja válido e verificável",
+      "warningText": "Sem o hash da semente não é possível sortear nem verificar o resultado. É o passo 3.",
+      "step1Label": "1. Dados do sorteio",
+      "step1Detail": "Título, preço, data e dados de pagamento.",
+      "step2Label": "2. Números e prêmios",
+      "step2Detail": "Gere os números e cadastre os prêmios.",
+      "step3Label": "3. Compromisso publicado",
+      "step3Detail": "Publique o hash da semente antes de sortear: sem isso não é possível executar o sorteio.",
+      "step4Label": "4. Sorteio",
+      "step4Ready": "Já há números vendidos: você pode sortear.",
+      "step4NoSales": "Você precisa de pelo menos um número vendido para sortear.",
+      "statusReady": "Pronto",
+      "statusPending": "Pendente"
+    },
+    "reservations": {
+      "title": "Reservas aguardando pagamento",
+      "description": "Pré-pagamento manual: o comprador reserva seus números, envia o comprovante por WhatsApp e aqui você confirma o pagamento."
+    },
+    "buyer": "Comprador",
+    "buyerNoName": "Comprador sem nome"
+  },
+  "AdminSorteosPremios": {
+    "title": "Prêmios do sorteio",
+    "subtitle": "Os prêmios que são sorteados, em ordem.",
+    "back": "Voltar",
+    "listTitle": "Prêmios ({count}/10)",
+    "listHint": "Cada prêmio ocupa uma posição de 1 a 10. Criar e editar é validado no servidor.",
+    "loading": "Carregando…",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "limitReached": "Você atingiu o limite de 10 prêmios para este sorteio.",
+    "addPrize": "Adicionar prêmio",
+    "editPrize": "Editar prêmio",
+    "position": "Posição (1-10)",
+    "toolNumber": "Nº da ferramenta associada",
+    "titleLabel": "Título",
+    "description": "Descrição",
+    "photo1": "Foto 1 (principal)",
+    "photo2": "Foto 2 (opcional)",
+    "saving": "Salvando…",
+    "saveChanges": "Salvar alterações",
+    "cancelEdit": "Cancelar edição",
+    "success": {
+      "updated": "Prêmio atualizado.",
+      "created": "Prêmio adicionado.",
+      "deleted": "Prêmio excluído."
+    }
+  },
+  "AdminSorteosVentas": {
+    "error": {
+      "title": "Não foi possível carregar a planilha de vendas.",
+      "text": "Tente novamente em instantes. Se persistir, pode faltar aplicar a migração 0091."
+    },
+    "back": "Voltar ao sorteio",
+    "title": "Vendas · {title}",
+    "subtitle": "Quem comprou o quê e quanto dinheiro entrou. {price} por número.",
+    "downloadCsv": "Baixar CSV",
+    "stats": {
+      "sold": "Números vendidos",
+      "buyers": "Compradores",
+      "collected": "Recebido",
+      "refunds": "Devoluções: {amount}",
+      "net": "Líquido",
+      "netHint": "Recebido menos devolvido",
+      "prize": "{count} de prêmio (não são vendas)"
+    },
+    "anonWarning": "<strong>{count}</strong> número(s) constam como vendidos sem comprador registrado. Isso acontece quando são marcados à mão em «Gerenciar números» sem uma reserva prévia. Aparecem abaixo como «Comprador sem nome».",
+    "empty": {
+      "title": "Ainda não há vendas.",
+      "text": "Quando o organizador confirmar um pagamento, o comprador aparece aqui com seus números."
+    },
+    "search": {
+      "placeholder": "Buscar por nome, telefone ou número",
+      "aria": "Buscar na planilha de vendas",
+      "submit": "Buscar",
+      "clear": "Limpar"
+    },
+    "noMatches": "Não há compradores que correspondam a «{query}».",
+    "table": {
+      "buyer": "Comprador",
+      "phone": "Telefone",
+      "numbers": "Números",
+      "which": "Quais",
+      "status": "Status",
+      "collected": "Recebido",
+      "net": "Líquido",
+      "lastSale": "Última venda",
+      "actions": "Ações",
+      "rows": "{count} linha(s)",
+      "prizeLabel": "🎁 Prêmio:"
+    },
+    "status": {
+      "paid": "Pago",
+      "pending": "Pendente",
+      "manual": "Sem pagamento registrado"
+    },
+    "footnote": "A planilha mostra nome e telefone, não email nem documento: é o que faz falta para validar uma transferência. «Devolver e liberar» registra a devolução pelo valor recebido e deixa o número disponível; fica auditado com o motivo."
+  },
+  "AdminSorteosAnalitica": {
+    "back": "Voltar ao sorteio",
+    "eyebrow": "Análise do sorteio",
+    "subtitle": "Do início do sorteio até hoje. As visitas são contadas por aba do navegador.",
+    "stats": {
+      "visits": "Visitas",
+      "sold": "Números vendidos",
+      "revenue": "Arrecadação",
+      "buyers": "Compradores"
+    },
+    "funnel": {
+      "title": "Funil de conversão",
+      "tracked": "Visitas registradas desde que ativamos o rastreamento",
+      "none": "Ainda não há visitas registradas",
+      "visits": "Visitas",
+      "participations": "Participações (reservas + vendas)",
+      "sales": "Vendas confirmadas"
+    },
+    "rates": {
+      "visitToSale": "Visitas → venda",
+      "participationToSale": "Participações → venda",
+      "avgTicket": "Ticket médio"
+    },
+    "daily": {
+      "title": "Números vendidos por dia",
+      "last": "Últimos {days} dias",
+      "tooltip": "{day}: {sold} vendido(s) · {revenue}"
+    },
+    "blocks": {
+      "title": "Vendas por bloco de números"
+    },
+    "noSales": "Ainda não há vendas confirmadas.",
+    "recent": {
+      "title": "Últimas vendas confirmadas",
+      "number": "Nº {number}"
+    },
+    "footnote": "As visitas são por render/aba, não pessoas únicas. O funil serve para comparar tendência, não como contagem exata de audiência."
+  },
+  "AdminSorteosLanding": {
+    "back": "Voltar ao sorteio",
+    "title": "Landing promocional",
+    "subtitle": "Conteúdo acima da grade: texto, imagens e vídeos do YouTube ou Vimeo. É salvo como blocos seguros, sem HTML.",
+    "viewPublic": "Ver página pública",
+    "linkNote": "Link público: a landing já está gerada desde que você criou o sorteio, sem etapa de publicação."
+  },
+  "AdminSorteosQuestions": {
+    "back": "Voltar ao sorteio",
+    "title": "Perguntas dos usuários",
+    "subtitle": "Responda em público as dúvidas de {title}. As pendentes aparecem primeiro.",
+    "viewPublic": "Ver seção pública"
+  },
+  "AdminSuper": {
+    "eyebrow": "Console",
+    "title": "Superadministrador",
+    "subtitle": "Métricas da plataforma, solicitações, usuários, sorteios, denúncias e auditoria.",
+    "configurePlans": "Configurar planos",
+    "accountDeletions": "Exclusões de conta",
+    "drawSimulator": "Simulador de sorteio",
+    "issuesTitle": "Há dados que não puderam ser lidos",
+    "navAria": "Seções do painel",
+    "whatsappMessage": "Olá! Recebi sua solicitação para ser organizador na Gadu Sorteos. Queria conversar sobre comissões e condições.",
+    "sections": {
+      "dashboard": "Painel",
+      "usuarios": "Usuários",
+      "sorteos": "Sorteios",
+      "referidos": "Indicações",
+      "notificaciones": "Notificações",
+      "denuncias": "Denúncias",
+      "auditoria": "Auditoria"
+    },
+    "tabs": {
+      "pending": "Pendentes",
+      "approved": "Aprovadas",
+      "rejected": "Rejeitadas"
+    },
+    "ranges": {
+      "all": "Histórico",
+      "month": "Este mês",
+      "week": "Últimos 7 dias"
+    },
+    "roles": {
+      "superadmin": "Superadmin",
+      "admin": "Organizador",
+      "user": "Usuário"
+    },
+    "status": {
+      "active": "Ativo",
+      "closed": "Encerrado",
+      "drawn": "Sorteado",
+      "cancelled": "Cancelado"
+    },
+    "reportReasons": {
+      "fraud": "Possível fraude",
+      "fakePrize": "Prêmio falso ou inexistente",
+      "inappropriate": "Conteúdo impróprio",
+      "spam": "Spam",
+      "other": "Outro"
+    },
+    "actions": {
+      "approveRole": "Aprovou papel de organizador",
+      "rejectRole": "Rejeitou solicitação de papel",
+      "changeRole": "Alterou papel manualmente",
+      "createOrganizer": "Criou organizador manualmente",
+      "inviteOrganizer": "Convidou organizador por email",
+      "suspendUser": "Suspendeu organizador",
+      "blockUser": "Bloqueou usuário",
+      "deleteUser": "Excluiu usuário",
+      "generateLicense": "Gerou código de licença",
+      "revokeLicense": "Anulou código de licença",
+      "revokeLicenseBenefit": "Removeu o benefício de uma licença",
+      "updatePlanPrice": "Atualizou preço do plano",
+      "banUser": "Suspendeu uma conta",
+      "unbanUser": "Removeu uma suspensão",
+      "supportView": "Abriu uma visualização de suporte",
+      "planPayment": "Registrou um pagamento de plano",
+      "markPaid": "Marcou números como pagos",
+      "undoMarkPaid": "Reverteu um pagamento marcado",
+      "impersonateUser": "Entrou como usuário (modo editor)",
+      "impersonateEnd": "Saiu do modo editor",
+      "editProfile": "Editou um perfil manualmente",
+      "reportResolve": "Resolveu/descartou uma denúncia",
+      "reportRafflePause": "Pausou um sorteio denunciado",
+      "reportDelete": "Excluiu uma denúncia"
+    },
+    "dashboard": {
+      "mrr": "MRR estimado (ARS)",
+      "mrrNoCalc": "Não foi possível calcular",
+      "mrrSubscriptions": "{count} assinaturas ativas",
+      "totalUsers": "Usuários totais",
+      "totalUsersHint": "{admins} organizadores · {supers} superadmin",
+      "activeRaffles": "Sorteios ativos",
+      "activeRafflesHint": "Em toda a plataforma",
+      "visits30": "Visitas · 30 dias",
+      "visits30Hint": "{count} visitantes autenticados",
+      "revenue30": "Receita estimada · 30 dias",
+      "revenue30Hint": "Por números vendidos",
+      "newUsers30": "Novos usuários · 30 dias",
+      "newUsers30Hint": "Cadastros no período",
+      "revenueRange": "Receita · {range}",
+      "revenueHint": "{mp} via Mercado Pago · {manual} manual",
+      "soldRange": "Números vendidos · {range}",
+      "soldHint": "{count} por venda manual",
+      "approvedRange": "Pagamentos aprovados · {range}",
+      "avgTicket": "Ticket médio (MP)",
+      "pendingRequests": "Solicitações de papel pendentes",
+      "pendingKyc": "Verificações KYC pendentes",
+      "manualSales": "Vendas manuais (valor)",
+      "successfulReferrals": "Indicações bem-sucedidas",
+      "pulseTitle": "Pulso da plataforma",
+      "activityTitle": "Atividade diária · últimos 30 dias",
+      "last30": "30 dias",
+      "visitsTitle": "Visitas · últimos 30 dias",
+      "visitsDescription": "Visitas à home e às páginas de sorteio, com os visitantes autenticados únicos de cada dia.",
+      "newUsersTitle": "Novos usuários",
+      "newUsersDescription": "Cadastros por dia nos últimos 30 dias.",
+      "newUsersLabel": "Novos usuários",
+      "newUsersEmptyTitle": "Sem cadastros no período",
+      "newUsersEmptyDescription": "Quando novas contas se cadastrarem, você verá a série diária aqui.",
+      "revenueChartTitle": "Receita estimada por números vendidos",
+      "revenueChartDescription": "Preço do número × quantidade vendida por dia (últimos 30 dias, em pesos).",
+      "revenueChartLabel": "Receita estimada",
+      "revenueEmptyTitle": "Sem vendas no período",
+      "revenueEmptyDescription": "Não há números vendidos nos últimos 30 dias.",
+      "periodTitle": "Métricas do período",
+      "periodLabel": "Período:",
+      "planPricesTitle": "Preços dos planos",
+      "planPricesNote": "/planes · mensal",
+      "licensesTitle": "Códigos de licença",
+      "licensesRecent": "{count, plural, one {# recente} other {# recentes}}"
+    },
+    "users": {
+      "requestsTitle": "Solicitações de papel",
+      "requestsDescription": "Pedidos para ser organizador. Aprovar ou rejeitar fica auditado.",
+      "requestsEmptyTitle": "Não há solicitações nesta categoria",
+      "requestsEmptyDescription": "Quando alguém pedir para ser organizador, aparece aqui com seus dados de contato.",
+      "noName": "Sem nome",
+      "noPhone": "Sem telefone",
+      "wouldRaffle": "🎁 Sortearia: {value}",
+      "social": "🔎 Redes: {value}",
+      "message": "💬 {value}",
+      "noMessage": "Sem mensagem: não deixou proposta nem contato escrito.",
+      "userSince": "Cadastro do usuário: {date}",
+      "approvedBadge": "Aprovada",
+      "rejectedBadge": "Rejeitada",
+      "kycTitle": "Verificações de identidade",
+      "kycDescription": "Solicitações com pelo menos uma imagem enviada. O bucket é privado: cada imagem é exibida com uma URL assinada que expira em 1 hora.",
+      "kycPending": "{count, plural, one {# pendente} other {# pendentes}}",
+      "kycEmptyTitle": "Não há verificações pendentes",
+      "kycEmptyDescription": "Quando um organizador enviar seu documento ou selfie, aparece aqui para aprovar ou rejeitar.",
+      "docFront": "Documento · frente",
+      "docBack": "Documento · verso",
+      "docSelfie": "Selfie",
+      "docFrontAlt": "Frente do documento de {name}",
+      "docBackAlt": "Verso do documento de {name}",
+      "docSelfieAlt": "Selfie de {name}",
+      "organizerFallback": "o organizador",
+      "requestMeta": "Solicitação: {date} · {count}/3 imagens",
+      "noDate": "sem data",
+      "dniLabel": "Documento:",
+      "deliveryLabel": "Entrega:",
+      "noDniAddress": "sem endereço cadastrado",
+      "noDeliveryAddress": "sem endereço de entrega",
+      "addressMismatch": "Não coincidem. É normal: verifique se o endereço do documento está legível na foto.",
+      "noImage": "Sem imagem",
+      "usersTitle": "Usuários",
+      "usersDescription": "Busque, altere papéis ou entre como usuário. O botão «Entrar como usuário» abre o Modo Editor e fica auditado.",
+      "registered": "{count, number} cadastrados",
+      "loadErrorTitle": "Não foi possível carregar a lista",
+      "loadErrorDescription": "Tente recarregar a página."
+    },
+    "table": {
+      "raffle": "Sorteio",
+      "status": "Status",
+      "links": "Links"
+    },
+    "raffles": {
+      "title": "Sorteios",
+      "description": "Últimos 50, do mais novo ao mais antigo.",
+      "onScreen": "{count} na tela",
+      "emptyTitle": "Ainda não há sorteios",
+      "emptyDescription": "Quando um organizador publicar o primeiro, aparece aqui com seu status e seus links.",
+      "noTitle": "Sem título",
+      "genericTitle": "Sorteio",
+      "price": "Preço",
+      "drawDate": "Data do sorteio",
+      "noDate": "Sem data",
+      "bonus": "Bônus por indicações",
+      "exclusive": "sorteio exclusivo",
+      "deliveryIn": "Entrega em: {title}",
+      "receivesFrom": "Recebe de: {list}",
+      "gifted": "🎁 {count, plural, one {# sorteado} other {# sorteados}}",
+      "organizer": "Organizador",
+      "featured": "Destacado",
+      "public": "Público",
+      "panel": "Painel"
+    },
+    "referrals": {
+      "title": "Indicações",
+      "description": "Top 10 por convidados que efetivamente compraram. Somente leitura.",
+      "emptyTitle": "Ainda não há indicações",
+      "emptyDescription": "Quando um usuário convidar outro, aparece aqui com seu resultado.",
+      "referrer": "Referenciador",
+      "invited": "Convidados",
+      "bought": "Compraram",
+      "prizes": "Prêmios",
+      "id": "ID"
+    },
+    "notifications": {
+      "title": "Notificações críticas",
+      "description": "Denúncias e pedidos de KYC enviados ao superadmin (últimas 50).",
+      "emptyTitle": "Sem avisos",
+      "emptyDescription": "Quando chegar uma denúncia ou um pedido de KYC, aparece aqui.",
+      "unread": "Não lido",
+      "viewRaffle": "Ver sorteio"
+    },
+    "reports": {
+      "title": "Denúncias",
+      "description": "Somente as pendentes de revisão. Resolver, pausar ou excluir fica auditado.",
+      "pending": "{count, plural, one {# pendente} other {# pendentes}}",
+      "emptyErrorTitle": "Não foi possível carregar as denúncias",
+      "emptyErrorDescription": "Verifique o aviso acima: se faltar a migração 0064, aplique-a e recarregue a página.",
+      "emptyTitle": "Não há denúncias pendentes",
+      "emptyDescription": "Quando alguém denunciar um sorteio, aparece aqui para revisão.",
+      "reporter": "Denunciante: {who}",
+      "deletedAccount": "conta excluída ou sem email",
+      "meta": "Denúncia: {date} · ID {id}",
+      "viewPublic": "Ver sorteio público",
+      "noComment": "Sem comentário do denunciante.",
+      "deletedRaffle": "Sorteio excluído"
+    },
+    "audit": {
+      "title": "Atividade / Auditoria",
+      "description": "Últimos 100 registros. Inclui o Modo Editor e a edição manual de perfis.",
+      "count": "{count, plural, one {# registro} other {# registros}}",
+      "actionLabel": "Ação",
+      "allActions": "Todas as ações",
+      "filter": "Filtrar",
+      "clearFilter": "Limpar filtro",
+      "emptyAllTitle": "Sem atividade registrada",
+      "emptyFilteredTitle": "Sem registros para essa ação",
+      "emptyAllDescription": "Toda ação do painel fica registrada aqui.",
+      "emptyFilteredDescription": "Tente outra ação ou limpe o filtro.",
+      "date": "Data",
+      "superadmin": "Superadmin",
+      "target": "Usuário afetado"
+    },
+    "error": {
+      "title": "Não conseguimos carregar o painel",
+      "description": "Uma consulta falhou ao carregar esta seção. O resto do app continua funcionando: tente novamente em alguns segundos.",
+      "retry": "Tentar novamente",
+      "back": "Voltar ao painel",
+      "code": "Código do erro: {code}"
+    }
+  },
+  "AdminSuperBajas": {
+    "back": "Voltar ao painel",
+    "title": "Exclusões de conta",
+    "description": "O usuário pede a exclusão no próprio perfil. Aqui ela é aprovada ou rejeitada com um motivo. Aprovar apaga dados pessoais e documentos KYC; pagamentos e reembolsos ficam registrados sem nome.",
+    "noName": "Sem nome",
+    "confirmApprove": "Os dados pessoais, os documentos KYC e a conta serão apagados. Os pagamentos ficam registrados sem nome. Continuar?",
+    "approvedNotice": "Conta excluída e auditoria registrada.",
+    "rejectPrompt": "Motivo da rejeição (o usuário vê):",
+    "rejectedNotice": "Solicitação rejeitada.",
+    "empty": "Não há solicitações pendentes.",
+    "noEmail": "sem email",
+    "requestedAt": "solicitada em {date}",
+    "noBlockers": "Sem bloqueios: pode ser aprovada.",
+    "approve": "Aprovar e excluir",
+    "reject": "Rejeitar"
+  },
+  "AdminSuperPlanes": {
+    "title": "Configurar planos",
+    "description": "Limites, preço e recursos incluídos por plano. Aplica-se na hora nos triggers e na página pública."
+  },
+  "AdminSuperSandbox": {
+    "back": "Voltar ao painel superadmin",
+    "title": "Simulador de sorteio",
+    "description": "Mesmo fluxo de um sorteio real: primeiro publica-se o compromisso (hash da semente) e depois executam-se os prêmios com a semente revelada e as impressões digitais. Você pode escolher até 10.000 números e 50 prêmios; cada prêmio tem seu hash e há um results_hash combinado. Nada disso aparece no site público nem altera sorteios reais.",
+    "lastRuns": "Últimas simulações",
+    "empty": "Você ainda não executou nenhuma simulação.",
+    "date": "Data",
+    "numbers": "Números",
+    "prizes": "Prêmios",
+    "winner1": "Ganhador 1",
+    "resultsHash": "results_hash",
+    "pending": "Pendente",
+    "notRun": "Não executado"
+  },
+  "AdminSuperUsers": {
+    "roles": {
+      "superadmin": "Superadmin",
+      "admin": "Organizador",
+      "user": "Usuário"
+    },
+    "back": "Voltar ao painel superadmin",
+    "noName": "Sem nome",
+    "noEmail": "Sem email",
+    "suspended": "Suspenso",
+    "pendingRequest": "Solicitação pendente",
+    "viewPanel": "Ver seu painel (somente leitura)",
+    "joined": "Cadastro",
+    "rafflesCreated": "Sorteios criados",
+    "planExpiry": "Vencimento do plano",
+    "noExpiry": "Sem vencimento",
+    "accountSuspended": "Conta suspensa",
+    "suspendAccount": "Suspender conta",
+    "banReason": "Motivo: {reason}",
+    "banNoReason": "sem motivo registrado",
+    "banExplain": "O banimento bloqueia o login e as reservas de números. A conta não é apagada e pode ser revertida.",
+    "planAndPayments": "Plano e pagamentos",
+    "planCurrent": "Plano atual: {plan}",
+    "planPremium": "Premium",
+    "planOrganizer": "Organizador",
+    "planNone": "Sem plano",
+    "planExpires": "vence {date}",
+    "roleExpires": "papel vence {date}",
+    "registerPayment": "Registre um pagamento por transferência ou em dinheiro. A vigência é estendida a partir do vencimento atual (ou de hoje, se já venceu) e o pagamento fica no histórico.",
+    "table": {
+      "date": "Data",
+      "plan": "Plano",
+      "days": "Dias",
+      "amount": "Valor",
+      "method": "Meio",
+      "note": "Nota",
+      "expires": "Vence",
+      "raffle": "Sorteio",
+      "status": "Status",
+      "sold": "Vendidos",
+      "reserved": "Reservados",
+      "revenue": "Receita",
+      "links": "Links",
+      "number": "Número",
+      "raffles": "Sorteios"
+    },
+    "organizerActivity": "Atividade como organizador",
+    "activitySummary": "{sold} vendidos · {reserved} reservados · {revenue} estimado",
+    "noRaffles": "Não criou sorteios.",
+    "public": "Público",
+    "panel": "Painel",
+    "buyerActivity": "Atividade como comprador",
+    "noNumbers": "Não tem números comprados nem reservados.",
+    "reservation": "Reserva até {date}",
+    "backToSupport": "Voltar à ficha de suporte",
+    "supportMode": "Modo suporte — somente leitura",
+    "supportExplain": "Você está vendo o painel de {name} como superadmin. Não há ações disponíveis e a abertura ficou registrada na auditoria.",
+    "thisAccount": "esta conta",
+    "userNumbers": "Números do usuário",
+    "viewRaffle": "Ver sorteio"
+  },
+  "AdminAnalytics": {
+    "ranges": {
+      "today": "Hoje",
+      "last7": "Últimos 7 dias",
+      "month": "Este mês",
+      "all": "Histórico"
+    },
+    "status": {
+      "active": "Ativo",
+      "closed": "Encerrado",
+      "drawn": "Sorteado",
+      "cancelled": "Cancelado"
+    },
+    "delta": {
+      "noBase": "sem base anterior",
+      "noChange": "sem mudanças",
+      "vs": "vs {label}"
+    },
+    "comparison": {
+      "previousDay": "dia anterior",
+      "previous7d": "7 dias anteriores",
+      "previousMonth": "mês anterior"
+    },
+    "ariaRefresh": "Atualizar análises",
+    "exportCsv": "Exportar CSV",
+    "error": {
+      "load": "Não foi possível carregar as análises.",
+      "unexpected": "Erro inesperado ao carregar dados."
+    },
+    "kpi": {
+      "revenue": "Receita",
+      "approvedSales": "Vendas confirmadas",
+      "avgTicket": "Ticket médio",
+      "visitConversion": "Conversão visitas→venda"
+    },
+    "funnel": {
+      "title": "Funil: visitas → venda",
+      "note": "Uma visita = uma navegação; o mesmo visitante conta várias vezes",
+      "trackingOff": "Rastreamento de visitas inativo (aplique a migração 0026)",
+      "visits": "Visitas (por render)",
+      "sales": "Vendas confirmadas",
+      "salesPerVisit": "Vendas por visita (por render)"
+    },
+    "trend": {
+      "title": "Receita por dia",
+      "description": "Vendas confirmadas do período",
+      "days": "{count, plural, one {# dia} other {# dias}}",
+      "loading": "Carregando…",
+      "tooltip": "{date}: {revenue} · {count, plural, one {# venda} other {# vendas}}",
+      "mobileNote": "Mostrando os últimos {count} dias. Em telas grandes você vê o período completo."
+    },
+    "detail": {
+      "title": "Comparativo de conversão por sorteio",
+      "description": "Somente vendas confirmadas; no celular cada linha é lida como cartão.",
+      "top": "Top {count}",
+      "emptyTitle": "Sem movimentos no período",
+      "emptyDescription": "Tente outro intervalo ou publique um sorteio para começar a medir."
+    },
+    "columns": {
+      "raffle": "Sorteio",
+      "status": "Status",
+      "visits": "Visitas",
+      "participations": "Particip.",
+      "sales": "Vendas",
+      "conversion": "Conv.",
+      "revenue": "Receita"
+    },
+    "inventory": "Inventário atual: {sold} números vendidos · {reserved} reservados · {active} sorteios ativos de {total}.",
+    "csv": {
+      "reportTitle": "Relatório de análises",
+      "range": "Intervalo",
+      "generated": "Gerado",
+      "kpi": "KPI",
+      "value": "Valor",
+      "revenue": "Receita",
+      "approvedSales": "Vendas confirmadas",
+      "participations": "Participações (vendas + reservas)",
+      "avgTicket": "Ticket médio",
+      "conversion": "Conversão visitas para venda",
+      "sold": "Números vendidos",
+      "reserved": "Números reservados",
+      "visits": "Visitas por render",
+      "visitConversion": "Vendas por visita (por render)",
+      "activeRaffles": "Sorteios ativos",
+      "totalRaffles": "Sorteios totais",
+      "comparison": "Comparativo vs {label}",
+      "previousRevenue": "Receita anterior",
+      "previousSales": "Vendas anteriores",
+      "previousAvgTicket": "Ticket médio anterior",
+      "previousConversion": "Conversão visitas para venda anterior",
+      "dailyHeader": "Data;Receita;Vendas confirmadas",
+      "rafflesHeader": "Sorteio;Status;Visitas;Participações;Vendas;Conversão reserva para venda;Receita"
+    }
   }
 }

@@ -1,0 +1,8 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"valid\": true,\n  \"errors\": [],\n  \"stats\": {\n    \"total\": 1400,\n    \"withInterpolation\": 139,\n    \"withPlural\": 23,\n    \"withSelect\": 0,\n    \"withRichText\": 38\n  }\n}"
+    }
+  ]
+}

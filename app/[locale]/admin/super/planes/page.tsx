@@ -1,14 +1,20 @@
 import { redirect } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { requireSuperadminSession } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDateTime } from "@/lib/utils";
 import { PlanConfigEditor } from "@/components/admin/PlanConfigEditor";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlanesConfigPage() {
+  const t = await getTranslations("AdminSuperPlanes");
+  const locale = await getLocale();
+  const inLocale = (path: string) =>
+    locale === "es" ? path : `/${locale}${path}`;
   const actor = await requireSuperadminSession();
-  if (!actor) redirect("/login");
+  if (!actor) redirect(inLocale("/login"));
 
   const admin = createAdminClient();
   const { data } = await admin
@@ -27,9 +33,7 @@ export default async function PlanesConfigPage() {
     const codigo = fila.currency_code as "ARS" | "MXN" | "COP" | "CLP";
     rates[codigo] = Number(fila.rate_to_usd);
     if (!ratesUpdatedAt && fila.updated_at) {
-      ratesUpdatedAt = new Date(fila.updated_at as string).toLocaleString(
-        "es-AR",
-      );
+      ratesUpdatedAt = formatDateTime(fila.updated_at as string, locale);
     }
   }
 
@@ -44,11 +48,8 @@ export default async function PlanesConfigPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configurar planes</h1>
-        <p className="text-sm text-fg-subtle">
-          Límites, precio y funciones incluidas por plan. Se aplica al instante
-          en los triggers y en la página pública.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="text-sm text-fg-subtle">{t("description")}</p>
       </div>
       <PlanConfigEditor
         inicial={configs as Parameters<typeof PlanConfigEditor>[0]["inicial"]}

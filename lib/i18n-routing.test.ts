@@ -18,9 +18,22 @@ function flattenKeys(value: Messages, prefix = ""): string[] {
 }
 
 function placeholders(value: string): string[] {
-  return [...value.matchAll(/\{([a-zA-Z0-9_]+)/g)]
-    .map((match) => match[1])
-    .sort();
+  // Solo placeholders de primer nivel: los textos dentro de un bloque ICU
+  // `{count, plural, one {premio} other {premios}}` no son placeholders.
+  const found: string[] = [];
+  let depth = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] === "{") {
+      depth += 1;
+      if (depth === 1) {
+        const match = /^\{([a-zA-Z0-9_]+)/.exec(value.slice(index));
+        if (match) found.push(match[1]);
+      }
+    } else if (value[index] === "}") {
+      depth = Math.max(0, depth - 1);
+    }
+  }
+  return found.sort();
 }
 
 function richTags(value: string): string[] {

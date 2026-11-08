@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   BarChart3,
   Grid3x3,
@@ -9,6 +9,7 @@ import {
   Receipt,
 } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdminSession } from "@/lib/auth";
@@ -34,17 +35,8 @@ import { NotifyWinnerButton } from "@/components/admin/NotifyWinnerButton";
 import { RaffleCloneButton } from "@/components/RaffleCloneButton";
 import { ReservedNumbersPanel } from "@/components/ReservedNumbersPanel";
 import { formatDateTime, formatPrice } from "@/lib/utils";
-import type { Raffle } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-const statusLabel: Record<Raffle["status"], string> = {
-  active: "Activo",
-  closed: "Cerrado",
-  drawn: "Sorteado",
-  cancelled: "Cancelado",
-  paused: "Pausado",
-};
 
 export default async function AdminRaffleDetailPage({
   params,
@@ -53,6 +45,9 @@ export default async function AdminRaffleDetailPage({
   params: { id: string };
   searchParams?: { creado?: string };
 }) {
+  const t = await getTranslations("AdminSorteosDetail");
+  const tc = await getTranslations("Common");
+  const locale = await getLocale();
   const supabase = createClient();
 
   // P0: un organizador no puede espiar el detalle de un sorteo ajeno. RLS de
@@ -274,7 +269,7 @@ export default async function AdminRaffleDetailPage({
 
     compradoresParaResena = [...conteo.entries()]
       .map(([id, numeros]) => ({
-        nombre: contactos.get(id)?.full_name?.trim() || "Comprador sin nombre",
+        nombre: contactos.get(id)?.full_name?.trim() || t("buyerNoName"),
         telefono: contactos.get(id)?.phone ?? null,
         numeros,
       }))
@@ -290,7 +285,7 @@ export default async function AdminRaffleDetailPage({
 
       return {
         userId,
-        name: buyer?.full_name?.trim() || "Comprador sin nombre",
+        name: buyer?.full_name?.trim() || t("buyerNoName"),
         phone: buyer?.phone ?? null,
         numbers: rows
           .map((row) => row.number as number)
@@ -337,7 +332,7 @@ export default async function AdminRaffleDetailPage({
       refundNames = new Map(
         (profiles ?? []).map((profile) => [
           profile.id as string,
-          (profile.full_name as string | null)?.trim() || "Comprador",
+          (profile.full_name as string | null)?.trim() || t("buyer"),
         ]),
       );
     }
@@ -345,7 +340,7 @@ export default async function AdminRaffleDetailPage({
     refunds = (refundRows ?? []).map((row) => ({
       id: row.id as string,
       user_id: row.user_id as string,
-      user_name: refundNames.get(row.user_id as string) ?? "Comprador",
+      user_name: refundNames.get(row.user_id as string) ?? t("buyer"),
       amount: Number(row.amount),
       status: row.status as string,
       paid_at: (row.paid_at as string | null) ?? null,
@@ -360,11 +355,10 @@ export default async function AdminRaffleDetailPage({
         <div className="space-y-3 rounded-xl border border-emerald-600/30 bg-emerald-500/5 p-4">
           <div>
             <p className="font-semibold">
-              Sorteo creado. Tu landing ya está publicada.
+              {t("created.title")}
             </p>
             <p className="text-sm text-muted-foreground">
-              Compartila ahora mismo: no hay que publicar nada más. El contenido
-              promocional lo podés editar después.
+              {t("created.description")}
             </p>
           </div>
           <CopyLandingLink raffleId={publicSlug} />
@@ -375,7 +369,7 @@ export default async function AdminRaffleDetailPage({
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle>{raffle.title}</CardTitle>
           <Badge variant="secondary">
-            {statusLabel[raffle.status as Raffle["status"]]}
+            {tc(`status.${raffle.status}`)}
           </Badge>
         </CardHeader>
 
@@ -387,19 +381,19 @@ export default async function AdminRaffleDetailPage({
           {/* Resumen ejecutivo */}
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border bg-muted/40 p-4">
-              <p className="text-sm text-muted-foreground">Precio por número</p>
+              <p className="text-sm text-muted-foreground">{t("summary.pricePerNumber")}</p>
               <p className="text-lg font-bold">
-                {formatPrice(Number(raffle.price_per_number))}
+                {formatPrice(Number(raffle.price_per_number), locale)}
               </p>
             </div>
             <div className="rounded-xl border bg-muted/40 p-4">
-              <p className="text-sm text-muted-foreground">Números vendidos</p>
+              <p className="text-sm text-muted-foreground">{t("summary.sold")}</p>
               <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
                 {soldCount ?? 0}
               </p>
             </div>
             <div className="rounded-xl border bg-muted/40 p-4">
-              <p className="text-sm text-muted-foreground">Reservados</p>
+              <p className="text-sm text-muted-foreground">{t("summary.reserved")}</p>
               <p className="text-lg font-bold text-amber-800 dark:text-amber-300">
                 {reservedCount ?? 0}
               </p>
@@ -407,17 +401,20 @@ export default async function AdminRaffleDetailPage({
           </div>
 
           <div className="rounded-xl border bg-muted/40 p-4">
-            <p className="text-sm text-muted-foreground">Fecha del sorteo</p>
-            <p className="font-semibold">{formatDateTime(raffle.draw_date)}</p>
+            <p className="text-sm text-muted-foreground">{t("drawDate")}</p>
+            <p className="font-semibold">{formatDateTime(raffle.draw_date, locale)}</p>
           </div>
 
           {/* Ganador */}
           <div className="rounded-xl border bg-muted/40 p-4">
-            <p className="text-sm text-muted-foreground">Número ganador</p>
+            <p className="text-sm text-muted-foreground">{t("winner.title")}</p>
             {raffle.status === "drawn" && raffle.winner_number != null ? (
               <>
                 <p className="text-lg font-bold">
-                  🎉 {raffle.winner_name ?? "Anónimo"} — Nº {raffle.winner_number}
+                  {t("winner.line", {
+                    name: raffle.winner_name ?? tc("anonymous"),
+                    number: raffle.winner_number,
+                  })}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <NotifyWinnerButton raffleId={raffle.id} />
@@ -430,7 +427,7 @@ export default async function AdminRaffleDetailPage({
               </>
             ) : (
               <p className="text-muted-foreground">
-                Aún no se realizó el sorteo.
+                {t("winner.none")}
               </p>
             )}
           </div>
@@ -438,11 +435,10 @@ export default async function AdminRaffleDetailPage({
           {winnerContacts.length > 0 && (
             <div className="space-y-2 rounded-xl border border-emerald-600/30 bg-emerald-500/5 p-4">
               <p className="text-sm font-semibold">
-                Direcciones de entrega de los ganadores
+                {t("delivery.title")}
               </p>
               <p className="text-xs text-muted-foreground">
-                Privado: sólo lo ves vos como organizador de este sorteo. No se
-                muestra en la página pública.
+                {t("delivery.description")}
               </p>
               <div className="space-y-2">
                 {winnerContacts.map((winner) => (
@@ -451,21 +447,26 @@ export default async function AdminRaffleDetailPage({
                     className="rounded-lg border bg-background/70 p-3 text-sm"
                   >
                     <p className="font-medium">
-                      {winner.position === 1
-                        ? "1.er premio"
-                        : `${winner.position}º premio`}{" "}
-                      · Nº {winner.number} ·{" "}
-                      {winner.user_name ?? "Ganador anónimo"}
+                      {t("delivery.line", {
+                        position:
+                          winner.position === 1
+                            ? t("delivery.positionFirst")
+                            : t("delivery.positionOther", {
+                                position: winner.position,
+                              }),
+                        number: winner.number,
+                        name: winner.user_name ?? tc("anonymousWinner"),
+                      })}
                     </p>
                     {winner.address_line ? (
                       <p className="mt-1 text-muted-foreground">
                         {winner.address_line}, {winner.city},{" "}
-                        {winner.province}, CP {winner.postal_code},{" "}
-                        {winner.country}
+                        {winner.province}, {t("delivery.postalCode")}{" "}
+                        {winner.postal_code}, {winner.country}
                       </p>
                     ) : (
                       <p className="mt-1 text-muted-foreground">
-                        El ganador todavía no cargó una dirección de entrega.
+                        {t("delivery.noAddress")}
                       </p>
                     )}
                   </div>
@@ -477,22 +478,24 @@ export default async function AdminRaffleDetailPage({
           {raffle.status === "cancelled" && (
             <div className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
               <div>
-                <p className="font-semibold">Sorteo cancelado</p>
+                <p className="font-semibold">{t("cancelled.title")}</p>
                 <p className="text-xs text-muted-foreground">
                   {raffle.cancellation_reason ||
-                    "No se alcanzó el mínimo de venta o el organizador lo canceló."}
+                    t("cancelled.defaultReason")}
                 </p>
               </div>
 
               {refunds.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No hay compradores con números vendidos para devolver.
+                  {t("cancelled.noBuyers")}
                 </p>
               ) : (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">
-                    Devoluciones ({refunds.filter((r) => r.status === "paid").length}/
-                    {refunds.length} pagadas):
+                    {t("cancelled.refunds", {
+                      paid: refunds.filter((r) => r.status === "paid").length,
+                      total: refunds.length,
+                    })}
                   </p>
                   {refunds.map((refund) => (
                     <RefundRow
@@ -513,11 +516,9 @@ export default async function AdminRaffleDetailPage({
           {raffle.status !== "cancelled" && refunds.length > 0 && (
             <div className="space-y-3 rounded-xl border p-4">
               <div>
-                <p className="font-semibold">Devoluciones</p>
+                <p className="font-semibold">{t("refunds.title")}</p>
                 <p className="text-xs text-muted-foreground">
-                  Compartí el enlace con el comprador para que avise que la
-                  recibió, y marcala como pagada cuando le hayas devuelto el
-                  dinero.
+                  {t("refunds.description")}
                 </p>
               </div>
               <div className="space-y-2">
@@ -538,24 +539,22 @@ export default async function AdminRaffleDetailPage({
 
           {raffle.status === "paused" && (
             <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
-              <p className="font-semibold">Sorteo pausado por plan</p>
+              <p className="font-semibold">{t("paused.title")}</p>
               <p className="mt-1 text-[13px]">
-                Este sorteo está temporalmente pausado: actualizá tu plan para
-                reactivarlo. No se perdió ningún dato.
+                {t("paused.text")}
               </p>
             </div>
           )}
 
           {(sorteosOrigen ?? []).length > 0 && (
             <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
-              <p className="font-semibold">Este sorteo recibe premios de referidos</p>
+              <p className="font-semibold">{t("bonus.title")}</p>
               <p className="mt-1 text-[13px]">
-                Los números ganados por invitar se entregan acá, marcados como
-                🎁 premio (no son ventas). Sorteo(s) de origen:{" "}
-                {(sorteosOrigen ?? [])
-                  .map((s) => s.title as string)
-                  .join(", ")}
-                .
+                {t("bonus.text", {
+                  titles: (sorteosOrigen ?? [])
+                    .map((s) => s.title as string)
+                    .join(", "),
+                })}
               </p>
             </div>
           )}
@@ -563,18 +562,19 @@ export default async function AdminRaffleDetailPage({
           {(soldSinPago ?? 0) > 0 && raffle.status !== "cancelled" && (
             <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
               <p className="font-semibold">
-                {soldSinPago} número(s) vendidos sin pago registrado
+                {t("soldNoPayment.title", { count: soldSinPago ?? 0 })}
               </p>
               <p className="mt-1 text-[13px]">
-                Si el sorteo se sortea así, ese comprador queda sin pago vinculado.
-                Registralo desde{" "}
-                <Link
-                  href={`/admin/sorteos/${raffle.id}/ventas`}
-                  className="underline underline-offset-2"
-                >
-                  Ventas
-                </Link>{" "}
-                antes de sortear.
+                {t.rich("soldNoPayment.text", {
+                  link: (chunks) => (
+                    <LocaleLink
+                      href={`/admin/sorteos/${raffle.id}/ventas`}
+                      className="underline underline-offset-2"
+                    >
+                      {chunks}
+                    </LocaleLink>
+                  ),
+                })}
               </p>
             </div>
           )}
@@ -588,20 +588,20 @@ export default async function AdminRaffleDetailPage({
               hasCommitment={Boolean(raffle.draw_commitment)}
               soldCount={soldCount ?? 0}
             />
-            <Link
+            <LocaleLink
               href={`/admin/sorteos/${raffle.id}/numeros`}
               className={buttonVariants({ variant: "outline" })}
             >
               <Grid3x3 className="mr-1.5 h-4 w-4" />
-              Gestionar números
-            </Link>
-            <Link
+              {t("actions.manageNumbers")}
+            </LocaleLink>
+            <LocaleLink
               href={`/admin/sorteos/${raffle.id}/ventas`}
               className={buttonVariants({ variant: "outline" })}
             >
               <Receipt className="mr-1.5 h-4 w-4" />
-              Ventas
-            </Link>
+              {t("actions.sales")}
+            </LocaleLink>
             {raffle.status === "drawn" && (
               <div className="w-full">
                 <InvitarResenas
@@ -611,49 +611,49 @@ export default async function AdminRaffleDetailPage({
                 />
               </div>
             )}
-            <Link
+            <LocaleLink
               href={`/admin/sorteos/${raffle.id}/premios`}
               className={buttonVariants({ variant: "outline" })}
             >
-              Gestionar premios
-            </Link>
-            <Link
+              {t("actions.prizes")}
+            </LocaleLink>
+            <LocaleLink
               href={`/admin/sorteos/${raffle.id}/preguntas`}
               className={buttonVariants({ variant: "outline" })}
             >
               <MessageCircle className="mr-1.5 h-4 w-4" />
-              Preguntas
-            </Link>
-            <Link
+              {t("actions.questions")}
+            </LocaleLink>
+            <LocaleLink
               href={`/admin/sorteos/${raffle.id}/landing`}
               className={buttonVariants({ variant: "outline" })}
             >
               <LayoutTemplate className="mr-1.5 h-4 w-4" />
-              Landing
-            </Link>
-            <Link
+              {t("actions.landing")}
+            </LocaleLink>
+            <LocaleLink
               href={`/admin/sorteos/${raffle.id}/analitica`}
               className={buttonVariants({ variant: "outline" })}
             >
               <BarChart3 className="mr-1.5 h-4 w-4" />
-              Ver analítica
-            </Link>
-            <Link
+              {t("actions.analytics")}
+            </LocaleLink>
+            <LocaleLink
               href={`/admin/sorteos/${raffle.id}/editar`}
               className={buttonVariants({ variant: "outline" })}
             >
               <Pencil className="mr-1.5 h-4 w-4" />
-              Editar sorteo
-            </Link>
+              {t("actions.edit")}
+            </LocaleLink>
             <RaffleCloneButton raffleId={raffle.id} />
             {canDeleteRaffle ? (
               <RaffleDeleteButton raffleId={raffle.id} />
             ) : (
               <span
                 className="self-center text-xs text-fg-subtle"
-                title="Tiene números movidos, pagos o compromiso publicado: se cancela en lugar de eliminarse."
+                title={t("actions.cannotDeleteTitle")}
               >
-                No se puede eliminar: tiene actividad
+                {t("actions.cannotDelete")}
               </span>
             )}
           </div>
@@ -672,34 +672,31 @@ export default async function AdminRaffleDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Landing pública</CardTitle>
+          <CardTitle>{t("landing.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p className="text-muted-foreground">
-            La página del sorteo se genera al crearlo y queda publicada en esta
-            dirección. Copiala para difundirla en el momento que quieras.
+            {t("landing.description")}
           </p>
           <CopyLandingLink raffleId={publicSlug} />
-          <Link
+          <LocaleLink
             href={`/admin/sorteos/${raffle.id}/landing`}
             className="inline-flex text-sm text-amber-700 underline-offset-4 hover:underline dark:text-amber-300"
           >
-            Editar contenido de la landing
-          </Link>
+            {t("landing.edit")}
+          </LocaleLink>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Tu enlace de referidos</CardTitle>
+          <CardTitle>{t("referral.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {raffle.referral_enabled ? (
             <>
               <p className="text-muted-foreground">
-                Compartí este enlace: cada amigo que se registre y compre suma un
-                número gratis para vos en este sorteo, según las reglas
-                configuradas.
+                {t("referral.enabledText")}
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 <code className="min-w-0 flex-1 truncate rounded-md bg-muted px-2 py-1.5 text-xs">
@@ -707,22 +704,23 @@ export default async function AdminRaffleDetailPage({
                 </code>
                 <CopyTextButton
                   texto={referralUrl || `/sorteos/${publicSlug}?ref=${actor.id}`}
-                  label="Copiar enlace"
+                  label={t("referral.copy")}
                 />
               </div>
             </>
           ) : (
             <>
               <p className="text-muted-foreground">
-                Este sorteo todavía no tiene <strong>Invitá y Ganá</strong>{" "}
-                activado.
+                {t.rich("referral.disabledText", {
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </p>
-              <Link
+              <LocaleLink
                 href={`/admin/sorteos/${raffle.id}/editar`}
                 className="inline-flex text-sm text-amber-700 underline-offset-4 hover:underline dark:text-amber-300"
               >
-                Activar Invitá y Ganá
-              </Link>
+                {t("referral.enable")}
+              </LocaleLink>
             </>
           )}
         </CardContent>
@@ -730,39 +728,36 @@ export default async function AdminRaffleDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Pasos para publicar y sortear</CardTitle>
+          <CardTitle>{t("steps.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           {!raffle.draw_commitment && (
             <div className="mb-2 animate-pulse rounded-xl border border-amber-500/50 bg-amber-500/15 p-3 text-amber-900 dark:text-amber-200">
               <p className="font-semibold">
-                ⚠️ Acción obligatoria: debés publicar el compromiso para que el
-                sorteo sea válido y verificable
+                {t("steps.warningTitle")}
               </p>
               <p className="mt-1 text-xs">
-                Sin el hash de la semilla no se puede sortear ni verificar el
-                resultado. Es el paso 3.
+                {t("steps.warningText")}
               </p>
             </div>
           )}
 
           {[
             {
-              label: "1. Datos del sorteo",
-              detail: "Título, precio, fecha y datos de pago.",
+              label: t("steps.step1Label"),
+              detail: t("steps.step1Detail"),
               done: true,
               action: null,
             },
             {
-              label: "2. Números y premios",
-              detail: "Generá los números y cargá los premios.",
+              label: t("steps.step2Label"),
+              detail: t("steps.step2Detail"),
               done: true,
               action: null,
             },
             {
-              label: "3. Compromiso publicado",
-              detail:
-                "Publicá el hash de la semilla antes de sortear: sin esto no se puede ejecutar el sorteo.",
+              label: t("steps.step3Label"),
+              detail: t("steps.step3Detail"),
               done: Boolean(raffle.draw_commitment),
               // El botón vive acá y no solo en la fila de acciones: el paso que
               // dice «Pendiente» tiene que traer la acción al lado.
@@ -773,11 +768,11 @@ export default async function AdminRaffleDetailPage({
               ),
             },
             {
-              label: "4. Sorteo",
+              label: t("steps.step4Label"),
               detail:
                 (soldCount ?? 0) > 0
-                  ? "Ya hay números vendidos: podés sortear."
-                  : "Necesitás al menos un número vendido para sortear.",
+                  ? t("steps.step4Ready")
+                  : t("steps.step4NoSales"),
               done: raffle.status === "drawn",
               action: null,
             },
@@ -792,37 +787,36 @@ export default async function AdminRaffleDetailPage({
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={step.done ? "success" : "warning"}>
-                  {step.done ? "Listo" : "Pendiente"}
+                  {step.done ? t("steps.statusReady") : t("steps.statusPending")}
                 </Badge>
                 {step.action}
               </div>
             </div>
           ))}
           <div className="flex flex-wrap gap-2 pt-2 text-xs">
-            <Link
+            <LocaleLink
               href={`/admin/sorteos/${raffle.id}/numeros`}
               className="text-amber-700 underline-offset-4 hover:underline dark:text-amber-400"
             >
-              Gestionar números
-            </Link>
-            <Link
+              {t("actions.manageNumbers")}
+            </LocaleLink>
+            <LocaleLink
               href={`/admin/sorteos/${raffle.id}/premios`}
               className="text-amber-700 underline-offset-4 hover:underline dark:text-amber-400"
             >
-              Gestionar premios
-            </Link>
+              {t("actions.prizes")}
+            </LocaleLink>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Reservas esperando pago</CardTitle>
+          <CardTitle>{t("reservations.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Prepago manual: el comprador reserva sus números, manda el
-            comprobante por WhatsApp y desde acá confirmás el pago.
+            {t("reservations.description")}
           </p>
           <ReservedNumbersPanel
             raffleId={raffle.id}

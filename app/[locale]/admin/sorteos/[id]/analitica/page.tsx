@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   ArrowLeft,
   BarChart3,
@@ -10,6 +10,7 @@ import {
   Users,
 } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { requireAdminSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,9 @@ export default async function RaffleAnalyticsPage({
 }: {
   params: { id: string };
 }) {
+  const t = await getTranslations("AdminSorteosAnalitica");
+  const tc = await getTranslations("Common");
+  const locale = await getLocale();
   const session = await requireAdminSession();
   if (!session) redirect("/login");
 
@@ -145,40 +149,43 @@ export default async function RaffleAnalyticsPage({
 
   return (
     <div className="space-y-6">
-      <Link
+      <LocaleLink
         href={`/admin/sorteos/${params.id}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver al sorteo
-      </Link>
+        {t("back")}
+      </LocaleLink>
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-            <BarChart3 className="h-4 w-4" /> Analítica del sorteo
+            <BarChart3 className="h-4 w-4" /> {t("eyebrow")}
           </p>
           <h1 className="text-2xl font-bold tracking-tight">{raffle.title}</h1>
           <p className="text-sm text-muted-foreground">
-            Desde el inicio del sorteo hasta hoy. Las visitas se cuentan por
-            pestaña de navegador.
+            {t("subtitle")}
           </p>
         </div>
         <Badge variant="secondary">
           {raffle.status === "active"
-            ? "Activo"
+            ? tc("status.active")
             : raffle.status === "closed"
-              ? "Cerrado"
-              : "Sorteado"}
+              ? tc("status.closed")
+              : tc("status.drawn")}
         </Badge>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { icon: Eye, label: "Visitas", value: String(visits) },
-          { icon: Ticket, label: "Números vendidos", value: String(sold) },
-          { icon: Coins, label: "Recaudación", value: formatPrice(revenue) },
-          { icon: Users, label: "Compradores", value: String(buyers) },
+          { icon: Eye, label: t("stats.visits"), value: String(visits) },
+          { icon: Ticket, label: t("stats.sold"), value: String(sold) },
+          {
+            icon: Coins,
+            label: t("stats.revenue"),
+            value: formatPrice(revenue, locale),
+          },
+          { icon: Users, label: t("stats.buyers"), value: String(buyers) },
         ].map((stat) => (
           <Card key={stat.label}>
             <CardContent className="flex items-center gap-3 p-4">
@@ -199,23 +206,23 @@ export default async function RaffleAnalyticsPage({
       <Card>
         <CardContent className="space-y-3 p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold">Embudo de conversión</p>
+            <p className="text-sm font-semibold">{t("funnel.title")}</p>
             <span className="text-xs text-muted-foreground">
               {visits > 0
-                ? "Visitas registradas desde que activamos el tracking"
-                : "Todavía no hay visitas registradas"}
+                ? t("funnel.tracked")
+                : t("funnel.none")}
             </span>
           </div>
 
           {[
-            { label: "Visitas", value: visits, width: 100 },
+            { label: t("funnel.visits"), value: visits, width: 100 },
             {
-              label: "Participaciones (reservas + ventas)",
+              label: t("funnel.participations"),
               value: participations,
               width: visits > 0 ? Math.min(100, (participations / visits) * 100) : 0,
             },
             {
-              label: "Ventas confirmadas",
+              label: t("funnel.sales"),
               value: sold,
               width: visits > 0 ? Math.min(100, (sold / visits) * 100) : 0,
             },
@@ -236,14 +243,14 @@ export default async function RaffleAnalyticsPage({
 
           <div className="grid gap-3 pt-1 sm:grid-cols-3">
             <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Visitas → venta</p>
+              <p className="text-xs text-muted-foreground">{t("rates.visitToSale")}</p>
               <p className="text-lg font-bold">
                 {visitToSale === null ? "—" : pct(visitToSale)}
               </p>
             </div>
             <div className="rounded-lg border p-3">
               <p className="text-xs text-muted-foreground">
-                Participaciones → venta
+                {t("rates.participationToSale")}
               </p>
               <p className="text-lg font-bold">
                 {participationToSale === null
@@ -252,8 +259,8 @@ export default async function RaffleAnalyticsPage({
               </p>
             </div>
             <div className="rounded-lg border p-3">
-              <p className="text-xs text-muted-foreground">Ticket promedio</p>
-              <p className="text-lg font-bold">{formatPrice(avgTicket)}</p>
+              <p className="text-xs text-muted-foreground">{t("rates.avgTicket")}</p>
+              <p className="text-lg font-bold">{formatPrice(avgTicket, locale)}</p>
             </div>
           </div>
         </CardContent>
@@ -262,9 +269,9 @@ export default async function RaffleAnalyticsPage({
       <Card>
         <CardContent className="space-y-3 p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold">Números vendidos por día</p>
+            <p className="text-sm font-semibold">{t("daily.title")}</p>
             <span className="text-xs text-muted-foreground">
-              Últimos {DAYS} días
+              {t("daily.last", { days: DAYS })}
             </span>
           </div>
 
@@ -273,7 +280,11 @@ export default async function RaffleAnalyticsPage({
               <div
                 key={day.key}
                 className="group relative flex flex-1 flex-col items-center justify-end"
-                title={`${shortDay(day.key)}: ${day.sold} vendido(s) · ${formatPrice(day.revenue)}`}
+                title={t("daily.tooltip", {
+                  day: shortDay(day.key),
+                  sold: day.sold,
+                  revenue: formatPrice(day.revenue, locale),
+                })}
               >
                 <div
                   className="w-full rounded-t bg-brand-500 transition-all hover:bg-brand-400"
@@ -293,10 +304,10 @@ export default async function RaffleAnalyticsPage({
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardContent className="space-y-3 p-5">
-            <p className="text-sm font-semibold">Ventas por bloque de números</p>
+            <p className="text-sm font-semibold">{t("blocks.title")}</p>
             {blockRows.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Todavía no hay ventas confirmadas.
+                {t("noSales")}
               </p>
             ) : (
               <div className="space-y-2">
@@ -325,10 +336,10 @@ export default async function RaffleAnalyticsPage({
 
         <Card>
           <CardContent className="space-y-3 p-5">
-            <p className="text-sm font-semibold">Últimas ventas confirmadas</p>
+            <p className="text-sm font-semibold">{t("recent.title")}</p>
             {soldRows.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Todavía no hay ventas confirmadas.
+                {t("noSales")}
               </p>
             ) : (
               <ul className="space-y-2 text-sm">
@@ -341,10 +352,12 @@ export default async function RaffleAnalyticsPage({
                       className="flex items-center justify-between gap-2 rounded-lg border p-2"
                     >
                       <span className="font-mono font-semibold">
-                        Nº {String(row.number).padStart(4, "0")}
+                        {t("recent.number", {
+                          number: String(row.number).padStart(4, "0"),
+                        })}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {row.sold_at ? formatDateTime(row.sold_at) : "—"}
+                        {row.sold_at ? formatDateTime(row.sold_at, locale) : "—"}
                       </span>
                     </li>
                   ))}
@@ -355,9 +368,7 @@ export default async function RaffleAnalyticsPage({
       </div>
 
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Percent className="h-3.5 w-3.5" /> Las visitas son por render/pestaña,
-        no personas únicas. El embudo sirve para comparar tendencia, no como
-        conteo exacto de audiencia.
+        <Percent className="h-3.5 w-3.5" /> {t("footnote")}
       </p>
     </div>
   );

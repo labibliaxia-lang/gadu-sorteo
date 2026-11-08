@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { Check, Clock, Loader2, MessageCircle, TimerReset, X } from "lucide-react";
+
+import { Link } from "@/src/i18n/navigation";
 
 import {
   approveReservation,

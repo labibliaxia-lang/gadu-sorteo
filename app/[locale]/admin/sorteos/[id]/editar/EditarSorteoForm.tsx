@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useRouter } from "@/src/i18n/navigation";
 import {
   Card,
   CardContent,
@@ -93,6 +94,8 @@ export function EditarSorteoForm({
   sorteosBonus?: { id: string; title: string }[];
   basesSugeridas?: string;
 }) {
+  const t = useTranslations("AdminSorteosForm");
+  const locale = useLocale();
   const router = useRouter();
 
   const [saving, setSaving] = useState(false);
@@ -141,7 +144,7 @@ export function EditarSorteoForm({
 
     if (!termsAccepted) {
       setError(
-        "Tenés que aceptar y publicar las bases legales del sorteo para guardar.",
+        t("errors.acceptTermsSave"),
       );
       setSaving(false);
       return;
@@ -156,7 +159,7 @@ export function EditarSorteoForm({
     });
 
     if (!res.ok) {
-      setError(res.error ?? "No se pudo guardar los cambios.");
+      setError(res.error ?? t("errors.saveFailed"));
       setSaving(false);
       return;
     }
@@ -169,20 +172,20 @@ export function EditarSorteoForm({
     <div className="mx-auto max-w-xl">
       <Card>
         <CardHeader>
-          <CardTitle>Editar sorteo</CardTitle>
+          <CardTitle>{t("editTitle")}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            La cantidad de números no se puede modificar una vez generados.
+            {t("editHint")}
           </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-2">
-              <Label>Imagen de portada</Label>
+              <Label>{t("cover.label")}</Label>
               <ImageUploader value={coverUrl} onChange={setCoverUrl} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="title">Título</Label>
+              <Label htmlFor="title">{t("fields.title")}</Label>
               <div className="relative">
                 <Type className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input id="title" className="pl-9" {...register("title")} />
@@ -195,7 +198,7 @@ export function EditarSorteoForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Descripción</Label>
+              <Label htmlFor="description">{t("fields.description")}</Label>
               <div className="relative">
                 <AlignLeft className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Textarea
@@ -209,7 +212,7 @@ export function EditarSorteoForm({
             <div className="grid gap-4 rounded-xl border bg-muted/20 p-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="min_tickets_required">
-                  Mínimo de números vendidos
+                  {t("fields.minTicketsRequired")}
                 </Label>
                 <Input
                   id="min_tickets_required"
@@ -225,7 +228,7 @@ export function EditarSorteoForm({
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="winners_count">Cantidad de premios</Label>
+                <Label htmlFor="winners_count">{t("fields.winnersCount")}</Label>
                 <Input
                   id="winners_count"
                   type="number"
@@ -240,28 +243,26 @@ export function EditarSorteoForm({
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="if_not_met">Si no se alcanza</Label>
+                <Label htmlFor="if_not_met">{t("fields.ifNotMet")}</Label>
                 <select
                   id="if_not_met"
                   className="h-10 w-full rounded-lg border border-border bg-card px-3 text-sm"
                   {...register("if_not_met")}
                 >
-                  <option value="extend_date">Reprogramar la fecha</option>
+                  <option value="extend_date">{t("fields.ifNotMetExtend")}</option>
                   <option value="cancel_and_refund">
-                    Cancelar y devolver el dinero
+                    {t("fields.ifNotMetCancel")}
                   </option>
                 </select>
               </div>
               <p className="text-xs text-muted-foreground sm:col-span-3">
-                El mínimo se controla al ejecutar el sorteo. La cantidad de
-                premios está limitada por tu plan (3 u 30) y el motor publica un
-                ganador por premio.
+                {t("fields.minRuleHint")}
               </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="price_per_number">Precio por número</Label>
+                <Label htmlFor="price_per_number">{t("fields.pricePerNumber")}</Label>
                 <div className="relative">
                   <Coins className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -281,18 +282,16 @@ export function EditarSorteoForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="draw_date">Fecha del sorteo</Label>
+                <Label htmlFor="draw_date">{t("fields.drawDate")}</Label>
                 {raffle.status === "active" ? (
                   <>
                     <div className="rounded-md border border-input bg-muted px-3 py-2 font-mono text-sm">
-                      {formatDateTime(raffle.draw_date)}
+                      {formatDateTime(raffle.draw_date, locale)}
                     </div>
                     {/* La fecha viaja igual: con el sorteo en venta no se toca. */}
                     <input type="hidden" {...register("draw_date")} />
                     <p className="text-xs text-muted-foreground">
-                      Con el sorteo en venta la fecha queda fija: la cuenta
-                      regresiva pública no se puede reiniciar. Para moverla,
-                      cerrá el sorteo y volvé a publicarlo.
+                      {t("fields.drawDateFixedHint")}
                     </p>
                   </>
                 ) : (
@@ -316,7 +315,7 @@ export function EditarSorteoForm({
 
             {/* Método de pago */}
             <div className="space-y-3">
-              <Label>Método de pago</Label>
+              <Label>{t("payment.title")}</Label>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <label
@@ -336,9 +335,9 @@ export function EditarSorteoForm({
                   <div className="flex items-start gap-3">
                     <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
                     <div className="space-y-0.5">
-                      <p className="font-semibold">Mercado Pago</p>
+                      <p className="font-semibold">{t("payment.mercadoPago")}</p>
                       <p className="text-xs text-muted-foreground">
-                        Automático / Modo Mock de Pruebas
+                        {t("payment.mercadoPagoSub")}
                       </p>
                     </div>
                   </div>
@@ -361,9 +360,9 @@ export function EditarSorteoForm({
                   <div className="flex items-start gap-3">
                     <Landmark className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700 dark:text-emerald-400" />
                     <div className="space-y-0.5">
-                      <p className="font-semibold">Transferencia Bancaria</p>
+                      <p className="font-semibold">{t("payment.transfer")}</p>
                       <p className="text-xs text-muted-foreground">
-                        Alias (Manual)
+                        {t("payment.transferSub")}
                       </p>
                     </div>
                   </div>
@@ -372,32 +371,30 @@ export function EditarSorteoForm({
 
               {paymentType === "mercadopago" ? (
                 <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
-                  Si no hay un token real de Mercado Pago configurado, la
-                  plataforma activará automáticamente el{" "}
-                  <strong className="text-foreground">
-                    Modo Simulación (Mock)
-                  </strong>{" "}
-                  para hacer pruebas locales sin costo.
+                  {t.rich("payment.mockInfo", {
+                    strong: (chunks) => (
+                      <strong className="text-foreground">{chunks}</strong>
+                    ),
+                  })}
                 </p>
               ) : (
                 <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
-                  Los compradores verán tus datos de transferencia y te enviarán
-                  el comprobante por WhatsApp.
+                  {t("payment.transferInfo")}
                 </p>
               )}
             </div>
 
             {paymentType === "transferencia" && (
               <div className="space-y-3 rounded-xl border p-4">
-                <p className="text-sm font-semibold">Datos de transferencia</p>
+                <p className="text-sm font-semibold">{t("transfer.title")}</p>
                 <div className="space-y-2">
-                  <Label htmlFor="transfer_alias">Alias</Label>
+                  <Label htmlFor="transfer_alias">{t("transfer.alias")}</Label>
                   <div className="relative">
                     <Wallet className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="transfer_alias"
                       className="pl-9"
-                      placeholder="Ej: mi.alias.mp"
+                      placeholder={t("transfer.aliasPlaceholder")}
                       {...register("transfer_alias")}
                     />
                   </div>
@@ -408,39 +405,39 @@ export function EditarSorteoForm({
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="transfer_cbu">CBU</Label>
+                  <Label htmlFor="transfer_cbu">{t("transfer.cbu")}</Label>
                   <div className="relative">
                     <Wallet className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="transfer_cbu"
                       className="pl-9"
-                      placeholder="22 dígitos"
+                      placeholder={t("transfer.cbuPlaceholder")}
                       {...register("transfer_cbu")}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="transfer_bank">Banco</Label>
+                  <Label htmlFor="transfer_bank">{t("transfer.bank")}</Label>
                   <div className="relative">
                     <Landmark className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="transfer_bank"
                       className="pl-9"
-                      placeholder="Ej: Mercado Pago / Banco Nación"
+                      placeholder={t("transfer.bankPlaceholder")}
                       {...register("transfer_bank")}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="whatsapp_contact">
-                    WhatsApp de contacto
+                    {t("transfer.whatsapp")}
                   </Label>
                   <div className="relative">
                     <MessageCircle className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="whatsapp_contact"
                       className="pl-9"
-                      placeholder="Ej: 5491123456789"
+                      placeholder={t("transfer.whatsappPlaceholder")}
                       {...register("whatsapp_contact")}
                     />
                   </div>
@@ -458,15 +455,14 @@ export function EditarSorteoForm({
             <div className="space-y-3 rounded-xl border p-4">
               <div>
                 <p className="text-sm font-semibold">
-                  Términos y Condiciones del sorteo
+                  {t("terms.title")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Bases legales que verá el jugador antes de reservar. Se
-                  generan con tus datos de KYC.
+                  {t("terms.descriptionEdit")}
                 </p>
               </div>
               <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap rounded-lg border bg-muted/30 p-3 text-[11px] leading-relaxed text-muted-foreground">
-{raffle.player_terms_text || basesSugeridas || "Sin bases legales cargadas."}
+{raffle.player_terms_text || basesSugeridas || t("terms.empty")}
               </pre>
               <label className="flex items-start gap-3 text-sm">
                 <input
@@ -476,8 +472,7 @@ export function EditarSorteoForm({
                   onChange={(e) => setTermsAccepted(e.target.checked)}
                 />
                 <span className="font-medium">
-                  Acepto publicar estos términos como bases legales de mi
-                  sorteo
+                  {t("terms.accept")}
                 </span>
               </label>
             </div>
@@ -492,12 +487,12 @@ export function EditarSorteoForm({
                 />
                 <span>
                   <span className="block text-sm font-semibold">
-                    Invitá y ganá en este sorteo
+                    {t("referral.enableEdit")}
                   </span>
                   <span className="block text-xs text-muted-foreground">
-                    Por cada invitado que compre, quien lo invitó recibe un
-                    número gratis <strong>de este sorteo</strong>. Ese número
-                    sale de tu recaudación: elegí el mínimo y el tope.
+                    {t.rich("referral.descriptionEdit", {
+                      strong: (chunks) => <strong>{chunks}</strong>,
+                    })}
                   </span>
                 </span>
               </label>
@@ -506,7 +501,7 @@ export function EditarSorteoForm({
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className="space-y-1">
                     <Label htmlFor="referral_min_numbers">
-                      Compra mínima del invitado
+                      {t("referral.minNumbers")}
                     </Label>
                     <Input
                       id="referral_min_numbers"
@@ -516,12 +511,12 @@ export function EditarSorteoForm({
                       {...register("referral_min_numbers")}
                     />
                     <p className="text-[11px] text-muted-foreground">
-                      Cuántos números debe comprar tu invitado en este sorteo.
+                      {t("referral.minNumbersHintEdit")}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="referral_require_buyer_min">
-                      Mínimo comprado por vos
+                      {t("referral.requireBuyerMin")}
                     </Label>
                     <Input
                       id="referral_require_buyer_min"
@@ -531,12 +526,12 @@ export function EditarSorteoForm({
                       {...register("referral_require_buyer_min")}
                     />
                     <p className="text-[11px] text-muted-foreground">
-                      0 = no hace falta que el que invita haya comprado.
+                      {t("referral.requireBuyerMinHint")}
                     </p>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="referral_max_per_user">
-                      Tope por persona
+                      {t("referral.maxPerUserEdit")}
                     </Label>
                     <Input
                       id="referral_max_per_user"
@@ -546,31 +541,28 @@ export function EditarSorteoForm({
                       {...register("referral_max_per_user")}
                     />
                     <p className="text-[11px] text-muted-foreground">
-                      0 = sin tope. Es la cantidad máxima de números gratis por
-                      referente en este sorteo.
+                      {t("referral.maxPerUserHintLong")}
                     </p>
                   </div>
 
                   <div className="space-y-1 sm:col-span-3">
                     <Label htmlFor="bonus_raffle_id">
-                      ¿Dónde se entregan los números gratis?
+                      {t("referral.bonusQuestion")}
                     </Label>
                     <select
                       id="bonus_raffle_id"
                       className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                       {...register("bonus_raffle_id")}
                     >
-                      <option value="">En este mismo sorteo</option>
+                      <option value="">{t("referral.bonusSame")}</option>
                       {sorteosBonus.map((sorteo) => (
                         <option key={sorteo.id} value={sorteo.id}>
-                          En un sorteo exclusivo: {sorteo.title}
+                          {t("referral.bonusExclusive", { title: sorteo.title })}
                         </option>
                       ))}
                     </select>
                     <p className="text-[11px] text-muted-foreground">
-                      Si elegís un sorteo exclusivo, el número se entrega ahí y
-                      queda marcado como 🎁 premio. Ese sorteo debe tener
-                      números disponibles.
+                      {t("referral.bonusEditHint")}
                     </p>
                   </div>
                 </div>
@@ -578,7 +570,7 @@ export function EditarSorteoForm({
             </div>
 
             <Button type="submit" className="w-full" disabled={saving}>
-              {saving ? "Guardando…" : "Guardar cambios"}
+              {saving ? t("buttons.saving") : t("buttons.save")}
             </Button>
           </form>
         </CardContent>

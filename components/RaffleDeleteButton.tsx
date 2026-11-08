@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+
+import { useRouter } from "@/src/i18n/navigation";
 
 import { Button } from "@/components/ui/button";
 import { deleteRaffle } from "@/app/[locale]/admin/sorteos/[id]/actions";

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ArrowLeft } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -24,6 +25,7 @@ import {
 import type { Prize } from "@/lib/types";
 
 export default function PremiosPage({ params }: { params: { id: string } }) {
+  const t = useTranslations("AdminSorteosPremios");
   const supabase = createClient();
 
   const [prizes, setPrizes] = useState<Prize[]>([]);
@@ -109,7 +111,7 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
       return;
     }
 
-    setSuccess(editingId ? "Premio actualizado." : "Premio agregado.");
+    setSuccess(editingId ? t("success.updated") : t("success.created"));
     resetForm();
     setSaving(false);
     load();
@@ -126,7 +128,7 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
       return;
     }
 
-    setSuccess("Premio eliminado.");
+    setSuccess(t("success.deleted"));
     if (editingId === id) resetForm();
     load();
   }
@@ -137,29 +139,30 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-xl font-semibold">Premios del sorteo</h2>
+          <h2 className="text-xl font-semibold">{t("title")}</h2>
           <p className="text-sm text-muted-foreground">
-            Los premios que se sortean, en orden.
+            {t("subtitle")}
           </p>
         </div>
-        <Link
+        <LocaleLink
           href={`/admin/sorteos/${params.id}`}
           className={buttonVariants({ variant: "outline", size: "sm" })}
         >
           <ArrowLeft className="mr-1.5 h-4 w-4" />
-          Volver
-        </Link>
+          {t("back")}
+        </LocaleLink>
       </div>
       <div>
-        <h2 className="text-xl font-semibold">Premios ({prizes.length}/10)</h2>
+        <h2 className="text-xl font-semibold">
+          {t("listTitle", { count: prizes.length })}
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Cada premio ocupa una posición del 1 al 10. Crear y editar se valida
-          en el servidor.
+          {t("listHint")}
         </p>
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground">Cargando…</p>
+        <p className="text-muted-foreground">{t("loading")}</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {prizes.map((prize) => (
@@ -171,14 +174,14 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
                   size="sm"
                   onClick={() => startEdit(prize)}
                 >
-                  Editar
+                  {t("edit")}
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={() => removePrize(prize.id)}
                 >
-                  Eliminar
+                  {t("delete")}
                 </Button>
               </div>
             </div>
@@ -188,20 +191,20 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
 
       {!canAdd ? (
         <p className="text-sm text-muted-foreground">
-          Has alcanzado el límite de 10 premios para este sorteo.
+          {t("limitReached")}
         </p>
       ) : (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
-              {editingId ? "Editar premio" : "Agregar premio"}
+              {editingId ? t("editPrize") : t("addPrize")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={submitPrize} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="position">Posición (1-10)</Label>
+                  <Label htmlFor="position">{t("position")}</Label>
                   <Input
                     id="position"
                     type="number"
@@ -212,7 +215,7 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="tool_number">Nº de herramienta asociado</Label>
+                  <Label htmlFor="tool_number">{t("toolNumber")}</Label>
                   <Input
                     id="tool_number"
                     type="number"
@@ -223,7 +226,7 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="title">Título</Label>
+                <Label htmlFor="title">{t("titleLabel")}</Label>
                 <Input
                   id="title"
                   value={title}
@@ -233,7 +236,7 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Descripción</Label>
+                <Label htmlFor="description">{t("description")}</Label>
                 <Textarea
                   id="description"
                   value={description}
@@ -243,11 +246,11 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Foto 1 (principal)</Label>
+                  <Label>{t("photo1")}</Label>
                   <ImageUploader value={imageUrl} onChange={setImageUrl} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Foto 2 (opcional)</Label>
+                  <Label>{t("photo2")}</Label>
                   <ImageUploader value={imageUrl2} onChange={setImageUrl2} />
                 </div>
               </div>
@@ -258,14 +261,14 @@ export default function PremiosPage({ params }: { params: { id: string } }) {
               <div className="flex flex-wrap gap-2">
                 <Button type="submit" disabled={saving}>
                   {saving
-                    ? "Guardando…"
+                    ? t("saving")
                     : editingId
-                      ? "Guardar cambios"
-                      : "Agregar premio"}
+                      ? t("saveChanges")
+                      : t("addPrize")}
                 </Button>
                 {editingId && (
                   <Button type="button" variant="outline" onClick={resetForm}>
-                    Cancelar edición
+                    {t("cancelEdit")}
                   </Button>
                 )}
               </div>

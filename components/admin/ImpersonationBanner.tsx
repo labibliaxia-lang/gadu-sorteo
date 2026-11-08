@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Eye, Loader2, LogOut } from "lucide-react";
 
+import { Link, useRouter } from "@/src/i18n/navigation";
 import { stopImpersonation } from "@/app/[locale]/admin/super/actions";
 import { Button } from "@/components/ui/button";
 

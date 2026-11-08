@@ -1,0 +1,25 @@
+Admin parte 2 — smoke local (next start :3100, base de producción, sesión admin real)
+
+200 /en/admin/sorteos — Manage, Prizes, View public page; fechas en-US; links /en/...
+200 /en/admin/sorteos/nuevo — formulario en inglés, sin MISSING_MESSAGE
+200 /en/admin/sorteos/<id> — detalle en inglés
+200 /en/admin/sorteos/<id>/premios — “Raffle prizes”, “Add prize”
+200 /en/admin/sorteos/<id>/ventas — “Sales · ...”, “Download CSV”
+200 /en/admin/sorteos/<id>/analitica — “Raffle analytics”, “Visits”
+200 /en/admin/sorteos/<id>/editar — “Edit raffle”, “Cover image”
+200 /pt/admin/sorteos — portugués, links /pt/...
+
+Links:
+- /en/admin/sorteos: solo href="/en/admin..." y /en/sorteos...
+- /pt/admin/sorteos: solo href="/pt/admin..." y /pt/sorteos...
+- Sin href="/admin..." en las páginas verificadas.
+- 0 next/link en app/[locale]/admin/sorteos/** y app/[locale]/admin/super/**.
+
+Super:
+- /pt/admin/super sin sesión -> 307 /pt/login
+- /pt/admin/super con sesión admin sin MFA -> 307 /pt/admin/verify?next=...
+- No hay cuenta superadmin de prueba sin MFA; runtime de la consola no verificable
+  sin completar el segundo factor.
+
+Catálogos: 1400 claves, ICU válido, sync 0 diferencias.
+Checks: typecheck OK, lint OK, 336 tests OK, build OK.

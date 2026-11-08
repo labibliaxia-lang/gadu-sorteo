@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Copy } from "lucide-react";
+
+import { useRouter } from "@/src/i18n/navigation";
 
 import { Button } from "@/components/ui/button";
 import { cloneRaffle } from "@/app/[locale]/admin/sorteos/[id]/actions";

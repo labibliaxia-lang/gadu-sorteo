@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { LucideIcon } from "lucide-react";
 import {
   AlertTriangle,
@@ -49,9 +49,9 @@ import {
 } from "@/components/admin/MetricBarChart";
 import { ReportActions } from "@/components/admin/ReportActions";
 import { FeatureRaffleButton } from "@/components/admin/FeatureRaffleButton";
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 import { buildDailySeries, type TrafficPoint } from "@/lib/page-views";
-import { REPORT_REASON_LABELS, type ReportReason } from "@/lib/reports";
 import {
   normalizeParam,
   pickAllowed,
@@ -67,66 +67,66 @@ export const dynamic = "force-dynamic";
    ===================================================================== */
 
 const SECTIONS = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { key: "usuarios", label: "Usuarios", icon: Users },
-  { key: "sorteos", label: "Sorteos", icon: Ticket },
-  { key: "referidos", label: "Referidos", icon: Gift },
-  { key: "notificaciones", label: "Notificaciones", icon: Bell },
-  { key: "denuncias", label: "Denuncias", icon: Flag },
-  { key: "auditoria", label: "Auditoría", icon: ScrollText },
+  { key: "dashboard", icon: LayoutDashboard },
+  { key: "usuarios", icon: Users },
+  { key: "sorteos", icon: Ticket },
+  { key: "referidos", icon: Gift },
+  { key: "notificaciones", icon: Bell },
+  { key: "denuncias", icon: Flag },
+  { key: "auditoria", icon: ScrollText },
 ] as const;
 type SectionKey = (typeof SECTIONS)[number]["key"];
 const SECTION_KEYS = SECTIONS.map((s) => s.key) as SectionKey[];
 
 const TABS = [
-  { key: "pending", label: "Pendientes" },
-  { key: "approved", label: "Aprobadas" },
-  { key: "rejected", label: "Rechazadas" },
+  { key: "pending" },
+  { key: "approved" },
+  { key: "rejected" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 const TAB_KEYS = TABS.map((t) => t.key) as TabKey[];
 
-const RANGES = [
-  { key: "all", label: "Histórico" },
-  { key: "month", label: "Este mes" },
-  { key: "week", label: "Últimos 7 días" },
-] as const;
+const RANGES = [{ key: "all" }, { key: "month" }, { key: "week" }] as const;
 type RangeKey = (typeof RANGES)[number]["key"];
 const RANGE_KEYS = RANGES.map((r) => r.key) as RangeKey[];
 
 const ACTION_LABELS: Record<string, string> = {
-  APPROVE_ROLE: "Aprobó rol de organizador",
-  REJECT_ROLE: "Rechazó solicitud de rol",
-  CHANGE_ROLE: "Cambió rol manualmente",
-  CREATE_ORGANIZER: "Alta manual de organizador",
-  INVITE_ORGANIZER: "Invitó organizador por email",
-  SUSPEND_USER: "Suspendió organizador",
-  BLOCK_USER: "Bloqueó usuario",
-  DELETE_USER: "Eliminó usuario",
-  GENERATE_LICENSE: "Generó código de licencia",
-  REVOKE_LICENSE: "Anuló código de licencia",
-  REVOKE_LICENSE_BENEFIT: "Quitó el beneficio de una licencia",
-  UPDATE_PLAN_PRICE: "Actualizó precio de plan",
-  BAN_USER: "Suspendió una cuenta",
-  UNBAN_USER: "Levantó una suspensión",
-  SUPPORT_VIEW: "Abrió una vista de soporte",
-  PLAN_PAYMENT: "Registró un pago de plan",
-  MARK_PAID: "Marcó números como pagados",
-  UNDO_MARK_PAID: "Revirtió un pago marcado",
+  APPROVE_ROLE: "approveRole",
+  REJECT_ROLE: "rejectRole",
+  CHANGE_ROLE: "changeRole",
+  CREATE_ORGANIZER: "createOrganizer",
+  INVITE_ORGANIZER: "inviteOrganizer",
+  SUSPEND_USER: "suspendUser",
+  BLOCK_USER: "blockUser",
+  DELETE_USER: "deleteUser",
+  GENERATE_LICENSE: "generateLicense",
+  REVOKE_LICENSE: "revokeLicense",
+  REVOKE_LICENSE_BENEFIT: "revokeLicenseBenefit",
+  UPDATE_PLAN_PRICE: "updatePlanPrice",
+  BAN_USER: "banUser",
+  UNBAN_USER: "unbanUser",
+  SUPPORT_VIEW: "supportView",
+  PLAN_PAYMENT: "planPayment",
+  MARK_PAID: "markPaid",
+  UNDO_MARK_PAID: "undoMarkPaid",
   // Acciones del Modo Editor y de la edición manual de perfil.
-  IMPERSONATE_USER: "Entró como usuario (modo editor)",
-  IMPERSONATE_END: "Salió del modo editor",
-  EDIT_PROFILE: "Editó un perfil manualmente",
+  IMPERSONATE_USER: "impersonateUser",
+  IMPERSONATE_END: "impersonateEnd",
+  EDIT_PROFILE: "editProfile",
   // Acciones sobre denuncias de sorteos (migración 0064).
-  REPORT_RESOLVE: "Resolvió/descartó una denuncia",
-  REPORT_RAFFLE_PAUSE: "Pausó un sorteo denunciado",
-  REPORT_DELETE: "Eliminó una denuncia",
+  REPORT_RESOLVE: "reportResolve",
+  REPORT_RAFFLE_PAUSE: "reportRafflePause",
+  REPORT_DELETE: "reportDelete",
 };
 
-/** Motivo de denuncia con la etiqueta compartida de `lib/reports`. */
-function reportReasonLabel(reason: string): string {
-  return REPORT_REASON_LABELS[reason as ReportReason] ?? reason;
-}
+/** Clave de traducción de cada motivo de denuncia (`lib/reports`). */
+const REPORT_REASON_KEYS: Record<string, string> = {
+  fraude: "fraud",
+  premio_falso: "fakePrize",
+  contenido_inapropiado: "inappropriate",
+  spam: "spam",
+  otro: "other",
+};
 
 /** Acciones que se pueden elegir en el filtro de auditoría. */
 const AUDIT_ACTIONS = Object.keys(ACTION_LABELS);
@@ -134,23 +134,18 @@ const AUDIT_ACTIONS = Object.keys(ACTION_LABELS);
 const RAFFLE_STATUS: Record<
   string,
   {
-    label: string;
+    labelKey: string;
     variant: "success" | "secondary" | "info" | "destructive" | "warning";
   }
 > = {
-  active: { label: "Activo", variant: "success" },
-  closed: { label: "Cerrado", variant: "warning" },
-  drawn: { label: "Sorteado", variant: "info" },
-  cancelled: { label: "Cancelado", variant: "destructive" },
+  active: { labelKey: "active", variant: "success" },
+  closed: { labelKey: "closed", variant: "warning" },
+  drawn: { labelKey: "drawn", variant: "info" },
+  cancelled: { labelKey: "cancelled", variant: "destructive" },
 };
-
-const WA_MESSAGE =
-  "Hola! Recibí tu solicitud para ser organizador en Gadu Sorteos. Quería charlar comisiones y condiciones.";
 
 /** Ventana del gráfico de tráfico: la misma que acepta la RPC. */
 const TRAFFIC_DAYS = 30;
-
-const nfmt = new Intl.NumberFormat("es-AR");
 
 /** Filas por llamada al paginar en el fallback de métricas. */
 const PAGE = 1000;
@@ -698,21 +693,19 @@ function esErrorDeControl(error: unknown): boolean {
 }
 
 /** Fallback del panel cuando una consulta del servidor falla de forma inesperada. */
-function SuperAdminFallback() {
+async function SuperAdminFallback() {
+  const t = await getTranslations("AdminSuper");
   return (
     <div className="mx-auto max-w-xl py-16" role="alert">
       <Card>
         <CardHeader>
-          <CardTitle>No pudimos cargar el panel</CardTitle>
-          <CardDescription>
-            Falló una consulta al cargar esta sección. El resto de la app sigue
-            funcionando: volvé a intentar en unos segundos.
-          </CardDescription>
+          <CardTitle>{t("error.title")}</CardTitle>
+          <CardDescription>{t("error.description")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Link href="/admin/super" className={buttonVariants()}>
-            Reintentar
-          </Link>
+          <LocaleLink href="/admin/super" className={buttonVariants()}>
+            {t("error.retry")}
+          </LocaleLink>
         </CardContent>
       </Card>
     </div>
@@ -739,12 +732,31 @@ async function SuperAdminPanel({
 }: {
   searchParams: SuperAdminSearchParams;
 }) {
+  const t = await getTranslations("AdminSuper");
+  const locale = await getLocale();
+  const nfmt = new Intl.NumberFormat(locale === "es" ? "es-AR" : locale);
+  const inLocale = (path: string) =>
+    locale === "es" ? path : `/${locale}${path}`;
+  const actionLabel = (action: string) => {
+    const key = ACTION_LABELS[action];
+    return key ? t(`actions.${key}`) : action;
+  };
+  const reportReasonLabel = (reason: string) => {
+    const key = REPORT_REASON_KEYS[reason];
+    return key ? t(`reportReasons.${key}`) : reason;
+  };
+  const roleLabel = (role: string) =>
+    role === "superadmin"
+      ? t("roles.superadmin")
+      : role === "admin"
+        ? t("roles.admin")
+        : t("roles.user");
   const supabase = createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect(inLocale("/login"));
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -752,7 +764,7 @@ async function SuperAdminPanel({
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "superadmin") redirect("/");
+  if (profile?.role !== "superadmin") redirect(inLocale("/"));
 
   const section = pickAllowed<SectionKey>(
     normalizeParam(searchParams.tab),
@@ -790,8 +802,7 @@ async function SuperAdminPanel({
         ? monthStartIso()
         : null;
 
-  const rangeLabel =
-    RANGES.find((r) => r.key === range)?.label ?? "Histórico";
+  const rangeLabel = t(`ranges.${range}`);
 
   const admin = createAdminClient();
   const issues: string[] = [];
@@ -1087,7 +1098,7 @@ async function SuperAdminPanel({
 
     for (const fila of relaciones ?? []) {
       const id = fila.id as string;
-      const titulo = (fila.title as string) ?? "Sorteo";
+      const titulo = (fila.title as string) ?? t("raffles.genericTitle");
       tituloSorteo.set(id, titulo);
       const destino = fila.bonus_raffle_id as string | null;
       if (destino) {
@@ -1104,7 +1115,10 @@ async function SuperAdminPanel({
         .in("id", [...bonusDestino.keys()]);
 
       for (const fila of destinos ?? []) {
-        tituloSorteo.set(fila.id as string, (fila.title as string) ?? "Sorteo");
+        tituloSorteo.set(
+          fila.id as string,
+          (fila.title as string) ?? t("raffles.genericTitle"),
+        );
       }
 
       const { data: premios } = await admin
@@ -1258,7 +1272,7 @@ async function SuperAdminPanel({
         (rafflesRes.data ?? []).map(
           (row: { id: string; title: string | null; status: string }) => [
             row.id,
-            { title: row.title || "Sorteo sin título", status: row.status },
+            { title: row.title || t("raffles.noTitle"), status: row.status },
           ],
         ),
       );
@@ -1273,7 +1287,7 @@ async function SuperAdminPanel({
         return {
           id: report.id,
           raffleId: report.raffle_id,
-          raffleTitle: raffle ? raffle.title : "Sorteo eliminado",
+          raffleTitle: raffle ? raffle.title : t("reports.deletedRaffle"),
           raffleStatus: raffle?.status ?? "unknown",
           reporterEmail: report.reporter_id
             ? reporterById.get(report.reporter_id) ?? null
@@ -1346,96 +1360,105 @@ async function SuperAdminPanel({
   }[] = [
     {
       icon: TrendingUp,
-      label: "MRR estimado (ARS)",
-      value: mrr === null ? "—" : formatPrice(mrr),
+      label: t("dashboard.mrr"),
+      value: mrr === null ? "—" : formatPrice(mrr, locale),
       hint:
         mrr === null
-          ? "No se pudo calcular"
-          : `${mrrSubscriptions} suscripciones activas`,
+          ? t("dashboard.mrrNoCalc")
+          : t("dashboard.mrrSubscriptions", { count: mrrSubscriptions }),
     },
     {
       icon: Users,
-      label: "Usuarios totales",
+      label: t("dashboard.totalUsers"),
       value: nfmt.format(metrics.usersTotal),
-      hint: `${metrics.usersByRole.admin ?? 0} organizadores · ${
-        metrics.usersByRole.superadmin ?? 0
-      } superadmin`,
+      hint: t("dashboard.totalUsersHint", {
+        admins: metrics.usersByRole.admin ?? 0,
+        supers: metrics.usersByRole.superadmin ?? 0,
+      }),
     },
     {
       icon: Wrench,
-      label: "Sorteos activos",
+      label: t("dashboard.activeRaffles"),
       value: nfmt.format(metrics.rafflesActive),
-      hint: "En toda la plataforma",
+      hint: t("dashboard.activeRafflesHint"),
     },
     {
       icon: Eye,
-      label: "Visitas · 30 días",
+      label: t("dashboard.visits30"),
       value: nfmt.format(totalTrafficViews),
-      hint: `${nfmt.format(totalTrafficVisitors)} visitantes autenticados`,
+      hint: t("dashboard.visits30Hint", {
+        count: nfmt.format(totalTrafficVisitors),
+      }),
     },
     {
       icon: Coins,
-      label: "Ingresos estimados · 30 días",
-      value: formatPrice(totalRevenue30),
-      hint: "Por números vendidos",
+      label: t("dashboard.revenue30"),
+      value: formatPrice(totalRevenue30, locale),
+      hint: t("dashboard.revenue30Hint"),
     },
     {
       icon: Users,
-      label: "Usuarios nuevos · 30 días",
+      label: t("dashboard.newUsers30"),
       value: nfmt.format(totalNewUsers),
-      hint: "Altas de cuenta en el período",
+      hint: t("dashboard.newUsers30Hint"),
     },
   ];
 
   const periodStats = [
     {
       icon: Coins,
-      label: `Recaudación · ${rangeLabel}`,
-      value: formatPrice(metrics.revenueTotal),
-      hint: `${formatPrice(
-        metrics.paymentsRevenue,
-      )} por Mercado Pago · ${formatPrice(metrics.manualRevenue)} manual`,
+      label: t("dashboard.revenueRange", { range: rangeLabel }),
+      value: formatPrice(metrics.revenueTotal, locale),
+      hint: t("dashboard.revenueHint", {
+        mp: formatPrice(metrics.paymentsRevenue, locale),
+        manual: formatPrice(metrics.manualRevenue, locale),
+      }),
     },
     {
       icon: Ticket,
-      label: `Números vendidos · ${rangeLabel}`,
+      label: t("dashboard.soldRange", { range: rangeLabel }),
       value: nfmt.format(metrics.numbersSold),
-      hint: `${nfmt.format(metrics.manualCount)} por venta manual`,
+      hint: t("dashboard.soldHint", {
+        count: nfmt.format(metrics.manualCount),
+      }),
     },
   ];
 
   const secondary = [
     {
       icon: TrendingUp,
-      label: `Pagos aprobados · ${rangeLabel}`,
+      label: t("dashboard.approvedRange", { range: rangeLabel }),
       value: nfmt.format(metrics.paymentsCount),
     },
     {
       icon: Crown,
-      label: "Ticket promedio (MP)",
+      label: t("dashboard.avgTicket"),
       value:
         metrics.paymentsCount > 0
-          ? formatPrice(metrics.paymentsRevenue / metrics.paymentsCount)
+          ? formatPrice(
+              metrics.paymentsRevenue / metrics.paymentsCount,
+              locale,
+            )
           : "—",
     },
     {
       icon: MessageCircle,
-      label: "Solicitudes de rol pendientes",
+      label: t("dashboard.pendingRequests"),
       value: nfmt.format(pendingCount),
     },
     {
       icon: ShieldCheck,
-      label: "Verificaciones KYC pendientes",
+      label: t("dashboard.pendingKyc"),
       value: nfmt.format(kycPendingCount),
     },
     {
       icon: Coins,
-      label: "Ventas manuales (importe)",
-      value: formatPrice(metrics.manualRevenue),
+      label: t("dashboard.manualSales"),
+      value: formatPrice(metrics.manualRevenue, locale),
     },
     {
       icon: Gift,
-      label: "Referidos exitosos",
+      label: t("dashboard.successfulReferrals"),
       value: nfmt.format(referidosExitosos),
     },
   ];
@@ -1452,37 +1475,32 @@ async function SuperAdminPanel({
     <div className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="eyebrow">Consola</p>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Superadministrador
-          </h1>
-          <p className="text-sm text-fg-subtle">
-            Métricas de la plataforma, solicitudes, usuarios, sorteos,
-            denuncias y auditoría.
-          </p>
+          <p className="eyebrow">{t("eyebrow")}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="text-sm text-fg-subtle">{t("subtitle")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link
+          <LocaleLink
             href="/admin/super/planes"
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <Settings2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Configurar planes
-          </Link>
-          <Link
+            {t("configurePlans")}
+          </LocaleLink>
+          <LocaleLink
             href="/admin/super/bajas"
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <UserX className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Bajas de cuenta
-          </Link>
-          <Link
+            {t("accountDeletions")}
+          </LocaleLink>
+          <LocaleLink
             href="/admin/super/sandbox"
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <FlaskConical className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Simulador de sorteo
-          </Link>
+            {t("drawSimulator")}
+          </LocaleLink>
         </div>
       </header>
 
@@ -1497,7 +1515,7 @@ async function SuperAdminPanel({
             aria-hidden="true"
           />
           <div className="space-y-1">
-            <p className="font-medium">Hay datos que no se pudieron leer</p>
+            <p className="font-medium">{t("issuesTitle")}</p>
             <ul className="list-inside list-disc text-xs">
               {issues.map((issue, index) => (
                 <li key={`${index}-${issue}`}>{issue}</li>
@@ -1509,7 +1527,7 @@ async function SuperAdminPanel({
 
       {/* Pestañas principales */}
       <nav
-        aria-label="Secciones del panel"
+        aria-label={t("navAria")}
         className="border-b border-hairline"
       >
         <ul className="-mx-4 flex gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0">
@@ -1517,8 +1535,8 @@ async function SuperAdminPanel({
             const active = section === item.key;
             return (
               <li key={item.key} className="shrink-0">
-                <Link
-                  href={qs({ tab: item.key })}
+                <LocaleLink
+                  href={`/admin/super${qs({ tab: item.key })}`}
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
@@ -1532,7 +1550,7 @@ async function SuperAdminPanel({
                     aria-hidden="true"
                     strokeWidth={active ? 2.2 : 1.8}
                   />
-                  {item.label}
+                  {t(`sections.${item.key}`)}
                   {item.key === "usuarios" && pendingCount > 0 && (
                     <Badge variant="warning">{pendingCount}</Badge>
                   )}
@@ -1540,7 +1558,7 @@ async function SuperAdminPanel({
                     (reportsPendingCount ?? 0) > 0 && (
                       <Badge variant="warning">{reportsPendingCount}</Badge>
                     )}
-                </Link>
+                </LocaleLink>
               </li>
             );
           })}
@@ -1555,7 +1573,7 @@ async function SuperAdminPanel({
               id="pulso-title"
               className="font-display text-lg font-semibold"
             >
-              Pulso de la plataforma
+              {t("dashboard.pulseTitle")}
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {dashboardKpis.map((kpi) => (
@@ -1570,9 +1588,9 @@ async function SuperAdminPanel({
                 id="graficos-title"
                 className="font-display text-lg font-semibold"
               >
-                Actividad diaria · últimos 30 días
+                {t("dashboard.activityTitle")}
               </h2>
-              <Badge variant="secondary">30 días</Badge>
+              <Badge variant="secondary">{t("dashboard.last30")}</Badge>
             </div>
 
             {dailyNote && (
@@ -1584,10 +1602,9 @@ async function SuperAdminPanel({
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               <Card className="lg:col-span-2">
                 <CardHeader>
-                  <CardTitle>Visitas · últimos 30 días</CardTitle>
+                  <CardTitle>{t("dashboard.visitsTitle")}</CardTitle>
                   <CardDescription>
-                    Visitas a la home y a las páginas de sorteo, con los
-                    visitantes autenticados únicos de cada día.
+                    {t("dashboard.visitsDescription")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -1597,22 +1614,21 @@ async function SuperAdminPanel({
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Usuarios nuevos</CardTitle>
+                  <CardTitle>{t("dashboard.newUsersTitle")}</CardTitle>
                   <CardDescription>
-                    Altas de cuenta por día en los últimos 30 días.
+                    {t("dashboard.newUsersDescription")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <MetricBarChart
                     data={newUsersSeries}
-                    label="Usuarios nuevos"
+                    label={t("dashboard.newUsersLabel")}
                     tone="amber"
                     valueType="count"
                     empty={{
                       icon: "users",
-                      title: "Sin altas en el período",
-                      description:
-                        "Cuando se registren cuentas nuevas vas a ver la serie diaria acá.",
+                      title: t("dashboard.newUsersEmptyTitle"),
+                      description: t("dashboard.newUsersEmptyDescription"),
                     }}
                   />
                 </CardContent>
@@ -1620,23 +1636,21 @@ async function SuperAdminPanel({
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Ingresos estimados por números vendidos</CardTitle>
+                  <CardTitle>{t("dashboard.revenueChartTitle")}</CardTitle>
                   <CardDescription>
-                    Precio del número × cantidad vendida por día (últimos 30
-                    días, en pesos).
+                    {t("dashboard.revenueChartDescription")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <MetricBarChart
                     data={revenueSeries}
-                    label="Ingresos estimados"
+                    label={t("dashboard.revenueChartLabel")}
                     tone="gold"
                     valueType="ars"
                     empty={{
                       icon: "coins",
-                      title: "Sin ventas en el período",
-                      description:
-                        "No hay números vendidos en los últimos 30 días.",
+                      title: t("dashboard.revenueEmptyTitle"),
+                      description: t("dashboard.revenueEmptyDescription"),
                     }}
                   />
                 </CardContent>
@@ -1650,14 +1664,16 @@ async function SuperAdminPanel({
                 id="periodo-title"
                 className="font-display text-lg font-semibold"
               >
-                Métricas del período
+                {t("dashboard.periodTitle")}
               </h2>
               <div className="flex flex-wrap items-center gap-1">
-                <span className="mr-1 text-xs text-fg-subtle">Período:</span>
+                <span className="mr-1 text-xs text-fg-subtle">
+                  {t("dashboard.periodLabel")}
+                </span>
                 {RANGES.map((r) => (
-                  <Link
+                  <LocaleLink
                     key={r.key}
-                    href={qs({ range: r.key })}
+                    href={`/admin/super${qs({ range: r.key })}`}
                     aria-current={range === r.key ? "true" : undefined}
                     className={cn(
                       "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
@@ -1666,8 +1682,8 @@ async function SuperAdminPanel({
                         : "text-fg-subtle hover:bg-panel-2 hover:text-fg",
                     )}
                   >
-                    {r.label}
-                  </Link>
+                    {t(`ranges.${r.key}`)}
+                  </LocaleLink>
                 ))}
               </div>
             </div>
@@ -1707,9 +1723,11 @@ async function SuperAdminPanel({
                 id="precios-title"
                 className="font-display text-lg font-semibold"
               >
-                Precios de los planes
+                {t("dashboard.planPricesTitle")}
               </h2>
-              <span className="text-xs text-fg-subtle">/planes · mensual</span>
+              <span className="text-xs text-fg-subtle">
+                {t("dashboard.planPricesNote")}
+              </span>
             </div>
             <PlanPricesPanel prices={planPrices} />
           </section>
@@ -1720,10 +1738,10 @@ async function SuperAdminPanel({
                 id="licencias-title"
                 className="font-display text-lg font-semibold"
               >
-                Códigos de licencia
+                {t("dashboard.licensesTitle")}
               </h2>
               <span className="text-xs text-fg-subtle">
-                {licenseCodes.length} recientes
+                {t("dashboard.licensesRecent", { count: licenseCodes.length })}
               </span>
             </div>
             <LicenseCodesPanel codes={licenseCodes} />
@@ -1741,66 +1759,61 @@ async function SuperAdminPanel({
                 id="solicitudes-title"
                 className="font-display text-lg font-semibold"
               >
-                Solicitudes de rol
+                {t("users.requestsTitle")}
               </h2>
               <p className="text-sm text-fg-subtle">
-                Pedidos para ser organizador. Aprobar o rechazar queda
-                auditado.
+                {t("users.requestsDescription")}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-1 border-b border-hairline">
-              {TABS.map((t) => (
-                <Link
-                  key={t.key}
-                  href={qs({ rtab: t.key })}
-                  aria-current={requestTab === t.key ? "true" : undefined}
+              {TABS.map((tab) => (
+                <LocaleLink
+                  key={tab.key}
+                  href={`/admin/super${qs({ rtab: tab.key })}`}
+                  aria-current={requestTab === tab.key ? "true" : undefined}
                   className={cn(
                     "inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
-                    requestTab === t.key
+                    requestTab === tab.key
                       ? "border-brand-500 text-fg"
                       : "border-transparent text-fg-subtle hover:text-fg",
                   )}
                 >
-                  {t.label}
+                  {t(`tabs.${tab.key}`)}
                   <span
                     className={cn(
                       "rounded-full px-1.5 font-mono text-[11px] tabular-nums",
-                      requestTab === t.key
+                      requestTab === tab.key
                         ? "bg-brand-500 text-brand-foreground"
                         : "bg-panel-2 text-fg-subtle",
                     )}
                   >
-                    {tabCounts[t.key]}
+                    {tabCounts[tab.key]}
                   </span>
-                </Link>
+                </LocaleLink>
               ))}
             </div>
 
             {requests.length === 0 ? (
               <EmptyState
                 icon={MessageCircle}
-                title="No hay solicitudes en esta categoría"
-                description="Cuando alguien pida ser organizador, aparece acá con sus datos de contacto."
+                title={t("users.requestsEmptyTitle")}
+                description={t("users.requestsEmptyDescription")}
               />
             ) : (
               <div className="space-y-3">
                 {requests.map((request) => {
-                  const link = waLink(request.phone, WA_MESSAGE);
+                  const link = waLink(request.phone, t("whatsappMessage"));
                   return (
                     <Card key={request.id}>
                       <CardContent className="flex flex-wrap items-start justify-between gap-3 p-4">
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="font-semibold">
-                              {request.full_name || "Sin nombre"}
+                              {request.full_name || t("users.noName")}
                             </p>
                             <Badge variant="secondary">
-                              {request.role === "superadmin"
-                                ? "Superadmin"
-                                : request.role === "admin"
-                                  ? "Organizador"
-                                  : "Usuario"}
+                              {roleLabel(request.role)}
                             </Badge>
                           </div>
                           {request.email && (
@@ -1809,31 +1822,37 @@ async function SuperAdminPanel({
                             </p>
                           )}
                           <p className="text-xs text-fg-subtle">
-                            {request.phone || "Sin teléfono"}
+                            {request.phone || t("users.noPhone")}
                           </p>
                           {request.request_tools && (
                             <p className="rounded-md bg-panel-2 p-2 text-xs">
-                              🎁 Sortearía: {request.request_tools}
+                              {t("users.wouldRaffle", {
+                                value: request.request_tools,
+                              })}
                             </p>
                           )}
                           {request.request_social && (
                             <p className="break-words rounded-md bg-panel-2 p-2 text-xs">
-                              🔎 Redes: {request.request_social}
+                              {t("users.social", {
+                                value: request.request_social,
+                              })}
                             </p>
                           )}
                           {request.request_message ? (
                             <p className="mt-1 whitespace-pre-wrap break-words rounded-md bg-panel-2 p-2 text-xs">
-                              💬 {request.request_message}
+                              {t("users.message", {
+                                value: request.request_message,
+                              })}
                             </p>
                           ) : (
                             <p className="text-xs italic text-fg-subtle">
-                              Sin mensaje: no dejó propuesta ni contacto
-                              escrito.
+                              {t("users.noMessage")}
                             </p>
                           )}
                           <p className="text-[11px] text-fg-subtle">
-                            Alta del usuario:{" "}
-                            {formatDateTime(request.created_at)}
+                            {t("users.userSince", {
+                              date: formatDateTime(request.created_at, locale),
+                            })}
                           </p>
                         </div>
 
@@ -1866,8 +1885,8 @@ async function SuperAdminPanel({
                               }
                             >
                               {requestTab === "approved"
-                                ? "Aprobada"
-                                : "Rechazada"}
+                                ? t("users.approvedBadge")
+                                : t("users.rejectedBadge")}
                             </Badge>
                           )}
                         </div>
@@ -1887,49 +1906,45 @@ async function SuperAdminPanel({
                   id="kyc-title"
                   className="font-display text-lg font-semibold"
                 >
-                  Verificaciones de identidad
+                  {t("users.kycTitle")}
                 </h2>
                 <p className="text-sm text-fg-subtle">
-                  Solicitudes con al menos una imagen subida. El bucket es
-                  privado: cada imagen se muestra con una URL firmada que
-                  vence en 1 hora.
+                  {t("users.kycDescription")}
                 </p>
               </div>
               <Badge variant="secondary">
-                {kycPendingCount} pendiente{kycPendingCount === 1 ? "" : "s"}
+                {t("users.kycPending", { count: kycPendingCount })}
               </Badge>
             </div>
 
             {pendingVerifications.length === 0 ? (
               <EmptyState
                 icon={ShieldCheck}
-                title="No hay verificaciones pendientes"
-                description="Cuando un organizador suba su DNI o su selfie, aparece acá para aprobar o rechazar."
+                title={t("users.kycEmptyTitle")}
+                description={t("users.kycEmptyDescription")}
               />
             ) : (
               <div className="space-y-3">
                 {pendingVerifications.map((pending) => {
+                  const organizerName =
+                    pending.full_name || t("users.organizerFallback");
                   const documents = [
                     {
                       key: "front",
-                      label: "DNI · frente",
-                      alt: `Frente del DNI de ${
-                        pending.full_name || "el organizador"
-                      }`,
+                      label: t("users.docFront"),
+                      alt: t("users.docFrontAlt", { name: organizerName }),
                       url: pending.dniFrontUrl,
                     },
                     {
                       key: "back",
-                      label: "DNI · dorso",
-                      alt: `Dorso del DNI de ${
-                        pending.full_name || "el organizador"
-                      }`,
+                      label: t("users.docBack"),
+                      alt: t("users.docBackAlt", { name: organizerName }),
                       url: pending.dniBackUrl,
                     },
                     {
                       key: "face",
-                      label: "Selfie",
-                      alt: `Selfie de ${pending.full_name || "el organizador"}`,
+                      label: t("users.docSelfie"),
+                      alt: t("users.docSelfieAlt", { name: organizerName }),
                       url: pending.faceUrl,
                     },
                   ];
@@ -1948,31 +1963,36 @@ async function SuperAdminPanel({
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0 space-y-1">
                             <p className="font-semibold">
-                              {pending.full_name || "Sin nombre"}
+                              {pending.full_name || t("users.noName")}
                             </p>
                             <p className="truncate text-xs text-fg-subtle">
                               {pending.email || pending.id}
                             </p>
                             <p className="text-[11px] text-fg-subtle">
-                              Solicitud:{" "}
-                              {pending.created_at
-                                ? formatDateTime(pending.created_at)
-                                : "sin fecha"}{" "}
-                              · {loadedCount}/3 imágenes
+                              {t("users.requestMeta", {
+                                date: pending.created_at
+                                  ? formatDateTime(pending.created_at, locale)
+                                  : t("users.noDate"),
+                                count: loadedCount,
+                              })}
                             </p>
                             {/* Las dos direcciones juntas: la del DNI es un
                                 dato legal y la de entrega es logística. No
                                 tienen que coincidir; el revisor las compara. */}
                             <div className="space-y-0.5 text-[11px] text-fg-subtle">
                               <p>
-                                <span className="font-medium">DNI:</span>{" "}
+                                <span className="font-medium">
+                                  {t("users.dniLabel")}
+                                </span>{" "}
                                 {pending.dni_address ||
-                                  "sin dirección cargada"}
+                                  t("users.noDniAddress")}
                               </p>
                               <p>
-                                <span className="font-medium">Entrega:</span>{" "}
+                                <span className="font-medium">
+                                  {t("users.deliveryLabel")}
+                                </span>{" "}
                                 {composeDeliveryAddress(pending) ||
-                                  "sin dirección de entrega"}
+                                  t("users.noDeliveryAddress")}
                               </p>
                               {pending.dni_address &&
                                 !addressMatches(
@@ -1980,8 +2000,7 @@ async function SuperAdminPanel({
                                   pending.dni_address,
                                 ) && (
                                   <p className="text-amber-700 dark:text-amber-300">
-                                    No coinciden. Es normal: verificá que la
-                                    dirección del DNI se lea bien en la foto.
+                                    {t("users.addressMismatch")}
                                   </p>
                                 )}
                             </div>
@@ -2009,7 +2028,7 @@ async function SuperAdminPanel({
                                 <span className="font-medium">
                                   {doc.label}
                                 </span>
-                                <span>Sin imagen</span>
+                                <span>{t("users.noImage")}</span>
                               </div>
                             ),
                           )}
@@ -2030,15 +2049,14 @@ async function SuperAdminPanel({
                   id="usuarios-title"
                   className="font-display text-lg font-semibold"
                 >
-                  Usuarios
+                  {t("users.usersTitle")}
                 </h2>
                 <p className="text-sm text-fg-subtle">
-                  Buscá, cambiá roles o entrá como usuario. El botón «Entrar
-                  como usuario» abre el Modo Editor y queda auditado.
+                  {t("users.usersDescription")}
                 </p>
               </div>
               <span className="text-sm text-fg-subtle">
-                {nfmt.format(registeredUsers)} registrados
+                {t("users.registered", { count: registeredUsers })}
               </span>
             </div>
 
@@ -2054,8 +2072,8 @@ async function SuperAdminPanel({
               />
             ) : (
               <EmptyState
-                title="No se pudo cargar el listado"
-                description="Probá recargar la página."
+                title={t("users.loadErrorTitle")}
+                description={t("users.loadErrorDescription")}
               />
             )}
           </section>
@@ -2071,15 +2089,15 @@ async function SuperAdminPanel({
                 id="sorteos-title"
                 className="font-display text-lg font-semibold"
               >
-                Sorteos
+                {t("raffles.title")}
               </h2>
               <p className="text-sm text-fg-subtle">
-                Últimos 50, del más nuevo al más viejo.
+                {t("raffles.description")}
               </p>
             </div>
             {raffles.length > 0 && (
               <span className="text-sm text-fg-subtle">
-                {raffles.length} en pantalla
+                {t("raffles.onScreen", { count: raffles.length })}
               </span>
             )}
           </div>
@@ -2090,18 +2108,18 @@ async function SuperAdminPanel({
             empty={
               <EmptyState
                 icon={Ticket}
-                title="No hay sorteos todavía"
-                description="Cuando un organizador publique el primero, aparece acá con su estado y sus links."
+                title={t("raffles.emptyTitle")}
+                description={t("raffles.emptyDescription")}
               />
             }
             columns={[
               {
                 key: "title",
-                header: "Sorteo",
+                header: t("table.raffle"),
                 render: (raffle) => (
                   <div className="min-w-0">
                     <p className="font-medium">
-                      {raffle.title || "Sin título"}
+                      {raffle.title || t("raffles.noTitle")}
                     </p>
                     <p className="font-mono text-[11px] text-fg-subtle">
                       {raffle.id.slice(0, 8)}
@@ -2111,45 +2129,49 @@ async function SuperAdminPanel({
               },
               {
                 key: "status",
-                header: "Estado",
+                header: t("table.status"),
                 render: (raffle) => {
-                  const status = RAFFLE_STATUS[raffle.status] ?? {
-                    label: raffle.status,
-                    variant: "secondary" as const,
-                  };
+                  const status = RAFFLE_STATUS[raffle.status];
                   return (
-                    <Badge variant={status.variant}>{status.label}</Badge>
+                    <Badge variant={status?.variant ?? "secondary"}>
+                      {status
+                        ? t(`status.${status.labelKey}`)
+                        : raffle.status}
+                    </Badge>
                   );
                 },
               },
               {
                 key: "price",
-                header: "Precio",
+                header: t("raffles.price"),
                 render: (raffle) => (
                   <span className="font-mono tabular-nums">
-                    {formatPrice(Number(raffle.price_per_number) || 0)}
+                    {formatPrice(
+                      Number(raffle.price_per_number) || 0,
+                      locale,
+                    )}
                   </span>
                 ),
               },
               {
                 key: "draw",
-                header: "Fecha de sorteo",
+                header: t("raffles.drawDate"),
                 render: (raffle) => (
                   <span className="whitespace-nowrap text-fg-muted">
                     {raffle.draw_date
-                      ? formatDateTime(raffle.draw_date)
-                      : "Sin fecha"}
+                      ? formatDateTime(raffle.draw_date, locale)
+                      : t("raffles.noDate")}
                   </span>
                 ),
               },
               {
                 key: "bonus",
-                header: "Bonus por referidos",
+                header: t("raffles.bonus"),
                 render: (raffle) => {
                   const origenes = bonusDestino.get(raffle.id) ?? [];
                   const destinoTitulo = raffle.bonus_raffle_id
                     ? tituloSorteo.get(raffle.bonus_raffle_id) ??
-                      "sorteo exclusivo"
+                      t("raffles.exclusive")
                     : null;
                   const regalados = premiosDestino.get(raffle.id) ?? 0;
 
@@ -2160,21 +2182,29 @@ async function SuperAdminPanel({
                   return (
                     <div className="space-y-1 text-xs">
                       {destinoTitulo && (
-                        <Badge variant="info">Entrega en: {destinoTitulo}</Badge>
+                        <Badge variant="info">
+                          {t("raffles.deliveryIn", {
+                            title: destinoTitulo,
+                          })}
+                        </Badge>
                       )}
                       {origenes.length > 0 && (
                         <p className="text-fg-muted">
-                          Recibe de: {origenes.join(", ")}
+                          {t("raffles.receivesFrom", {
+                            list: origenes.join(", "),
+                          })}
                         </p>
                       )}
-                      <p className="text-fg-muted">🎁 {regalados} regalado(s)</p>
+                      <p className="text-fg-muted">
+                        {t("raffles.gifted", { count: regalados })}
+                      </p>
                     </div>
                   );
                 },
               },
               {
                 key: "organizer",
-                header: "Organizador",
+                header: t("raffles.organizer"),
                 render: (raffle) => (
                   <span className="break-all text-fg-muted">
                     {raffle.created_by
@@ -2185,7 +2215,7 @@ async function SuperAdminPanel({
               },
               {
                 key: "featured",
-                header: "Destacado",
+                header: t("raffles.featured"),
                 render: (raffle) => (
                   <FeatureRaffleButton
                     raffleId={raffle.id}
@@ -2196,26 +2226,26 @@ async function SuperAdminPanel({
               },
               {
                 key: "links",
-                header: "Links",
+                header: t("table.links"),
                 render: (raffle) => (
                   <div className="flex flex-wrap items-center gap-3">
-                    <Link
+                    <LocaleLink
                       href={`/sorteos/${raffle.id}`}
                       className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline dark:text-brand-300"
                     >
-                      Público
+                      {t("raffles.public")}
                       <ArrowUpRight
                         className="h-3.5 w-3.5"
                         aria-hidden="true"
                       />
-                    </Link>
-                    <Link
+                    </LocaleLink>
+                    <LocaleLink
                       href={`/admin/sorteos/${raffle.id}`}
                       className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline dark:text-brand-300"
                     >
-                      Panel
+                      {t("raffles.panel")}
                       <Settings2 className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Link>
+                    </LocaleLink>
                   </div>
                 ),
               },
@@ -2232,10 +2262,10 @@ async function SuperAdminPanel({
               id="referidos-title"
               className="font-display text-lg font-semibold"
             >
-              Referidos
+              {t("referrals.title")}
             </h2>
             <p className="text-sm text-fg-subtle">
-              Top 10 por invitados que efectivamente compraron. Solo lectura.
+              {t("referrals.description")}
             </p>
           </div>
 
@@ -2245,28 +2275,28 @@ async function SuperAdminPanel({
             empty={
               <EmptyState
                 icon={Gift}
-                title="Sin referidos todavía"
-                description="Cuando un usuario invite a otro, aparece acá con su resultado."
+                title={t("referrals.emptyTitle")}
+                description={t("referrals.emptyDescription")}
               />
             }
             columns={[
               {
                 key: "nombre",
-                header: "Referente",
+                header: t("referrals.referrer"),
                 render: (fila) => (
                   <span className="font-medium">{fila.nombre}</span>
                 ),
               },
               {
                 key: "invitados",
-                header: "Invitados",
+                header: t("referrals.invited"),
                 render: (fila) => (
                   <span className="tabular-nums">{fila.invitados}</span>
                 ),
               },
               {
                 key: "compraron",
-                header: "Compraron",
+                header: t("referrals.bought"),
                 render: (fila) => (
                   <Badge variant={fila.compraron > 0 ? "success" : "secondary"}>
                     {fila.compraron}
@@ -2275,14 +2305,14 @@ async function SuperAdminPanel({
               },
               {
                 key: "premios",
-                header: "Premios",
+                header: t("referrals.prizes"),
                 render: (fila) => (
                   <span className="tabular-nums">{fila.premios}</span>
                 ),
               },
               {
                 key: "id",
-                header: "ID",
+                header: t("referrals.id"),
                 render: (fila) => (
                   <span className="font-mono text-[11px] text-fg-subtle">
                     {fila.referrerId.slice(0, 8)}
@@ -2301,18 +2331,18 @@ async function SuperAdminPanel({
               id="notis-title"
               className="font-display text-lg font-semibold"
             >
-              Notificaciones críticas
+              {t("notifications.title")}
             </h2>
             <p className="text-sm text-fg-subtle">
-              Denuncias y pedidos de KYC dirigidos al superadmin (últimas 50).
+              {t("notifications.description")}
             </p>
           </div>
 
           {superNotifs.length === 0 ? (
             <EmptyState
               icon={Bell}
-              title="Sin avisos"
-              description="Cuando entre una denuncia o una solicitud de KYC, aparece acá."
+              title={t("notifications.emptyTitle")}
+              description={t("notifications.emptyDescription")}
             />
           ) : (
             <ul className="space-y-2">
@@ -2326,7 +2356,7 @@ async function SuperAdminPanel({
                       {noti.title ?? noti.type}
                     </p>
                     <span className="text-[11px] text-fg-subtle">
-                      {formatDateTime(noti.created_at)}
+                      {formatDateTime(noti.created_at, locale)}
                     </span>
                   </div>
                   {noti.message && (
@@ -2334,14 +2364,18 @@ async function SuperAdminPanel({
                   )}
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-fg-subtle">
                     <span className="font-mono">{noti.type}</span>
-                    {!noti.read_at && <Badge variant="warning">Sin leer</Badge>}
+                    {!noti.read_at && (
+                      <Badge variant="warning">
+                        {t("notifications.unread")}
+                      </Badge>
+                    )}
                     {noti.raffle_id && (
-                      <Link
+                      <LocaleLink
                         href={`/admin/sorteos/${noti.raffle_id}`}
                         className="font-medium text-brand-700 hover:underline dark:text-brand-300"
                       >
-                        Ver sorteo
-                      </Link>
+                        {t("notifications.viewRaffle")}
+                      </LocaleLink>
                     )}
                   </div>
                 </li>
@@ -2359,15 +2393,14 @@ async function SuperAdminPanel({
                 id="denuncias-title"
                 className="font-display text-lg font-semibold"
               >
-                Denuncias
+                {t("reports.title")}
               </h2>
               <p className="text-sm text-fg-subtle">
-                Sólo las pendientes de revisión. Resolver, pausar o eliminar
-                queda auditado.
+                {t("reports.description")}
               </p>
             </div>
             <span className="text-sm text-fg-subtle">
-              {reports.length} pendiente{reports.length === 1 ? "" : "s"}
+              {t("reports.pending", { count: reports.length })}
             </span>
           </div>
 
@@ -2382,22 +2415,19 @@ async function SuperAdminPanel({
               icon={Flag}
               title={
                 reportsNote
-                  ? "No se pudieron cargar las denuncias"
-                  : "No hay denuncias pendientes"
+                  ? t("reports.emptyErrorTitle")
+                  : t("reports.emptyTitle")
               }
               description={
                 reportsNote
-                  ? "Revisá el aviso de arriba: si falta la migración 0064, aplicála y recargá la página."
-                  : "Cuando alguien denuncie un sorteo, aparece acá para revisarlo."
+                  ? t("reports.emptyErrorDescription")
+                  : t("reports.emptyDescription")
               }
             />
           ) : (
             <div className="space-y-3">
               {reports.map((report) => {
-                const raffleStatus = RAFFLE_STATUS[report.raffleStatus] ?? {
-                  label: "—",
-                  variant: "secondary" as const,
-                };
+                const raffleStatus = RAFFLE_STATUS[report.raffleStatus];
                 return (
                   <Card key={report.id}>
                     <CardContent className="space-y-3 p-4">
@@ -2405,33 +2435,39 @@ async function SuperAdminPanel({
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="font-semibold">{report.raffleTitle}</p>
-                            <Badge variant={raffleStatus.variant}>
-                              {raffleStatus.label}
+                            <Badge variant={raffleStatus?.variant ?? "secondary"}>
+                              {raffleStatus
+                                ? t(`status.${raffleStatus.labelKey}`)
+                                : "—"}
                             </Badge>
                             <Badge variant="warning">
                               {reportReasonLabel(report.reason)}
                             </Badge>
                           </div>
                           <p className="break-all text-xs text-fg-subtle">
-                            Denunciante:{" "}
-                            {report.reporterEmail ||
-                              "cuenta eliminada o sin email"}
+                            {t("reports.reporter", {
+                              who:
+                                report.reporterEmail ||
+                                t("reports.deletedAccount"),
+                            })}
                           </p>
                           <p className="text-[11px] text-fg-subtle">
-                            Denuncia: {formatDateTime(report.createdAt)} · ID{" "}
-                            {report.id.slice(0, 8)}
+                            {t("reports.meta", {
+                              date: formatDateTime(report.createdAt, locale),
+                              id: report.id.slice(0, 8),
+                            })}
                           </p>
                           {report.raffleStatus !== "unknown" && (
-                            <Link
+                            <LocaleLink
                               href={`/sorteos/${report.raffleId}`}
                               className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline dark:text-brand-300"
                             >
-                              Ver sorteo público
+                              {t("reports.viewPublic")}
                               <ArrowUpRight
                                 className="h-3.5 w-3.5"
                                 aria-hidden="true"
                               />
-                            </Link>
+                            </LocaleLink>
                           )}
                         </div>
 
@@ -2456,7 +2492,7 @@ async function SuperAdminPanel({
                         </p>
                       ) : (
                         <p className="text-xs italic text-fg-subtle">
-                          Sin comentario del denunciante.
+                          {t("reports.noComment")}
                         </p>
                       )}
                     </CardContent>
@@ -2477,21 +2513,20 @@ async function SuperAdminPanel({
                 id="auditoria-title"
                 className="font-display text-lg font-semibold"
               >
-                Actividad / Auditoría
+                {t("audit.title")}
               </h2>
               <p className="text-sm text-fg-subtle">
-                Últimos 100 registros. Incluye el Modo Editor y la edición
-                manual de perfiles.
+                {t("audit.description")}
               </p>
             </div>
             <span className="text-sm text-fg-subtle">
-              {logs.length} registros
+              {t("audit.count", { count: logs.length })}
             </span>
           </div>
 
           <form
             method="get"
-            action="/admin/super"
+            action={inLocale("/admin/super")}
             className="flex flex-wrap items-end gap-2"
           >
             <input type="hidden" name="tab" value="auditoria" />
@@ -2500,7 +2535,7 @@ async function SuperAdminPanel({
                 htmlFor="audit-action"
                 className="block text-xs font-medium text-fg-subtle"
               >
-                Acción
+                {t("audit.actionLabel")}
               </label>
               <select
                 id="audit-action"
@@ -2508,24 +2543,24 @@ async function SuperAdminPanel({
                 defaultValue={auditFilter}
                 className="h-10 w-full max-w-full rounded-lg border border-hairline bg-panel-1 px-3 text-sm text-fg focus-visible:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 sm:w-auto"
               >
-                <option value="all">Todas las acciones</option>
+                <option value="all">{t("audit.allActions")}</option>
                 {AUDIT_ACTIONS.map((action) => (
                   <option key={action} value={action}>
-                    {ACTION_LABELS[action]}
+                    {actionLabel(action)}
                   </option>
                 ))}
               </select>
             </div>
             <Button type="submit" size="sm" variant="outline">
-              Filtrar
+              {t("audit.filter")}
             </Button>
             {auditFilter !== "all" && (
-              <Link
-                href={qs({ accion: "all" })}
+              <LocaleLink
+                href={`/admin/super${qs({ accion: "all" })}`}
                 className="text-xs font-medium text-brand-700 hover:underline dark:text-brand-300"
               >
-                Limpiar filtro
-              </Link>
+                {t("audit.clearFilter")}
+              </LocaleLink>
             )}
           </form>
 
@@ -2537,29 +2572,29 @@ async function SuperAdminPanel({
                 icon={ScrollText}
                 title={
                   auditFilter === "all"
-                    ? "Sin actividad registrada"
-                    : "Sin registros para esa acción"
+                    ? t("audit.emptyAllTitle")
+                    : t("audit.emptyFilteredTitle")
                 }
                 description={
                   auditFilter === "all"
-                    ? "Toda acción del panel queda registrada acá."
-                    : "Probá con otra acción o limpiá el filtro."
+                    ? t("audit.emptyAllDescription")
+                    : t("audit.emptyFilteredDescription")
                 }
               />
             }
             columns={[
               {
                 key: "date",
-                header: "Fecha",
+                header: t("audit.date"),
                 render: (log) => (
                   <span className="whitespace-nowrap text-fg-muted">
-                    {formatDateTime(log.created_at)}
+                    {formatDateTime(log.created_at, locale)}
                   </span>
                 ),
               },
               {
                 key: "admin",
-                header: "Superadmin",
+                header: t("audit.superadmin"),
                 render: (log) => (
                   <span className="break-all">
                     {log.admin_email || log.admin_id || "—"}
@@ -2568,7 +2603,7 @@ async function SuperAdminPanel({
               },
               {
                 key: "action",
-                header: "Acción",
+                header: t("audit.actionLabel"),
                 render: (log) => (
                   <Badge
                     variant={
@@ -2579,13 +2614,13 @@ async function SuperAdminPanel({
                         : "secondary"
                     }
                   >
-                    {ACTION_LABELS[log.action] ?? log.action}
+                    {actionLabel(log.action)}
                   </Badge>
                 ),
               },
               {
                 key: "target",
-                header: "Usuario afectado",
+                header: t("audit.target"),
                 render: (log) => (
                   <span className="break-all text-fg-muted">
                     {log.target_email || log.target_user_id || "—"}
