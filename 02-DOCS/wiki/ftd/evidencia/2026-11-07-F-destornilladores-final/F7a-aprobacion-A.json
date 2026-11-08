@@ -1,0 +1,52 @@
+{
+  "notiA": "bce799b1-24f2-45cc-a33c-b7dd441f8944",
+  "numeros": [
+    {
+      "number": 1,
+      "status": "sold",
+      "sold_to": "523d507e-429b-45f7-8155-cf48bb81ee33",
+      "origin": "venta"
+    },
+    {
+      "number": 2,
+      "status": "sold",
+      "sold_to": "523d507e-429b-45f7-8155-cf48bb81ee33",
+      "origin": "venta"
+    }
+  ],
+  "referral": {
+    "id": "1732a880-66e0-428a-83b9-e80b0baffd9e",
+    "referrer_id": "2aedaaf8-30ef-47a2-8767-0e8e9a4e6f1e",
+    "referred_id": "523d507e-429b-45f7-8155-cf48bb81ee33",
+    "rewarded": true,
+    "rewarded_raffle_id": "4a2a313b-e8c9-4269-bef3-c499b71fc506",
+    "rewarded_number": 27,
+    "created_at": "2026-11-07T23:57:51.009747+00:00",
+    "rewarded_via_raffle_id": "c5a74b9d-2271-48e8-818c-2ced799016b3"
+  },
+  "numeroPremio": {
+    "number": 27,
+    "status": "sold",
+    "sold_to": "2aedaaf8-30ef-47a2-8767-0e8e9a4e6f1e",
+    "origin": "premio"
+  },
+  "notificaciones": {
+    "aprobada": {
+      "id": "cbd13904-d860-4092-866d-111b0e55d8e9",
+      "user_id": "523d507e-429b-45f7-8155-cf48bb81ee33",
+      "type": "buyer_reservation_approved",
+      "title": "✅ Números aprobados",
+      "message": "Tus números están confirmados. ¡Ya estás participando!",
+      "created_at": "2026-11-07T23:58:28.853934+00:00"
+    },
+    "premio": {
+      "id": "f24138cf-de1e-4989-8339-880945e5105e",
+      "user_id": "2aedaaf8-30ef-47a2-8767-0e8e9a4e6f1e",
+      "type": "buyer_referral_reward",
+      "title": "🎁 Número gratis",
+      "message": "Tu invitado compró en destornilladores jacinto y ganaste el número 27 en destornilladores jacinto — bonus.",
+      "created_at": "2026-11-07T23:58:29.489407+00:00"
+    }
+  },
+  "aRecibioPremio": false
+}

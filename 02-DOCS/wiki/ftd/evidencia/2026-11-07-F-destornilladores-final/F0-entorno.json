@@ -1,0 +1,12 @@
+{
+  "base": "http://localhost:3001",
+  "status": 200,
+  "urlSupabase": "https://dolxvoxyespguvixhkku.supabase.co",
+  "usaStaging": true,
+  "usaProduccion": false,
+  "bundles": 17,
+  "bundlesPrueba": 2,
+  "bundlesProduccion": 0,
+  "migracion": "0120",
+  "errorMigracion": null
+}

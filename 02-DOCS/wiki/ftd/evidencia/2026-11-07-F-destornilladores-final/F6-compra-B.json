@@ -1,0 +1,28 @@
+{
+  "numeros": [
+    4,
+    5,
+    6
+  ],
+  "reserva": {
+    "texto": "Reserva confirmada\n\n3 números reservados en destornilladores jacinto.\n\n004\n005\n006\n\nTotal a pagar: $ 30\n\nEl contador de arriba es solo para elegir. La reserva queda guardada 48 h hasta que el organizador confirme el pago.\n\nDatos para transferir\n\nAlias\ne2e.full\nCopiar\nCBU\n0000003100010000000001\nCopiar\nBanco\nBanco de Prueba\nCopiar\n\nTransferí el total y después enviá el comprobante por WhatsApp.\n\nEnviar comprobante por WhatsApp\n\nGuardamos tus números 48 h. Cuando el organizador reciba el comprobante, los marca como pagados. Podés seguir tus números desde «Mis números».\n\nCerrar",
+    "whatsappHref": "https://wa.me/5491155550201?text=Hola!%20Quiero%20participar%20en%20%22destornilladores%20jacinto%22%20con%20los%20n%C3%BAmeros%3A%204%2C%205%2C%206.%20Total%3A%20%24%C2%A030"
+  },
+  "filas": [
+    {
+      "number": 4,
+      "status": "reserved",
+      "reserved_by": "f7621f36-d794-4750-a846-48360392dcbb"
+    },
+    {
+      "number": 5,
+      "status": "reserved",
+      "reserved_by": "f7621f36-d794-4750-a846-48360392dcbb"
+    },
+    {
+      "number": 6,
+      "status": "reserved",
+      "reserved_by": "f7621f36-d794-4750-a846-48360392dcbb"
+    }
+  ]
+}

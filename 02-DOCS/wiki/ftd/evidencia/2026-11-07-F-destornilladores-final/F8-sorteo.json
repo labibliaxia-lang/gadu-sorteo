@@ -1,0 +1,40 @@
+{
+  "sorteo": {
+    "id": "c5a74b9d-2271-48e8-818c-2ced799016b3",
+    "status": "drawn",
+    "winner_number": 2,
+    "winners_count": 3,
+    "draw_seed": "c48b527e73194159a5e2a55f1bdd2c9ec3fb6916f2634ed391b62a15bf57a16d",
+    "draw_commitment": "96ed135ee762e1c60eca4413e87f20803764632e01ab026c0008c1b0427efe98",
+    "numbers_hash": "0c52318a81ef0a08d39746ec6861cb3926d089c2b234323320a1b6bbcd483832",
+    "result_hash": "a13f1ccf5893f23cd398bd2ce6b83f0a4cc841ccee66b9ddb0b6dd311bf4db82",
+    "results_hash": "e5ec903ef7367873e09fe9bc4aa2308d0b0474765d9390ae406bae54577dde50",
+    "drawn_at": "2026-11-07T23:58:58.102012+00:00"
+  },
+  "winners": [
+    {
+      "position": 1,
+      "number": 2,
+      "user_id": "523d507e-429b-45f7-8155-cf48bb81ee33",
+      "user_name": "E2E Full Jugadora A",
+      "prize_title": "1º premio — Kit Gadu",
+      "winner_hash": "a13f1ccf5893f23cd398bd2ce6b83f0a4cc841ccee66b9ddb0b6dd311bf4db82"
+    },
+    {
+      "position": 2,
+      "number": 1,
+      "user_id": "523d507e-429b-45f7-8155-cf48bb81ee33",
+      "user_name": "E2E Full Jugadora A",
+      "prize_title": "2º premio — Auriculares",
+      "winner_hash": "6c1b09a1e5fb264e6265c14cbbc8ea4a1d198fc732767ae9b09a447f6678ec1b"
+    },
+    {
+      "position": 3,
+      "number": 6,
+      "user_id": "f7621f36-d794-4750-a846-48360392dcbb",
+      "user_name": "E2E Full Jugador B",
+      "prize_title": "3º premio — Voucher",
+      "winner_hash": "7e55cc69469a8345756643c9c17f8e954d5b53a39390d5d43f896e9c5c668ca0"
+    }
+  ]
+}

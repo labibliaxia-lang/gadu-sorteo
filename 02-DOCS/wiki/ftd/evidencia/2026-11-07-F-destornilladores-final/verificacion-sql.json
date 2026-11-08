@@ -1,0 +1,151 @@
+﻿{
+  "sorteos": [
+    {
+      "id": "b2e775bd-f262-45e5-8a66-14a09c4c7737",
+      "slug": "destornilladores-jacinto",
+      "title": "destornilladores jacinto",
+      "status": "drawn",
+      "winners_count": 3,
+      "is_listed": false,
+      "referral_enabled": true,
+      "referral_min_numbers": 2,
+      "referral_max_per_user": 1,
+      "bonus_raffle_id": "64f660c8-34ce-4b33-b3f3-338d13e2ef6e",
+      "created_at": "2026-11-07T23:41:34.971Z",
+      "numerosTotales": 100,
+      "vendidos": [
+        {
+          "number": 1,
+          "status": "sold",
+          "origin": "venta",
+          "sold_to": "36b42d52-51ee-46c3-96b2-dac1b160368b"
+        },
+        {
+          "number": 2,
+          "status": "sold",
+          "origin": "venta",
+          "sold_to": "36b42d52-51ee-46c3-96b2-dac1b160368b"
+        },
+        {
+          "number": 4,
+          "status": "sold",
+          "origin": "venta",
+          "sold_to": "31f02846-1258-42ef-ba85-6c990edb910c"
+        },
+        {
+          "number": 5,
+          "status": "sold",
+          "origin": "venta",
+          "sold_to": "31f02846-1258-42ef-ba85-6c990edb910c"
+        },
+        {
+          "number": 6,
+          "status": "sold",
+          "origin": "venta",
+          "sold_to": "31f02846-1258-42ef-ba85-6c990edb910c"
+        }
+      ],
+      "premios": []
+    },
+    {
+      "id": "acbaee2b-7795-47de-bf96-6ac9881a2945",
+      "slug": "destornilladores-jacinto-f8c0",
+      "title": "destornilladores jacinto",
+      "status": "active",
+      "winners_count": 3,
+      "is_listed": false,
+      "referral_enabled": true,
+      "referral_min_numbers": 2,
+      "referral_max_per_user": 1,
+      "bonus_raffle_id": "6321da2f-e736-4d3c-810b-f7f93c65ec47",
+      "created_at": "2026-11-07T23:50:01.269Z",
+      "numerosTotales": 100,
+      "vendidos": [],
+      "premios": []
+    },
+    {
+      "id": "c5a74b9d-2271-48e8-818c-2ced799016b3",
+      "slug": "destornilladores-jacinto-22eb",
+      "title": "destornilladores jacinto",
+      "status": "drawn",
+      "winners_count": 3,
+      "is_listed": false,
+      "referral_enabled": true,
+      "referral_min_numbers": 2,
+      "referral_max_per_user": 1,
+      "bonus_raffle_id": "4a2a313b-e8c9-4269-bef3-c499b71fc506",
+      "created_at": "2026-11-07T23:56:15.802Z",
+      "numerosTotales": 100,
+      "vendidos": [
+        {
+          "number": 1,
+          "status": "sold",
+          "origin": "venta",
+          "sold_to": "523d507e-429b-45f7-8155-cf48bb81ee33"
+        },
+        {
+          "number": 2,
+          "status": "sold",
+          "origin": "venta",
+          "sold_to": "523d507e-429b-45f7-8155-cf48bb81ee33"
+        },
+        {
+          "number": 4,
+          "status": "sold",
+          "origin": "venta",
+          "sold_to": "f7621f36-d794-4750-a846-48360392dcbb"
+        },
+        {
+          "number": 5,
+          "status": "sold",
+          "origin": "venta",
+          "sold_to": "f7621f36-d794-4750-a846-48360392dcbb"
+        },
+        {
+          "number": 6,
+          "status": "sold",
+          "origin": "venta",
+          "sold_to": "f7621f36-d794-4750-a846-48360392dcbb"
+        }
+      ],
+      "premios": []
+    }
+  ],
+  "referidos": [
+    {
+      "id": "3a9e3d2e-ea07-4852-96f8-a7d789a252ba",
+      "referrer_id": "6e354c27-f8f5-494c-849a-024fa7f4d769",
+      "referred_id": "36b42d52-51ee-46c3-96b2-dac1b160368b",
+      "rewarded": true,
+      "rewarded_number": 34,
+      "rewarded_raffle_id": "64f660c8-34ce-4b33-b3f3-338d13e2ef6e",
+      "created_at": "2026-11-07T23:43:22.501Z"
+    },
+    {
+      "id": "1732a880-66e0-428a-83b9-e80b0baffd9e",
+      "referrer_id": "2aedaaf8-30ef-47a2-8767-0e8e9a4e6f1e",
+      "referred_id": "523d507e-429b-45f7-8155-cf48bb81ee33",
+      "rewarded": true,
+      "rewarded_number": 27,
+      "rewarded_raffle_id": "4a2a313b-e8c9-4269-bef3-c499b71fc506",
+      "created_at": "2026-11-07T23:57:51.009Z"
+    }
+  ],
+  "codigos": [
+    {
+      "id": "6e354c27-f8f5-494c-849a-024fa7f4d769",
+      "referral_code": "6W2VHG",
+      "full_name": "E2E Full Organizador"
+    },
+    {
+      "id": "2aedaaf8-30ef-47a2-8767-0e8e9a4e6f1e",
+      "referral_code": "F6D5W4",
+      "full_name": "E2E Full Organizador"
+    },
+    {
+      "id": "e03e8940-70ff-441d-af76-9dcfd2b06c7f",
+      "referral_code": "X564AW",
+      "full_name": "E2E Full Organizador"
+    }
+  ]
+}

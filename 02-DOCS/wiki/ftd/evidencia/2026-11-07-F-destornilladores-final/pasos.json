@@ -1,0 +1,299 @@
+[
+  {
+    "paso": "F0-entorno-staging",
+    "rol": "sistema",
+    "inicio": "2026-11-07T23:55:47.403Z",
+    "fin": "2026-11-07T23:55:48.849Z",
+    "duracionMs": 1446,
+    "esperado": "la app y los bundles del navegador hablan con dolxvoxyespguvixhkku y nunca con producción",
+    "observado": "HTTP 200; Supabase staging; chunks=17 (staging=2, producción=0); migración 0120",
+    "resultado": "ok",
+    "evidencia": [
+      "F0-entorno.json"
+    ],
+    "nota": "el HTML SSR no imprime la ref de Supabase; se comprobó en los chunks del cliente"
+  },
+  {
+    "paso": "F1-preparacion-cuentas",
+    "rol": "organizador+jA+jB",
+    "inicio": "2026-11-07T23:55:48.850Z",
+    "fin": "2026-11-07T23:55:51.842Z",
+    "duracionMs": 2992,
+    "esperado": "tres cuentas sintéticas listas: organizador admin/premium con KYC aprobado y dos jugadores con dirección completa",
+    "observado": "organizador 2aedaaf8 (creado=true), A 523d507e, B f7621f36",
+    "resultado": "ok",
+    "evidencia": [
+      "F1-cuentas.json"
+    ],
+    "nota": "laboratorio: cuentas por Admin API y profiles por service_role; no existe alta por UI"
+  },
+  {
+    "paso": "F2-sorteo-bonus",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:55:51.844Z",
+    "fin": "2026-11-07T23:56:07.610Z",
+    "duracionMs": 15766,
+    "esperado": "sorteo bonus activo, no listado, listo para recibir el número 🎁",
+    "observado": "destornilladores jacinto — bonus (destornilladores-jacinto-bonus-781d) estado=active listado=false premios=1",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F02-bonus-creado.png",
+      "F2-bonus.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F3-sorteo-principal-3-premios",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:56:07.611Z",
+    "fin": "2026-11-07T23:57:14.267Z",
+    "duracionMs": 66656,
+    "esperado": "sorteo principal activo con 3 premios, «Invitá y Ganá» mínimo 2 / tope 1 y bonus asignado",
+    "observado": "destornilladores jacinto (destornilladores-jacinto-22eb); premios=1º premio — Kit Gadu | 2º premio — Auriculares | 3º premio — Voucher; referidos=true/2/1; bonus=4a2a313b",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F03-premios.png",
+      "F3-principal.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F3b-referidos-por-edicion",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:57:14.269Z",
+    "fin": "2026-11-07T23:57:20.766Z",
+    "duracionMs": 6497,
+    "esperado": "la edición mantiene la configuración de referidos que el alta ya persistió",
+    "observado": "referidos=true/2/1; bonus=4a2a313b",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F03b-referidos-editados.png",
+      "F3b-referidos.json"
+    ],
+    "nota": "idempotente: el alta ya la había guardado"
+  },
+  {
+    "paso": "F4-compromiso-publicado",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:57:20.768Z",
+    "fin": "2026-11-07T23:57:30.244Z",
+    "duracionMs": 9476,
+    "esperado": "el compromiso de la semilla queda publicado antes de vender",
+    "observado": "compromiso 96ed135ee762e1c6… (2026-11-07T23:57:28.977219+00:00)",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F04-compromiso.png",
+      "F4-compromiso.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F4b-enlace-corto-mis-numeros",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:57:30.245Z",
+    "fin": "2026-11-07T23:57:36.254Z",
+    "duracionMs": 6009,
+    "esperado": "«Mis Números» muestra el enlace de referido corto /r/CODIGO, no el formato largo /sorteos/[slug]?ref=UUID",
+    "observado": "enlace visible: http://localhost:3001/r/F6D5W4; profiles.referral_code=F6D5W4",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F04b-mis-numeros-enlace.png",
+      "F4b-enlace.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F5a-enlace-corto-incognito",
+    "rol": "incognito→jugadorA",
+    "inicio": "2026-11-07T23:57:36.256Z",
+    "fin": "2026-11-07T23:57:54.677Z",
+    "duracionMs": 18421,
+    "esperado": "un navegador nuevo abre /r/CODIGO, redirige a /sorteos/<slug>?ref=CODIGO y, al iniciar sesión, ReferralCapture crea el vínculo",
+    "observado": "abrí http://localhost:3001/r/F6D5W4 (HTTP 200) → http://localhost:3001/sorteos/destornilladores-jacinto-22eb?ref=F6D5W4; redirect correcto=true; vínculo creado por UI=true; errores de consola=0",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F05a-enlace-corto-incognito.png",
+      "capturas/F05a-tras-login.png",
+      "F5a-referido.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F5b-compra-jugadorA",
+    "rol": "jugadorA",
+    "inicio": "2026-11-07T23:57:54.678Z",
+    "fin": "2026-11-07T23:58:08.297Z",
+    "duracionMs": 13619,
+    "esperado": "2 números reservados con prepago (hold 48 h) y modal de comprobante",
+    "observado": "2/2 con status reserved; WhatsApp=sí; modal: Reserva confirmada 2 números reservados en destornilladores jacinto. 001 002 Total a pagar: $ 20 El contador de arriba e",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F05-compra-A.png",
+      "F5b-compra-A.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F6-compra-jugadorB",
+    "rol": "jugadorB",
+    "inicio": "2026-11-07T23:58:08.299Z",
+    "fin": "2026-11-07T23:58:19.864Z",
+    "duracionMs": 11565,
+    "esperado": "3 números reservados con prepago, sin usar enlace de referido",
+    "observado": "3/3 con status reserved; WhatsApp=sí",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F06-compra-B.png",
+      "F6-compra-B.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F7a-aprobacion-jugadorA",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:58:19.912Z",
+    "fin": "2026-11-07T23:58:30.737Z",
+    "duracionMs": 10825,
+    "esperado": "la reserva de A pasa a sold y se dispara reward_referral con el número 🎁 del sorteo bonus",
+    "observado": "A vendida=1:sold,2:sold; referral rewarded=true en bonus 4a2a313b; número 🎁=27 (sold_to 2aedaaf8); notis A=true / org=true",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F07-tras-aprobar-A.png",
+      "F7a-aprobacion-A.json"
+    ],
+    "nota": "regla 0102/0105: el número 🎁 se acredita al referente (organizador); el invitado no lo recibe"
+  },
+  {
+    "paso": "F7b-premio-al-referente",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:58:30.739Z",
+    "fin": "2026-11-07T23:58:30.740Z",
+    "duracionMs": 1,
+    "esperado": "el número 🎁 queda en el sorteo bonus a nombre del organizador (referente)",
+    "observado": "el número 27 quedó para el organizador 2aedaaf8; A no lo recibió (correcto)",
+    "resultado": "ok",
+    "evidencia": [
+      "F7b-receptor.json"
+    ],
+    "nota": "regla 0102/0105: premia al referente, no al invitado"
+  },
+  {
+    "paso": "F7c-premio-en-pantalla",
+    "rol": "jugadorA+organizador",
+    "inicio": "2026-11-07T23:58:30.743Z",
+    "fin": "2026-11-07T23:58:43.797Z",
+    "duracionMs": 13054,
+    "esperado": "ver en «Mis números» que el organizador (referente) tiene el bono y A no",
+    "observado": "A: captura tomada; organizador muestra bono=true; número=27",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F07-mis-numeros-A.png",
+      "capturas/F07-mis-numeros-organizador.png"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F7d-aprobacion-jugadorB",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:58:43.819Z",
+    "fin": "2026-11-07T23:58:50.811Z",
+    "duracionMs": 6992,
+    "esperado": "la reserva de B pasa a sold y el total vendido queda en 5",
+    "observado": "5 vendidos: 4,5,1,2,6",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F07-tras-aprobar-B.png",
+      "F7d-aprobacion-B.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F8a-sorteo-en-vivo",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:58:50.812Z",
+    "fin": "2026-11-07T23:59:03.602Z",
+    "duracionMs": 12790,
+    "esperado": "el botón «Iniciar sorteo» ejecuta el sorteo y la animación lo revela",
+    "observado": "status=drawn; winner_number=2; raffle_winners=3; semilla revelada=true",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F08-live-antes.png",
+      "capturas/F08-live-girando.png",
+      "capturas/F08-live-final.png",
+      "F8-sorteo.json"
+    ],
+    "nota": "laboratorio: draw_date se movió al pasado después del compromiso (auto_draw=false)"
+  },
+  {
+    "paso": "F8b-podio-multipremio",
+    "rol": "sistema",
+    "inicio": "2026-11-07T23:59:03.604Z",
+    "fin": "2026-11-07T23:59:03.605Z",
+    "duracionMs": 1,
+    "esperado": "3 premios generan 3 ganadores distintos en raffle_winners",
+    "observado": "3 ganadores: #1 Nº2 | #2 Nº1 | #3 Nº6",
+    "resultado": "ok",
+    "evidencia": [
+      "F8b-podio.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F9a-pagina-resultados",
+    "rol": "anonimo",
+    "inicio": "2026-11-07T23:59:03.671Z",
+    "fin": "2026-11-07T23:59:08.746Z",
+    "duracionMs": 5075,
+    "esperado": "la página pública de resultados muestra el podio con 3 premios",
+    "observado": "HTTP 200; podio=3 tarjeta(s); texto: Saltar al contenido Inicio Sorteos Ganadores Cómo funciona Planes Ingresar Registrarse Volver al sorteo RESULTADOS OFICIALES destornilladores jacinto SORTEO FINALIZADO 1 E2E A. 1º premio — Kit Gadu NÚMERO 0002 2 E2E A. 2",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F09-resultados.png",
+      "F9-resultados.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F9b-hashes",
+    "rol": "verificador",
+    "inicio": "2026-11-07T23:59:08.748Z",
+    "fin": "2026-11-07T23:59:09.040Z",
+    "duracionMs": 292,
+    "esperado": "compromiso, listado, ganador(es) y huellas coinciden con lo publicado, calculados con node:crypto",
+    "observado": "single={\"commitment\":true,\"numbersHash\":true,\"winner\":true,\"resultHash\":true}; multi={\"commitment\":true,\"numbersHash\":true,\"winners\":true,\"resultsHash\":true}; ganadores=3",
+    "resultado": "ok",
+    "evidencia": [
+      "F9b-hashes.json",
+      "hashes.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F9c-verificador-publico",
+    "rol": "anonimo",
+    "inicio": "2026-11-07T23:59:09.043Z",
+    "fin": "2026-11-07T23:59:15.162Z",
+    "duracionMs": 6119,
+    "esperado": "la página /verificar recalcula los 3 premios y muestra que coinciden",
+    "observado": "verificador presente; “Todos los premios coinciden”=true",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F09-verificar.png"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F10-consola",
+    "rol": "todas-las-pestanas",
+    "inicio": "2026-11-07T23:59:15.164Z",
+    "fin": "2026-11-07T23:59:15.164Z",
+    "duracionMs": 0,
+    "esperado": "sin errores de consola ni pageerror en el recorrido",
+    "observado": "0 error(es) capturado(s); 0 relevante(s)",
+    "resultado": "ok",
+    "evidencia": [
+      "F10-consola.json"
+    ],
+    "nota": null
+  }
+]

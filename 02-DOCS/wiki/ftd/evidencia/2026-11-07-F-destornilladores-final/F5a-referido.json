@@ -1,0 +1,14 @@
+{
+  "enlacePedido": "http://localhost:3001/r/F6D5W4",
+  "urlFinal": "http://localhost:3001/sorteos/destornilladores-jacinto-22eb?ref=F6D5W4",
+  "esperadoUrl": "http://localhost:3001/sorteos/destornilladores-jacinto-22eb?ref=F6D5W4",
+  "redirigeOk": true,
+  "creadaPorUI": true,
+  "fila": {
+    "id": "1732a880-66e0-428a-83b9-e80b0baffd9e",
+    "referrer_id": "2aedaaf8-30ef-47a2-8767-0e8e9a4e6f1e",
+    "referred_id": "523d507e-429b-45f7-8155-cf48bb81ee33",
+    "rewarded": false,
+    "rewarded_number": null
+  }
+}

@@ -1,0 +1,381 @@
+{
+  "escenario": "F",
+  "inicio": "2026-11-07T23:55:47.205Z",
+  "fin": "2026-11-07T23:59:24.195Z",
+  "resumen": {
+    "total": 20,
+    "ok": 20
+  },
+  "salida": {
+    "entorno": {
+      "base": "http://localhost:3001",
+      "status": 200,
+      "urlSupabase": "https://dolxvoxyespguvixhkku.supabase.co",
+      "usaStaging": true,
+      "usaProduccion": false,
+      "bundles": 17,
+      "bundlesPrueba": 2,
+      "bundlesProduccion": 0,
+      "migracion": "0120",
+      "errorMigracion": null
+    },
+    "cuentas": {
+      "org": {
+        "id": "2aedaaf8-30ef-47a2-8767-0e8e9a4e6f1e",
+        "creado": true,
+        "email": "e2e.full.organizador+1794095747403@gadu.test",
+        "nombre": "E2E Full Organizador",
+        "rol": "organizador",
+        "telefono": "+5491155550201"
+      },
+      "a": {
+        "id": "523d507e-429b-45f7-8155-cf48bb81ee33",
+        "creado": true,
+        "email": "e2e.full.jugadora+1794095747403@gadu.test",
+        "nombre": "E2E Full Jugadora A",
+        "rol": "jugadorA",
+        "telefono": "+5491155550198"
+      },
+      "b": {
+        "id": "f7621f36-d794-4750-a846-48360392dcbb",
+        "creado": true,
+        "email": "e2e.full.jugadorb+1794095747403@gadu.test",
+        "nombre": "E2E Full Jugador B",
+        "rol": "jugadorB",
+        "telefono": "+5491155550197"
+      }
+    },
+    "sorteos": {
+      "bonusId": "4a2a313b-e8c9-4269-bef3-c499b71fc506",
+      "bonusSlug": "destornilladores-jacinto-bonus-781d",
+      "bonus": {
+        "id": "4a2a313b-e8c9-4269-bef3-c499b71fc506",
+        "slug": "destornilladores-jacinto-bonus-781d",
+        "title": "destornilladores jacinto — bonus",
+        "status": "active",
+        "winners_count": 1,
+        "is_listed": false,
+        "draw_date": "2026-11-10T23:55:00+00:00"
+      },
+      "mainId": "c5a74b9d-2271-48e8-818c-2ced799016b3",
+      "main": {
+        "id": "c5a74b9d-2271-48e8-818c-2ced799016b3",
+        "slug": "destornilladores-jacinto-22eb",
+        "title": "destornilladores jacinto",
+        "status": "active",
+        "winners_count": 3,
+        "referral_enabled": true,
+        "referral_min_numbers": 2,
+        "referral_max_per_user": 1,
+        "bonus_raffle_id": "4a2a313b-e8c9-4269-bef3-c499b71fc506",
+        "is_listed": false
+      },
+      "mainSlug": "destornilladores-jacinto-22eb",
+      "prizes": [
+        {
+          "position": 1,
+          "title": "1º premio — Kit Gadu"
+        },
+        {
+          "position": 2,
+          "title": "2º premio — Auriculares"
+        },
+        {
+          "position": 3,
+          "title": "3º premio — Voucher"
+        }
+      ],
+      "commitment": "96ed135ee762e1c60eca4413e87f20803764632e01ab026c0008c1b0427efe98"
+    },
+    "referidos": {
+      "enlaceMostrado": "http://localhost:3001/r/F6D5W4",
+      "codigo": "F6D5W4",
+      "perfilCodigo": "F6D5W4",
+      "formatoLargo": false,
+      "esCorto": true
+    },
+    "compras": {
+      "enlaceReferido": "http://localhost:3001/r/F6D5W4",
+      "referidoCreadoPorUI": true,
+      "a": {
+        "numeros": [
+          1,
+          2
+        ],
+        "reserva": {
+          "texto": "Reserva confirmada\n\n2 números reservados en destornilladores jacinto.\n\n001\n002\n\nTotal a pagar: $ 20\n\nEl contador de arriba es solo para elegir. La reserva queda guardada 48 h hasta que el organizador confirme el pago.\n\nDatos para transferir\n\nAlias\ne2e.full\nCopiar\nCBU\n0000003100010000000001\nCopiar\nBanco\nBanco de Prueba\nCopiar\n\nTransferí el total y después enviá el comprobante por WhatsApp.\n\nEnviar comprobante por WhatsApp\n\nGuardamos tus números 48 h. Cuando el organizador reciba el comprobante, los marca como pagados. Podés seguir tus números desde «Mis números».\n\nCerrar",
+          "whatsappHref": "https://wa.me/5491155550201?text=Hola!%20Quiero%20participar%20en%20%22destornilladores%20jacinto%22%20con%20los%20n%C3%BAmeros%3A%201%2C%202.%20Total%3A%20%24%C2%A020"
+        },
+        "filas": [
+          {
+            "number": 1,
+            "status": "reserved",
+            "reserved_by": "523d507e-429b-45f7-8155-cf48bb81ee33",
+            "reserved_until": "2026-11-09T23:58:06.596149+00:00"
+          },
+          {
+            "number": 2,
+            "status": "reserved",
+            "reserved_by": "523d507e-429b-45f7-8155-cf48bb81ee33",
+            "reserved_until": "2026-11-09T23:58:06.596149+00:00"
+          }
+        ]
+      },
+      "b": {
+        "numeros": [
+          4,
+          5,
+          6
+        ],
+        "reserva": {
+          "texto": "Reserva confirmada\n\n3 números reservados en destornilladores jacinto.\n\n004\n005\n006\n\nTotal a pagar: $ 30\n\nEl contador de arriba es solo para elegir. La reserva queda guardada 48 h hasta que el organizador confirme el pago.\n\nDatos para transferir\n\nAlias\ne2e.full\nCopiar\nCBU\n0000003100010000000001\nCopiar\nBanco\nBanco de Prueba\nCopiar\n\nTransferí el total y después enviá el comprobante por WhatsApp.\n\nEnviar comprobante por WhatsApp\n\nGuardamos tus números 48 h. Cuando el organizador reciba el comprobante, los marca como pagados. Podés seguir tus números desde «Mis números».\n\nCerrar",
+          "whatsappHref": "https://wa.me/5491155550201?text=Hola!%20Quiero%20participar%20en%20%22destornilladores%20jacinto%22%20con%20los%20n%C3%BAmeros%3A%204%2C%205%2C%206.%20Total%3A%20%24%C2%A030"
+        },
+        "filas": [
+          {
+            "number": 4,
+            "status": "reserved",
+            "reserved_by": "f7621f36-d794-4750-a846-48360392dcbb"
+          },
+          {
+            "number": 5,
+            "status": "reserved",
+            "reserved_by": "f7621f36-d794-4750-a846-48360392dcbb"
+          },
+          {
+            "number": 6,
+            "status": "reserved",
+            "reserved_by": "f7621f36-d794-4750-a846-48360392dcbb"
+          }
+        ]
+      },
+      "vendidos": [
+        {
+          "number": 4,
+          "status": "sold",
+          "sold_to": "f7621f36-d794-4750-a846-48360392dcbb"
+        },
+        {
+          "number": 5,
+          "status": "sold",
+          "sold_to": "f7621f36-d794-4750-a846-48360392dcbb"
+        },
+        {
+          "number": 1,
+          "status": "sold",
+          "sold_to": "523d507e-429b-45f7-8155-cf48bb81ee33"
+        },
+        {
+          "number": 2,
+          "status": "sold",
+          "sold_to": "523d507e-429b-45f7-8155-cf48bb81ee33"
+        },
+        {
+          "number": 6,
+          "status": "sold",
+          "sold_to": "f7621f36-d794-4750-a846-48360392dcbb"
+        }
+      ]
+    },
+    "premio": {
+      "notiA": "bce799b1-24f2-45cc-a33c-b7dd441f8944",
+      "numeros": [
+        {
+          "number": 1,
+          "status": "sold",
+          "sold_to": "523d507e-429b-45f7-8155-cf48bb81ee33",
+          "origin": "venta"
+        },
+        {
+          "number": 2,
+          "status": "sold",
+          "sold_to": "523d507e-429b-45f7-8155-cf48bb81ee33",
+          "origin": "venta"
+        }
+      ],
+      "referral": {
+        "id": "1732a880-66e0-428a-83b9-e80b0baffd9e",
+        "referrer_id": "2aedaaf8-30ef-47a2-8767-0e8e9a4e6f1e",
+        "referred_id": "523d507e-429b-45f7-8155-cf48bb81ee33",
+        "rewarded": true,
+        "rewarded_raffle_id": "4a2a313b-e8c9-4269-bef3-c499b71fc506",
+        "rewarded_number": 27,
+        "created_at": "2026-11-07T23:57:51.009747+00:00",
+        "rewarded_via_raffle_id": "c5a74b9d-2271-48e8-818c-2ced799016b3"
+      },
+      "numeroPremio": {
+        "number": 27,
+        "status": "sold",
+        "sold_to": "2aedaaf8-30ef-47a2-8767-0e8e9a4e6f1e",
+        "origin": "premio"
+      },
+      "notificaciones": {
+        "aprobada": {
+          "id": "cbd13904-d860-4092-866d-111b0e55d8e9",
+          "user_id": "523d507e-429b-45f7-8155-cf48bb81ee33",
+          "type": "buyer_reservation_approved",
+          "title": "✅ Números aprobados",
+          "message": "Tus números están confirmados. ¡Ya estás participando!",
+          "created_at": "2026-11-07T23:58:28.853934+00:00"
+        },
+        "premio": {
+          "id": "f24138cf-de1e-4989-8339-880945e5105e",
+          "user_id": "2aedaaf8-30ef-47a2-8767-0e8e9a4e6f1e",
+          "type": "buyer_referral_reward",
+          "title": "🎁 Número gratis",
+          "message": "Tu invitado compró en destornilladores jacinto y ganaste el número 27 en destornilladores jacinto — bonus.",
+          "created_at": "2026-11-07T23:58:29.489407+00:00"
+        }
+      },
+      "aRecibioPremio": false
+    },
+    "sorteo": {
+      "sorteo": {
+        "id": "c5a74b9d-2271-48e8-818c-2ced799016b3",
+        "status": "drawn",
+        "winner_number": 2,
+        "winners_count": 3,
+        "draw_seed": "c48b527e73194159a5e2a55f1bdd2c9ec3fb6916f2634ed391b62a15bf57a16d",
+        "draw_commitment": "96ed135ee762e1c60eca4413e87f20803764632e01ab026c0008c1b0427efe98",
+        "numbers_hash": "0c52318a81ef0a08d39746ec6861cb3926d089c2b234323320a1b6bbcd483832",
+        "result_hash": "a13f1ccf5893f23cd398bd2ce6b83f0a4cc841ccee66b9ddb0b6dd311bf4db82",
+        "results_hash": "e5ec903ef7367873e09fe9bc4aa2308d0b0474765d9390ae406bae54577dde50",
+        "drawn_at": "2026-11-07T23:58:58.102012+00:00"
+      },
+      "winners": [
+        {
+          "position": 1,
+          "number": 2,
+          "user_id": "523d507e-429b-45f7-8155-cf48bb81ee33",
+          "user_name": "E2E Full Jugadora A",
+          "prize_title": "1º premio — Kit Gadu",
+          "winner_hash": "a13f1ccf5893f23cd398bd2ce6b83f0a4cc841ccee66b9ddb0b6dd311bf4db82"
+        },
+        {
+          "position": 2,
+          "number": 1,
+          "user_id": "523d507e-429b-45f7-8155-cf48bb81ee33",
+          "user_name": "E2E Full Jugadora A",
+          "prize_title": "2º premio — Auriculares",
+          "winner_hash": "6c1b09a1e5fb264e6265c14cbbc8ea4a1d198fc732767ae9b09a447f6678ec1b"
+        },
+        {
+          "position": 3,
+          "number": 6,
+          "user_id": "f7621f36-d794-4750-a846-48360392dcbb",
+          "user_name": "E2E Full Jugador B",
+          "prize_title": "3º premio — Voucher",
+          "winner_hash": "7e55cc69469a8345756643c9c17f8e954d5b53a39390d5d43f896e9c5c668ca0"
+        }
+      ]
+    },
+    "resultados": {
+      "status": 200,
+      "tarjetas": 3,
+      "texto": "Saltar al contenido\nInicio\nSorteos\nGanadores\nCómo funciona\nPlanes\nIngresar\nRegistrarse\nVolver al sorteo\nRESULTADOS OFICIALES\ndestornilladores jacinto\nSORTEO FINALIZADO\n1\nE2E A.\n1º premio — Kit Gadu\nNÚMERO\n0002\n2\nE2E A.\n2º premio — Auriculares\nNÚMERO\n0001\n3\nE2E B.\n3º premio — Voucher\nNÚMERO\n0006\nCompartir Resultados\nVerificar el sorteo\nLos ganadores se calculan en la base con la semilla comprometida antes del sorteo. Se publica solo el nombre y la inicial del apellido.\nSorteos transparentes con premios de todo tipo. Elegí tus números, participá y ganá.\nPago por transferencia y comprobante por WhatsApp.\nTU CUENTA\nMis números\nMis pagos\nMi perfil\nIngresar\nLEGAL\nTérminos y Condiciones\nPolítica de Privacidad\nCONTACTO\nCentro de ayuda\nWhatsApp de ventas\nSoporte por email\nSer organizador\n© 2026 Gadu Sorteos. Todos los derechos reservados.\ndesarrollado por @jacinto.cards",
+      "hashes": {
+        "numbers": [
+          1,
+          2,
+          4,
+          5,
+          6
+        ],
+        "single": {
+          "commitment": "96ed135ee762e1c60eca4413e87f20803764632e01ab026c0008c1b0427efe98",
+          "numbersHash": "0c52318a81ef0a08d39746ec6861cb3926d089c2b234323320a1b6bbcd483832",
+          "pick": "dccb2b9eaad1d8289923928d2c449b8016bd781bb48c28c4a631812447cac557",
+          "index": 1,
+          "winner": 2,
+          "resultHash": "a13f1ccf5893f23cd398bd2ce6b83f0a4cc841ccee66b9ddb0b6dd311bf4db82",
+          "list": "1,2,4,5,6",
+          "sorted": [
+            1,
+            2,
+            4,
+            5,
+            6
+          ]
+        },
+        "singleChecks": {
+          "commitment": true,
+          "numbersHash": true,
+          "winner": true,
+          "resultHash": true
+        },
+        "multi": {
+          "commitment": "96ed135ee762e1c60eca4413e87f20803764632e01ab026c0008c1b0427efe98",
+          "numbersHash": "0c52318a81ef0a08d39746ec6861cb3926d089c2b234323320a1b6bbcd483832",
+          "winners": [
+            {
+              "position": 1,
+              "number": 2,
+              "hash": "a13f1ccf5893f23cd398bd2ce6b83f0a4cc841ccee66b9ddb0b6dd311bf4db82"
+            },
+            {
+              "position": 2,
+              "number": 1,
+              "hash": "6c1b09a1e5fb264e6265c14cbbc8ea4a1d198fc732767ae9b09a447f6678ec1b"
+            },
+            {
+              "position": 3,
+              "number": 6,
+              "hash": "7e55cc69469a8345756643c9c17f8e954d5b53a39390d5d43f896e9c5c668ca0"
+            }
+          ],
+          "resultsHash": "e5ec903ef7367873e09fe9bc4aa2308d0b0474765d9390ae406bae54577dde50",
+          "list": "1,2,4,5,6",
+          "total": 3
+        },
+        "multiWinnerChecks": [
+          {
+            "position": 1,
+            "coincide": true
+          },
+          {
+            "position": 2,
+            "coincide": true
+          },
+          {
+            "position": 3,
+            "coincide": true
+          }
+        ],
+        "multiChecks": {
+          "commitment": true,
+          "numbersHash": true,
+          "winners": true,
+          "resultsHash": true
+        },
+        "publicado": {
+          "commitment": "96ed135ee762e1c60eca4413e87f20803764632e01ab026c0008c1b0427efe98",
+          "numbersHash": "0c52318a81ef0a08d39746ec6861cb3926d089c2b234323320a1b6bbcd483832",
+          "winner": 2,
+          "resultHash": "a13f1ccf5893f23cd398bd2ce6b83f0a4cc841ccee66b9ddb0b6dd311bf4db82",
+          "resultsHash": "e5ec903ef7367873e09fe9bc4aa2308d0b0474765d9390ae406bae54577dde50",
+          "winners": [
+            {
+              "position": 1,
+              "number": 2,
+              "winner_hash": "a13f1ccf5893f23cd398bd2ce6b83f0a4cc841ccee66b9ddb0b6dd311bf4db82"
+            },
+            {
+              "position": 2,
+              "number": 1,
+              "winner_hash": "6c1b09a1e5fb264e6265c14cbbc8ea4a1d198fc732767ae9b09a447f6678ec1b"
+            },
+            {
+              "position": 3,
+              "number": 6,
+              "winner_hash": "7e55cc69469a8345756643c9c17f8e954d5b53a39390d5d43f896e9c5c668ca0"
+            }
+          ]
+        }
+      }
+    },
+    "consola": {
+      "total": 0,
+      "relevantes": []
+    }
+  }
+}
