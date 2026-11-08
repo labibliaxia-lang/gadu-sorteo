@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   ArrowRight,
   CalendarDays,
@@ -66,6 +66,7 @@ export async function generateMetadata({
   params: { slug: string };
 }): Promise<Metadata> {
   const t = await getTranslations("Sorteo");
+  const locale = await getLocale();
   const supabase = createClient();
   const { data: raffle } = await supabase
     .from("raffles")
@@ -102,8 +103,8 @@ export async function generateMetadata({
       ? String(raffle.description).trim().slice(0, 160)
       : t("metaDescriptionActive", {
           title: raffle.title,
-          price: formatPrice(Number(raffle.price_per_number)),
-          date: formatDateTime(raffle.draw_date),
+          price: formatPrice(Number(raffle.price_per_number), locale),
+          date: formatDateTime(raffle.draw_date, locale),
         });
 
   // 0114: SEO del sorteo terminado. El nombre ya viene recortado (sin apellido
@@ -150,6 +151,7 @@ export default async function RafflePage({
 }) {
   const t = await getTranslations("Sorteo");
   const tc = await getTranslations("Common");
+  const locale = await getLocale();
   const supabase = createClient();
   const isDev = process.env.NODE_ENV === "development";
 
@@ -525,7 +527,7 @@ export default async function RafflePage({
                 <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
                   {t("drawDate")}
                 </span>
-                {formatDateTime(raffle.draw_date)}
+                {formatDateTime(raffle.draw_date, locale)}
                 <span className="mt-0.5 block">
                   <RaffleCountdown
                     drawDate={raffle.draw_date}
@@ -540,7 +542,11 @@ export default async function RafflePage({
                 {t("pricePerNumber")}
               </span>
               <span className="font-mono text-xl text-fg">
-                {formatPriceIn(Number(raffle.price_per_number), raffle.currency ?? "ARS")}
+                {formatPriceIn(
+                  Number(raffle.price_per_number),
+                  raffle.currency ?? "ARS",
+                  locale,
+                )}
               </span>
             </span>
           </div>
@@ -785,7 +791,7 @@ export default async function RafflePage({
             {raffle.draw_commitment_at && (
               <p className="text-muted-foreground">
                 {t("publishedAt", {
-                  date: formatDateTime(raffle.draw_commitment_at),
+                  date: formatDateTime(raffle.draw_commitment_at, locale),
                 })}
               </p>
             )}
@@ -807,7 +813,7 @@ export default async function RafflePage({
               {raffle.hashes_at && (
                 <p className="text-xs text-muted-foreground">
                   {t("hashesAt", {
-                    date: formatDateTime(raffle.hashes_at),
+                    date: formatDateTime(raffle.hashes_at, locale),
                     id: raffle.id,
                   })}
                 </p>
@@ -844,7 +850,10 @@ export default async function RafflePage({
                   {raffle.draw_seed_revealed_at && (
                     <p className="text-muted-foreground">
                       {t("revealedAt", {
-                        date: formatDateTime(raffle.draw_seed_revealed_at),
+                        date: formatDateTime(
+                          raffle.draw_seed_revealed_at,
+                          locale,
+                        ),
                       })}
                     </p>
                   )}

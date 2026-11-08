@@ -50,6 +50,8 @@ const LOCALIZED_ROOTS = [
   "/como-funciona",
   "/ganadores",
   "/planes",
+  "/login",
+  "/register",
 ];
 
 /** Solo las rutas migradas tienen versión en otro idioma. */
@@ -274,18 +276,18 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
             </>
           ) : (
             <>
-              <NextLink
+              <LocaleLink
                 href="/login"
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
                 {t("login")}
-              </NextLink>
-              <NextLink
+              </LocaleLink>
+              <LocaleLink
                 href="/register"
                 className={buttonVariants({ size: "sm" })}
               >
                 {t("register")}
-              </NextLink>
+              </LocaleLink>
             </>
           )}
         </div>
@@ -317,12 +319,12 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
           )}
           <NotificationBell userId={userId} />
           {!userId && (
-            <NextLink
+            <LocaleLink
               href="/login"
               className="rounded-md px-2 py-2 text-[13px] font-medium text-fg-muted transition-colors hover:bg-panel-2 hover:text-fg xl:hidden"
             >
               {t("login")}
-            </NextLink>
+            </LocaleLink>
           )}
           <button
             type="button"
@@ -467,20 +469,20 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
               </>
             ) : (
               <>
-                <NextLink
+                <LocaleLink
                   href="/login"
                   onClick={() => setMobileOpen(false)}
                   className="rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
                 >
                   {t("login")}
-                </NextLink>
-                <NextLink
+                </LocaleLink>
+                <LocaleLink
                   href="/register"
                   onClick={() => setMobileOpen(false)}
                   className={cn(buttonVariants(), "mt-1")}
                 >
                   {t("register")}
-                </NextLink>
+                </LocaleLink>
               </>
             )}
           </nav>

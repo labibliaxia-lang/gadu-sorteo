@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { Check, Crown, KeyRound, MessageCircle, Ticket } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
@@ -110,6 +112,7 @@ export default async function PlanesPage({
   searchParams?: { currency?: string };
 }) {
   const t = await getTranslations("Planes");
+  const locale = await getLocale();
   const supabase = createClient();
   const salesWhatsapp = process.env.NEXT_PUBLIC_SALES_WHATSAPP?.trim() || null;
   const moneda: Moneda = MONEDAS.includes(
@@ -162,10 +165,10 @@ export default async function PlanesPage({
 
   const currentPlan = normalizePlan(profile?.plan);
   const premiumUntil = profile?.plan_expires_at
-    ? formatDateTime(profile.plan_expires_at)
+    ? formatDateTime(profile.plan_expires_at, locale)
     : null;
   const organizerUntil = profile?.role_expires_at
-    ? formatDateTime(profile.role_expires_at)
+    ? formatDateTime(profile.role_expires_at, locale)
     : null;
 
   function salesHref(plan: Plan): string | null {
@@ -174,9 +177,9 @@ export default async function PlanesPage({
     const ars = Number(cfg?.price_ars ?? 0);
     const precio =
       usd > 0
-        ? t("pricePerMonth", { price: formatPriceIn(usd, "USD") })
+        ? t("pricePerMonth", { price: formatPriceIn(usd, "USD", locale) })
         : ars > 0
-          ? t("pricePerMonth", { price: formatPriceIn(ars, "ARS") })
+          ? t("pricePerMonth", { price: formatPriceIn(ars, "ARS", locale) })
           : t("priceByAgreement");
     const msg = t("planMessage", {
       plan: t(PLAN_KEYS[plan].name),
@@ -271,7 +274,7 @@ export default async function PlanesPage({
                       t("free")
                     ) : (
                       <>
-                        {formatPriceIn(precioLocal, moneda)}
+                        {formatPriceIn(precioLocal, moneda, locale)}
                         <span className="ml-1 font-normal text-fg-subtle">
                           {t("perMonth")}
                         </span>
@@ -280,12 +283,12 @@ export default async function PlanesPage({
                   </p>
                   {!esGratis && moneda !== "USD" && (
                     <p className="text-[11px] text-fg-subtle">
-                      {t("basePrice", { price: formatPriceIn(usd, "USD") })}
+                      {t("basePrice", { price: formatPriceIn(usd, "USD", locale) })}
                     </p>
                   )}
                   {!esGratis && moneda === "USD" && ars > 0 && (
                     <p className="text-[11px] text-fg-subtle">
-                      {t("equalsPrice", { price: formatPriceIn(ars, "ARS") })}
+                      {t("equalsPrice", { price: formatPriceIn(ars, "ARS", locale) })}
                     </p>
                   )}
                 </div>
@@ -303,12 +306,12 @@ export default async function PlanesPage({
 
                 <div className="mt-auto space-y-2">
                   {plan === "free" ? (
-                    <Link
+                    <LocaleLink
                       href="/register"
                       className={cn(buttonVariants(), "w-full")}
                     >
                       {t("startFree")}
-                    </Link>
+                    </LocaleLink>
                   ) : href ? (
                     <a
                       href={href}
@@ -378,12 +381,16 @@ export default async function PlanesPage({
           {user ? (
             <RedeemCodeForm />
           ) : (
-            <Link
-              href="/login?next=/planes"
+            <LocaleLink
+              href={
+                locale === "es"
+                  ? "/login?next=/planes"
+                  : `/${locale}/login?next=/${locale}/planes`
+              }
               className={buttonVariants({ variant: "outline" })}
             >
               {t("loginToRedeem")}
-            </Link>
+            </LocaleLink>
           )}
         </CardContent>
       </Card>
@@ -408,7 +415,7 @@ export default async function PlanesPage({
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       {item.redeemed_at
-                        ? new Date(item.redeemed_at).toLocaleDateString("es-AR")
+                        ? new Date(item.redeemed_at).toLocaleDateString(locale)
                         : ""}
                     </span>
                   </div>

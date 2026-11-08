@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Clock } from "lucide-react";
 
 import { countdownState } from "@/lib/countdown";
@@ -27,6 +27,7 @@ export function RaffleCountdown({
   className?: string;
 }) {
   const t = useTranslations("RaffleCountdown");
+  const locale = useLocale();
   const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export function RaffleCountdown({
         )}
       >
         <Clock className="h-3 w-3 shrink-0" aria-hidden="true" />
-        {formatDateTime(drawDate)}
+        {formatDateTime(drawDate, locale)}
       </span>
     );
   }
@@ -79,7 +80,7 @@ export function RaffleCountdown({
         {compact ? t("closesIn") : t("remaining")}
         <span className="tabular-nums">{state.label}</span>
         {!compact && (
-          <span className="text-fg-subtle"> · {formatDateTime(drawDate)}</span>
+          <span className="text-fg-subtle"> · {formatDateTime(drawDate, locale)}</span>
         )}
       </span>
     </span>

@@ -1,11 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 import { PasskeyLoginButton } from "@/components/PasskeyLoginButton";
-import { PRIVACY_PATH, TERMS_PATH } from "@/lib/terms";
+import {
+  PRIVACY_PATH,
+  TERMS_COOKIE,
+  TERMS_PATH,
+  TERMS_VERSION,
+} from "@/lib/terms";
 
 export function LoginForm({
   next,
@@ -15,7 +21,18 @@ export function LoginForm({
   /** La cookie de consentimiento cubre la versión vigente: no hace falta tildar. */
   termsAcceptedByCookie?: boolean;
 }) {
+  const t = useTranslations("Auth");
   const [accepted, setAccepted] = useState(termsAcceptedByCookie);
+
+  // Respaldo por si el rewrite del middleware no propaga la cookie de
+  // consentimiento al Server Component: el navegador sí la ve.
+  useEffect(() => {
+    if (termsAcceptedByCookie) return;
+    const hasCookie = document.cookie
+      .split("; ")
+      .some((entry) => entry === `${TERMS_COOKIE}=${TERMS_VERSION}`);
+    if (hasCookie) setAccepted(true);
+  }, [termsAcceptedByCookie]);
 
   return (
     <div className="space-y-4">
@@ -28,25 +45,28 @@ export function LoginForm({
             className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-amber-600"
           />
           <span>
-            He leído y acepto los{" "}
-            <Link
-              href={TERMS_PATH}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-amber-800 underline underline-offset-4 dark:text-amber-300"
-            >
-              Términos y Condiciones
-            </Link>{" "}
-            y la{" "}
-            <Link
-              href={PRIVACY_PATH}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-amber-800 underline underline-offset-4 dark:text-amber-300"
-            >
-              Política de Privacidad
-            </Link>
-            .
+            {t.rich("termsRich", {
+              terms: (chunks) => (
+                <Link
+                  href={TERMS_PATH}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-800 underline underline-offset-4 dark:text-amber-300"
+                >
+                  {chunks}
+                </Link>
+              ),
+              privacy: (chunks) => (
+                <Link
+                  href={PRIVACY_PATH}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-800 underline underline-offset-4 dark:text-amber-300"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
           </span>
         </label>
       )}
@@ -59,7 +79,7 @@ export function LoginForm({
 
       {!accepted && (
         <p className="text-xs text-muted-foreground">
-          Debés aceptar los términos para continuar.
+          {t("mustAccept")}
         </p>
       )}
     </div>

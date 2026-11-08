@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AlertTriangle, Clock, MessageCircle } from "lucide-react";
 
@@ -24,6 +25,7 @@ const RESERVATION_SECONDS = 10 * 60;
 
 /** Fila de dato de transferencia con botón de copiar. */
 function CopyRow({ label, value }: { label: string; value: string }) {
+  const t = useTranslations("NumbersGrid");
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -47,7 +49,7 @@ function CopyRow({ label, value }: { label: string; value: string }) {
         onClick={copy}
         className="shrink-0 rounded border px-2 py-0.5 text-xs transition hover:bg-accent"
       >
-        {copied ? "Copiado" : "Copiar"}
+        {copied ? t("copied") : t("copy")}
       </button>
     </div>
   );
@@ -120,10 +122,15 @@ export function NumbersGrid({
   playerTerms = null,
   esDueno = false,
 }: NumbersGridProps) {
+  const t = useTranslations("NumbersGrid");
+  const locale = useLocale();
   const supabase = useMemo(() => createClient(), []);
   const cols = useColumnCount();
   const parentRef = useRef<HTMLDivElement>(null);
-  const loginHref = `/login?next=${encodeURIComponent(`/sorteos/${raffleId}`)}`;
+  const detailPath =
+    locale === "es" ? `/sorteos/${raffleId}` : `/${locale}/sorteos/${raffleId}`;
+  const loginBase = locale === "es" ? "/login" : `/${locale}/login`;
+  const loginHref = `${loginBase}?next=${encodeURIComponent(detailPath)}`;
 
   const [numbers, setNumbers] = useState<Map<number, RaffleNumber>>(new Map());
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -437,10 +444,13 @@ export function NumbersGrid({
     if (!digits) return null;
     const phone = digits.startsWith("54") ? digits : `54${digits}`;
     const sorted = [...nums].sort((a, b) => a - b);
-    const numbersText = sorted.length > 0 ? sorted.join(", ") : "a confirmar";
-    const msg = `Hola! Quiero participar en "${
-      raffleTitle ?? "el sorteo"
-    }" con los números: ${numbersText}. Total: ${formatPriceIn(total, currency)}`;
+    const numbersText =
+      sorted.length > 0 ? sorted.join(", ") : t("whatsappConfirm");
+    const msg = t("whatsappMessage", {
+      title: raffleTitle ?? t("whatsappTitle"),
+      numbers: numbersText,
+      total: formatPriceIn(total, currency, locale),
+    });
     return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
   }
 
@@ -471,9 +481,7 @@ export function NumbersGrid({
     const picked = Array.from(selected).sort((a, b) => a - b);
 
     if (!buildWhatsAppHref(picked, totalPrice)) {
-      setError(
-        "El organizador todavía no cargó un WhatsApp de contacto. Probá más tarde.",
-      );
+      setError(t("errorNoWhatsapp"));
       return;
     }
 
@@ -511,9 +519,7 @@ export function NumbersGrid({
       if (reserved.length === 0) {
         setSelected(new Set());
         setError(
-          `Estos números ya no están disponibles: ${picked.join(
-            ", ",
-          )}. Elegí otros.`,
+          t("errorUnavailable", { numbers: picked.join(", ") }),
         );
         return;
       }
@@ -545,7 +551,7 @@ export function NumbersGrid({
         total: reserved.length * pricePerNumber,
         notice:
           missing.length > 0
-            ? `Estos números ya no estaban disponibles: ${missing.join(", ")}.`
+            ? t("errorNotice", { numbers: missing.join(", ") })
             : undefined,
       });
       setSelected(new Set());
@@ -554,7 +560,7 @@ export function NumbersGrid({
       // Email de respaldo: no bloquea la reserva ni la apertura del resumen.
       void notifyReservation(raffleId, reserved).catch(() => {});
     } catch {
-      setError("Error de red al reservar los números.");
+      setError(t("errorNetworkReserve"));
     } finally {
       setReserving(false);
     }
@@ -590,7 +596,7 @@ export function NumbersGrid({
       const json = await res.json();
 
       if (!res.ok) {
-        setError(json.error ?? "No se pudo iniciar el pago.");
+        setError(t("errorPayment"));
         // Si algunos números ya no estaban disponibles, recargarlos.
         if (json.unavailable) {
           const unavailable = new Set<number>(json.unavailable);
@@ -608,7 +614,7 @@ export function NumbersGrid({
         window.location.href = json.init_point;
       }
     } catch {
-      setError("Error de red al iniciar el pago.");
+      setError(t("errorNetworkPayment"));
     } finally {
       setCheckingOut(false);
     }
@@ -637,7 +643,7 @@ export function NumbersGrid({
       const json = await res.json();
 
       if (!res.ok) {
-        setError(json.error ?? "No se pudo simular el pago.");
+        setError(t("errorMock"));
         if (json.unavailable) {
           const unavailable = new Set<number>(json.unavailable);
           setSelected((prev) => {
@@ -651,7 +657,7 @@ export function NumbersGrid({
 
       window.location.href = "/pago/exitoso";
     } catch {
-      setError("Error de red al simular el pago.");
+      setError(t("errorNetworkMock"));
     } finally {
       setCheckingOut(false);
     }
@@ -696,7 +702,9 @@ export function NumbersGrid({
     const target = parseJumpNumber(jumpValue, totalCount);
     if (target === null) {
       setError(
-        `Elegí un número entre 1 y ${totalCount.toLocaleString("es-AR")}.`,
+        t("errorJumpRange", {
+          max: totalCount.toLocaleString(locale),
+        }),
       );
       return;
     }
@@ -707,9 +715,11 @@ export function NumbersGrid({
     const status = numbers.get(target)?.status ?? "available";
     if (status !== "available") {
       setError(
-        `El número ${fmtNum(target)} no está disponible (${
-          status === "sold" ? "vendido" : "reservado"
-        }).`,
+        t("errorNumberUnavailable", {
+          number: fmtNum(target),
+          status:
+            status === "sold" ? t("statusSold") : t("statusReserved"),
+        }),
       );
       return;
     }
@@ -758,31 +768,28 @@ export function NumbersGrid({
     <div className={cn("space-y-4", selected.size > 0 && "pb-28 lg:pb-0")}>
       {esDueno && (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
-          <p className="font-semibold">Este es tu sorteo</p>
-          <p className="mt-1">
-            Para probarlo, podés comprar en el sorteo de otro organizador. Acá
-            no podés reservar números.
-          </p>
+          <p className="font-semibold">{t("ownerTitle")}</p>
+          <p className="mt-1">{t("ownerText")}</p>
         </div>
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-[13px] text-fg-subtle">
           <span>
             <span aria-live="polite">
-              {selected.size} número{selected.size === 1 ? "" : "s"}{" "}
-              seleccionado{selected.size === 1 ? "" : "s"}
+              {t("selectedCount", { count: selected.size })}
             </span>{" "}
-            · Total:{" "}
+            · {t("total")}{" "}
             <span className="font-semibold text-foreground">
-              {formatPriceIn(totalPrice, currency)}
+              {formatPriceIn(totalPrice, currency, locale)}
             </span>
           </span>
           {selected.size > 0 && deadline !== null && (
             <span
               className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 font-mono text-[11px] font-semibold text-foreground"
-              title="Tiempo para terminar de elegir. La reserva después dura 48 horas."
+              title={t("timerTitle")}
             >
-              <Clock className="h-3 w-3" aria-hidden="true" /> Elegí en {formatCountdown(remaining)}
+              <Clock className="h-3 w-3" aria-hidden="true" />{" "}
+              {t("chooseIn", { time: formatCountdown(remaining) })}
             </span>
           )}
         </div>
@@ -799,12 +806,12 @@ export function NumbersGrid({
               }
             >
               <MessageCircle className="mr-1.5 h-4 w-4" />
-              {reserving ? "Reservando…" : "Reservar y enviar comprobante"}
+              {reserving ? t("reserving") : t("reserveSend")}
             </Button>
           ) : (
             <Link href={loginHref} className={buttonVariants()}>
               <MessageCircle className="mr-1.5 h-4 w-4" />
-              Iniciar sesión para participar
+              {t("loginToJoin")}
             </Link>
           )}
 
@@ -816,10 +823,10 @@ export function NumbersGrid({
                   disabled={selected.size === 0 || checkingOut || !isActive || esDueno}
                 >
                   {checkingOut
-                    ? "Procesando…"
+                    ? t("processing")
                     : userId
-                      ? "Simular Pago (Solo Dev)"
-                      : "Inicia sesión para participar"}
+                      ? t("simulateDev")
+                      : t("loginToJoin")}
                 </Button>
               )}
               <Button
@@ -828,12 +835,12 @@ export function NumbersGrid({
                 disabled={selected.size === 0 || checkingOut || !isActive || esDueno}
               >
                 {checkingOut
-                  ? "Preparando pago…"
+                  ? t("preparingPayment")
                   : userId
                     ? isDev
-                      ? "Pagar real (MP)"
-                      : "Reservar y pagar"
-                    : "Inicia sesión para participar"}
+                      ? t("payReal")
+                      : t("reservePay")
+                    : t("loginToJoin")}
               </Button>
             </>
           )}
@@ -842,10 +849,9 @@ export function NumbersGrid({
 
       {isTransfer && (
         <p className="text-[11px] leading-relaxed text-fg-subtle">
-          Si el organizador cancela el sorteo, se devuelve el{" "}
-          <strong>100% del dinero por el mismo medio de pago</strong>. No se
-          realizan devoluciones una vez confirmado el pago y realizado el
-          sorteo.
+          {t.rich("transferDisclaimer", {
+            strong: (chunks) => <strong>{chunks}</strong>,
+          })}
         </p>
       )}
 
@@ -857,7 +863,7 @@ export function NumbersGrid({
 
       {selectionExpired && (
         <p className="flex items-start gap-2 rounded-md bg-amber-500/10 p-3 text-[13px] text-amber-700 dark:text-amber-300">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" aria-hidden="true" /> Tu selección expiró. Elegí de nuevo tus números.
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" aria-hidden="true" /> {t("selectionExpired")}
         </p>
       )}
 
@@ -867,41 +873,42 @@ export function NumbersGrid({
             role="status"
             className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200"
           >
-            <strong>Este sorteo todavía no se puede comprar.</strong> El
-            organizador no cargó los datos para recibir el pago ni un WhatsApp de
-            contacto, así que no hay forma de reservar ni de enviar el
-            comprobante. Probá más tarde o contactá al organizador.
+            <strong>{t("cannotBuyTitle")}</strong> {t("cannotBuyText")}
           </p>
         )}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-medium">
-            Tocá un número para elegirlo
+            {t("tapNumber")}
             <span className="ml-1 font-normal text-muted-foreground">
-              · los vendidos y reservados están bloqueados
+              {t("blockedHint")}
             </span>
           </p>
           <span className="text-xs text-muted-foreground">
-            {availableCount.toLocaleString("es-AR")} disponibles de{" "}
-            {totalCount.toLocaleString("es-AR")}
+            {t("availableOf", {
+              available: availableCount.toLocaleString(locale),
+              total: totalCount.toLocaleString(locale),
+            })}
           </span>
         </div>
         <div
           className="flex flex-wrap gap-x-4 gap-y-2 rounded-lg border border-hairline bg-panel-1/60 px-3 py-2 text-[11px] text-fg-subtle"
-          aria-label="Leyenda de estados"
+          aria-label={t("legendAria")}
         >
           <span className="flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-[3px] border border-emerald-500/50 bg-emerald-500/15" />{" "}
-            Disponible
+            {t("available")}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-amber-500" /> Reservado
+            <span className="h-3 w-3 rounded-full bg-amber-500" />{" "}
+            {t("reserved")}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-[3px] border border-rose-500/50 bg-rose-500/20" />{" "}
-            Vendido
+            {t("sold")}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] bg-brand-500" /> Tu selección
+            <span className="h-3 w-3 rounded-[3px] bg-brand-500" />{" "}
+            {t("yourSelection")}
           </span>
         </div>
 
@@ -911,7 +918,7 @@ export function NumbersGrid({
               htmlFor="jump-number"
               className="text-xs text-muted-foreground"
             >
-              Ir a un número
+              {t("jumpLabel")}
             </label>
             <Input
               id="jump-number"
@@ -925,7 +932,9 @@ export function NumbersGrid({
                   jumpToNumber();
                 }
               }}
-              placeholder={`Ej: ${fmtNum(Math.min(150, totalCount))}`}
+              placeholder={t("jumpPlaceholder", {
+                number: fmtNum(Math.min(150, totalCount)),
+              })}
               aria-describedby="jump-number-help"
               className="h-9 w-28"
             />
@@ -933,12 +942,11 @@ export function NumbersGrid({
               id="jump-number-help"
               className="w-full text-[11px] text-muted-foreground"
             >
-              Al escribirlo, la grilla salta al número y lo resalta. Enter o
-              «Ir» también lo dejan seleccionado.
+              {t("jumpHelp")}
             </p>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={jumpToNumber}>
-            Ir
+            {t("go")}
           </Button>
           {selected.size > 0 && (
             <Button
@@ -947,7 +955,7 @@ export function NumbersGrid({
               size="sm"
               onClick={clearSelection}
             >
-              Limpiar selección
+              {t("clearSelection")}
             </Button>
           )}
         </div>
@@ -955,7 +963,7 @@ export function NumbersGrid({
 
       {loading ? (
         <p className="py-16 text-center text-muted-foreground">
-          Cargando números…
+          {t("loading")}
         </p>
       ) : (
         <div
@@ -1002,7 +1010,15 @@ export function NumbersGrid({
                         data-number={num}
                         onClick={() => toggle(num)}
                         disabled={disabled}
-                        aria-label={`Número ${fmtNum(num)} - ${status}`}
+                        aria-label={t("numberAria", {
+                          number: fmtNum(num),
+                          status:
+                            status === "sold"
+                              ? t("sold")
+                              : status === "reserved"
+                                ? t("reserved")
+                                : t("available"),
+                        })}
                         aria-pressed={isSelected}
                         className={cn(
                           "relative flex h-11 items-center justify-center overflow-hidden rounded-md border text-xs font-medium leading-none transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-10 sm:text-[13px]",
@@ -1043,9 +1059,11 @@ export function NumbersGrid({
       {!loading && totalCount > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="font-mono text-[12px] text-fg-subtle">
-            {(pageStart + 1).toLocaleString("es-AR")}–
-            {pageEnd.toLocaleString("es-AR")} de{" "}
-            {totalCount.toLocaleString("es-AR")} números
+            {t("range", {
+              from: (pageStart + 1).toLocaleString(locale),
+              to: pageEnd.toLocaleString(locale),
+              total: totalCount.toLocaleString(locale),
+            })}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -1055,10 +1073,10 @@ export function NumbersGrid({
               onClick={() => setPage((prev) => Math.max(0, prev - 1))}
               disabled={page === 0}
             >
-              Anterior
+              {t("previous")}
             </Button>
             <span className="font-mono text-[11px] text-fg-subtle">
-              Página {page + 1} de {pageCount}
+              {t("pageOf", { page: page + 1, total: pageCount })}
             </span>
             <Button
               type="button"
@@ -1067,7 +1085,7 @@ export function NumbersGrid({
               onClick={() => setPage((prev) => Math.min(pageCount - 1, prev + 1))}
               disabled={page >= pageCount - 1}
             >
-              Siguiente
+              {t("next")}
             </Button>
           </div>
         </div>
@@ -1078,12 +1096,14 @@ export function NumbersGrid({
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-sm font-semibold">
-                {selected.size} número{selected.size === 1 ? "" : "s"}
+                {t("selectedShort", { count: selected.size })}
               </p>
               <p className="text-xs text-muted-foreground">
-                {formatPriceIn(totalPrice, currency)}
+                {formatPriceIn(totalPrice, currency, locale)}
                 {deadline !== null && remaining > 0
-                  ? ` · elegí en ${formatCountdown(remaining)}`
+                  ? ` ${t("chooseInShort", {
+                      time: formatCountdown(remaining),
+                    })}`
                   : ""}
               </p>
             </div>
@@ -1094,12 +1114,12 @@ export function NumbersGrid({
                 onClick={handleReservePrepaid}
               >
                 <MessageCircle className="mr-1.5 h-4 w-4" />
-                {reserving ? "Reservando…" : "Reservar"}
+                {reserving ? t("reserving") : t("reserveShort")}
               </Button>
             ) : (
               <Link href={loginHref} className={buttonVariants()}>
                 <MessageCircle className="mr-1.5 h-4 w-4" />
-                Iniciar sesión
+                {t("loginShort")}
               </Link>
             )}
           </div>
@@ -1121,17 +1141,17 @@ export function NumbersGrid({
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="login-required-title" className="text-lg font-semibold">
-              Debes iniciar sesión para participar
+              {t("loginModalTitle")}
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Iniciá sesión con Google para elegir y reservar tus números.
+              {t("loginModalText")}
             </p>
             <div className="mt-5 flex justify-center gap-2">
               <Button variant="outline" onClick={() => setLoginRequired(false)}>
-                Cancelar
+                {t("cancel")}
               </Button>
               <Button onClick={() => (window.location.href = loginHref)}>
-                Ir a iniciar sesión
+                {t("goToLogin")}
               </Button>
             </div>
           </div>
@@ -1153,13 +1173,13 @@ export function NumbersGrid({
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="summary-title" className="text-lg font-semibold">
-              Reserva confirmada
+              {t("summaryTitle")}
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              {summary.numbers.length} número
-              {summary.numbers.length === 1 ? "" : "s"} reservado
-              {summary.numbers.length === 1 ? "" : "s"} en{" "}
-              {raffleTitle ?? "el sorteo"}.
+              {t("summaryText", {
+                count: summary.numbers.length,
+                title: raffleTitle ?? t("whatsappTitle"),
+              })}
             </p>
 
             <div className="mt-4 flex flex-wrap gap-1.5">
@@ -1175,21 +1195,19 @@ export function NumbersGrid({
 
             {summary.notice && (
               <p className="mt-3 flex items-start gap-2 rounded-md bg-amber-500/10 p-2 text-[12px] text-amber-700 dark:text-amber-300">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> {summary.notice} El resumen incluye solo los que sí quedaron
-                reservados.
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{" "}
+                {summary.notice} {t("summaryNoticeExtra")}
               </p>
             )}
 
             <p className="mt-4 text-sm">
-              Total a pagar:{" "}
+              {t("totalToPay")}{" "}
               <span className="text-lg font-bold">
-                {formatPriceIn(summary.total, currency)}
+                {formatPriceIn(summary.total, currency, locale)}
               </span>
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              El contador de arriba es solo para elegir. La reserva queda
-              guardada {PREPAID_HOLD_HOURS} h hasta que el organizador confirme
-              el pago.
+              {t("holdNote", { hours: PREPAID_HOLD_HOURS })}
             </p>
 
             {isTransfer &&
@@ -1204,19 +1222,20 @@ export function NumbersGrid({
                       {transferInfo.note}
                     </p>
                   )}
-                  <p className="text-sm font-semibold">Datos para transferir</p>
+                  <p className="text-sm font-semibold">
+                    {t("transferData")}
+                  </p>
                   {transferInfo.alias && (
-                    <CopyRow label="Alias" value={transferInfo.alias} />
+                    <CopyRow label={t("alias")} value={transferInfo.alias} />
                   )}
                   {transferInfo.cbu && (
-                    <CopyRow label="CBU" value={transferInfo.cbu} />
+                    <CopyRow label={t("cbu")} value={transferInfo.cbu} />
                   )}
                   {transferInfo.bank && (
-                    <CopyRow label="Banco" value={transferInfo.bank} />
+                    <CopyRow label={t("bank")} value={transferInfo.bank} />
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Transferí el total y después enviá el comprobante por
-                    WhatsApp.
+                    {t("transferHint")}
                   </p>
                 </div>
               )}
@@ -1232,19 +1251,16 @@ export function NumbersGrid({
                 )}
               >
                 <MessageCircle className="mr-1.5 h-4 w-4" />
-                Enviar comprobante por WhatsApp
+                {t("sendReceipt")}
               </a>
             ) : (
               <p className="mt-4 flex items-start gap-2 rounded-md bg-amber-500/10 p-3 text-[12px] text-amber-700 dark:text-amber-300">
-                El organizador no cargó un WhatsApp de contacto. Usá los datos
-                de transferencia y coordiná el pago desde la página del sorteo.
+                {t("noWhatsapp")}
               </p>
             )}
 
             <p className="mt-3 text-xs text-muted-foreground">
-              Guardamos tus números {PREPAID_HOLD_HOURS} h. Cuando el
-              organizador reciba el comprobante, los marca como pagados. Podés
-              seguir tus números desde «Mis números».
+              {t("savedNote", { hours: PREPAID_HOLD_HOURS })}
             </p>
 
             <Button
@@ -1252,7 +1268,7 @@ export function NumbersGrid({
               className="mt-4 w-full"
               onClick={() => setSummary(null)}
             >
-              Cerrar
+              {t("close")}
             </Button>
           </div>
         </div>
@@ -1269,15 +1285,13 @@ export function NumbersGrid({
         >
           <div className="w-full max-w-lg rounded-2xl border bg-card p-6 shadow-2xl">
             <h2 id="direccion-reserva-title" className="text-lg font-semibold">
-              ¿A dónde te mandamos el premio?
+              {t("addressTitle")}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Necesitamos una dirección antes de reservar. Es privada: no se
-              muestra en tu perfil público. Después de guardarla seguimos con la
-              reserva de tus números.
+              {t("addressText")}
             </p>
             <DeliveryAddressForm
-              submitLabel="Guardar y reservar"
+              submitLabel={t("addressSubmit")}
               onSaved={() => {
                 direccionOk.current = true;
                 setPideDireccion(false);
@@ -1289,7 +1303,7 @@ export function NumbersGrid({
               className="mt-2 w-full"
               onClick={() => setPideDireccion(false)}
             >
-              Ahora no
+              {t("notNow")}
             </Button>
           </div>
         </div>
@@ -1308,14 +1322,14 @@ export function NumbersGrid({
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="terms-title" className="text-lg font-semibold">
-              Términos y Condiciones del sorteo
+              {t("termsTitle")}
             </h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              Para reservar números tenés que aceptar estas bases legales.
+              {t("termsText")}
             </p>
 
             <pre className="mt-3 max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg border bg-muted/30 p-3 text-[11px] leading-relaxed text-muted-foreground">
-{playerTerms ?? "El organizador no cargó bases legales para este sorteo."}
+              {playerTerms ?? t("termsFallback")}
             </pre>
 
             <label className="mt-3 flex items-start gap-2 text-sm">
@@ -1326,7 +1340,7 @@ export function NumbersGrid({
                 onChange={(e) => setTermsOk(e.target.checked)}
               />
               <span>
-                He leído y acepto los Términos y Condiciones de este sorteo
+                {t("termsAccept")}
               </span>
             </label>
 
@@ -1344,13 +1358,13 @@ export function NumbersGrid({
                   else if (accion === "checkout") void handleCheckout();
                 }}
               >
-                Aceptar y continuar
+                {t("acceptContinue")}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowTerms(false)}
               >
-                Cancelar
+                {t("cancel")}
               </Button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { ArrowLeft, Radio } from "lucide-react";
 
 import { Link as LocaleLink } from "@/src/i18n/navigation";
@@ -29,6 +29,7 @@ export default async function LiveDrawPage({
 }) {
   const t = await getTranslations("EnVivo");
   const tc = await getTranslations("Common");
+  const locale = await getLocale();
   const supabase = createClient();
 
   // 0115: la ruta acepta slug o UUID viejo. Sin esto, `/sorteos/<slug>/en-vivo`
@@ -156,7 +157,9 @@ export default async function LiveDrawPage({
           <p className="text-sm text-muted-foreground">
             {raffle.status === "drawn"
               ? t("finished")
-              : t("scheduled", { date: formatDateTime(raffle.draw_date) })}
+              : t("scheduled", {
+                  date: formatDateTime(raffle.draw_date, locale),
+                })}
           </p>
         </div>
         <Badge variant="secondary">{tc(`status.${raffle.status}`)}</Badge>

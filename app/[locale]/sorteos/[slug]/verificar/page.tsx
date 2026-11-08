@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { ArrowLeft, ShieldCheck, Trophy } from "lucide-react";
 
 import { Link as LocaleLink } from "@/src/i18n/navigation";
@@ -45,6 +45,7 @@ export default async function VerifyPage({
 }) {
   const t = await getTranslations("Verificar");
   const tc = await getTranslations("Common");
+  const locale = await getLocale();
   const supabase = createClient();
 
   // 0115: la ruta acepta slug o UUID viejo. Sin esto, `/sorteos/<slug>/verificar`
@@ -102,9 +103,10 @@ export default async function VerifyPage({
   const winners = (winnerRows ?? []) as RaffleWinner[];
 
   const base = siteUrl();
+  const localePrefix = locale === "es" ? "" : `/${locale}`;
   const verifyUrl = base
-    ? `${base}/sorteos/${clavePublica}/verificar`
-    : `/sorteos/${clavePublica}/verificar`;
+    ? `${base}${localePrefix}/sorteos/${clavePublica}/verificar`
+    : `${localePrefix}/sorteos/${clavePublica}/verificar`;
 
   const drawn = raffle.status === "drawn" && raffle.winner_number != null;
 
@@ -131,7 +133,7 @@ export default async function VerifyPage({
           </h1>
           <p className="text-[13px] text-fg-subtle">
             {drawn && raffle.drawn_at
-              ? t("drawnAt", { date: formatDateTime(raffle.drawn_at) })
+              ? t("drawnAt", { date: formatDateTime(raffle.drawn_at, locale) })
               : t("notDrawn")}
           </p>
         </div>
@@ -307,7 +309,7 @@ export default async function VerifyPage({
                     winnerName={winner.user_name ?? t("anonymous")}
                     winnerNumber={winner.number}
                     drawnAt={
-                      raffle.drawn_at ? formatDateTime(raffle.drawn_at) : null
+                      raffle.drawn_at ? formatDateTime(raffle.drawn_at, locale) : null
                     }
                     verificationHash={winner.winner_hash}
                     verifyUrl={verifyUrl}
@@ -320,7 +322,7 @@ export default async function VerifyPage({
                 winnerName={raffle.winner_name ?? t("anonymous")}
                 winnerNumber={raffle.winner_number}
                 drawnAt={
-                  raffle.drawn_at ? formatDateTime(raffle.drawn_at) : null
+                  raffle.drawn_at ? formatDateTime(raffle.drawn_at, locale) : null
                 }
                 verificationHash={
                   raffle.result_hash ?? raffle.draw_commitment ?? ""

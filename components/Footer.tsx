@@ -102,9 +102,9 @@ export function Footer() {
               </NextLink>
             </li>
             <li>
-              <NextLink href="/login" className={linkClass}>
+              <LocaleLink href="/login" className={linkClass}>
                 {t("login")}
-              </NextLink>
+              </LocaleLink>
             </li>
           </ul>
         </div>

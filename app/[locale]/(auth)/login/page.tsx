@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { cookies } from "next/headers";
+import { getTranslations } from "next-intl/server";
 
 import { LoginForm } from "@/components/LoginForm";
 import { PASSKEYS_ENABLED } from "@/lib/flags";
@@ -7,16 +9,29 @@ import { TERMS_COOKIE, termsCookieAccepted } from "@/lib/terms";
 
 export const dynamic = "force-dynamic";
 
-export default function LoginPage({
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Auth");
+  return {
+    title: t("loginMetaTitle"),
+    description: t("loginMetaDescription"),
+  };
+}
+
+export default async function LoginPage({
+  params,
   searchParams,
 }: {
+  params: { locale: string };
   searchParams: { error?: string; confirm?: string; next?: string };
 }) {
+  const t = await getTranslations("Auth");
+  const next =
+    searchParams.next ?? (params.locale === "es" ? null : `/${params.locale}`);
   const notice =
     searchParams.error === "auth"
-      ? "No se pudo completar el inicio con Google. Intentá de nuevo."
+      ? t("authError")
       : searchParams.confirm === "1"
-        ? "Te enviamos un correo de confirmación. Revisá tu bandeja de entrada."
+        ? t("confirmNotice")
         : null;
 
   return (
@@ -42,12 +57,9 @@ export default function LoginPage({
           />
         </div>
 
-        <h1 className="text-2xl font-bold tracking-tight">
-          Bienvenido a Gadu Sorteos
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("welcome")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Iniciá sesión con tu cuenta de Google para elegir tus números y
-          participar por premios de todo tipo.
+          {t("loginSubtitle")}
         </p>
 
         {notice && (
@@ -58,7 +70,7 @@ export default function LoginPage({
 
         <div className="mt-6">
           <LoginForm
-            next={searchParams.next ?? null}
+            next={next}
             termsAcceptedByCookie={termsCookieAccepted(
               cookies().get(TERMS_COOKIE)?.value,
             )}
@@ -66,13 +78,12 @@ export default function LoginPage({
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">
-          ¿No tenés cuenta? Se crea automáticamente con Google.
+          {t("noAccount")}
         </p>
 
         {PASSKEYS_ENABLED && (
           <p className="mt-2 text-xs text-muted-foreground">
-            Si ya registraste una llave de acceso, también podés entrar con la
-            huella o la cara de este dispositivo.
+            {t("passkeyNote")}
           </p>
         )}
       </div>

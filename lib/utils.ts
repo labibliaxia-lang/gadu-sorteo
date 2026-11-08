@@ -11,12 +11,28 @@ export function formatNumber(n: number): string {
 }
 
 /** Formatea un precio en pesos argentinos. */
+/**
+ * Los locales de next-intl son cortos (`es`, `en`, `pt`); para formatear
+ * moneda necesitamos la variante regional. `es-AR` conserva el formato
+ * histórico del producto.
+ */
+const INTL_LOCALES: Record<string, string> = {
+  es: "es-AR",
+  en: "en-US",
+  pt: "pt-BR",
+};
+
+function intlLocale(locale: string): string {
+  return INTL_LOCALES[locale] ?? locale;
+}
+
 /** Precio en la moneda del sorteo (LATAM). */
 export function formatPriceIn(
   value: number,
   currency: string = "ARS",
+  locale: string = "es-AR",
 ): string {
-  return new Intl.NumberFormat("es-AR", {
+  return new Intl.NumberFormat(intlLocale(locale), {
     style: "currency",
     currency: currency || "ARS",
     minimumFractionDigits: 0,
@@ -24,8 +40,11 @@ export function formatPriceIn(
   }).format(value);
 }
 
-export function formatPrice(value: number): string {
-  return formatPriceIn(value, "ARS");
+export function formatPrice(
+  value: number,
+  locale: string = "es-AR",
+): string {
+  return formatPriceIn(value, "ARS", locale);
 }
 
 /**
@@ -36,8 +55,11 @@ export function formatPrice(value: number): string {
 const AR_TZ = "America/Argentina/Buenos_Aires";
 
 /** Formatea una fecha legible en es-AR, siempre en hora argentina. */
-export function formatDateTime(value: string | Date): string {
-  return new Intl.DateTimeFormat("es-AR", {
+export function formatDateTime(
+  value: string | Date,
+  locale: string = "es-AR",
+): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: AR_TZ,

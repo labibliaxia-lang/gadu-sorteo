@@ -222,7 +222,7 @@ export function RafflesList({
                           className="h-3.5 w-3.5"
                           aria-hidden="true"
                         />
-                        {formatDateTime(raffle.draw_date)}
+                        {formatDateTime(raffle.draw_date, locale)}
                       </p>
                     </div>
                   </div>
@@ -233,7 +233,7 @@ export function RafflesList({
                         {tc("perNumber")}
                       </p>
                       <p className="font-mono text-[17px] text-fg">
-                        {formatPrice(Number(raffle.price_per_number))}
+                        {formatPrice(Number(raffle.price_per_number), locale)}
                       </p>
                     </div>
                     {raffleStat && raffleStat.total > 0 && (

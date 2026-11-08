@@ -193,7 +193,7 @@ export function RaffleQnA({
               </div>
 
               <p className="mt-1 text-xs text-muted-foreground">
-                {formatDateTime(item.createdAt)}
+                {formatDateTime(item.createdAt, locale)}
               </p>
 
               {item.answer && (

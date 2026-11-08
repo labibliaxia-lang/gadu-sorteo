@@ -1,0 +1,36 @@
+Fase 2 — smoke local con `next start` en :3100 (2026-11-08)
+
+Rutas y lang:
+200 lang=OK http://localhost:3100/login
+200 lang=OK http://localhost:3100/en/login
+200 lang=OK http://localhost:3100/pt/login
+200 lang=OK http://localhost:3100/en/register
+200 lang=OK http://localhost:3100/en/sorteos/df7c3431-babd-403b-988d-806373d2365a
+200 lang=OK http://localhost:3100/es/sorteos/df7c3431-babd-403b-988d-806373d2365a
+200 lang=OK http://localhost:3100/pt/sorteos/df7c3431-babd-403b-988d-806373d2365a
+200 lang=OK http://localhost:3100/en/sorteos/auto-2026-demo
+
+Formato:
+Fecha EN: Nov 9, 2026, 11:20 AM
+Fecha ES: 9 nov 2026, 11:20 a. m.
+Precio ES: $ 1
+Precio EN: ARS 1
+
+Notas:
+- `/sorteos/auto-2026-demo` está sorteado y no muestra grid; el grid se verificó
+  con el sorteo activo `df7c3431-babd-403b-988d-806373d2365a`.
+- El build genera `/[locale]/login` y `/[locale]/register` para es/en/pt.
+- `typecheck`, `lint`, `test` (336) y `build`: OK.
+
+Sesi�n real (cuenta de test):
+/ -> logged=True
+/en -> logged=True
+/en/sorteos/df7c3431-babd-403b-988d-806373d2365a -> logged=True
+
+Checks finales 2026-11-08:
+typecheck OK
+lint OK
+test 336/336 OK
+build OK
+MCP validate_icu: 609 claves, valid=true, 0 errores (es/en/pt)
+MCP sync_locales: inSync=true, 0 faltantes/sobrantes

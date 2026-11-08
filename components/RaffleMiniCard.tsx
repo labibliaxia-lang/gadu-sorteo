@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays, Gift } from "lucide-react";
 
 import { Link as LocaleLink } from "@/src/i18n/navigation";
@@ -14,6 +14,7 @@ import type { Raffle } from "@/lib/types";
  */
 export function RaffleMiniCard({ raffle }: { raffle: Raffle }) {
   const t = useTranslations("RaffleMiniCard");
+  const locale = useLocale();
   return (
     <LocaleLink
       href={`/sorteos/${raffle.id}`}
@@ -44,7 +45,7 @@ export function RaffleMiniCard({ raffle }: { raffle: Raffle }) {
         <p className="mt-1 truncate text-sm font-medium">{raffle.title}</p>
         <p className="mt-1 flex items-center gap-1.5 font-mono text-[11px] text-fg-subtle">
           <CalendarDays className="h-3 w-3 shrink-0" aria-hidden="true" />
-          {formatDateTime(raffle.draw_date)}
+          {formatDateTime(raffle.draw_date, locale)}
         </p>
         <span className="mt-0.5 block">
           <RaffleCountdown
@@ -54,7 +55,7 @@ export function RaffleMiniCard({ raffle }: { raffle: Raffle }) {
           />
         </span>
         <p className="mt-1 font-mono text-[12px] text-fg">
-          {formatPrice(Number(raffle.price_per_number))}{" "}
+          {formatPrice(Number(raffle.price_per_number), locale)}{" "}
           <span className="text-[11px] text-fg-subtle">
             {t("perNumber")}
           </span>

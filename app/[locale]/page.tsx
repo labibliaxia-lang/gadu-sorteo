@@ -1,6 +1,6 @@
 import Image from "next/image";
 import NextLink from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   ArrowRight,
   CalendarDays,
@@ -52,6 +52,7 @@ async function FeaturedTicket({
 }) {
   const t = await getTranslations("Home");
   const tc = await getTranslations("Common");
+  const locale = await getLocale();
   const percent = rafflePercent(stats);
   const statusLabel = tc(`status.${raffle.status}`);
   const status = statusVariant(raffle.status);
@@ -101,7 +102,7 @@ async function FeaturedTicket({
           </h2>
           <p className="flex items-center gap-1.5 font-mono text-[12px] text-fg-subtle">
             <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
-            {formatDateTime(raffle.draw_date)}
+            {formatDateTime(raffle.draw_date, locale)}
           </p>
         </div>
 
@@ -111,7 +112,7 @@ async function FeaturedTicket({
               {tc("perNumber")}
             </p>
             <p className="font-mono text-lg text-fg">
-              {formatPrice(Number(raffle.price_per_number))}
+              {formatPrice(Number(raffle.price_per_number), locale)}
             </p>
           </div>
           {stats && stats.total > 0 && (
@@ -158,6 +159,7 @@ async function FeaturedTicket({
 export default async function HomePage() {
   const t = await getTranslations("Home");
   const tc = await getTranslations("Common");
+  const locale = await getLocale();
   const supabase = createClient();
   const {
     data: { user },
@@ -335,7 +337,7 @@ export default async function HomePage() {
                           className="h-3.5 w-3.5 shrink-0"
                           aria-hidden="true"
                         />
-                        {formatDateTime(featured.draw_date)}
+                        {formatDateTime(featured.draw_date, locale)}
                       </p>
                     </div>
 
@@ -345,7 +347,10 @@ export default async function HomePage() {
                           {tc("perNumber")}
                         </p>
                         <p className="font-mono text-xl text-fg">
-                          {formatPrice(Number(featured.price_per_number))}
+                          {formatPrice(
+                            Number(featured.price_per_number),
+                            locale,
+                          )}
                         </p>
                       </div>
                       <p className="text-right font-mono text-[11px] leading-tight text-fg-subtle">

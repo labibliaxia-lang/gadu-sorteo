@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { BadgeCheck, Gift, Trophy } from "lucide-react";
 
 import { Link as LocaleLink } from "@/src/i18n/navigation";
@@ -51,6 +51,7 @@ function shortWinnerName(
 export default async function GanadoresPage() {
   const t = await getTranslations("Ganadores");
   const tc = await getTranslations("Common");
+  const locale = await getLocale();
   const supabase = createClient();
 
   const { data: raffles } = await supabase
@@ -176,7 +177,7 @@ export default async function GanadoresPage() {
                     </h2>
                     {raffle.drawn_at && (
                       <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-fg-subtle">
-                        {formatDateTime(raffle.drawn_at)}
+                        {formatDateTime(raffle.drawn_at, locale)}
                       </p>
                     )}
                   </div>

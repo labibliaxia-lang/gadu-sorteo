@@ -15,6 +15,8 @@ const LOCALIZED_PREFIXES = [
   "/como-funciona",
   "/ganadores",
   "/planes",
+  "/login",
+  "/register",
 ];
 
 function isLocalizedRoute(pathname: string): boolean {
@@ -25,6 +27,11 @@ function isLocalizedRoute(pathname: string): boolean {
     (prefix) =>
       withoutLocale === prefix || withoutLocale.startsWith(`${prefix}/`),
   );
+}
+
+function localeFromPath(pathname: string): "es" | "en" | "pt" {
+  const match = pathname.match(/^\/(es|en|pt)(?=\/|$)/);
+  return (match?.[1] as "es" | "en" | "pt" | undefined) ?? "es";
 }
 
 const ADMIN_COOKIE = "admin_verified";
@@ -234,10 +241,31 @@ export async function middleware(request: NextRequest) {
   // conserva las cookies de sesión que Supabase pudo haber refrescado.
   if (isLocalizedRoute(pathname)) {
     const intlResponse = intlMiddleware(request);
+
+    // Los redirects de next-intl (p. ej. /es → /) no renderizan página: se
+    // devuelven tal cual.
+    if (intlResponse.status >= 300 && intlResponse.status < 400) {
+      return intlResponse;
+    }
+
+    // Se reconstruye la respuesta con los headers originales de la petición.
+    // El rewrite de next-intl podía dejar al Server Component sin las cookies
+    // de sesión y de consentimiento.
+    const headers = new Headers(request.headers);
+    headers.set("x-next-intl-locale", localeFromPath(pathname));
+    const rewrite = intlResponse.headers.get("x-middleware-rewrite");
+    const response = rewrite
+      ? NextResponse.rewrite(new URL(rewrite, request.url), {
+          request: { headers },
+        })
+      : NextResponse.next({ request: { headers } });
+
+    const link = intlResponse.headers.get("link");
+    if (link) response.headers.set("link", link);
     supabaseResponse.cookies.getAll().forEach((cookie) => {
-      intlResponse.cookies.set(cookie);
+      response.cookies.set(cookie);
     });
-    return intlResponse;
+    return response;
   }
 
   const isSuperArea =
