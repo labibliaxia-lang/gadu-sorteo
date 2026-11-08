@@ -1,0 +1,17 @@
+Fase 3 — smoke local con `next start` en :3100 (2026-11-08)
+
+200 lang=OK http://localhost:3100/en/terminos
+200 lang=OK http://localhost:3100/en/privacidad
+200 lang=OK http://localhost:3100/terminos
+200 lang=OK http://localhost:3100/pt/terminos
+200 lang=OK http://localhost:3100/en/login
+200 lang=OK http://localhost:3100/en/sorteos/df7c3431-babd-403b-988d-806373d2365a
+
+Enlaces:
+- Footer en /en: /en/terminos y /en/privacidad.
+- Login en /en/login: /en/terminos y /en/privacidad.
+- /es/terminos -> 307 /terminos.
+
+Catálogos:
+- 687 claves, ICU válido, sync 0 diferencias.
+- Tests 336/336; typecheck, lint y build OK.

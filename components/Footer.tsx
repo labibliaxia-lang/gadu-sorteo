@@ -114,14 +114,14 @@ export function Footer() {
           <h3 className="eyebrow mb-3">{t("legal")}</h3>
           <ul className="space-y-2">
             <li>
-              <NextLink href="/terminos" className={linkClass}>
+              <LocaleLink href="/terminos" className={linkClass}>
                 {t("terms")}
-              </NextLink>
+              </LocaleLink>
             </li>
             <li>
-              <NextLink href="/privacidad" className={linkClass}>
+              <LocaleLink href="/privacidad" className={linkClass}>
                 {t("privacy")}
-              </NextLink>
+              </LocaleLink>
             </li>
           </ul>
         </div>

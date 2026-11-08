@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 import { PasskeyLoginButton } from "@/components/PasskeyLoginButton";
 import {
@@ -47,24 +47,24 @@ export function LoginForm({
           <span>
             {t.rich("termsRich", {
               terms: (chunks) => (
-                <Link
+                <LocaleLink
                   href={TERMS_PATH}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-amber-800 underline underline-offset-4 dark:text-amber-300"
                 >
                   {chunks}
-                </Link>
+                </LocaleLink>
               ),
               privacy: (chunks) => (
-                <Link
+                <LocaleLink
                   href={PRIVACY_PATH}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-amber-800 underline underline-offset-4 dark:text-amber-300"
                 >
                   {chunks}
-                </Link>
+                </LocaleLink>
               ),
             })}
           </span>

@@ -52,6 +52,8 @@ const LOCALIZED_ROOTS = [
   "/planes",
   "/login",
   "/register",
+  "/terminos",
+  "/privacidad",
 ];
 
 /** Solo las rutas migradas tienen versión en otro idioma. */

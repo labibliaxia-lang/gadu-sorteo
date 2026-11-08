@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 
 import { saveDeliveryAddress } from "@/app/perfil/actions";
@@ -21,6 +22,17 @@ import { direccionEntregaCompleta } from "@/lib/direccion";
  * y los tests de UI los usan.
  */
 
+const ERROR_KEYS: Record<string, string> = {
+  "El teléfono es demasiado largo": "phoneLong",
+  "Ingresá un teléfono válido": "phone",
+  "Ingresá la dirección de entrega": "address",
+  "Ingresá la ciudad": "city",
+  "Ingresá la provincia": "province",
+  "Ingresá el código postal": "postalCode",
+  "Datos inválidos.": "generic",
+  "No autenticado": "auth",
+};
+
 export interface DireccionInicial {
   phone?: string | null;
   address_line?: string | null;
@@ -33,12 +45,14 @@ export interface DireccionInicial {
 export function DeliveryAddressForm({
   inicial,
   onSaved,
-  submitLabel = "Guardar dirección y continuar",
+  submitLabel,
 }: {
   inicial?: DireccionInicial;
   onSaved: () => void;
   submitLabel?: string;
 }) {
+  const t = useTranslations("DeliveryAddress");
+  const label = submitLabel ?? t("saveDefault");
   const [phone, setPhone] = useState(inicial?.phone ?? "");
   const [address, setAddress] = useState(inicial?.address_line ?? "");
   const [city, setCity] = useState(inicial?.city ?? "");
@@ -73,7 +87,8 @@ export function DeliveryAddressForm({
     setBusy(false);
 
     if (!resultado.ok) {
-      setError(resultado.error);
+      const key = ERROR_KEYS[resultado.error];
+      setError(key ? t(`errors.${key}`) : t("errors.unknown"));
       return;
     }
 
@@ -85,7 +100,7 @@ export function DeliveryAddressForm({
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
           <label htmlFor="gate-phone" className="text-sm font-medium">
-            Teléfono
+            {t("phone")}
           </label>
           <Input
             id="gate-phone"
@@ -96,7 +111,7 @@ export function DeliveryAddressForm({
         </div>
         <div className="space-y-1.5 sm:col-span-2">
           <label htmlFor="gate-address" className="text-sm font-medium">
-            Dirección y número
+            {t("address")}
           </label>
           <Input
             id="gate-address"
@@ -107,7 +122,7 @@ export function DeliveryAddressForm({
         </div>
         <div className="space-y-1.5">
           <label htmlFor="gate-city" className="text-sm font-medium">
-            Ciudad
+            {t("city")}
           </label>
           <Input
             id="gate-city"
@@ -118,7 +133,7 @@ export function DeliveryAddressForm({
         </div>
         <div className="space-y-1.5">
           <label htmlFor="gate-province" className="text-sm font-medium">
-            Provincia
+            {t("province")}
           </label>
           <Input
             id="gate-province"
@@ -129,7 +144,7 @@ export function DeliveryAddressForm({
         </div>
         <div className="space-y-1.5">
           <label htmlFor="gate-postal" className="text-sm font-medium">
-            Código postal
+            {t("postalCode")}
           </label>
           <Input
             id="gate-postal"
@@ -140,7 +155,7 @@ export function DeliveryAddressForm({
         </div>
         <div className="space-y-1.5">
           <label htmlFor="gate-country" className="text-sm font-medium">
-            País
+            {t("country")}
           </label>
           <Input
             id="gate-country"
@@ -163,7 +178,7 @@ export function DeliveryAddressForm({
         disabled={!completo || busy}
       >
         {busy ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
-        {submitLabel}
+        {label}
       </Button>
     </div>
   );

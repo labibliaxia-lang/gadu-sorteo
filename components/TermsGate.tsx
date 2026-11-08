@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2, ShieldCheck } from "lucide-react";
 
+import {
+  Link as LocaleLink,
+  usePathname,
+} from "@/src/i18n/navigation";
 import { acceptTerms } from "@/app/actions/terms";
 import { Button } from "@/components/ui/button";
 import { PRIVACY_PATH, TERMS_PATH, TERMS_VERSION } from "@/lib/terms";
@@ -27,6 +30,7 @@ export function TermsGate({
   hasAcceptedTerms: boolean;
   acceptedVersion: string | null;
 }) {
+  const t = useTranslations("TermsGate");
   const pathname = usePathname();
   const [alreadyAccepted, setAlreadyAccepted] = useState(accepted);
   const [checked, setChecked] = useState(false);
@@ -73,21 +77,22 @@ export function TermsGate({
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-brand-600" />
           <h2 id="terms-gate-title" className="text-lg font-semibold">
-            {hasAcceptedTerms
-              ? "Actualizamos los Términos"
-              : "Un paso antes de continuar"}
+            {hasAcceptedTerms ? t("updatedTitle") : t("title")}
           </h2>
         </div>
 
         <p className="mt-2 text-sm text-muted-foreground">
           {hasAcceptedTerms
-            ? `Los Términos y la Política de Privacidad cambiaron a la versión ${TERMS_VERSION}. Aceptá la nueva versión para seguir usando Gadu Sorteos.`
-            : "Para usar Gadu Sorteos necesitás aceptar los Términos y Condiciones y la Política de Privacidad. Las aceptaste antes de entrar con Google, pero todavía no quedó registrada en tu cuenta."}
+            ? t("updatedText", { version: TERMS_VERSION })
+            : t("introText")}
         </p>
 
         {hasAcceptedTerms && acceptedVersion && (
           <p className="mt-1 font-mono text-xs text-muted-foreground">
-            Versión aceptada: {acceptedVersion} · vigente: {TERMS_VERSION}
+            {t("acceptedVersion", {
+              accepted: acceptedVersion,
+              current: TERMS_VERSION,
+            })}
           </p>
         )}
 
@@ -99,25 +104,28 @@ export function TermsGate({
             className="mt-0.5 h-4 w-4 rounded border-border accent-brand-500"
           />
           <span>
-            He leído y acepto los{" "}
-            <Link
-              href={TERMS_PATH}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-800 underline underline-offset-4 dark:text-brand-300"
-            >
-              Términos y Condiciones
-            </Link>{" "}
-            y la{" "}
-            <Link
-              href={PRIVACY_PATH}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-800 underline underline-offset-4 dark:text-brand-300"
-            >
-              Política de Privacidad
-            </Link>
-            .
+            {t.rich("termsRich", {
+              terms: (chunks) => (
+                <LocaleLink
+                  href={TERMS_PATH}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-800 underline underline-offset-4 dark:text-brand-300"
+                >
+                  {chunks}
+                </LocaleLink>
+              ),
+              privacy: (chunks) => (
+                <LocaleLink
+                  href={PRIVACY_PATH}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-800 underline underline-offset-4 dark:text-brand-300"
+                >
+                  {chunks}
+                </LocaleLink>
+              ),
+            })}
           </span>
         </label>
 
@@ -133,7 +141,7 @@ export function TermsGate({
           disabled={!checked || busy}
         >
           {busy ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
-          Aceptar versión {TERMS_VERSION} y continuar
+          {t("accept", { version: TERMS_VERSION })}
         </Button>
       </div>
     </div>

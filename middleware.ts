@@ -17,6 +17,8 @@ const LOCALIZED_PREFIXES = [
   "/planes",
   "/login",
   "/register",
+  "/terminos",
+  "/privacidad",
 ];
 
 function isLocalizedRoute(pathname: string): boolean {
