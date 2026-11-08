@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ExternalLink, Play, Trophy } from "lucide-react";
+import { ExternalLink, Play, Trophy, Volume2, VolumeX } from "lucide-react";
 
 import { drawWinner } from "@/app/admin/sorteos/[id]/actions";
 import { createClient } from "@/lib/supabase/client";
@@ -42,6 +42,117 @@ interface ConfettiOrigin {
 }
 
 const CONFETTI_COLORS = ["#F5B301", "#FFD23A", "#FFF0B8", "#FFFFFF"];
+
+const TICKS_TOTALES = 40;
+const TICKS_RAPIDOS = 30;
+const TICK_RAPIDO_MS = 50;
+const TICK_FINAL_MS = 400;
+const PAUSA_REVELADO_MS = 2000;
+const PAUSA_ENTRE_PREMIOS_MS = 2000;
+
+/** Curva de suspenso: ráfaga inicial y frenada progresiva en los últimos 10. */
+function retrasoTick(tick: number): number {
+  if (tick <= TICKS_RAPIDOS) return TICK_RAPIDO_MS;
+  const avance = (tick - TICKS_RAPIDOS) / (TICKS_TOTALES - TICKS_RAPIDOS);
+  return TICK_RAPIDO_MS + avance * avance * (TICK_FINAL_MS - TICK_RAPIDO_MS);
+}
+
+/** Tono corto con envolvente: base de los ticks, la cuenta y la fanfarria. */
+function sonarTono(
+  ctx: AudioContext,
+  frecuencia: number,
+  inicio: number,
+  duracion: number,
+  volumen: number,
+  tipo: OscillatorType = "sine",
+) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = tipo;
+  osc.frequency.setValueAtTime(frecuencia, inicio);
+  gain.gain.setValueAtTime(0.0001, inicio);
+  gain.gain.exponentialRampToValueAtTime(
+    Math.max(volumen, 0.0002),
+    inicio + 0.008,
+  );
+  gain.gain.exponentialRampToValueAtTime(0.0001, inicio + duracion);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(inicio);
+  osc.stop(inicio + duracion + 0.02);
+}
+
+/** Golpe seco de la ruleta. */
+function sonarTick(ctx: AudioContext, intensidad: number) {
+  sonarTono(
+    ctx,
+    1400 + intensidad * 600,
+    ctx.currentTime,
+    0.045,
+    0.035 * intensidad,
+    "square",
+  );
+}
+
+/** Redoble de tambor sintetizado con ruido y filtro pasa-bajos. */
+function sonarRedoble(ctx: AudioContext, intensidad: number) {
+  const ahora = ctx.currentTime;
+  const duracion = 0.14;
+  const muestras = Math.max(1, Math.floor(ctx.sampleRate * duracion));
+  const buffer = ctx.createBuffer(1, muestras, ctx.sampleRate);
+  const datos = buffer.getChannelData(0);
+
+  for (let i = 0; i < muestras; i += 1) {
+    const caida = 1 - i / muestras;
+    datos[i] = (Math.random() * 2 - 1) * caida * caida;
+  }
+
+  const fuente = ctx.createBufferSource();
+  fuente.buffer = buffer;
+  const filtro = ctx.createBiquadFilter();
+  filtro.type = "lowpass";
+  filtro.frequency.setValueAtTime(140 + intensidad * 160, ahora);
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.22 * intensidad, ahora);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ahora + duracion);
+  fuente.connect(filtro).connect(gain).connect(ctx.destination);
+  fuente.start(ahora);
+}
+
+/** Fanfarria "ta-da!": arpegio mayor y, en el cierre, acorde + destello. */
+function sonarVictoria(ctx: AudioContext, final = false) {
+  const ahora = ctx.currentTime;
+  const notas = [523.25, 659.25, 783.99, 1046.5];
+
+  notas.forEach((frecuencia, indice) => {
+    sonarTono(
+      ctx,
+      frecuencia,
+      ahora + indice * 0.1,
+      final ? 0.55 : 0.3,
+      0.09,
+      "triangle",
+    );
+  });
+
+  if (!final) return;
+
+  notas.forEach((frecuencia) => {
+    sonarTono(ctx, frecuencia, ahora + 0.46, 0.8, 0.06);
+  });
+  sonarTono(ctx, 2093, ahora + 0.5, 0.65, 0.03);
+}
+
+/** Beep de la cuenta regresiva; el 1 suena más agudo. */
+function sonarCuenta(ctx: AudioContext, numero: number) {
+  sonarTono(
+    ctx,
+    numero === 1 ? 880 : 440,
+    ctx.currentTime,
+    0.09,
+    0.045,
+    "triangle",
+  );
+}
 
 /** Respeta la preferencia del sistema también antes de importar el paquete. */
 function prefiereMenosMovimiento(): boolean {
@@ -133,6 +244,97 @@ const CEREMONIA_CSS = `
     filter: blur(52px);
   }
 
+  /* Focos y viñeta: capa teatral sobre la tarjeta, debajo del contenido. */
+  .ceremonia-fx {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  .ceremonia-spot {
+    position: absolute;
+    left: 50%;
+    top: -65%;
+    width: 140%;
+    height: 160%;
+    transform: translateX(-50%);
+    background:
+      linear-gradient(
+        112deg,
+        transparent 38%,
+        rgba(245, 179, 1, 0.12) 48%,
+        transparent 52%
+      ),
+      linear-gradient(
+        248deg,
+        transparent 38%,
+        rgba(245, 179, 1, 0.1) 48%,
+        transparent 52%
+      ),
+      radial-gradient(
+        ellipse 40% 55% at 50% 18%,
+        rgba(255, 214, 102, 0.2),
+        transparent 70%
+      );
+    filter: blur(16px);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .ceremonia-fx[data-show="true"] .ceremonia-spot {
+    opacity: 1;
+    animation: ceremonia-sway 7s ease-in-out infinite alternate;
+  }
+
+  @keyframes ceremonia-sway {
+    from {
+      transform: translateX(-50%) rotate(-4deg);
+    }
+    to {
+      transform: translateX(-50%) rotate(4deg);
+    }
+  }
+
+  .ceremonia-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse 62% 58% at 50% 46%,
+      transparent 30%,
+      rgba(0, 0, 0, 0.58) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .light .ceremonia-vignette {
+    background: radial-gradient(
+      ellipse 62% 58% at 50% 46%,
+      transparent 32%,
+      rgba(20, 19, 15, 0.22) 100%
+    );
+  }
+
+  .ceremonia-fx[data-show="true"] .ceremonia-vignette {
+    opacity: 1;
+  }
+
+  .ceremonia-fx[data-reveal="true"] {
+    animation: ceremonia-stage-flash 0.7s ease-out both;
+  }
+
+  @keyframes ceremonia-stage-flash {
+    0% {
+      box-shadow: inset 0 0 100px 12px rgba(245, 179, 1, 0.34);
+    }
+    100% {
+      box-shadow: inset 0 0 0 0 rgba(245, 179, 1, 0);
+    }
+  }
+
   .ceremonia-reel {
     animation: ceremonia-reel 0.26s ease-in-out infinite;
     will-change: transform, filter;
@@ -153,25 +355,50 @@ const CEREMONIA_CSS = `
   }
 
   .ceremonia-reveal {
-    animation: ceremonia-reveal 0.55s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+    animation: ceremonia-reveal 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
   }
 
   @keyframes ceremonia-reveal {
     0% {
-      transform: scale(0.9);
-      filter: blur(6px);
+      transform: scale(0.82);
+      filter: blur(10px) brightness(1.3);
       text-shadow: 0 0 0 rgba(245, 179, 1, 0);
     }
-    60% {
-      transform: scale(1.07);
-      filter: blur(0);
-      text-shadow: 0 0 34px rgba(245, 179, 1, 0.6);
+    55% {
+      transform: scale(1.18);
+      filter: blur(0) brightness(1.35);
+      text-shadow: 0 0 46px rgba(245, 179, 1, 0.75);
     }
     100% {
       transform: scale(1);
-      filter: blur(0);
-      text-shadow: 0 0 18px rgba(245, 179, 1, 0.25);
+      filter: blur(0) brightness(1);
+      text-shadow: 0 0 20px rgba(245, 179, 1, 0.3);
     }
+  }
+
+  /* Latido del número en cada tick lento; se reinicia al cambiar la key. */
+  .ceremonia-beat {
+    display: inline-block;
+    animation: ceremonia-beat 0.22s cubic-bezier(0.2, 0.9, 0.25, 1.2);
+  }
+
+  @keyframes ceremonia-beat {
+    0% {
+      transform: scale(1);
+    }
+    45% {
+      transform: scale(1.14);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Pausa de 2 s antes del revelado: el número queda en primer plano. */
+  .ceremonia-hold {
+    transform: scale(1.05);
+    filter: brightness(1.15);
+    transition: transform 0.35s ease, filter 0.35s ease;
   }
 
   .ceremonia-count {
@@ -234,11 +461,23 @@ const CEREMONIA_CSS = `
 
     .ceremonia-reel,
     .ceremonia-reveal,
+    .ceremonia-beat,
+    .ceremonia-hold,
     .ceremonia-count,
     .ceremonia-rise {
       animation: none;
       filter: none;
       transform: none;
+      transition: none;
+    }
+
+    .ceremonia-spot {
+      animation: none;
+    }
+
+    .ceremonia-fx[data-reveal="true"] {
+      animation: none;
+      box-shadow: none;
     }
 
     .ceremonia-flash {
@@ -283,6 +522,8 @@ export function LiveDrawAnimation({
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const samples = useRef(sampleNumbers);
   const numberRef = useRef<HTMLParagraphElement | null>(null);
+  const audioRef = useRef<AudioContext | null>(null);
+  const mutedRef = useRef(false);
 
   const [phase, setPhase] = useState<Phase>(
     initialStatus === "drawn"
@@ -302,15 +543,53 @@ export function LiveDrawAnimation({
   const [countdown, setCountdown] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [revealKey, setRevealKey] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const [slowPhase, setSlowPhase] = useState(false);
+  const [holding, setHolding] = useState(false);
+  const [beatKey, setBeatKey] = useState(0);
 
   useEffect(() => {
     samples.current = sampleNumbers;
   }, [sampleNumbers]);
 
+  useEffect(() => {
+    mutedRef.current = muted;
+  }, [muted]);
+
   const limpiarTimers = useCallback(() => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
   }, []);
+
+  /** Crea o reanuda el AudioContext: siempre después de un gesto del usuario. */
+  const asegurarAudio = useCallback((): AudioContext | null => {
+    if (typeof window === "undefined") return null;
+    if (!audioRef.current) {
+      const Ctor = window.AudioContext;
+      if (!Ctor) return null;
+      try {
+        audioRef.current = new Ctor();
+      } catch {
+        // Si el navegador bloquea el audio, el sorteo debe seguir igual.
+        return null;
+      }
+    }
+    if (audioRef.current.state === "suspended") {
+      void audioRef.current.resume().catch(() => {});
+    }
+    return audioRef.current;
+  }, []);
+
+  // Al desmontar: cortar timers y cerrar el audio para que no siga sonando.
+  useEffect(() => {
+    return () => {
+      limpiarTimers();
+      if (audioRef.current) {
+        void audioRef.current.close();
+        audioRef.current = null;
+      }
+    };
+  }, [limpiarTimers]);
 
   /** Busca en la base los ganadores definitivos (multipremio). */
   const cargarGanadores = useCallback(async (): Promise<LiveWinner[]> => {
@@ -329,15 +608,27 @@ export function LiveDrawAnimation({
   }, [raffleId, supabase]);
 
   /**
-   * Secuencia: cuenta 3-2-1, corre la ruleta ~2 s por premio, revela el
-   * número, lanza confeti, lo suma al podio y espera 2 s antes del siguiente.
+   * Secuencia: cuenta 3-2-1, ruleta con frenada de suspenso (50 ms → 400 ms
+   * en los últimos 10 números), 2 s de pausa antes de revelar, confeti,
+   * fanfarria y podio. Los sonidos se sintetizan con Web Audio y se pueden
+   * silenciar sin cortar la animación.
    */
   const runSequence = useCallback(
     (lista: LiveWinner[]) => {
       if (animated.current || lista.length === 0) return;
       animated.current = true;
 
+      const audio = asegurarAudio();
       const numeros = samples.current.length > 0 ? samples.current : [1];
+      const tocar = (accion: (ctx: AudioContext) => void) => {
+        if (!mutedRef.current && audio && audio.state === "running") {
+          try {
+            accion(audio);
+          } catch {
+            // El audio es decorativo: nunca debe cortar la secuencia.
+          }
+        }
+      };
 
       const animarPremio = (indice: number) => {
         const premio = lista[indice];
@@ -345,27 +636,26 @@ export function LiveDrawAnimation({
           setPhase("done");
           setCurrentPrize(null);
           setCountdown(null);
+          setSlowPhase(false);
+          setHolding(false);
           lanzarConfeti("final");
+          tocar((ctx) => sonarVictoria(ctx, true));
           return;
         }
 
         setCurrentPrize(premio);
         setRevealed(false);
+        setSlowPhase(false);
+        setHolding(false);
         let tick = 0;
-        const totalTicks = 40;
 
-        const girar = () => {
-          tick += 1;
-          if (tick < totalTicks) {
-            setDisplay(numeros[Math.floor(Math.random() * numeros.length)]);
-            const delay = 45 + Math.pow(tick / totalTicks, 3) * 120;
-            timers.current.push(setTimeout(girar, delay));
-            return;
-          }
-
+        const revelar = () => {
           setDisplay(premio.number);
           setWinner(premio.number);
           setRevealed(true);
+          setSlowPhase(false);
+          setHolding(false);
+          setBeatKey((clave) => clave + 1);
           setRevealKey((clave) => clave + 1);
           setPodium((prev) => [
             ...prev.filter((p) => p.position !== premio.position),
@@ -385,10 +675,62 @@ export function LiveDrawAnimation({
                 }
               : undefined;
           lanzarConfeti("premio", origen);
+          tocar((ctx) => sonarVictoria(ctx));
 
           timers.current.push(
-            setTimeout(() => animarPremio(indice + 1), 2000),
+            setTimeout(
+              () => animarPremio(indice + 1),
+              PAUSA_ENTRE_PREMIOS_MS,
+            ),
           );
+        };
+
+        const girar = () => {
+          tick += 1;
+          if (tick > TICKS_TOTALES) return;
+
+          setDisplay(numeros[Math.floor(Math.random() * numeros.length)]);
+
+          if (tick > TICKS_RAPIDOS) {
+            const avance =
+              (tick - TICKS_RAPIDOS) / (TICKS_TOTALES - TICKS_RAPIDOS);
+            setSlowPhase(true);
+            setBeatKey((clave) => clave + 1);
+            tocar((ctx) => sonarRedoble(ctx, 0.35 + avance * 0.65));
+          } else if (tick % 2 === 0) {
+            tocar((ctx) => sonarTick(ctx, 0.5 + (tick / TICKS_RAPIDOS) * 0.4));
+          }
+
+          if (tick === TICKS_TOTALES) {
+            setHolding(true);
+
+            // Redoble continuo durante la pausa de 2 s: cada golpe late el número.
+            const pasos = Math.floor(PAUSA_REVELADO_MS / 90);
+            for (let paso = 0; paso < pasos; paso += 1) {
+              timers.current.push(
+                setTimeout(() => {
+                  if (
+                    !mutedRef.current &&
+                    audio &&
+                    audio.state === "running"
+                  ) {
+                    try {
+                      sonarRedoble(audio, 0.45 + (paso / pasos) * 0.55);
+                      setBeatKey((clave) => clave + 1);
+                    } catch {
+                      // El redoble es decorativo: la secuencia sigue.
+                    }
+                  }
+                }, paso * 90),
+              );
+            }
+
+            timers.current.push(setTimeout(revelar, PAUSA_REVELADO_MS));
+            return;
+          }
+
+          // La frenada usa el tick siguiente: el último salto tarda 400 ms.
+          timers.current.push(setTimeout(girar, retrasoTick(tick + 1)));
         };
 
         girar();
@@ -404,11 +746,12 @@ export function LiveDrawAnimation({
           return;
         }
         setCountdown(n);
+        tocar((ctx) => sonarCuenta(ctx, n));
         timers.current.push(setTimeout(() => descontar(n - 1), 800));
       };
       descontar(3);
     },
-    [],
+    [asegurarAudio],
   );
 
   const runSingle = useCallback(
@@ -435,6 +778,9 @@ export function LiveDrawAnimation({
     setCountdown(null);
     setRevealed(false);
     setRevealKey(0);
+    setSlowPhase(false);
+    setHolding(false);
+    setBeatKey(0);
     timers.current.push(
       setTimeout(() => runSequence(demoWinners), 300),
     );
@@ -513,6 +859,7 @@ export function LiveDrawAnimation({
   ]);
 
   function reiniciarDemo() {
+    asegurarAudio();
     animated.current = false;
     limpiarTimers();
     setPodium([]);
@@ -522,11 +869,22 @@ export function LiveDrawAnimation({
     setCountdown(null);
     setRevealed(false);
     setRevealKey(0);
+    setSlowPhase(false);
+    setHolding(false);
+    setBeatKey(0);
     setPhase("idle");
     timers.current.push(setTimeout(() => runSequence(simulatedWinners), 250));
   }
 
+  function alternarSonido() {
+    const siguiente = !muted;
+    setMuted(siguiente);
+    mutedRef.current = siguiente;
+    if (!siguiente) asegurarAudio();
+  }
+
   async function startDraw() {
+    asegurarAudio();
     setBusy(true);
     setError(null);
 
@@ -575,6 +933,18 @@ export function LiveDrawAnimation({
       <style dangerouslySetInnerHTML={{ __html: CEREMONIA_CSS }} />
 
       <div className="relative overflow-hidden rounded-xl border border-hairline bg-panel-1 p-5 text-center shadow-[0_24px_70px_-40px_rgba(245,179,1,0.35)] sm:p-8">
+        {/* Focos y viñeta: solo mientras la ruleta está en juego. */}
+        <div
+          aria-hidden="true"
+          className="ceremonia-fx"
+          data-show={phase === "spinning" || phase === "countdown"}
+          data-reveal={revealed}
+        >
+          <div className="ceremonia-spot" />
+          <div className="ceremonia-vignette" />
+        </div>
+
+        <div className="relative z-10">
         {/* Marco de evento en vivo */}
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-hairline/70 pb-4">
           <span className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-red-600 dark:text-red-400">
@@ -584,13 +954,29 @@ export function LiveDrawAnimation({
             </span>
             REC
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-fg-subtle">
-            {phase === "done"
-              ? "Sorteo finalizado"
-              : phase === "countdown"
-                ? "Comenzando"
-                : "Sorteo en vivo"}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-fg-subtle">
+              {phase === "done"
+                ? "Sorteo finalizado"
+                : phase === "countdown"
+                  ? "Comenzando"
+                  : "Sorteo en vivo"}
+            </span>
+            <button
+              type="button"
+              onClick={alternarSonido}
+              aria-label={muted ? "Activar sonido" : "Silenciar sonido"}
+              aria-pressed={muted}
+              title={muted ? "Activar sonido" : "Silenciar sonido"}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-hairline bg-panel-2 text-fg-subtle transition-colors hover:border-hairline-strong hover:text-fg"
+            >
+              {muted ? (
+                <VolumeX className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+            </button>
+          </div>
         </div>
 
         <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-accent">
@@ -624,14 +1010,24 @@ export function LiveDrawAnimation({
                 phase === "done" || revealed
                   ? "text-brand-accent"
                   : "text-fg",
-                phase === "spinning" && !revealed ? "ceremonia-reel" : "",
+                phase === "spinning" && !revealed && !holding
+                  ? "ceremonia-reel"
+                  : "",
+                holding && !revealed ? "ceremonia-hold" : "",
                 revealed ? "ceremonia-reveal" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
               aria-live="polite"
             >
-              {numberLabel}
+              <span
+                key={beatKey}
+                className={`inline-block ${
+                  slowPhase && !revealed ? "ceremonia-beat" : ""
+                }`}
+              >
+                {numberLabel}
+              </span>
             </p>
           )}
 
@@ -658,7 +1054,11 @@ export function LiveDrawAnimation({
           <p className="mt-4 text-[13px] text-fg-subtle">
             {revealed
               ? "Número revelado. Preparando el siguiente premio…"
-              : "Mezclando los números vendidos…"}
+              : holding
+                ? "El número está por salir…"
+                : slowPhase
+                  ? "Últimos números: la ruleta está frenando…"
+                  : "Mezclando los números vendidos…"}
           </p>
         ) : phase === "countdown" ? (
           <p className="mt-4 text-[13px] text-fg-subtle">
@@ -676,6 +1076,7 @@ export function LiveDrawAnimation({
             <Button
               size="lg"
               onClick={() => {
+                asegurarAudio();
                 animated.current = false;
                 runSequence(simulatedWinners);
               }}
@@ -741,6 +1142,7 @@ export function LiveDrawAnimation({
             {error}
           </p>
         )}
+        </div>
       </div>
 
       {podium.length > 0 && (
