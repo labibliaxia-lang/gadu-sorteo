@@ -407,4 +407,5 @@ Sintoma    — Sentry reporto "There was an error while hydrating" en /sorteos/[
 Causa      — CEREMONIA_CSS se renderizaba como hijo de texto de <style>. El SSR escapa las comillas (content: &quot;&quot;) y el primer render del cliente las deja crudas (content: ""); el texto no coincide y React tira abajo la hidratacion de todo el arbol ("the entire root will switch to client rendering").
 Fix        — inyectar el CSS crudo con dangerouslySetInnerHTML en components/LiveDrawAnimation.tsx. Ya esta en main desde 62b34e8 y desplegado: no hay cambio de codigo pendiente.
 Verificacion — revertido a <style>{CEREMONIA_CSS}</style> en un worktree aislado: reproduce #425 y el mensaje de Sentry. Con el codigo actual: 0 errores de consola en dev (:3100), en build de produccion (:3000) y en produccion (gadu-sorteo-doci.vercel.app).
+Guard      — lib/live-draw-hydration.test.ts: falla si el CSS vuelve a ir como texto de <style>; probado en rojo revirtiendo el fix y en verde al restaurarlo.
 Leccion    — el contenido de <style>/<script> se compara como texto al hidratar: va como HTML crudo con dangerouslySetInnerHTML o no va.
