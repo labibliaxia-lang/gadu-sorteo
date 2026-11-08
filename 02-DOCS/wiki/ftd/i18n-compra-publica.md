@@ -46,7 +46,8 @@ Fuera:
   públicos.
 - [x] `typecheck`, `lint`, `test`, `build` verdes.
 - [x] Smoke local y producción.
-- [x] Commit y push.
+- [x] Commit `0b0b1e6` y push a `main`.
+- [x] Deploy de producción verificado.
 
 ## Evidence
 
@@ -79,6 +80,18 @@ Fuera:
 - Sesión real probada con una cuenta de test (`carla.ficticia@gadu.test`): con la
   cookie de Supabase, `/`, `/en` y `/en/sorteos/<activo>` renderizan el Navbar con
   “Log out”, así que la sesión no se pierde en las rutas localizadas.
+- Producción verificada después del push (`0b0b1e6`):
+  - `/en/login`: 200, inglés (“Welcome to Gadu Sorteos”, “Continue with Google”).
+  - `/en/register`: 200, inglés.
+  - `/login`: 200, español.
+  - `/en/sorteos/df7c3431-…`: 200, grid en inglés (“Tap a number to choose it”,
+    “Reserve and send receipt”).
+  - `/es/sorteos/df7c3431-…` y `/pt/sorteos/df7c3431-…`: grid en español y portugués.
+  - Fecha: `Nov 9, 2026, 11:20 AM` (en) / `9 nov 2026, 11:20 a. m.` (es).
+  - Precio: `ARS 1` (en) / `$ 1` (es).
+  - `/es/sorteos/df7c3431-…`: 307 → ruta sin prefijo.
+  - `/en/sorteos/auto-2026-demo`: 200 en inglés, pero **no muestra grid** porque
+    ese sorteo está sorteado; el grid solo se renderiza en sorteos activos.
 - No se tocó `NumbersGrid` en su lógica: solo textos y formato. Tampoco se tocaron
   pagos, checkout, RPCs, motor de sorteos, admin ni `LiveDrawAnimation`.
 
