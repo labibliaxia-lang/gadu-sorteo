@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Camera, Check, Loader2, Trash2, X } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
@@ -42,6 +43,7 @@ export function FotosEntrega({
   esOrganizador: boolean;
   usuarioId: string | null;
 }) {
+  const t = useTranslations("FotosEntrega");
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ocupada, setOcupada] = useState<string | null>(null);
@@ -51,11 +53,11 @@ export function FotosEntrega({
     setError(null);
 
     if (!archivo.type.startsWith("image/")) {
-      setError("Tiene que ser una imagen.");
+      setError(t("errorImage"));
       return;
     }
     if (archivo.size > MAX_BYTES) {
-      setError("La imagen no puede superar los 5 MB.");
+      setError(t("errorSize"));
       return;
     }
 
@@ -122,7 +124,7 @@ export function FotosEntrega({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <Camera className="h-5 w-5" aria-hidden="true" />
-          Premios entregados
+          {t("title")}
         </h2>
         {puedeSubir && (
           <>
@@ -147,7 +149,7 @@ export function FotosEntrega({
               ) : (
                 <Camera className="mr-1.5 h-4 w-4" />
               )}
-              {subiendo ? "Subiendo…" : "Subir foto"}
+              {subiendo ? t("uploading") : t("upload")}
             </Button>
           </>
         )}
@@ -161,13 +163,13 @@ export function FotosEntrega({
 
       {puedeSubir && !esOrganizador && (
         <p className="text-xs text-muted-foreground">
-          Tu foto queda pendiente hasta que el organizador la apruebe.
+          {t("uploadHint")}
         </p>
       )}
 
       {aprobadas.length === 0 && pendientes.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Todavía no hay fotos de la entrega.
+          {t("empty")}
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -180,11 +182,11 @@ export function FotosEntrega({
               )}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={foto.url} alt={foto.caption || "Foto de la entrega del premio"} className="aspect-square w-full object-cover" />
+              <img src={foto.url} alt={foto.caption || t("photoAlt")} className="aspect-square w-full object-cover" />
               <figcaption className="space-y-1 p-2">
                 {foto.status === "pending" && (
                   <span className="inline-block rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium uppercase text-amber-900 dark:text-amber-200">
-                    Pendiente
+                    {t("pending")}
                   </span>
                 )}
                 {foto.caption && <p className="text-xs">{foto.caption}</p>}
@@ -198,7 +200,7 @@ export function FotosEntrega({
                         disabled={ocupada === foto.id}
                         onClick={() => void aprobar(foto.id)}
                       >
-                        <Check className="mr-1 h-3 w-3" /> Aprobar
+                        <Check className="mr-1 h-3 w-3" /> {t("approve")}
                       </Button>
                     )}
                     <Button

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ShoppingBag } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
@@ -26,6 +27,7 @@ const MAX_TOASTS = 3;
  * público del sorteo y la cantidad de números.
  */
 export function LiveFomo() {
+  const t = useTranslations("LiveFomo");
   const [toasts, setToasts] = useState<Toast[]>([]);
   const supabase = useRef(createClient());
   const titles = useRef(new Map<string, string>());
@@ -51,7 +53,7 @@ export function LiveFomo() {
         .eq("id", raffleId)
         .maybeSingle();
 
-      const title = (data?.title as string | undefined) ?? "un sorteo";
+      const title = (data?.title as string | undefined) ?? t("someRaffle");
       titlesMap.set(raffleId, title);
       return title;
     }
@@ -124,7 +126,7 @@ export function LiveFomo() {
       timersMap.clear();
       dismissSet.clear();
     };
-  }, []);
+  }, [t]);
 
   if (toasts.length === 0) return null;
 
@@ -142,11 +144,10 @@ export function LiveFomo() {
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold">
-              ¡Alguien acaba de comprar {toast.count} número
-              {toast.count === 1 ? "" : "s"}!
+              {t("bought", { count: toast.count })}
             </p>
             <p className="truncate text-xs text-fg-subtle">
-              en {toast.title}
+              {t("inRaffle", { title: toast.title })}
             </p>
           </div>
         </div>

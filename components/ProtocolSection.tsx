@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   ArrowRight,
   CreditCard,
@@ -7,75 +7,78 @@ import {
   Truck,
 } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
+
 const STEPS = [
   {
     n: "01",
     icon: MousePointerClick,
-    title: "Elegí tus números",
-    desc: "Seleccionalos en la grilla del sorteo. Los que elegís quedan reservados a tu nombre mientras completás el pago.",
+    title: "step1Title",
+    desc: "step1Desc",
   },
   {
     n: "02",
     icon: CreditCard,
-    title: "Transferí y avisá",
-    desc: "Transferí el total con los datos del organizador y enviá el comprobante por WhatsApp. Cuando lo confirma, tus números pasan a vendidos.",
+    title: "step2Title",
+    desc: "step2Desc",
   },
   {
     n: "03",
     icon: Eye,
-    title: "Sorteo verificable",
-    desc: "El ganador se define con una semilla comprometida antes del sorteo. Cualquiera puede recalcularlo y comprobar que no se eligió después.",
+    title: "step3Title",
+    desc: "step3Desc",
   },
-];
+] as const;
 
 const GUARANTEES = [
   {
     icon: Eye,
-    title: "Resultados públicos",
-    desc: "Números vendidos, ganador, semilla y hash quedan a la vista en la página del sorteo.",
+    title: "guarantee1Title",
+    desc: "guarantee1Desc",
   },
   {
     icon: CreditCard,
-    title: "Pago claro",
-    desc: "Transferencia y comprobante por WhatsApp. Sin cobros automáticos ni sorpresas.",
+    title: "guarantee2Title",
+    desc: "guarantee2Desc",
   },
   {
     icon: Truck,
-    title: "Entrega coordinada",
-    desc: "El premio se entrega en cualquier punto de Argentina, coordinado con el organizador.",
+    title: "guarantee3Title",
+    desc: "guarantee3Desc",
   },
-];
+] as const;
 
 /**
  * Bloque "El protocolo" con el simulador (demo) accesible.
  * En móvil los pasos se compactan y aparecen los dos accesos principales;
  * en desktop se mantiene la grilla de tres pasos y el botón del demo debajo.
  */
-export function ProtocolSection() {
+export async function ProtocolSection() {
+  const t = await getTranslations("ProtocolSection");
+
   return (
     <section className="space-y-6 sm:space-y-8" aria-labelledby="protocolo">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="eyebrow">El protocolo</p>
+          <p className="eyebrow">{t("eyebrow")}</p>
           <h2
             id="protocolo"
             className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
           >
-            Tres pasos, sin letra chica.
+            {t("title")}
           </h2>
           <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-fg-subtle">
-            Ni ruletas ocultas ni resultados que cambian: compra, pago y sorteo
-            con la misma información disponible para todos.
+            {t("description")}
           </p>
         </div>
 
-        <Link
+        <LocaleLink
           href="/como-funciona"
           className="hidden items-center gap-1.5 text-[13px] font-medium text-fg-muted transition-colors hover:text-fg sm:inline-flex"
         >
-          Ver la verificación completa
+          {t("seeFullVerification")}
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
+        </LocaleLink>
       </div>
 
       <ol className="grid gap-px overflow-hidden rounded-xl border border-hairline bg-hairline sm:grid-cols-3">
@@ -91,10 +94,10 @@ export function ProtocolSection() {
               />
             </div>
             <h3 className="mt-2.5 font-display text-[15px] font-semibold tracking-tight sm:mt-6 sm:text-lg">
-              {step.title}
+              {t(step.title)}
             </h3>
             <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-fg-subtle sm:mt-2 sm:line-clamp-none sm:text-[13px]">
-              {step.desc}
+              {t(step.desc)}
             </p>
           </li>
         ))}
@@ -111,9 +114,11 @@ export function ProtocolSection() {
               <item.icon className="h-4 w-4" />
             </span>
             <div>
-              <h3 className="text-[13px] font-semibold text-fg">{item.title}</h3>
+              <h3 className="text-[13px] font-semibold text-fg">
+                {t(item.title)}
+              </h3>
               <p className="mt-1 text-[13px] leading-relaxed text-fg-subtle">
-                {item.desc}
+                {t(item.desc)}
               </p>
             </div>
           </li>
@@ -121,20 +126,20 @@ export function ProtocolSection() {
       </ul>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Link
+        <LocaleLink
           href="/como-funciona#demo"
           className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-hairline-strong bg-panel-2 px-4 text-[13px] font-medium text-fg transition-colors hover:border-brand-500/60 hover:text-brand-accent"
         >
           <span aria-hidden="true">🎲</span>
-          Probar el motor (Demo)
-        </Link>
+          {t("tryEngine")}
+        </LocaleLink>
 
-        <Link
+        <LocaleLink
           href="/como-funciona"
           className="inline-flex h-11 items-center justify-center rounded-lg border border-hairline px-4 text-[13px] font-medium text-fg-muted transition-colors hover:border-hairline-strong hover:text-fg sm:hidden"
         >
-          Ver protocolo completo
-        </Link>
+          {t("seeFullProtocol")}
+        </LocaleLink>
       </div>
     </section>
   );

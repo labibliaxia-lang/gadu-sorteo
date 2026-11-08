@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ export function DrawVerifier({
   resultHash,
   soldNumbers,
 }: DrawVerifierProps) {
+  const t = useTranslations("DrawVerifier");
   const [listText, setListText] = useState(soldNumbers.join(", "));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +62,7 @@ export function DrawVerifier({
       try {
         const numbers = parseNumberList(texto);
         if (numbers.length === 0) {
-          setError("Pegá el listado de números vendidos (separados por coma).");
+          setError(t("emptyList"));
           return;
         }
 
@@ -79,32 +81,29 @@ export function DrawVerifier({
 
         setChecks([
           {
-            label:
-              "La semilla coincide con el compromiso publicado (existía antes del sorteo)",
+            label: t("seedCheck"),
             ok: computedDraw.commitment === commitment,
           },
           {
-            label: "El listado coincide con la huella del listado vendido",
+            label: t("numbersCheck"),
             ok: computedDraw.numbersHash === numbersHash,
           },
           {
-            label: "El resultado coincide con la huella del resultado",
+            label: t("resultCheck"),
             ok: computedDraw.resultHash === resultHash,
           },
           {
-            label: "El ganador calculado coincide con el ganador publicado",
+            label: t("winnerCheck"),
             ok: computedDraw.winner === winnerNumber,
           },
         ]);
       } catch {
-        setError(
-          "No se pudo calcular el hash en este navegador. Probá desde una conexión segura (https).",
-        );
+        setError(t("computeError"));
       } finally {
         setBusy(false);
       }
     },
-    [raffleId, seed, commitment, numbersHash, resultHash, winnerNumber],
+    [raffleId, seed, commitment, numbersHash, resultHash, winnerNumber, t],
   );
 
   /**
@@ -131,11 +130,9 @@ export function DrawVerifier({
   return (
     <div className="space-y-3 rounded-md border p-3 text-sm">
       <div>
-        <h3 className="font-medium">Verificador automático</h3>
+        <h3 className="font-medium">{t("title")}</h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          Se ejecuta en tu navegador: no consulta la base. Compara la semilla
-          revelada, el listado vendido y el resultado con lo publicado. Podés
-          pegar otro listado para comprobar qué pasa si alguien lo cambia.
+          {t("description")}
         </p>
       </div>
 
@@ -144,13 +141,13 @@ export function DrawVerifier({
         onChange={(e) => setListText(e.target.value)}
         rows={3}
         className="font-mono text-xs"
-        aria-label="Listado de números vendidos"
-        placeholder="1, 5, 12, 30"
+        aria-label={t("inputAria")}
+        placeholder={t("inputPlaceholder")}
       />
 
       <div className="flex flex-wrap gap-2">
         <Button type="button" size="sm" onClick={verify} disabled={busy}>
-          {busy ? "Comprobando…" : "Comprobar"}
+          {busy ? t("verifying") : t("verify")}
         </Button>
         <Button
           type="button"
@@ -164,7 +161,7 @@ export function DrawVerifier({
             setError(null);
           }}
         >
-          Restaurar listado oficial
+          {t("reset")}
         </Button>
       </div>
 
@@ -183,9 +180,7 @@ export function DrawVerifier({
                 : "text-sm font-semibold text-destructive"
             }
           >
-            {allOk
-              ? "✓ Verificado: el resultado es consistente con la semilla comprometida."
-              : "✗ Algo no coincide: revisá el listado o los datos publicados."}
+            {allOk ? t("allOk") : t("someFail")}
           </p>
 
           <ul className="space-y-1.5 text-xs">
@@ -210,14 +205,14 @@ export function DrawVerifier({
           {computed && (
             <div className="space-y-1 text-xs text-muted-foreground">
               <p>
-                Ganador calculado:{" "}
+                {t("computedWinner")}{" "}
                 <span className="font-mono font-semibold text-foreground">
                   {computed.winner}
                 </span>
               </p>
               <details>
                 <summary className="cursor-pointer">
-                  Ver valores calculados
+                  {t("showValues")}
                 </summary>
                 <div className="mt-2 space-y-2">
                   <p className="break-all">

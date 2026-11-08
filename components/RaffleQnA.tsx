@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { HelpCircle, Loader2, MessageCircle, Trash2 } from "lucide-react";
 
@@ -22,6 +23,7 @@ function AnswerForm({
   question: PublicQuestion;
   onDone: () => void;
 }) {
+  const t = useTranslations("RaffleQnA");
   const [answer, setAnswer] = useState(question.answer ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +50,8 @@ function AnswerForm({
         onChange={(event) => setAnswer(event.target.value)}
         maxLength={500}
         rows={2}
-        placeholder="Respuesta pública del organizador…"
-        aria-label="Respuesta"
+        placeholder={t("answerPlaceholder")}
+        aria-label={t("answerAria")}
       />
       <div className="flex flex-wrap items-center gap-2">
         <Button
@@ -62,7 +64,7 @@ function AnswerForm({
           ) : (
             <MessageCircle className="mr-1.5 h-4 w-4" />
           )}
-          {question.answer ? "Actualizar respuesta" : "Responder"}
+          {question.answer ? t("updateAnswer") : t("answer")}
         </Button>
         {error && <span className="text-xs text-destructive">{error}</span>}
       </div>
@@ -87,6 +89,8 @@ export function RaffleQnA({
   canAnswer?: boolean;
   canModerate?: boolean;
 }) {
+  const t = useTranslations("RaffleQnA");
+  const locale = useLocale();
   const router = useRouter();
   const [question, setQuestion] = useState("");
   const [busy, setBusy] = useState(false);
@@ -117,12 +121,12 @@ export function RaffleQnA({
     }
 
     setQuestion("");
-    setMessage(result.message ?? "Pregunta enviada.");
+    setMessage(result.message ?? t("sent"));
     router.refresh();
   }
 
   async function remove(id: string) {
-    if (!window.confirm("¿Eliminar esta pregunta?")) return;
+    if (!window.confirm(t("deleteConfirm"))) return;
 
     setDeleting(id);
     setError(null);
@@ -140,22 +144,20 @@ export function RaffleQnA({
     <section id="preguntas" className="scroll-mt-24 space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 className="text-xl font-semibold">Preguntas de usuarios</h2>
+          <h2 className="text-xl font-semibold">{t("title")}</h2>
           <p className="text-sm text-muted-foreground">
-            Dudas públicas sobre este sorteo, respondidas por el organizador.
+            {t("description")}
           </p>
         </div>
         <span className="text-xs text-muted-foreground">
-          {questions.length} pregunta{questions.length === 1 ? "" : "s"}
+          {t("count", { count: questions.length })}
         </span>
       </div>
 
       {questions.length === 0 ? (
         <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-          Todavía no hay preguntas.{" "}
-          {isLoggedIn
-            ? "Podés dejar la primera abajo."
-            : "Iniciá sesión para preguntar."}
+          {t("empty")}{" "}
+          {isLoggedIn ? t("emptyLoggedIn") : t("emptyLoggedOut")}
         </p>
       ) : (
         <ul className="space-y-3">
@@ -168,16 +170,16 @@ export function RaffleQnA({
                 </p>
                 <div className="flex items-center gap-2">
                   {item.answer ? (
-                    <Badge variant="success">Respondida</Badge>
+                    <Badge variant="success">{t("answered")}</Badge>
                   ) : (
-                    <Badge variant="warning">Pendiente</Badge>
+                    <Badge variant="warning">{t("pending")}</Badge>
                   )}
                   {(item.isMine || canModerate) && (
                     <button
                       type="button"
                       onClick={() => void remove(item.id)}
                       disabled={deleting === item.id}
-                      aria-label="Eliminar pregunta"
+                      aria-label={t("delete")}
                       className="rounded-md p-1 text-muted-foreground transition hover:bg-accent hover:text-destructive"
                     >
                       {deleting === item.id ? (
@@ -196,7 +198,9 @@ export function RaffleQnA({
 
               {item.answer && (
                 <div className="mt-3 rounded-lg border-l-2 border-emerald-600 bg-muted/40 p-3">
-                  <p className="text-xs font-semibold">Respuesta del organizador</p>
+                  <p className="text-xs font-semibold">
+                    {t("organizerAnswer")}
+                  </p>
                   <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
                     {item.answer}
                   </p>
@@ -217,7 +221,7 @@ export function RaffleQnA({
       {isLoggedIn && !canAnswer && (
         <div className="space-y-2 rounded-xl border bg-muted/20 p-4">
           <label className="block text-sm font-medium" htmlFor="new-question">
-            Hacer una pregunta
+            {t("ask")}
           </label>
           <Textarea
             id="new-question"
@@ -225,11 +229,11 @@ export function RaffleQnA({
             onChange={(event) => setQuestion(event.target.value)}
             maxLength={300}
             rows={3}
-            placeholder="Ej: ¿El premio se entrega en mano o por envío?"
+            placeholder={t("askPlaceholder")}
           />
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs text-muted-foreground">
-              {question.trim().length}/300 · máximo 3 preguntas por día
+              {t("askLimit", { count: question.trim().length })}
             </span>
             <Button
               onClick={() => void submit()}
@@ -240,7 +244,7 @@ export function RaffleQnA({
               ) : (
                 <MessageCircle className="mr-1.5 h-4 w-4" />
               )}
-              Enviar pregunta
+              {t("send")}
             </Button>
           </div>
         </div>
@@ -249,12 +253,16 @@ export function RaffleQnA({
       {!isLoggedIn && !canAnswer && (
         <p className="text-sm text-muted-foreground">
           <a
-            href={`/login?next=${encodeURIComponent(`/sorteos/${raffleId}`)}`}
+            href={`/login?next=${encodeURIComponent(
+              locale === "es"
+                ? `/sorteos/${raffleId}`
+                : `/${locale}/sorteos/${raffleId}`,
+            )}`}
             className="text-amber-800 underline-offset-4 hover:underline dark:text-amber-300"
           >
-            Iniciá sesión
+            {t("loginPrefix")}
           </a>{" "}
-          para dejar tu pregunta.
+          {t("loginSuffix")}
         </p>
       )}
 

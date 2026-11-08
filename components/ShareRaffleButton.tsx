@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Check,
   Copy,
@@ -15,16 +16,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const PREFIJO = "¡Participá en el sorteo de";
-
-/** Texto sin URL: lo usan Telegram y Twitter, que reciben el enlace aparte. */
-function textoBase(titulo: string): string {
-  return `${PREFIJO} ${titulo}! Comprá tus números acá:`;
-}
-
 /** Texto pre-armado del share nativo y de WhatsApp: incluye la URL. */
-function textoConUrl(titulo: string, url: string): string {
-  return `${textoBase(titulo)} ${url}`;
+function textoConUrl(base: string, url: string): string {
+  return `${base} ${url}`;
 }
 
 /**
@@ -50,10 +44,13 @@ export function ShareRaffleButton({
   titulo: string;
   className?: string;
 }) {
+  const t = useTranslations("ShareRaffleButton");
+  const locale = useLocale();
   const [abierto, setAbierto] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const contenedor = useRef<HTMLDivElement>(null);
   const menuId = useId();
+  const texto = t("shareText", { title: titulo });
 
   // Cerrar el menú al tocar/clicar fuera.
   useEffect(() => {
@@ -89,8 +86,15 @@ export function ShareRaffleButton({
     if (typeof window === "undefined") return "";
     const { origin, pathname, href } = window.location;
     const clave = (slug ?? "").trim() || raffleId;
-    const ruta = `/sorteos/${clave}`;
-    if (pathname === ruta || pathname.startsWith(`${ruta}/`)) return href;
+    const localPath = `/sorteos/${clave}`;
+    const ruta = locale === "es" ? localPath : `/${locale}${localPath}`;
+    if (
+      pathname === localPath ||
+      pathname === ruta ||
+      pathname.startsWith(`${ruta}/`)
+    ) {
+      return href;
+    }
     return `${origin.replace(/\/$/, "")}${ruta}`;
   }
 
@@ -121,7 +125,7 @@ export function ShareRaffleButton({
       // el mensaje quede exactamente como se pide y no se duplique al
       // pegarlo en WhatsApp. Se llama sin `await` previo para conservar el
       // gesto del usuario (requisito de Safari/iOS).
-      await navigator.share({ title: titulo, text: textoConUrl(titulo, url) });
+      await navigator.share({ title: titulo, text: textoConUrl(texto, url) });
       track("native");
       return true;
     } catch (error) {
@@ -151,18 +155,17 @@ export function ShareRaffleButton({
     try {
       await navigator.clipboard.writeText(url);
       setCopiado(true);
-      toast.success("Enlace copiado");
+      toast.success(t("copied"));
       window.setTimeout(() => setCopiado(false), 2000);
       track("copy");
       setAbierto(false);
     } catch {
-      toast.error("No se pudo copiar el enlace");
+      toast.error(t("copyError"));
     }
   }
 
   const url = abierto ? urlParaCompartir() : "";
-  const texto = textoBase(titulo);
-  const mensajeConUrl = textoConUrl(titulo, url);
+  const mensajeConUrl = textoConUrl(texto, url);
 
   const redes = [
     {
@@ -202,14 +205,14 @@ export function ShareRaffleButton({
         className="w-full sm:w-auto"
       >
         <Share2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
-        Compartir este sorteo
+        {t("button")}
       </Button>
 
       {abierto && (
         <div
           id={menuId}
           role="menu"
-          aria-label="Compartir sorteo"
+          aria-label={t("menuAria")}
           className="absolute left-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-hairline bg-background p-1 shadow-xl"
         >
           {redes.map((red) => (
@@ -241,7 +244,7 @@ export function ShareRaffleButton({
             ) : (
               <Copy className="h-4 w-4" aria-hidden="true" />
             )}
-            {copiado ? "Enlace copiado" : "Copiar enlace"}
+            {copiado ? t("copied") : t("copy")}
           </button>
         </div>
       )}

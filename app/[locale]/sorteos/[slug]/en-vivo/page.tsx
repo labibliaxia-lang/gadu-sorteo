@@ -1,29 +1,24 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, Radio } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { LiveDrawAnimation } from "@/components/LiveDrawAnimation";
 import { resolverColumna } from "@/lib/raffle-slug";
 import { formatDateTime } from "@/lib/utils";
-import type { Raffle } from "@/lib/types";
 
-export const metadata: Metadata = {
-  title: "Sorteo en vivo | Gadu Sorteos",
-  description: "Seguí el sorteo en vivo y verificá el resultado.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("EnVivo");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
 export const dynamic = "force-dynamic";
-
-const statusLabel: Record<Raffle["status"], string> = {
-  active: "Activo",
-  closed: "Cerrado",
-  drawn: "Sorteado",
-  cancelled: "Cancelado",
-  paused: "Pausado",
-};
 
 export default async function LiveDrawPage({
   params,
@@ -32,6 +27,8 @@ export default async function LiveDrawPage({
   params: { slug: string };
   searchParams?: { demo?: string };
 }) {
+  const t = await getTranslations("EnVivo");
+  const tc = await getTranslations("Common");
   const supabase = createClient();
 
   // 0115: la ruta acepta slug o UUID viejo. Sin esto, `/sorteos/<slug>/en-vivo`
@@ -140,31 +137,29 @@ export default async function LiveDrawPage({
 
   return (
     <div className="space-y-6">
-      <Link
+      <LocaleLink
         href={`/sorteos/${clavePublica}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver al sorteo
-      </Link>
+        {t("back")}
+      </LocaleLink>
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-widest text-brand-800 dark:text-brand-300">
-            <Radio className="h-4 w-4" /> Sala en vivo
+            <Radio className="h-4 w-4" /> {t("liveRoom")}
           </p>
           <h1 className="font-display text-3xl font-bold tracking-tight">
             {raffle.title}
           </h1>
           <p className="text-sm text-muted-foreground">
             {raffle.status === "drawn"
-              ? "Sorteo finalizado"
-              : `Fecha programada: ${formatDateTime(raffle.draw_date)}`}
+              ? t("finished")
+              : t("scheduled", { date: formatDateTime(raffle.draw_date) })}
           </p>
         </div>
-        <Badge variant="secondary">
-          {statusLabel[raffle.status as Raffle["status"]]}
-        </Badge>
+        <Badge variant="secondary">{tc(`status.${raffle.status}`)}</Badge>
       </header>
 
       <LiveDrawAnimation
@@ -180,18 +175,18 @@ export default async function LiveDrawPage({
       />
 
       <div className="flex flex-wrap gap-2 text-sm">
-        <Link
+        <LocaleLink
           href={`/sorteos/${clavePublica}`}
           className="text-brand-800 underline-offset-4 hover:underline dark:text-brand-300"
         >
-          Ver el sorteo
-        </Link>
-        <Link
+          {t("seeRaffle")}
+        </LocaleLink>
+        <LocaleLink
           href={`/sorteos/${clavePublica}/verificar`}
           className="text-brand-800 underline-offset-4 hover:underline dark:text-brand-300"
         >
-          Página de verificación
-        </Link>
+          {t("verifyPage")}
+        </LocaleLink>
       </div>
     </div>
   );

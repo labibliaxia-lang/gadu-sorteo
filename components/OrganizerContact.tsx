@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Instagram, MessageCircle } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export function OrganizerContact({
 }: {
   organizer: OrganizerContactInfo;
 }) {
+  const t = useTranslations("OrganizerContact");
   const whatsapp = waLink(organizer.phone);
   const instagram = igLink(organizer.instagram_url);
 
@@ -40,12 +42,9 @@ export function OrganizerContact({
     <section className="space-y-3">
       <Card>
         <CardContent className="space-y-3 p-5">
-          <h2 className="text-lg font-semibold">
-            ¿Tienes dudas? Contactá al organizador
-          </h2>
+          <h2 className="text-lg font-semibold">{t("title")}</h2>
           <p className="text-sm text-muted-foreground">
-            Para consultas sobre el producto o el envío. Las compras y pagos se
-            realizan únicamente a través de esta plataforma.
+            {t("description")}
           </p>
           <div className="flex flex-wrap gap-2">
             {whatsapp && (

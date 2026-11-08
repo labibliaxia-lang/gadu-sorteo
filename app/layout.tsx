@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -34,46 +36,47 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_URL?.trim() || "http://localhost:3000",
-  ),
-  title: "Gadu Sorteos",
-  description:
-    "Participa en sorteos con premios de todo tipo, elige tus números y paga por transferencia con comprobante por WhatsApp.",
-  openGraph: {
-    title: "Gadu Sorteos",
-    description:
-      "Sorteos transparentes con premios de todo tipo. Elegí tus números, participá y ganá.",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Gadu Sorteos",
-      },
-    ],
-    type: "website",
-    locale: "es_AR",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Gadu Sorteos",
-    description:
-      "Sorteos transparentes con premios de todo tipo. Elegí tus números, participá y ganá.",
-    images: ["/og-image.png"],
-  },
-  appleWebApp: {
-    capable: true,
-    title: "Gadu Sorteos",
-    statusBarStyle: "default",
-  },
-  applicationName: "Gadu Sorteos",
-  icons: {
-    icon: "/icons/icon-192.png",
-    apple: "/icons/icon-192.png",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Metadata");
+
+  return {
+    metadataBase: new URL(
+      process.env.NEXT_PUBLIC_URL?.trim() || "http://localhost:3000",
+    ),
+    title: t("title"),
+    description: t("description"),
+    openGraph: {
+      title: t("title"),
+      description: t("ogDescription"),
+      images: [
+        {
+          url: "/og-image.png",
+          width: 1200,
+          height: 630,
+          alt: t("title"),
+        },
+      ],
+      type: "website",
+      locale: t("ogLocale"),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("title"),
+      description: t("ogDescription"),
+      images: ["/og-image.png"],
+    },
+    appleWebApp: {
+      capable: true,
+      title: t("title"),
+      statusBarStyle: "default",
+    },
+    applicationName: t("title"),
+    icons: {
+      icon: "/icons/icon-192.png",
+      apple: "/icons/icon-192.png",
+    },
+  };
+}
 
 export const viewport = {
   themeColor: "#0b0f19",
@@ -180,9 +183,15 @@ export default async function RootLayout({
     impersonation = null;
   }
 
+  // El locale sale del prefijo de la URL (middleware). Fuera de las rutas
+  // localizadas cae en `es`, el default de `src/i18n/routing.ts`.
+  const locale = await getLocale();
+  const messages = await getMessages();
+  const t = await getTranslations("Common");
+
   return (
     <html
-      lang="es"
+      lang={locale}
       suppressHydrationWarning
       className={`${inter.variable} ${spaceGrotesk.variable} ${plexMono.variable}`}
     >
@@ -191,10 +200,11 @@ export default async function RootLayout({
           href="#contenido"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
         >
-          Saltar al contenido
+          {t("skipToContent")}
         </a>
-        <ThemeProvider>
-          <ReferralCapture />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThemeProvider>
+            <ReferralCapture />
           {user &&
             (termsAccepted ? (
               <ProfileCompletionGate
@@ -229,7 +239,8 @@ export default async function RootLayout({
           <Footer />
           <Toaster />
           <PwaRegister />
-        </ThemeProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

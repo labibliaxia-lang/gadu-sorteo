@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   BadgeCheck,
   Eye,
@@ -11,15 +11,20 @@ import {
   Trophy,
 } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DemoExperience } from "@/components/SandboxDraw";
 
-export const metadata: Metadata = {
-  title: "Cómo funciona | Gadu Sorteos",
-  description:
-    "Cómo se eligen los números, cómo se confirma el pago y cómo se define y publica el ganador de cada sorteo.",
-};
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("ComoFunciona");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
 /** Resalta un concepto clave dentro de una lista. */
 function Key({ children }: { children: ReactNode }) {
@@ -30,80 +35,60 @@ const STEPS = [
   {
     n: "01",
     icon: Ticket,
-    title: "Solo números vendidos",
-    points: [
-      <>
-        El sorteo se juega únicamente con <Key>números vendidos</Key>: nadie
-        participa sin haber pagado.
-      </>,
-      <>Elegís tus números y quedan reservados a tu nombre.</>,
-      <>
-        Cuando el organizador confirma el pago, pasan a vendidos y entran al
-        sorteo.
-      </>,
-    ],
+    title: "step1Title",
+    points: ["step1Point1", "step1Point2", "step1Point3"],
   },
   {
     n: "02",
     icon: ShieldCheck,
-    title: "Pago confirmado",
-    points: [
-      <>
-        El pago es por <Key>transferencia</Key>: te mostramos los datos del
-        organizador.
-      </>,
-      <>Enviás el comprobante por WhatsApp.</>,
-      <>
-        El organizador revisa y marca tus números como pagados. Hasta entonces
-        siguen reservados a tu nombre.
-      </>,
-    ],
+    title: "step2Title",
+    points: ["step2Point1", "step2Point2", "step2Point3"],
   },
   {
     n: "03",
     icon: Trophy,
-    title: "Sorteo en la fecha publicada",
-    points: [
-      <>
-        El organizador ejecuta el sorteo en la <Key>fecha y hora</Key>{" "}
-        publicadas.
-      </>,
-      <>El sistema elige al azar un número entre los vendidos.</>,
-      <>
-        El <Key>resultado</Key> queda registrado y no se puede modificar: una
-        vez sorteado, el ganador y la fecha quedan congelados.
-      </>,
-    ],
+    title: "step3Title",
+    points: ["step3Point1", "step3Point2", "step3Point3"],
   },
   {
     n: "04",
     icon: Eye,
-    title: "Verificación pública",
-    points: [
-      <>
-        El <Key>resultado</Key> se publica a la vista de cualquiera, sin
-        necesidad de cuenta.
-      </>,
-      <>Los <Key>números vendidos</Key> también son públicos.</>,
-      <>
-        El <Key>hash</Key> y la semilla te dejan verificar que el ganador
-        estuvo en juego.
-      </>,
-    ],
+    title: "step4Title",
+    points: ["step4Point1", "step4Point2", "step4Point3"],
   },
-];
+] as const;
 
 const FORMULA =
   "sha256( gadu:v1 | raffle:<id> | seed:<semilla> | numbers:n1,n2,...,nN )";
 
 const CHECK_ITEMS = [
-  "Mirá la misma puesta en escena del sorteo en vivo.",
-  "Armá tu escenario con tus números y nombres de premios.",
-  "Publicá el hash y verificá el resultado paso a paso.",
-  "Nada de lo que hagas acá toca sorteos reales.",
-];
+  "demoCheck1",
+  "demoCheck2",
+  "demoCheck3",
+  "demoCheck4",
+] as const;
 
-export default function ComoFuncionaPage() {
+const DEMO_STEPS = [
+  {
+    n: "1",
+    title: "demoStep1Title",
+    text: "demoStep1Text",
+  },
+  {
+    n: "2",
+    title: "demoStep2Title",
+    text: "demoStep2Text",
+  },
+  {
+    n: "3",
+    title: "demoStep3Title",
+    text: "demoStep3Text",
+  },
+] as const;
+
+export default async function ComoFuncionaPage() {
+  const t = await getTranslations("ComoFunciona");
+
   return (
     <div className="mx-auto max-w-4xl space-y-16">
       <header className="space-y-5 border-b border-hairline pb-10">
@@ -112,37 +97,36 @@ export default function ComoFuncionaPage() {
             className="h-3.5 w-3.5 text-brand-accent"
             aria-hidden="true"
           />
-          <span className="eyebrow-gold">Transparencia total</span>
+          <span className="eyebrow-gold">{t("eyebrow")}</span>
         </p>
         <h1 className="max-w-2xl text-balance font-display text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.03em] sm:text-5xl">
-          ¿Cómo funciona Gadu Sorteos?
+          {t("title")}
         </h1>
         <p className="max-w-2xl text-[15px] leading-relaxed text-fg-muted">
-          Un sorteo simple: elegís tus números, pagás, el organizador confirma y
-          el ganador se define entre los números vendidos, a la vista de todos.
+          {t("intro")}
         </p>
         <div className="flex flex-wrap items-center gap-4 pt-2">
-          <Link href="/#sorteos" className={buttonVariants()}>
-            Ver sorteos activos
-          </Link>
-          <Link
+          <LocaleLink href="/#sorteos" className={buttonVariants()}>
+            {t("seeActiveRaffles")}
+          </LocaleLink>
+          <LocaleLink
             href="/planes"
             className="inline-flex items-center gap-1.5 text-[13px] font-medium text-fg-muted transition-colors hover:text-fg"
           >
             <BadgeCheck className="h-4 w-4" aria-hidden="true" />
-            Quiero organizar un sorteo
-          </Link>
+            {t("wantToOrganize")}
+          </LocaleLink>
         </div>
       </header>
 
       <section className="space-y-8" aria-labelledby="pasos">
         <div>
-          <p className="eyebrow">El recorrido</p>
+          <p className="eyebrow">{t("journeyEyebrow")}</p>
           <h2
             id="pasos"
             className="mt-2 font-display text-3xl font-semibold tracking-tight"
           >
-            De elegir un número a cobrar el premio.
+            {t("journeyTitle")}
           </h2>
         </div>
 
@@ -163,16 +147,20 @@ export default function ComoFuncionaPage() {
               </div>
               <div className="space-y-2">
                 <h3 className="font-display text-xl font-semibold tracking-tight">
-                  {step.title}
+                  {t(step.title)}
                 </h3>
                 <ul className="space-y-1.5 text-[13px] leading-relaxed text-fg-subtle">
-                  {step.points.map((point, index) => (
-                    <li key={index} className="flex gap-2">
+                  {step.points.map((point) => (
+                    <li key={point} className="flex gap-2">
                       <span
                         className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-brand-500"
                         aria-hidden="true"
                       />
-                      <span>{point}</span>
+                      <span>
+                        {t.rich(point, {
+                          key: (chunks) => <Key>{chunks}</Key>,
+                        })}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -194,7 +182,7 @@ export default function ComoFuncionaPage() {
             id="verificacion"
             className="font-display text-xl font-semibold tracking-tight"
           >
-            Verificación con hash y semilla comprometida
+            {t("verificationTitle")}
           </h2>
           <Badge variant="success" className="ml-auto">
             <ShieldCheck className="h-3 w-3" />
@@ -203,40 +191,32 @@ export default function ComoFuncionaPage() {
         </div>
 
         <p className="mt-4 text-[13px] leading-relaxed text-fg-subtle">
-          Antes de sortear, el organizador publica el{" "}
-          <Key>compromiso</Key>: el <Key>hash</Key> SHA-256 de una semilla
-          secreta. Ese compromiso queda congelado y no se puede cambiar ni
-          retirar.
+          {t.rich("verificationIntro", {
+            key: (chunks) => <Key>{chunks}</Key>,
+          })}
         </p>
 
         <ul className="mt-4 space-y-2 text-[13px] leading-relaxed text-fg-subtle">
           {[
-            <>
-              La semilla se genera antes del sorteo y permanece oculta hasta el
-              momento de revelar.
-            </>,
-            <>
-              Al revelar, cualquiera puede recalcular el ganador con la semilla
-              y el listado de <Key>números vendidos</Key>.
-            </>,
-            <>
-              Un <Key>verificador</Key> automático corre en tu navegador y te
-              dice si todo coincide con lo publicado.
-            </>,
-          ].map((item, index) => (
-            <li key={index} className="flex gap-2">
+            "verificationPoint1",
+            "verificationPoint2",
+            "verificationPoint3",
+          ].map((item) => (
+            <li key={item} className="flex gap-2">
               <span
                 className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-brand-500"
                 aria-hidden="true"
               />
-              <span>{item}</span>
+              <span>
+                {t.rich(item, { key: (chunks) => <Key>{chunks}</Key> })}
+              </span>
             </li>
           ))}
         </ul>
 
         <details className="group mt-5 rounded-xl border border-hairline bg-panel-2 p-4">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-fg">
-            Ver detalles técnicos
+            {t("showTechnicalDetails")}
             <span
               className="text-fg-subtle transition-transform group-open:rotate-180"
               aria-hidden="true"
@@ -245,32 +225,21 @@ export default function ComoFuncionaPage() {
             </span>
           </summary>
           <div className="mt-4 space-y-4 text-[13px] leading-relaxed text-fg-subtle">
-            <p>
-              Al ejecutarse el sorteo, la base usa la semilla junto con el
-              listado de números vendidos para calcular al ganador y revela la
-              semilla. Cualquiera puede recalcular el resultado y comprobar que
-              la semilla era la misma que se había comprometido antes.
-            </p>
+            <p>{t("technicalIntro")}</p>
 
             <div className="rounded-lg border border-hairline bg-panel-1 p-4">
               <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-fg-subtle">
-                La cuenta que hace el sistema
+                {t("formulaLabel")}
               </p>
               <code className="mt-2 block break-all font-mono text-[12px] leading-relaxed text-fg-muted">
                 {FORMULA}
               </code>
               <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.14em] text-fg-subtle">
-                primeros 15 caracteres hex ÷ números vendidos → resto = posición
-                del ganador
+                {t("formulaHint")}
               </p>
             </div>
 
-            <p>
-              Además, la base calcula dos huellas SHA-256: una del listado
-              completo de números vendidos y otra del mismo listado junto con el
-              número ganador. Ambas quedan publicadas y congeladas en la página
-              del sorteo, con el paso a paso exacto para verificarlas.
-            </p>
+            <p>{t("technicalOutro")}</p>
           </div>
         </details>
       </section>
@@ -283,15 +252,10 @@ export default function ComoFuncionaPage() {
           id="no-hacemos"
           className="font-display text-xl font-semibold tracking-tight"
         >
-          Lo que no hacemos
+          {t("whatWeDoNotDo")}
         </h2>
         <ul className="mt-4 divide-y divide-hairline">
-          {[
-            "No sorteamos entre números que nadie pagó.",
-            "No modificamos el resultado después del sorteo.",
-            "No vendemos ni compartimos tus datos con otros organizadores.",
-            "No prometemos premios que el organizador no haya publicado.",
-          ].map((line) => (
+          {["notDo1", "notDo2", "notDo3", "notDo4"].map((line) => (
             <li
               key={line}
               className="flex items-start gap-3 py-3 text-[13px] text-fg-muted"
@@ -300,7 +264,7 @@ export default function ComoFuncionaPage() {
                 className="mt-1.5 h-px w-4 shrink-0 bg-brand-500"
                 aria-hidden="true"
               />
-              {line}
+              {t(line)}
             </li>
           ))}
         </ul>
@@ -319,7 +283,7 @@ export default function ComoFuncionaPage() {
             id="demo-title"
             className="font-display text-xl font-semibold tracking-tight"
           >
-            Probalo vos mismo: Simulador de Sorteo
+            {t("demoTitle")}
           </h2>
         </div>
 
@@ -332,10 +296,10 @@ export default function ComoFuncionaPage() {
           </span>
           <div className="min-w-0">
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-violet-700 dark:text-violet-300">
-              MODO DEMO - SIMULACIÓN
+              {t("demoBadge")}
             </p>
             <p className="mt-1 text-[12px] leading-relaxed text-violet-900/80 dark:text-violet-100/80">
-              Estás en un entorno de pruebas. No se juegan premios reales.
+              {t("demoNote")}
             </p>
           </div>
         </div>
@@ -347,29 +311,13 @@ export default function ComoFuncionaPage() {
                 className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-brand-500"
                 aria-hidden="true"
               />
-              <span>{item}</span>
+              <span>{t(item)}</span>
             </li>
           ))}
         </ul>
 
         <ol className="mt-5 grid gap-3 sm:grid-cols-3">
-          {[
-            {
-              n: "1",
-              title: "Mirá la animación",
-              text: "La misma ceremonia, con los números y premios de tu escenario.",
-            },
-            {
-              n: "2",
-              title: "Armá tu escenario",
-              text: "Elegí cuántos números y premios hay, y cuáles están vendidos.",
-            },
-            {
-              n: "3",
-              title: "Verificá el hash",
-              text: "Publicá el compromiso y recalculá todo en tu navegador.",
-            },
-          ].map((step) => (
+          {DEMO_STEPS.map((step) => (
             <li
               key={step.n}
               className="rounded-lg border border-hairline bg-panel-2 p-3"
@@ -378,10 +326,10 @@ export default function ComoFuncionaPage() {
                 {step.n}
               </p>
               <p className="mt-1 text-[13px] font-semibold text-fg">
-                {step.title}
+                {t(step.title)}
               </p>
               <p className="mt-1 text-[12px] leading-relaxed text-fg-subtle">
-                {step.text}
+                {t(step.text)}
               </p>
             </li>
           ))}
@@ -393,37 +341,29 @@ export default function ComoFuncionaPage() {
 
         <details className="group mt-5 rounded-xl border border-hairline bg-panel-2 p-4">
           <summary className="cursor-pointer text-sm font-semibold text-fg">
-            ¿Cómo se verifica esta demo?
+            {t("demoHowTitle")}
           </summary>
           <div className="mt-3 space-y-2 text-[13px] leading-relaxed text-fg-subtle">
             <p>
-              Antes de sortear, se publica el{" "}
-              <strong className="text-fg">compromiso</strong>: el hash SHA-256
-              de una semilla secreta que todavía no se conoce. El compromiso
-              queda fijado y no se puede cambiar.
+              {t.rich("demoHow1", {
+                strong: (chunks) => (
+                  <strong className="text-fg">{chunks}</strong>
+                ),
+              })}
             </p>
-            <p>
-              Al revelar, se da a conocer la semilla. Cualquiera puede
-              recalcular el hash y comprobar que coincide con el compromiso
-              publicado. El resultado se deriva de esa semilla y del listado de
-              números vendidos.
-            </p>
-            <p>
-              La animación que viste no elige al ganador: solo lo muestra. En la
-              pestaña interactiva, el cálculo corre entero en tu navegador, sin
-              consultar la base.
-            </p>
-            <Link
+            <p>{t("demoHow2")}</p>
+            <p>{t("demoHow3")}</p>
+            <LocaleLink
               href="/ganadores"
               className="inline-flex text-sm text-brand-800 underline-offset-4 hover:underline dark:text-brand-300"
             >
-              Ver sorteos ya verificados
-            </Link>
+              {t("seeVerifiedRaffles")}
+            </LocaleLink>
           </div>
         </details>
 
         <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.08em] text-fg-subtle">
-          Sin registro · entorno aislado · hash y verificación en tu navegador
+          {t("demoFootnote")}
         </p>
       </section>
     </div>

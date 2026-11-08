@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import NextLink from "next/link";
+import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import {
   LayoutDashboard,
   LogOut,
@@ -19,6 +20,11 @@ import {
 import { useTheme } from "next-themes";
 import type { Session } from "@supabase/supabase-js";
 
+import {
+  Link as LocaleLink,
+  usePathname as useLocalePathname,
+  useRouter as useLocaleRouter,
+} from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -26,12 +32,33 @@ import { RequestAdminButton } from "@/components/RequestAdminButton";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/", label: "Inicio" },
-  { href: "/#sorteos", label: "Sorteos" },
-  { href: "/ganadores", label: "Ganadores" },
-  { href: "/como-funciona", label: "Cómo funciona" },
-  { href: "/planes", label: "Planes" },
+  { href: "/", key: "home" },
+  { href: "/#sorteos", key: "raffles" },
+  { href: "/ganadores", key: "winners" },
+  { href: "/como-funciona", key: "howItWorks" },
+  { href: "/planes", key: "plans" },
+] as const;
+
+const LOCALES = [
+  { code: "es", key: "localeEs" },
+  { code: "en", key: "localeEn" },
+  { code: "pt", key: "localePt" },
+] as const;
+
+const LOCALIZED_ROOTS = [
+  "/sorteos",
+  "/como-funciona",
+  "/ganadores",
+  "/planes",
 ];
+
+/** Solo las rutas migradas tienen versión en otro idioma. */
+function supportsLocale(pathname: string): boolean {
+  if (pathname === "/") return true;
+  return LOCALIZED_ROOTS.some(
+    (root) => pathname === root || pathname.startsWith(`${root}/`),
+  );
+}
 
 type InitialUser = {
   id: string;
@@ -40,9 +67,13 @@ type InitialUser = {
 } | null;
 
 export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
-  const router = useRouter();
+  const t = useTranslations("Navbar");
+  const locale = useLocale();
+  const router = useLocaleRouter();
   const pathname = usePathname();
+  const localePathname = useLocalePathname();
   const inPanel = pathname.startsWith("/admin");
+  const showLocaleSwitcher = !inPanel && supportsLocale(localePathname);
   const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(initialUser?.id ?? null);
   const [email, setEmail] = useState<string | null>(initialUser?.email ?? null);
@@ -131,10 +162,10 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
     <header className="sticky top-0 z-50 border-b border-hairline bg-canvas/90 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-6 sm:px-6">
         {/* Logo */}
-        <Link
+        <LocaleLink
           href="/"
           className="flex shrink-0 items-center"
-          aria-label="Gadu Sorteos — inicio"
+          aria-label={t("logoHome")}
         >
           <Image
             src="/logo-gadu-azul.png"
@@ -153,7 +184,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
             className="hidden h-10 w-auto dark:block"
             priority
           />
-        </Link>
+        </LocaleLink>
 
         {/* Navegación desktop (oculta dentro del panel) */}
         <nav
@@ -164,13 +195,13 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
           }
         >
           {NAV_LINKS.map((l) => (
-            <Link
+            <LocaleLink
               key={l.href}
               href={l.href}
               className="rounded-md px-3 py-2 text-[13px] font-medium text-fg-subtle transition-colors hover:bg-panel-2 hover:text-fg"
             >
-              {l.label}
-            </Link>
+              {t(l.key)}
+            </LocaleLink>
           ))}
         </nav>
 
@@ -179,46 +210,46 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
           {userId ? (
             <>
               {isAdmin && (
-                <Link
+                <NextLink
                   href="/admin"
-                  title="Panel del organizador"
+                  title={t("organizerPanel")}
                   className={buttonVariants({ variant: "ghost", size: "sm" })}
                 >
                   <LayoutDashboard className="h-4 w-4 2xl:mr-1.5" />
-                  <span className="hidden 2xl:inline">Organizador</span>
-                </Link>
+                  <span className="hidden 2xl:inline">{t("organizer")}</span>
+                </NextLink>
               )}
-              <Link
+              <NextLink
                 href="/mis-pagos"
-                title="Mis pagos"
+                title={t("myPayments")}
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
                 <Receipt className="h-4 w-4 2xl:mr-1.5" />
-                <span className="hidden 2xl:inline">Mis pagos</span>
-              </Link>
-              <Link
+                <span className="hidden 2xl:inline">{t("myPayments")}</span>
+              </NextLink>
+              <NextLink
                 href="/mis-numeros"
-                title="Mis números"
+                title={t("myNumbers")}
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
                 <Ticket className="h-4 w-4 2xl:mr-1.5" />
-                <span className="hidden 2xl:inline">Mis números</span>
-              </Link>
-              <Link
+                <span className="hidden 2xl:inline">{t("myNumbers")}</span>
+              </NextLink>
+              <NextLink
                 href="/perfil"
-                title="Mi perfil"
+                title={t("myProfile")}
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
                 <User className="h-4 w-4 2xl:mr-1.5" />
-                <span className="hidden 2xl:inline">Perfil</span>
-              </Link>
+                <span className="hidden 2xl:inline">{t("profile")}</span>
+              </NextLink>
               {!isAdmin && !roleRequested && <RequestAdminButton />}
               <span className="flex items-center gap-2 rounded-md border border-hairline px-2 py-1 text-[13px] text-fg-muted">
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={avatarUrl}
-                    alt={displayName ?? "Usuario"}
+                    alt={displayName ?? t("user")}
                     referrerPolicy="no-referrer"
                     className="h-6 w-6 rounded-full object-cover"
                   />
@@ -235,41 +266,68 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                 variant="ghost"
                 size="sm"
                 onClick={signOut}
-                title="Cerrar sesión"
+                title={t("logoutLong")}
               >
                 <LogOut className="h-4 w-4 2xl:mr-1.5" />
-                <span className="hidden 2xl:inline">Salir</span>
+                <span className="hidden 2xl:inline">{t("logout")}</span>
               </Button>
             </>
           ) : (
             <>
-              <Link
+              <NextLink
                 href="/login"
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
-                Ingresar
-              </Link>
-              <Link href="/register" className={buttonVariants({ size: "sm" })}>
-                Registrarse
-              </Link>
+                {t("login")}
+              </NextLink>
+              <NextLink
+                href="/register"
+                className={buttonVariants({ size: "sm" })}
+              >
+                {t("register")}
+              </NextLink>
             </>
           )}
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
+          {showLocaleSwitcher && (
+            <div
+              className="hidden items-center gap-0.5 rounded-md border border-hairline p-0.5 sm:flex"
+              role="group"
+              aria-label={t("language")}
+            >
+              {LOCALES.map((item) => (
+                <LocaleLink
+                  key={item.code}
+                  href={localePathname}
+                  locale={item.code}
+                  aria-current={locale === item.code ? "true" : undefined}
+                  className={cn(
+                    "rounded px-1.5 py-1 font-mono text-[10px] uppercase tracking-[0.06em] transition-colors",
+                    locale === item.code
+                      ? "bg-panel-3 text-fg"
+                      : "text-fg-subtle hover:text-fg",
+                  )}
+                >
+                  {item.code}
+                </LocaleLink>
+              ))}
+            </div>
+          )}
           <NotificationBell userId={userId} />
           {!userId && (
-            <Link
+            <NextLink
               href="/login"
               className="rounded-md px-2 py-2 text-[13px] font-medium text-fg-muted transition-colors hover:bg-panel-2 hover:text-fg xl:hidden"
             >
-              Ingresar
-            </Link>
+              {t("login")}
+            </NextLink>
           )}
           <button
             type="button"
             onClick={toggleTheme}
-            aria-label="Cambiar tema"
+            aria-label={t("theme")}
             className="rounded-md p-2 text-fg-subtle transition-colors hover:bg-panel-2 hover:text-fg"
           >
             {mounted && resolvedTheme === "dark" ? (
@@ -284,7 +342,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
             type="button"
             className="rounded-md p-2 text-fg-muted transition-colors hover:bg-panel-2 hover:text-fg xl:hidden"
             onClick={() => setMobileOpen((v) => !v)}
-            aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-label={mobileOpen ? t("closeMenu") : t("openMenu")}
             aria-expanded={mobileOpen}
           >
             {mobileOpen ? (
@@ -302,15 +360,41 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
           <nav className="flex flex-col gap-1 p-4">
             {!inPanel &&
               NAV_LINKS.map((l) => (
-                <Link
+                <LocaleLink
                   key={l.href}
                   href={l.href}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
+                >
+                  {t(l.key)}
+                </LocaleLink>
+              ))}
+
+            {showLocaleSwitcher && (
+              <div
+                className="mt-2 flex items-center gap-1 rounded-md border border-hairline p-1"
+                role="group"
+                aria-label={t("language")}
               >
-                {l.label}
-              </Link>
-            ))}
+                {LOCALES.map((item) => (
+                  <LocaleLink
+                    key={item.code}
+                    href={localePathname}
+                    locale={item.code}
+                    onClick={() => setMobileOpen(false)}
+                    aria-current={locale === item.code ? "true" : undefined}
+                    className={cn(
+                      "flex-1 rounded px-2 py-1.5 text-center font-mono text-[11px] uppercase tracking-[0.06em]",
+                      locale === item.code
+                        ? "bg-panel-3 text-fg"
+                        : "text-fg-subtle hover:text-fg",
+                    )}
+                  >
+                    {t(item.key)}
+                  </LocaleLink>
+                ))}
+              </div>
+            )}
 
             <div className="my-2 border-t border-hairline" />
 
@@ -321,7 +405,7 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={avatarUrl}
-                      alt={displayName ?? "Usuario"}
+                      alt={displayName ?? t("user")}
                       referrerPolicy="no-referrer"
                       className="h-10 w-10 rounded-full object-cover"
                     />
@@ -340,35 +424,35 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                   </div>
                 </div>
                 {isAdmin && (
-                  <Link
+                  <NextLink
                     href="/admin"
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
                   >
-                    <LayoutDashboard className="h-4 w-4" /> Organizador
-                  </Link>
+                    <LayoutDashboard className="h-4 w-4" /> {t("organizer")}
+                  </NextLink>
                 )}
-                <Link
+                <NextLink
                   href="/mis-pagos"
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
                 >
-                  <Receipt className="h-4 w-4" /> Mis pagos
-                </Link>
-                <Link
+                  <Receipt className="h-4 w-4" /> {t("myPayments")}
+                </NextLink>
+                <NextLink
                   href="/mis-numeros"
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
                 >
-                  <Ticket className="h-4 w-4" /> Mis números
-                </Link>
-                <Link
+                  <Ticket className="h-4 w-4" /> {t("myNumbers")}
+                </NextLink>
+                <NextLink
                   href="/perfil"
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
                 >
-                  <User className="h-4 w-4" /> Perfil
-                </Link>
+                  <User className="h-4 w-4" /> {t("profile")}
+                </NextLink>
                 {!isAdmin && !roleRequested && <RequestAdminButton />}
                 <button
                   type="button"
@@ -378,25 +462,25 @@ export function Navbar({ initialUser }: { initialUser?: InitialUser }) {
                   }}
                   className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-destructive hover:bg-panel-2"
                 >
-                  <LogOut className="h-4 w-4" /> Cerrar sesión
+                  <LogOut className="h-4 w-4" /> {t("logoutLong")}
                 </button>
               </>
             ) : (
               <>
-                <Link
+                <NextLink
                   href="/login"
                   onClick={() => setMobileOpen(false)}
                   className="rounded-md px-3 py-2.5 text-sm font-medium text-fg-muted hover:bg-panel-2 hover:text-fg"
                 >
-                  Ingresar
-                </Link>
-                <Link
+                  {t("login")}
+                </NextLink>
+                <NextLink
                   href="/register"
                   onClick={() => setMobileOpen(false)}
                   className={cn(buttonVariants(), "mt-1")}
                 >
-                  Registrarse
-                </Link>
+                  {t("register")}
+                </NextLink>
               </>
             )}
           </nav>

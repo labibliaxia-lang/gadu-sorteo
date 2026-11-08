@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, Trophy } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { resolverColumna } from "@/lib/raffle-slug";
 import { ShareResultsButton } from "@/components/ShareResultsButton";
@@ -20,9 +21,12 @@ interface Ganador {
   imageUrl: string | null;
 }
 
-function nombreCorto(fullName: string | null): string {
+function nombreCorto(
+  fullName: string | null,
+  fallback: string,
+): string {
   const partes = (fullName ?? "").trim().split(/\s+/).filter(Boolean);
-  if (partes.length === 0) return "Participante";
+  if (partes.length === 0) return fallback;
   if (partes.length === 1) return partes[0];
   return `${partes[0]} ${partes[partes.length - 1][0]}.`;
 }
@@ -32,6 +36,7 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
+  const t = await getTranslations("Resultados");
   const supabase = createClient();
   const { data: raffle } = await supabase
     .from("raffles")
@@ -39,21 +44,24 @@ export async function generateMetadata({
     .eq(resolverColumna(params.slug), params.slug)
     .maybeSingle();
 
-  if (!raffle) return { title: "Resultados no encontrados | Gadu Sorteos" };
+  if (!raffle) return { title: t("metaNotFound") };
 
   const dibujado = raffle.status === "drawn" && raffle.winner_number != null;
   const titulo = dibujado
-    ? `¡${nombreCorto(raffle.winner_name as string | null)} ganó ${raffle.title} en Gadu Sorteos!`
-    : `Resultados de ${raffle.title} | Gadu Sorteos`;
+    ? t("metaWinnerTitle", {
+        name: nombreCorto(raffle.winner_name as string | null, t("participant")),
+        title: raffle.title,
+      })
+    : t("metaResultsTitle", { title: raffle.title });
 
   return {
     title: titulo,
     description: dibujado
-      ? `Mirá el podio final y verificá el resultado del sorteo ${raffle.title}.`
-      : `Resultados y podio del sorteo ${raffle.title}.`,
+      ? t("metaWinnerDesc", { title: raffle.title })
+      : t("metaResultsDesc", { title: raffle.title }),
     openGraph: {
       title: titulo,
-      description: "Podio final y resultado verificable.",
+      description: t("metaOgDesc"),
       images: [`/sorteos/${params.slug}/resultados/opengraph-image`],
     },
     twitter: {
@@ -69,6 +77,7 @@ export default async function ResultadosPage({
 }: {
   params: { slug: string };
 }) {
+  const t = await getTranslations("Resultados");
   const supabase = createClient();
   const parametro = params.slug.trim();
 
@@ -133,31 +142,31 @@ export default async function ResultadosPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <Link
+      <LocaleLink
         href={`/sorteos/${clavePublica}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver al sorteo
-      </Link>
+        {t("back")}
+      </LocaleLink>
 
       <header className="space-y-2 text-center">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-brand-accent">
-          Resultados oficiales
+          {t("official")}
         </p>
         <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
           {raffle.title}
         </h1>
         <div className="flex justify-center">
           <Badge variant={dibujado ? "success" : "secondary"}>
-            {dibujado ? "Sorteo finalizado" : "Todavía sin resultado"}
+            {dibujado ? t("finished") : t("noResult")}
           </Badge>
         </div>
       </header>
 
       {!dibujado ? (
         <div className="rounded-xl border border-hairline bg-panel-1 p-8 text-center text-sm text-fg-subtle">
-          El resultado todavía no está publicado. Volvé cuando se haya sorteado.
+          {t("notPublished")}
         </div>
       ) : (
         <>
@@ -174,7 +183,7 @@ export default async function ResultadosPage({
             </div>
           )}
 
-          <section className="space-y-3" aria-label="Podio de ganadores">
+          <section className="space-y-3" aria-label={t("podiumAria")}>
             {ganadores.map((ganador) => (
               <article
                 key={ganador.position}
@@ -188,7 +197,10 @@ export default async function ResultadosPage({
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-hairline">
                     <Image
                       src={ganador.imageUrl}
-                      alt={ganador.prizeTitle ?? `Premio ${ganador.position}`}
+                      alt={
+                        ganador.prizeTitle ??
+                        t("prizeN", { position: ganador.position })
+                      }
                       fill
                       className="object-cover"
                       sizes="64px"
@@ -198,16 +210,19 @@ export default async function ResultadosPage({
 
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">
-                    {ganador.name ? nombreCorto(ganador.name) : "Participante"}
+                    {ganador.name
+                      ? nombreCorto(ganador.name, t("participant"))
+                      : t("participant")}
                   </p>
                   <p className="text-sm text-fg-subtle">
-                    {ganador.prizeTitle ?? `Premio ${ganador.position}`}
+                    {ganador.prizeTitle ??
+                      t("prizeN", { position: ganador.position })}
                   </p>
                 </div>
 
                 <div className="text-right">
                   <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
-                    Número
+                    {t("number")}
                   </p>
                   <p className="font-mono text-xl font-semibold tabular-nums text-brand-accent">
                     {String(ganador.number).padStart(4, "0")}
@@ -220,20 +235,23 @@ export default async function ResultadosPage({
           <div className="flex flex-wrap items-center justify-center gap-3">
             <ShareResultsButton
               titulo={raffle.title}
-              ganador={principal.name ? nombreCorto(principal.name) : null}
+              ganador={
+                principal.name
+                  ? nombreCorto(principal.name, t("participant"))
+                  : null
+              }
             />
-            <Link
+            <LocaleLink
               href={`/sorteos/${clavePublica}/verificar`}
               className={buttonVariants({ variant: "outline", size: "lg" })}
             >
               <Trophy className="mr-2 h-5 w-5" />
-              Verificar el sorteo
-            </Link>
+              {t("verify")}
+            </LocaleLink>
           </div>
 
           <p className="text-center text-xs text-muted-foreground">
-            Los ganadores se calculan en la base con la semilla comprometida antes
-            del sorteo. Se publica solo el nombre y la inicial del apellido.
+            {t("footer")}
           </p>
         </>
       )}

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft, ShieldCheck, Trophy } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { MultiPrizeVerifier } from "@/components/MultiPrizeVerifier";
@@ -12,21 +13,15 @@ import { resolverColumna } from "@/lib/raffle-slug";
 import { formatDateTime } from "@/lib/utils";
 import type { Raffle, RaffleWinner } from "@/lib/types";
 
-export const metadata: Metadata = {
-  title: "Verificación del sorteo | Gadu Sorteos",
-  description:
-    "Hash, números vendidos y ganador para verificar el resultado del sorteo.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Verificar");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
 export const dynamic = "force-dynamic";
-
-const statusLabel: Record<Raffle["status"], string> = {
-  active: "Activo",
-  closed: "Cerrado",
-  drawn: "Sorteado",
-  cancelled: "Cancelado",
-  paused: "Pausado",
-};
 
 const statusVariant: Record<
   Raffle["status"],
@@ -48,6 +43,8 @@ export default async function VerifyPage({
 }: {
   params: { slug: string };
 }) {
+  const t = await getTranslations("Verificar");
+  const tc = await getTranslations("Common");
   const supabase = createClient();
 
   // 0115: la ruta acepta slug o UUID viejo. Sin esto, `/sorteos/<slug>/verificar`
@@ -113,19 +110,19 @@ export default async function VerifyPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <Link
+      <LocaleLink
         href={`/sorteos/${clavePublica}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver al sorteo
-      </Link>
+        {t("back")}
+      </LocaleLink>
 
       <header className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <p className="eyebrow-gold">Verificación pública</p>
+          <p className="eyebrow-gold">{t("eyebrow")}</p>
           <Badge variant={statusVariant[raffle.status as Raffle["status"]]}>
-            {statusLabel[raffle.status as Raffle["status"]]}
+            {tc(`status.${raffle.status}`)}
           </Badge>
         </div>
         <div>
@@ -134,8 +131,8 @@ export default async function VerifyPage({
           </h1>
           <p className="text-[13px] text-fg-subtle">
             {drawn && raffle.drawn_at
-              ? `Sorteado: ${formatDateTime(raffle.drawn_at)}`
-              : "Todavía no se realizó el sorteo."}
+              ? t("drawnAt", { date: formatDateTime(raffle.drawn_at) })
+              : t("notDrawn")}
           </p>
         </div>
       </header>
@@ -145,13 +142,12 @@ export default async function VerifyPage({
           <section className="space-y-3 rounded-lg border border-hairline bg-panel-1 p-6">
             <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
               <ShieldCheck className="h-5 w-5 text-brand-accent" />
-              Compromiso del sorteo
+              {t("commitmentTitle")}
             </h2>
             {raffle.draw_commitment ? (
               <>
                 <p className="text-[13px] text-fg-subtle">
-                  El organizador ya publicó el compromiso (hash de la semilla).
-                  Cuando se sortee vas a poder comparar el resultado acá.
+                  {t("commitmentPublished")}
                 </p>
                 <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono text-xs">
                   {raffle.draw_commitment}
@@ -159,37 +155,28 @@ export default async function VerifyPage({
               </>
             ) : (
               <p className="text-[13px] text-fg-subtle">
-                Este sorteo todavía no publicó el compromiso de la semilla. Cuando lo haga, vas a poder compararlo acá antes del sorteo.
+                {t("commitmentMissing")}
               </p>
             )}
-            <Link
+            <LocaleLink
               href={`/sorteos/${clavePublica}/en-vivo`}
               className="inline-flex items-center gap-1.5 text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
             >
-              Ir a la sala en vivo
-            </Link>
+              {t("goLive")}
+            </LocaleLink>
           </section>
 
           <section className="overflow-hidden rounded-lg border border-hairline bg-panel-1">
             <div className="border-b border-hairline px-6 py-3">
               <h2 className="font-display text-lg font-semibold">
-                Cómo se verifica
+                {t("howVerify")}
               </h2>
             </div>
             <ol className="divide-y divide-hairline">
               {[
-                {
-                  label: "Compromiso",
-                  text: "antes del sorteo el organizador publica el hash SHA-256 de una semilla secreta. Si la cambiara después, el hash no coincidiría.",
-                },
-                {
-                  label: "Semilla",
-                  text: "al sortear se revela la semilla. Cualquiera puede recalcular el hash y comprobar que es la misma que se publicó antes.",
-                },
-                {
-                  label: "Listado",
-                  text: "el listado de números vendidos también se hashea. Si se agregara o quitara un número, la huella del resultado no coincidiría.",
-                },
+                { label: t("step1Label"), text: t("step1Text") },
+                { label: t("step2Label"), text: t("step2Text") },
+                { label: t("step3Label"), text: t("step3Text") },
               ].map((step, index) => (
                 <li key={step.label} className="flex gap-3 px-6 py-3">
                   <span className="font-mono text-[11px] leading-5 text-fg-subtle">
@@ -208,43 +195,43 @@ export default async function VerifyPage({
         <>
           <section className="rounded-lg border border-brand-500/25 bg-brand-500/[0.06] p-6">
             <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.1em] text-brand-accent">
-              <Trophy className="h-5 w-5" /> Resultado certificado
+              <Trophy className="h-5 w-5" /> {t("certifiedResult")}
             </p>
             <p className="mt-3 font-mono text-5xl font-medium tracking-tight text-brand-accent">
               {String(raffle.winner_number).padStart(4, "0")}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Ganador: {raffle.winner_name ?? "Anónimo"}
+              {t("winner", {
+                name: raffle.winner_name ?? t("anonymous"),
+              })}
             </p>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-display text-lg font-semibold">Huellas del sorteo</h2>
+            <h2 className="font-display text-lg font-semibold">
+              {t("hashesTitle")}
+            </h2>
             <div className="space-y-2 text-xs">
               <div>
-                <p className="font-medium">Compromiso publicado antes de sortear</p>
+                <p className="font-medium">{t("commitmentHashLabel")}</p>
                 <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.draw_commitment ?? "—"}
                 </code>
               </div>
               <div>
-                <p className="font-medium">
-                  Huella del listado vendido (<code>numbers_hash</code>)
-                </p>
+                <p className="font-medium">{t("numbersHashLabel")}</p>
                 <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.numbers_hash ?? "—"}
                 </code>
               </div>
               <div>
-                <p className="font-medium">
-                  Huella del resultado (<code>result_hash</code>)
-                </p>
+                <p className="font-medium">{t("resultHashLabel")}</p>
                 <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.result_hash ?? "—"}
                 </code>
               </div>
               <div>
-                <p className="font-medium">Semilla revelada</p>
+                <p className="font-medium">{t("seedLabel")}</p>
                 <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.draw_seed ?? "—"}
                 </code>
@@ -254,7 +241,7 @@ export default async function VerifyPage({
 
           <section className="space-y-2">
             <h2 className="font-display text-lg font-semibold">
-              Números vendidos que participaron ({soldNumbers.length})
+              {t("soldNumbersTitle", { count: soldNumbers.length })}
             </h2>
             <div className="flex max-h-64 flex-wrap gap-1.5 overflow-y-auto rounded-lg border border-hairline bg-panel-1/60 p-3">
               {soldNumbers.map((number) => (
@@ -272,14 +259,15 @@ export default async function VerifyPage({
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              Listado canónico usado por el motor: ascendente y separado por
-              comas. Si faltara un número, el hash no coincidiría.
+              {t("canonicalNote")}
             </p>
           </section>
 
           {winners.length > 1 && (
             <section className="space-y-3">
-              <h2 className="font-display text-lg font-semibold">Resultados por premio</h2>
+              <h2 className="font-display text-lg font-semibold">
+                {t("resultsByPrize")}
+              </h2>
               <MultiPrizeVerifier
                 raffleId={raffle.id}
                 seed={raffle.draw_seed ?? ""}
@@ -299,12 +287,11 @@ export default async function VerifyPage({
           <section className="space-y-3 rounded-lg border border-hairline bg-panel-1 p-5">
             <h2 className="font-display text-lg font-semibold">
               {winners.length > 1
-                ? "Certificados por premio"
-                : "Certificado de ganador"}
+                ? t("certificatesByPrize")
+                : t("certificate")}
             </h2>
             <p className="text-[13px] text-fg-subtle">
-              Descargá el certificado con el número, el ganador y el hash de
-              verificación.
+              {t("certificateDesc")}
             </p>
             {winners.length > 1 ? (
               <div className="space-y-3">
@@ -314,10 +301,10 @@ export default async function VerifyPage({
                     raffleTitle={raffle.title}
                     prizeLabel={
                       winner.position === 1
-                        ? "1.er premio"
-                        : `${winner.position}º premio`
+                        ? t("firstPrize")
+                        : t("prizePosition", { position: winner.position })
                     }
-                    winnerName={winner.user_name ?? "Anónimo"}
+                    winnerName={winner.user_name ?? t("anonymous")}
                     winnerNumber={winner.number}
                     drawnAt={
                       raffle.drawn_at ? formatDateTime(raffle.drawn_at) : null
@@ -330,7 +317,7 @@ export default async function VerifyPage({
             ) : (
               <WinnerCertificate
                 raffleTitle={raffle.title}
-                winnerName={raffle.winner_name ?? "Anónimo"}
+                winnerName={raffle.winner_name ?? t("anonymous")}
                 winnerNumber={raffle.winner_number}
                 drawnAt={
                   raffle.drawn_at ? formatDateTime(raffle.drawn_at) : null
@@ -346,18 +333,18 @@ export default async function VerifyPage({
       )}
 
       <div className="flex flex-wrap gap-3 text-sm">
-        <Link
+        <LocaleLink
           href={`/sorteos/${clavePublica}`}
           className="text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
         >
-          Página pública del sorteo
-        </Link>
-        <Link
+          {t("publicPage")}
+        </LocaleLink>
+        <LocaleLink
           href={`/sorteos/${clavePublica}/en-vivo`}
           className="text-[13px] font-medium text-brand-accent underline-offset-4 hover:underline"
         >
-          Sala en vivo
-        </Link>
+          {t("liveRoom")}
+        </LocaleLink>
       </div>
     </div>
   );

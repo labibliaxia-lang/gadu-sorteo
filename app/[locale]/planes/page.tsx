@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Check, Crown, KeyRound, MessageCircle, Ticket } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
@@ -11,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { RedeemCodeForm } from "@/components/RedeemCodeForm";
-import { PLAN_BENEFITS, PLAN_LIMITS, normalizePlan } from "@/lib/plans";
+import { normalizePlan } from "@/lib/plans";
 import { waLink } from "@/lib/superadmin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PlanCurrencySelect } from "@/components/PlanCurrencySelect";
@@ -21,6 +23,71 @@ import type { Plan } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 const PLANS: Plan[] = ["free", "organizador", "pro", "premium", "social"];
+
+const PLAN_KEYS: Record<
+  Plan,
+  { name: string; description: string; benefits: string[] }
+> = {
+  free: {
+    name: "planFreeName",
+    description: "planFreeDescription",
+    benefits: [
+      "planFreeBenefit1",
+      "planFreeBenefit2",
+      "planFreeBenefit3",
+      "planFreeBenefit4",
+    ],
+  },
+  organizador: {
+    name: "planStarterName",
+    description: "planStarterDescription",
+    benefits: [
+      "planStarterBenefit1",
+      "planStarterBenefit2",
+      "planStarterBenefit3",
+      "planStarterBenefit4",
+    ],
+  },
+  pro: {
+    name: "planProName",
+    description: "planProDescription",
+    benefits: [
+      "planProBenefit1",
+      "planProBenefit2",
+      "planProBenefit3",
+      "planProBenefit4",
+    ],
+  },
+  premium: {
+    name: "planPremiumName",
+    description: "planPremiumDescription",
+    benefits: [
+      "planPremiumBenefit1",
+      "planPremiumBenefit2",
+      "planPremiumBenefit3",
+      "planPremiumBenefit4",
+      "planPremiumBenefit5",
+    ],
+  },
+  social: {
+    name: "planSocialName",
+    description: "planSocialDescription",
+    benefits: [
+      "planSocialBenefit1",
+      "planSocialBenefit2",
+      "planSocialBenefit3",
+      "planSocialBenefit4",
+    ],
+  },
+};
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Planes");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
 interface PlanConfigRow {
   plan_name: Plan;
@@ -42,6 +109,7 @@ export default async function PlanesPage({
 }: {
   searchParams?: { currency?: string };
 }) {
+  const t = await getTranslations("Planes");
   const supabase = createClient();
   const salesWhatsapp = process.env.NEXT_PUBLIC_SALES_WHATSAPP?.trim() || null;
   const moneda: Moneda = MONEDAS.includes(
@@ -106,15 +174,17 @@ export default async function PlanesPage({
     const ars = Number(cfg?.price_ars ?? 0);
     const precio =
       usd > 0
-        ? `${formatPriceIn(usd, "USD")} por mes`
+        ? t("pricePerMonth", { price: formatPriceIn(usd, "USD") })
         : ars > 0
-          ? `${formatPriceIn(ars, "ARS")} por mes`
-          : "a convenir";
-    const msg = `Hola! Quiero contratar el plan ${
-      PLAN_LIMITS[plan].label
-    } de Gadu Sorteos (${precio})${
-      profile?.full_name ? `. Mi nombre es ${profile.full_name}` : ""
-    }.`;
+          ? t("pricePerMonth", { price: formatPriceIn(ars, "ARS") })
+          : t("priceByAgreement");
+    const msg = t("planMessage", {
+      plan: t(PLAN_KEYS[plan].name),
+      price: precio,
+      name: profile?.full_name
+        ? t("planMessageName", { name: profile.full_name })
+        : "",
+    });
     return waLink(salesWhatsapp, msg);
   }
 
@@ -122,29 +192,29 @@ export default async function PlanesPage({
     <div className="mx-auto max-w-4xl space-y-10">
       <header className="space-y-3 text-center">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-brand-800 dark:text-brand-300">
-          Organizadores
+          {t("eyebrow")}
         </p>
         <h1 className="font-display text-[2.2rem] font-semibold leading-tight tracking-[-0.03em]">
-          Planes para organizadores
+          {t("title")}
         </h1>
         <p className="mx-auto max-w-xl text-[13px] text-fg-subtle">
-          Publicá tus sorteos con tu cuenta. Pagás por mes y, si preferís otro
-          esquema, la comisión se acuerda por WhatsApp.
+          {t("description")}
         </p>
         {user && (
           <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
             {currentPlan === "premium" ? (
               <Badge variant="secondary">
                 <Crown className="mr-1 h-3.5 w-3.5" />
-                Plan Premium activo
-                {premiumUntil ? ` hasta ${premiumUntil}` : ""}
+                {premiumUntil
+                  ? t("premiumUntil", { date: premiumUntil })
+                  : t("premiumActive")}
               </Badge>
             ) : (
-              <Badge variant="secondary">Plan Organizador</Badge>
+              <Badge variant="secondary">{t("organizerPlan")}</Badge>
             )}
             {organizerUntil && (
               <span className="text-xs text-muted-foreground">
-                Acceso de organizador hasta {organizerUntil}
+                {t("organizerAccessUntil", { date: organizerUntil })}
               </span>
             )}
           </div>
@@ -157,7 +227,7 @@ export default async function PlanesPage({
 
       <section className="grid gap-5 md:grid-cols-2">
         {PLANS.map((plan) => {
-          const limits = PLAN_LIMITS[plan];
+          const planCopy = PLAN_KEYS[plan];
           const cfg = configByPlan.get(plan);
           const usd = Number(cfg?.price_usd ?? 0);
           const ars = Number(cfg?.price_ars ?? 0);
@@ -182,36 +252,40 @@ export default async function PlanesPage({
             >
               <CardHeader className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <CardTitle className="text-xl">{limits.label}</CardTitle>
-                  {isPremium && <Badge variant="secondary">Recomendado</Badge>}
+                  <CardTitle className="text-xl">
+                    {t(planCopy.name)}
+                  </CardTitle>
+                  {isPremium && (
+                    <Badge variant="secondary">{t("recommended")}</Badge>
+                  )}
                 </div>
                 <p className="text-[13px] text-fg-subtle">
-                  {limits.description}
+                  {t(planCopy.description)}
                 </p>
                 <div className="pt-2">
                   <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
-                    Precio mensual
+                    {t("monthlyPrice")}
                   </p>
                   <p className="mt-1 font-mono text-2xl font-medium tracking-tight text-fg">
                     {esGratis ? (
-                      "Gratis"
+                      t("free")
                     ) : (
                       <>
                         {formatPriceIn(precioLocal, moneda)}
                         <span className="ml-1 font-normal text-fg-subtle">
-                          / mes
+                          {t("perMonth")}
                         </span>
                       </>
                     )}
                   </p>
                   {!esGratis && moneda !== "USD" && (
                     <p className="text-[11px] text-fg-subtle">
-                      Base {formatPriceIn(usd, "USD")} por mes
+                      {t("basePrice", { price: formatPriceIn(usd, "USD") })}
                     </p>
                   )}
                   {!esGratis && moneda === "USD" && ars > 0 && (
                     <p className="text-[11px] text-fg-subtle">
-                      Equivale a {formatPriceIn(ars, "ARS")} por mes
+                      {t("equalsPrice", { price: formatPriceIn(ars, "ARS") })}
                     </p>
                   )}
                 </div>
@@ -219,10 +293,10 @@ export default async function PlanesPage({
 
               <CardContent className="flex flex-1 flex-col gap-5">
                 <ul className="space-y-2 text-[13px]">
-                  {PLAN_BENEFITS[plan].map((benefit) => (
+                  {planCopy.benefits.map((benefit) => (
                     <li key={benefit} className="flex items-start gap-2">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                      {benefit}
+                      {t(benefit)}
                     </li>
                   ))}
                 </ul>
@@ -233,7 +307,7 @@ export default async function PlanesPage({
                       href="/register"
                       className={cn(buttonVariants(), "w-full")}
                     >
-                      Empezar gratis
+                      {t("startFree")}
                     </Link>
                   ) : href ? (
                     <a
@@ -244,8 +318,8 @@ export default async function PlanesPage({
                     >
                       <MessageCircle className="mr-1.5 h-4 w-4" />
                       {plan === "social"
-                        ? "Solo por contacto"
-                        : "Contratar por WhatsApp"}
+                        ? t("contactOnly")
+                        : t("hireWhatsapp")}
                     </a>
                   ) : (
                     <Link
@@ -253,15 +327,15 @@ export default async function PlanesPage({
                       className={cn(buttonVariants(), "w-full")}
                     >
                       <MessageCircle className="mr-1.5 h-4 w-4" />
-                      Hablar con ventas
+                      {t("talkToSales")}
                     </Link>
                   )}
                   <p className="text-center text-[12px] text-fg-subtle">
                     {plan === "free"
-                      ? "Sin tarjeta. Creá tu cuenta y publicá tu primer sorteo de prueba."
+                      ? t("freeNote")
                       : plan === "social"
-                        ? "El Plan Social lo asigna el equipo desde soporte. No hay autoservicio."
-                        : "Prepago manual: transferís, mandás el comprobante y te entregamos el código de 30 días."}
+                        ? t("socialNote")
+                        : t("paidNote")}
                   </p>
                 </div>
               </CardContent>
@@ -271,28 +345,21 @@ export default async function PlanesPage({
       </section>
 
       <section className="rounded-xl border border-hairline bg-panel-1/50 p-5">
-        <h2 className="text-lg font-semibold">
-          ¿Preferís pagar por comisión?
-        </h2>
+        <h2 className="text-lg font-semibold">{t("commissionTitle")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          También trabajamos por comisión sobre las ventas, a convenir con cada
-          organizador. La comisión se acuerda por WhatsApp y se factura aparte;
-          no se descuenta automáticamente de los cobros del sorteo.
+          {t("commissionDescription")}
         </p>
         {salesWhatsapp && (
           <a
             href={
-              waLink(
-                salesWhatsapp,
-                "Hola! Quiero consultar por el esquema de comisión de Gadu Sorteos.",
-              ) ?? "#"
+              waLink(salesWhatsapp, t("commissionWhatsapp")) ?? "#"
             }
             target="_blank"
             rel="noopener noreferrer"
             className={cn(buttonVariants({ variant: "outline" }), "mt-4")}
           >
             <MessageCircle className="mr-1.5 h-4 w-4" />
-            Consultar por comisión
+            {t("commissionCta")}
           </a>
         )}
       </section>
@@ -301,11 +368,10 @@ export default async function PlanesPage({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <KeyRound className="h-5 w-5 text-amber-500" />
-            ¿Ya compraste? Canjeá tu código
+            {t("redeemTitle")}
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Pegá el código de activación de 25 caracteres que te enviamos. Cada
-            código suma 30 días.
+            {t("redeemDescription")}
           </p>
         </CardHeader>
         <CardContent>
@@ -316,7 +382,7 @@ export default async function PlanesPage({
               href="/login?next=/planes"
               className={buttonVariants({ variant: "outline" })}
             >
-              Iniciá sesión para canjear
+              {t("loginToRedeem")}
             </Link>
           )}
         </CardContent>
@@ -324,7 +390,7 @@ export default async function PlanesPage({
 
       {user && (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Mis códigos canjeados</h2>
+          <h2 className="text-lg font-semibold">{t("myCodes")}</h2>
 
           {redeemed && redeemed.length > 0 ? (
             <div className="space-y-2">
@@ -351,7 +417,7 @@ export default async function PlanesPage({
             </div>
           ) : (
             <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-              Todavía no canjeaste ningún código.
+              {t("noCodes")}
             </p>
           )}
         </section>

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { BadgeCheck } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ export function OrganizerCard({
   organizer: PublicOrganizer;
   href?: string | null;
 }) {
+  const t = useTranslations("OrganizerCard");
   const initial = (organizer.full_name || "O").charAt(0).toUpperCase();
 
   const card = (
@@ -30,7 +32,7 @@ export function OrganizerCard({
           {organizer.avatar_url ? (
             <Image
               src={organizer.avatar_url}
-              alt={organizer.full_name ?? "Organizador"}
+              alt={organizer.full_name ?? t("organizer")}
               width={56}
               height={56}
               className="h-14 w-14 rounded-full object-cover"
@@ -43,17 +45,17 @@ export function OrganizerCard({
 
           <div className="min-w-0 space-y-1">
             <p className="flex items-center gap-1.5 font-semibold">
-              {organizer.full_name || "Organizador"}
+              {organizer.full_name || t("organizer")}
               {organizer.is_verified && (
                 <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-500" />
               )}
             </p>
             {organizer.is_verified && (
-              <Badge variant="success">✓ Identidad Verificada</Badge>
+              <Badge variant="success">{t("verified")}</Badge>
             )}
             {href && (
               <p className="text-xs text-muted-foreground">
-                Ver perfil y sorteos →
+                {t("seeProfile")}
               </p>
             )}
           </div>
@@ -68,7 +70,9 @@ export function OrganizerCard({
     <Link
       href={href}
       className="block rounded-xl transition hover:opacity-90"
-      aria-label={`Ver perfil de ${organizer.full_name || "el organizador"}`}
+      aria-label={t("profileAria", {
+        name: organizer.full_name || t("organizer"),
+      })}
     >
       {card}
     </Link>

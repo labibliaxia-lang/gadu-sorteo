@@ -1,7 +1,8 @@
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { CalendarDays, Gift } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { RaffleCountdown } from "@/components/RaffleCountdown";
 import type { Raffle } from "@/lib/types";
@@ -12,8 +13,9 @@ import type { Raffle } from "@/lib/types";
  * destacados que van primero).
  */
 export function RaffleMiniCard({ raffle }: { raffle: Raffle }) {
+  const t = useTranslations("RaffleMiniCard");
   return (
-    <Link
+    <LocaleLink
       href={`/sorteos/${raffle.id}`}
       className="group flex gap-3 rounded-xl border border-hairline bg-panel-1 p-3 transition-colors hover:border-hairline-strong"
     >
@@ -36,7 +38,7 @@ export function RaffleMiniCard({ raffle }: { raffle: Raffle }) {
       <div className="min-w-0 flex-1">
         {raffle.is_featured && (
           <span className="inline-flex rounded-full bg-brand-500/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-brand-accent">
-            Destacado
+            {t("featured")}
           </span>
         )}
         <p className="mt-1 truncate text-sm font-medium">{raffle.title}</p>
@@ -53,9 +55,11 @@ export function RaffleMiniCard({ raffle }: { raffle: Raffle }) {
         </span>
         <p className="mt-1 font-mono text-[12px] text-fg">
           {formatPrice(Number(raffle.price_per_number))}{" "}
-          <span className="text-[11px] text-fg-subtle">por número</span>
+          <span className="text-[11px] text-fg-subtle">
+            {t("perNumber")}
+          </span>
         </p>
       </div>
-    </Link>
+    </LocaleLink>
   );
 }

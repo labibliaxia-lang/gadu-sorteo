@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import {
   ArrowRight,
   CalendarDays,
@@ -12,6 +12,7 @@ import {
   Ticket,
   Trophy,
 } from "lucide-react";
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { parseLandingContent } from "@/lib/landing";
 import { collectSoldNumbers } from "@/lib/raffle-numbers";
@@ -44,14 +45,6 @@ import type { Prize, PublicOrganizer, Raffle, RaffleWinner } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-const statusLabel: Record<Raffle["status"], string> = {
-  active: "Activo",
-  closed: "Cerrado",
-  drawn: "Sorteado",
-  cancelled: "Cancelado",
-  paused: "Pausado",
-};
-
 /**
  * Metadata por sorteo: es lo que se ve al compartir el link por WhatsApp o
  * redes. No incluye el nombre del ganador (PII): título, premio y fecha.
@@ -72,6 +65,7 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
+  const t = await getTranslations("Sorteo");
   const supabase = createClient();
   const { data: raffle } = await supabase
     .from("raffles")
@@ -82,7 +76,7 @@ export async function generateMetadata({
     .maybeSingle();
 
   if (!raffle) {
-    return { title: "Sorteo no encontrado | Gadu Sorteos" };
+    return { title: t("metaNotFound") };
   }
 
   // 0113/SEO: si ya se sorteó, el título apunta al ganador. Se usa el nombre
@@ -92,7 +86,7 @@ export async function generateMetadata({
       .trim()
       .split(/\s+/)
       .filter(Boolean);
-    if (partes.length === 0) return "un participante";
+    if (partes.length === 0) return t("anonymousParticipant");
     if (partes.length === 1) return partes[0];
     return `${partes[0]} ${partes[partes.length - 1][0]}.`;
   })();
@@ -100,17 +94,22 @@ export async function generateMetadata({
   const dibujado = raffle.status === "drawn" && raffle.winner_number != null;
 
   const description = dibujado
-    ? `Mirá el número ganador y verificá el resultado del sorteo. ${nombreCorto} ganó con el número ${raffle.winner_number}.`
+    ? t("metaDescriptionWinner", {
+        name: nombreCorto,
+        number: raffle.winner_number,
+      })
     : raffle.description?.trim()
       ? String(raffle.description).trim().slice(0, 160)
-      : `Participá por ${raffle.title} en Gadu Sorteos. Precio por número: ${formatPrice(
-          Number(raffle.price_per_number),
-        )}. Sorteo: ${formatDateTime(raffle.draw_date)}.`;
+      : t("metaDescriptionActive", {
+          title: raffle.title,
+          price: formatPrice(Number(raffle.price_per_number)),
+          date: formatDateTime(raffle.draw_date),
+        });
 
   // 0114: SEO del sorteo terminado. El nombre ya viene recortado (sin apellido
   // completo) y no se exponen email ni teléfono.
   const title = dibujado
-    ? `¡${nombreCorto} ganó ${raffle.title} en Gadu Sorteos!`
+    ? t("metaWinnerTitle", { name: nombreCorto, title: raffle.title })
     : `${raffle.title} | Gadu Sorteos`;
 
   const images = dibujado
@@ -119,7 +118,7 @@ export async function generateMetadata({
           url: `/sorteos/${params.slug}/opengraph-image`,
           width: 1200,
           height: 630,
-          alt: `Ganador del sorteo ${raffle.title}`,
+          alt: t("metaImageAlt", { title: raffle.title }),
         },
       ]
     : raffle.cover_image_url
@@ -149,6 +148,8 @@ export default async function RafflePage({
 }: {
   params: { slug: string };
 }) {
+  const t = await getTranslations("Sorteo");
+  const tc = await getTranslations("Common");
   const supabase = createClient();
   const isDev = process.env.NODE_ENV === "development";
 
@@ -435,7 +436,7 @@ export default async function RafflePage({
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-2">
               <Gift className="h-7 w-7 text-fg-subtle" aria-hidden="true" />
-              <span className="eyebrow">Premio en juego</span>
+              <span className="eyebrow">{t("prizeInPlay")}</span>
             </div>
           )}
           <div className="absolute left-3 top-3 flex flex-wrap gap-2">
@@ -455,31 +456,29 @@ export default async function RafflePage({
                     : "border-hairline bg-canvas/90 text-fg"
               }
             >
-              {statusLabel[raffle.status as Raffle["status"]]}
+              {tc(`status.${raffle.status}`)}
             </Badge>
             <Badge variant="secondary" className="bg-canvas/85 ring-1 ring-hairline">
-              {raffle.auto_draw ? "Automático" : "Manual"}
+              {raffle.auto_draw ? tc("automatic") : tc("manual")}
             </Badge>
           </div>
           <span className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md bg-canvas/85 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.08em] text-fg-muted ring-1 ring-hairline">
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            Resultado verificable
+            {t("verifiableResult")}
           </span>
         </div>
 
         <div className="space-y-5">
-          <p className="eyebrow-gold">Sorteo verificable</p>
+          <p className="eyebrow-gold">{t("verifiableRaffle")}</p>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.025em] sm:text-4xl">
               {raffle.title}
             </h1>
-            <Badge variant="secondary">
-              {statusLabel[raffle.status as Raffle["status"]]}
-            </Badge>
+            <Badge variant="secondary">{tc(`status.${raffle.status}`)}</Badge>
             {organizer?.is_verified && (
               <Badge variant="success">
                 <ShieldCheck className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
-                Organizador Verificado
+                {t("verifiedOrganizer")}
               </Badge>
             )}
           </div>
@@ -503,21 +502,18 @@ export default async function RafflePage({
 
           {raffle.status === "paused" && (
             <div className="max-w-xl rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
-              <p className="font-semibold">Este sorteo está temporalmente pausado</p>
-              <p className="mt-1 text-muted-foreground">
-                El organizador debe actualizar su plan para reactivarlo.
-              </p>
+              <p className="font-semibold">{t("pausedTitle")}</p>
+              <p className="mt-1 text-muted-foreground">{t("pausedText")}</p>
             </div>
           )}
 
           {raffle.status === "cancelled" && (
             <div className="max-w-xl rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
-              <p className="font-semibold">Sorteo cancelado</p>
+              <p className="font-semibold">{t("cancelledTitle")}</p>
               <p className="mt-1 text-muted-foreground">
-                {raffle.cancellation_reason ||
-                  "El organizador canceló este sorteo."}{" "}
-                Si compraste números, contactá al organizador para coordinar la
-                devolución.
+                {t("cancelledText", {
+                  reason: raffle.cancellation_reason || t("cancelledDefault"),
+                })}
               </p>
             </div>
           )}
@@ -527,7 +523,7 @@ export default async function RafflePage({
               <CalendarDays className="h-4 w-4 text-fg-subtle" aria-hidden="true" />
               <span>
                 <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
-                  Fecha del sorteo
+                  {t("drawDate")}
                 </span>
                 {formatDateTime(raffle.draw_date)}
                 <span className="mt-0.5 block">
@@ -541,7 +537,7 @@ export default async function RafflePage({
             <span className="hidden h-9 w-px bg-hairline sm:block" />
             <span>
               <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
-                Precio por número
+                {t("pricePerNumber")}
               </span>
               <span className="font-mono text-xl text-fg">
                 {formatPriceIn(Number(raffle.price_per_number), raffle.currency ?? "ARS")}
@@ -551,9 +547,7 @@ export default async function RafflePage({
 
           {(raffle.status === "active" || raffle.status === "closed") && (
             <p className="max-w-xl rounded-lg border border-hairline bg-panel-1/60 p-3 text-[13px] leading-relaxed text-fg-subtle">
-              {raffle.auto_draw
-                ? "Sorteo automático: se ejecuta solo a la fecha y hora programadas; el resultado se publica al confirmarse."
-                : "Sorteo manual: el organizador lo ejecuta a la fecha y hora programadas; el resultado se publica al confirmarse."}
+              {raffle.auto_draw ? t("autoDrawNote") : t("manualDrawNote")}
             </p>
           )}
 
@@ -561,8 +555,10 @@ export default async function RafflePage({
             <div className="max-w-xl space-y-2">
               <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.06em] text-fg-subtle">
                 <span>
-                  {(soldTotal ?? 0).toLocaleString("es-AR")} de{" "}
-                  {numbersTotal.toLocaleString("es-AR")} números vendidos
+                  {t("soldCount", {
+                    sold: (soldTotal ?? 0).toLocaleString("es-AR"),
+                    total: numbersTotal.toLocaleString("es-AR"),
+                  })}
                 </span>
                 <span className="text-fg">{soldPercent}%</span>
               </div>
@@ -584,24 +580,25 @@ export default async function RafflePage({
               }
             >
               <p className="font-semibold">
-                Mínimo para realizarse:{" "}
-                {raffle.min_tickets_required.toLocaleString("es-AR")} números
-                vendidos
+                {t("minRequired", {
+                  min: raffle.min_tickets_required.toLocaleString("es-AR"),
+                })}
               </p>
               <p className="mt-1 text-muted-foreground">
-                Vendidos actualmente: {(soldTotal ?? 0).toLocaleString("es-AR")}
-                {". "}
+                {t("currentlySold", {
+                  sold: (soldTotal ?? 0).toLocaleString("es-AR"),
+                })}{" "}
                 {raffle.if_not_met === "extend_date"
-                  ? "Si no se alcanza, se reprograma la fecha."
-                  : "Si no se alcanza, se cancela y se devuelve el dinero."}
+                  ? t("ifNotMetExtend")
+                  : t("ifNotMetCancel")}
               </p>
               {(soldTotal ?? 0) < raffle.min_tickets_required && (
                 <p className="mt-1 font-medium text-amber-800 dark:text-amber-300">
-                  Faltan{" "}
-                  {(raffle.min_tickets_required - (soldTotal ?? 0)).toLocaleString(
-                    "es-AR",
-                  )}{" "}
-                  para habilitar el sorteo.
+                  {t("missingForDraw", {
+                    missing: (
+                      raffle.min_tickets_required - (soldTotal ?? 0)
+                    ).toLocaleString("es-AR"),
+                  })}
                 </p>
               )}
             </div>
@@ -609,29 +606,29 @@ export default async function RafflePage({
 
           <div className="flex flex-wrap gap-2">
             {raffle.status === "active" && (
-              <Link
+              <a
                 href="#elegir-numeros"
                 className={buttonVariants({ size: "lg" })}
               >
                 <Ticket className="mr-1.5 h-4 w-4" />
-                Elegir mis números
-              </Link>
+                {t("chooseMyNumbers")}
+              </a>
             )}
             {raffle.status === "drawn" && (
-              <Link
+              <LocaleLink
                 href={`/sorteos/${raffle.id}/verificar`}
                 className={buttonVariants({ size: "lg" })}
               >
                 <ShieldCheck className="mr-1.5 h-4 w-4" />
-                Verificar resultado
-              </Link>
+                {t("verifyResult")}
+              </LocaleLink>
             )}
-            <Link
+            <LocaleLink
               href={`/sorteos/${raffle.id}/en-vivo`}
               className="btn-ghost-strong"
             >
-              Sala en vivo
-            </Link>
+              {t("liveRoom")}
+            </LocaleLink>
           </div>
 
           {raffle.status === "drawn" && raffle.winner_number != null && (
@@ -642,16 +639,16 @@ export default async function RafflePage({
                 </span>
                 <div>
                   <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
-                    Ganador
+                    {tc("winner")}
                   </p>
                   <p className="font-semibold">
-                    {raffle.winner_name ?? "Anónimo"}
+                    {raffle.winner_name ?? tc("anonymous")}
                   </p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
-                  Número
+                  {tc("number")}
                 </p>
                 <p className="font-mono text-2xl font-medium text-brand-accent">
                   {formatNumber(raffle.winner_number)}
@@ -697,7 +694,7 @@ export default async function RafflePage({
                 />
               )}
               {ratingCount > 0 && (
-                <Link
+                <a
                   href={`/organizador/${
                     organizer.slug ?? raffle.created_by
                   }#resenas`}
@@ -707,10 +704,8 @@ export default async function RafflePage({
                   <span className="font-semibold">
                     {formatRating(ratingAverage)}
                   </span>
-                  <span>
-                    Ã‚· {ratingCount} reseña{ratingCount === 1 ? "" : "s"}
-                  </span>
-                </Link>
+                  <span>· {t("reviewCount", { count: ratingCount })}</span>
+                </a>
               )}
             </>
           )}
@@ -722,19 +717,18 @@ export default async function RafflePage({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="font-display text-xl font-semibold">
-                Ganadores por premio
+                {t("winnersByPrize")}
               </h2>
               <p className="text-[13px] text-fg-subtle">
-                Resultado publicado automáticamente y congelado. Cada premio
-                conserva su hash.
+                {t("winnersFrozen")}
               </p>
             </div>
-            <Link
+            <LocaleLink
               href={`/sorteos/${raffle.id}/verificar`}
               className={buttonVariants({ variant: "outline", size: "sm" })}
             >
-              Verificar resultados
-            </Link>
+              {t("verifyResults")}
+            </LocaleLink>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -747,14 +741,14 @@ export default async function RafflePage({
                   <div className="min-w-0">
                     <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
                       {winner.position === 1
-                        ? "1.er premio"
-                        : `${winner.position}Ã‚º premio`}
+                        ? t("firstPrize")
+                        : t("prizePosition", { position: winner.position })}
                     </p>
                     <p className="truncate font-semibold">
-                      {winner.prize_title ?? "Premio"}
+                      {winner.prize_title ?? tc("prize")}
                     </p>
                     <p className="text-[13px] text-fg-subtle">
-                      {winner.user_name ?? "Ganador anónimo"}
+                      {winner.user_name ?? t("anonymousWinner")}
                     </p>
                   </div>
                   <p className="font-mono text-2xl font-medium text-brand-accent">
@@ -779,24 +773,20 @@ export default async function RafflePage({
 
       {raffle.status !== "drawn" && raffle.draw_commitment && (
         <section className="space-y-3 rounded-lg border border-hairline bg-panel-1/60 p-5">
-          <h2 className="text-lg font-semibold">
-            Compromiso del sorteo publicado
-          </h2>
+          <h2 className="text-lg font-semibold">{t("commitmentTitle")}</h2>
           <p className="text-sm text-muted-foreground">
-            El organizador publicó, antes del sorteo, el hash de una semilla
-            secreta. Nadie conoce la semilla hasta que se sortea: cuando se
-            revele, cualquiera podrá comprobar que el ganador se calculó a partir
-            de ella y de los números vendidos. El compromiso ya no se puede
-            cambiar.
+            {t("commitmentText")}
           </p>
           <div className="space-y-1 text-xs">
-            <p className="font-medium">Compromiso (hash de la semilla)</p>
+            <p className="font-medium">{t("commitmentLabel")}</p>
             <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
               {raffle.draw_commitment}
             </code>
             {raffle.draw_commitment_at && (
               <p className="text-muted-foreground">
-                Publicado: {formatDateTime(raffle.draw_commitment_at)}
+                {t("publishedAt", {
+                  date: formatDateTime(raffle.draw_commitment_at),
+                })}
               </p>
             )}
           </div>
@@ -809,47 +799,37 @@ export default async function RafflePage({
           <section className="space-y-4 rounded-xl border border-hairline bg-panel-1 p-5">
             <div className="space-y-1">
               <h2 className="font-display text-xl font-semibold">
-                Huellas del sorteo (verificable)
+                {t("hashesTitle")}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Estas huellas SHA-256 se calcularon en el momento del sorteo y
-                quedaron congeladas. Además, la semilla del sorteo se publicó
-                comprometida antes de sortear y ahora está revelada: con el
-                listado de números vendidos que se muestra en esta página,
-                cualquiera puede recomputar el ganador y comprobar que no se
-                eligió después de conocer los números.
+                {t("hashesText")}
               </p>
               {raffle.hashes_at && (
                 <p className="text-xs text-muted-foreground">
-                  Calculadas: {formatDateTime(raffle.hashes_at)} Ã‚· Sorteo:{" "}
-                  <span className="font-mono">{raffle.id}</span>
+                  {t("hashesAt", {
+                    date: formatDateTime(raffle.hashes_at),
+                    id: raffle.id,
+                  })}
                 </p>
               )}
             </div>
 
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <p className="font-medium">
-                  Huella del listado vendido (<code>numbers_hash</code>)
-                </p>
+                <p className="font-medium">{t("numbersHashLabel")}</p>
                 <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.numbers_hash}
                 </code>
               </div>
               <div className="space-y-1">
-                <p className="font-medium">
-                  Huella del resultado (<code>result_hash</code>)
-                </p>
+                <p className="font-medium">{t("resultHashLabel")}</p>
                 <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                   {raffle.result_hash}
                 </code>
               </div>
               {raffle.draw_commitment && (
                 <div className="space-y-1">
-                  <p className="font-medium">
-                    Compromiso publicado antes del sorteo{" "}
-                    (<code>draw_commitment</code>)
-                  </p>
+                  <p className="font-medium">{t("commitmentHashLabel")}</p>
                   <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                     {raffle.draw_commitment}
                   </code>
@@ -857,15 +837,15 @@ export default async function RafflePage({
               )}
               {raffle.draw_seed && (
                 <div className="space-y-1">
-                  <p className="font-medium">
-                    Semilla revelada (<code>draw_seed</code>)
-                  </p>
+                  <p className="font-medium">{t("seedLabel")}</p>
                   <code className="block break-all rounded-md border border-hairline bg-panel-2 p-3 font-mono">
                     {raffle.draw_seed}
                   </code>
                   {raffle.draw_seed_revealed_at && (
                     <p className="text-muted-foreground">
-                      Revelada: {formatDateTime(raffle.draw_seed_revealed_at)}
+                      {t("revealedAt", {
+                        date: formatDateTime(raffle.draw_seed_revealed_at),
+                      })}
                     </p>
                   )}
                 </div>
@@ -888,48 +868,48 @@ export default async function RafflePage({
 
             <details className="rounded-md border p-3 text-sm">
               <summary className="cursor-pointer font-medium">
-                Cómo verificarlo
+                {t("howToVerify")}
               </summary>
               <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
                 <li>
-                  <strong>Compromiso:</strong> calculá el SHA-256 (hexadecimal) de{" "}
-                  <code className="break-all font-mono">
-                    gadu:v1|raffle:{raffle.id}|seed:&lt;semilla&gt;
-                  </code>
-                  . Tiene que coincidir con <code>draw_commitment</code>: eso
-                  prueba que la semilla ya estaba fijada antes del sorteo.
+                  {t.rich("verifyStep1", {
+                    strong: (chunks) => <strong>{chunks}</strong>,
+                    code: (chunks) => (
+                      <code className="break-all font-mono">{chunks}</code>
+                    ),
+                    raffleId: raffle.id,
+                    seed: "<semilla>",
+                  })}
                 </li>
                 <li>
-                  <strong>Listado vendido:</strong> tomá los números vendidos de
-                  este sorteo, ordenados de menor a mayor, separados por coma y
-                  sin espacios: <code className="font-mono">n1,n2,...,nN</code>.
+                  {t.rich("verifyStep2", {
+                    strong: (chunks) => <strong>{chunks}</strong>,
+                    code: (chunks) => (
+                      <code className="break-all font-mono">{chunks}</code>
+                    ),
+                  })}
                 </li>
                 <li>
-                  <strong>Ganador:</strong> calculá el SHA-256 de{" "}
-                  <code className="break-all font-mono">
-                    gadu:v1|raffle:{raffle.id}|seed:&lt;semilla&gt;|numbers:n1,n2,...,nN
-                  </code>
-                  . Tomá sus primeros 15 caracteres hexadecimales como número,
-                  dividilo por la cantidad de números vendidos y usá el resto
-                  como posición (empezando en 0) del listado ordenado: ese es el
-                  número ganador y tiene que coincidir con el publicado.
+                  {t.rich("verifyStep3", {
+                    strong: (chunks) => <strong>{chunks}</strong>,
+                    code: (chunks) => (
+                      <code className="break-all font-mono">{chunks}</code>
+                    ),
+                    raffleId: raffle.id,
+                    seed: "<semilla>",
+                  })}
                 </li>
                 <li>
-                  <strong>Huellas:</strong> el SHA-256 de{" "}
-                  <code className="break-all font-mono">
-                    gadu:v1|raffle:{raffle.id}|numbers:n1,n2,...,nN
-                  </code>{" "}
-                  debe ser <code>numbers_hash</code>, y el de{" "}
-                  <code className="break-all font-mono">
-                    gadu:v1|raffle:{raffle.id}|winner:{raffle.winner_number}
-                    |numbers:n1,n2,...,nN
-                  </code>{" "}
-                  debe ser <code>result_hash</code>.
+                  {t.rich("verifyStep4", {
+                    strong: (chunks) => <strong>{chunks}</strong>,
+                    code: (chunks) => (
+                      <code className="break-all font-mono">{chunks}</code>
+                    ),
+                    raffleId: raffle.id,
+                    winnerNumber: raffle.winner_number ?? "",
+                  })}
                 </li>
-                <li>
-                  Cualquier diferencia significa que la semilla, el listado o el
-                  resultado se modificaron después del sorteo.
-                </li>
+                <li>{t("verifyStep5")}</li>
               </ol>
             </details>
           </section>
@@ -946,11 +926,11 @@ export default async function RafflePage({
         <section id="elegir-numeros" className="scroll-mt-24 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-2xl font-semibold tracking-tight">
-              Elegí tus números
+              {t("chooseNumbersTitle")}
             </h2>
             {isDev && (
               <span className="rounded-full bg-yellow-500/20 px-3 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-300">
-                Modo simulación de pagos activo
+                {t("simulationPayment")}
               </span>
             )}
           </div>
@@ -959,34 +939,32 @@ export default async function RafflePage({
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary font-mono text-[11px] font-medium text-primary-foreground">
                 1
               </span>
-              Elegí tus números
+              {t("stepChoose")}
             </div>
             <div className="flex items-center gap-2">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-panel-3 font-mono text-[11px] font-medium text-fg-subtle">
                 2
               </span>
               {raffle.payment_type === "transferencia"
-                ? "Transferí el total"
-                : "Pagá online"}
+                ? t("stepTransfer")
+                : t("stepPayOnline")}
             </div>
             <div className="flex items-center gap-2">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-panel-3 font-mono text-[11px] font-medium text-fg-subtle">
                 3
               </span>
               {raffle.payment_type === "transferencia"
-                ? "Enviá el comprobante"
-                : "Confirmá el pago"}
+                ? t("stepSendReceipt")
+                : t("stepConfirmPayment")}
             </div>
           </div>
           {raffle.payment_type === "transferencia" && (
             <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-[13px] text-amber-900 dark:text-amber-200">
-              <p className="font-semibold">Prepago manual por WhatsApp</p>
+              <p className="font-semibold">{t("manualPrepayTitle")}</p>
               <p className="mt-1">
-                Reservás tus números y coordinás el pago por transferencia. Si el
-                organizador cancela el sorteo, se devuelve el{" "}
-                <strong>100% del dinero por el mismo medio de pago</strong>. No se
-                realizan devoluciones una vez confirmado el pago y realizado el
-                sorteo.
+                {t.rich("manualPrepayText", {
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </p>
             </div>
           )}
@@ -1015,12 +993,14 @@ export default async function RafflePage({
           {raffle.payment_type === "transferencia" && (
             <div className="rounded-lg border border-hairline bg-panel-1/60 p-4">
               <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-fg-subtle">
-                Datos para transferir cuando reserves
+                {t("transferDataTitle")}
               </p>
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 {raffle.transfer_alias && (
                   <div>
-                    <p className="font-mono text-[11px] text-fg-subtle">Alias</p>
+                    <p className="font-mono text-[11px] text-fg-subtle">
+                      {t("alias")}
+                    </p>
                     <p className="font-mono text-[13px] font-medium text-fg">
                       {raffle.transfer_alias}
                     </p>
@@ -1028,7 +1008,9 @@ export default async function RafflePage({
                 )}
                 {raffle.transfer_cbu && (
                   <div>
-                    <p className="font-mono text-[11px] text-fg-subtle">CBU</p>
+                    <p className="font-mono text-[11px] text-fg-subtle">
+                      {t("cbu")}
+                    </p>
                     <p className="font-mono text-[13px] font-medium text-fg">
                       {raffle.transfer_cbu}
                     </p>
@@ -1036,7 +1018,9 @@ export default async function RafflePage({
                 )}
                 {raffle.transfer_bank && (
                   <div>
-                    <p className="font-mono text-[11px] text-fg-subtle">Banco</p>
+                    <p className="font-mono text-[11px] text-fg-subtle">
+                      {t("bank")}
+                    </p>
                     <p className="font-mono text-[13px] font-medium text-fg">
                       {raffle.transfer_bank}
                     </p>
@@ -1044,8 +1028,7 @@ export default async function RafflePage({
                 )}
               </div>
               <p className="mt-3 text-[12px] text-fg-subtle">
-                Primero elegí tus números y reservá: el comprobante se envía
-                después por WhatsApp.
+                {t("transferHint")}
               </p>
             </div>
           )}
@@ -1054,7 +1037,7 @@ export default async function RafflePage({
 
       <section className="space-y-4 border-t border-hairline pt-8">
         <h2 className="font-display text-2xl font-semibold tracking-tight">
-          Premios
+          {t("prizesTitle")}
         </h2>
         {prizes && prizes.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -1063,9 +1046,7 @@ export default async function RafflePage({
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground">
-            Los premios se publicarán pronto.
-          </p>
+          <p className="text-muted-foreground">{t("prizesSoon")}</p>
         )}
       </section>
 
@@ -1080,22 +1061,21 @@ export default async function RafflePage({
         <section className="space-y-4 border-t border-hairline pt-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="eyebrow">Más sorteos</p>
+              <p className="eyebrow">{t("moreRaffles")}</p>
               <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">
-                Seguí participando
+                {t("keepParticipating")}
               </h2>
               <p className="mt-1 text-[13px] text-fg-subtle">
-                Otros sorteos publicados en Gadu. Los destacados aparecen
-                primero.
+                {t("moreRafflesText")}
               </p>
             </div>
-            <Link
+            <LocaleLink
               href="/"
               className={buttonVariants({ variant: "outline", size: "sm" })}
             >
-              Ver todos los sorteos
+              {t("seeAllRaffles")}
               <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
-            </Link>
+            </LocaleLink>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {otherRaffles.map((other) => (

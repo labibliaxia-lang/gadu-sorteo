@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ function PrizeImage({
   alt: string;
   className?: string;
 }) {
+  const t = useTranslations("PrizeCard");
   return (
     <div className={cn("relative w-full overflow-hidden bg-panel-2", className)}>
       {src ? (
@@ -26,7 +28,7 @@ function PrizeImage({
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-          Sin imagen
+          {t("noImage")}
         </div>
       )}
     </div>
@@ -34,6 +36,7 @@ function PrizeImage({
 }
 
 export function PrizeCard({ prize }: { prize: Prize }) {
+  const t = useTranslations("PrizeCard");
   const hasSecondImage = Boolean(prize.image_url_2);
   const isFirst = prize.position === 1;
 
@@ -49,7 +52,7 @@ export function PrizeCard({ prize }: { prize: Prize }) {
             />
             <PrizeImage
               src={prize.image_url_2}
-              alt={`${prize.title} — foto 2`}
+              alt={t("photo2", { title: prize.title })}
               className="aspect-square"
             />
           </div>
@@ -68,7 +71,9 @@ export function PrizeCard({ prize }: { prize: Prize }) {
                 : "border-transparent bg-panel-3 text-fg-muted"
             }
           >
-            {isFirst ? "1.er premio" : `Puesto ${prize.position}`}
+            {isFirst
+              ? t("firstPrize")
+              : t("position", { position: prize.position })}
           </Badge>
         </span>
       </div>
@@ -82,7 +87,7 @@ export function PrizeCard({ prize }: { prize: Prize }) {
         )}
         {prize.tool_number != null && (
           <p className="font-mono text-xs text-muted-foreground">
-            Herramienta #{prize.tool_number}
+            {t("toolNumber", { number: prize.tool_number })}
           </p>
         )}
       </CardContent>

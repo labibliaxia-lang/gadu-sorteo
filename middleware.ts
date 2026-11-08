@@ -1,5 +1,31 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
+
+import { routing } from "@/src/i18n/routing";
+
+/**
+ * next-intl solo maneja las rutas migradas a `app/[locale]`. El resto del
+ * producto (admin, auth, perfil, legales) sigue existiendo únicamente en
+ * español y no debe recibir el prefijo `/es` ni `/en`.
+ */
+const intlMiddleware = createMiddleware(routing);
+const LOCALIZED_PREFIXES = [
+  "/sorteos",
+  "/como-funciona",
+  "/ganadores",
+  "/planes",
+];
+
+function isLocalizedRoute(pathname: string): boolean {
+  const withoutLocale =
+    pathname.replace(/^\/(?:es|en|pt)(?=\/|$)/, "") || "/";
+  if (withoutLocale === "/") return true;
+  return LOCALIZED_PREFIXES.some(
+    (prefix) =>
+      withoutLocale === prefix || withoutLocale.startsWith(`${prefix}/`),
+  );
+}
 
 const ADMIN_COOKIE = "admin_verified";
 const SUPER_PREFIX = "/admin/super";
@@ -203,6 +229,17 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+
+  // Rutas públicas localizadas: next-intl negocia/reescribe el locale y
+  // conserva las cookies de sesión que Supabase pudo haber refrescado.
+  if (isLocalizedRoute(pathname)) {
+    const intlResponse = intlMiddleware(request);
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      intlResponse.cookies.set(cookie);
+    });
+    return intlResponse;
+  }
+
   const isSuperArea =
     pathname === SUPER_PREFIX || pathname.startsWith(`${SUPER_PREFIX}/`);
 

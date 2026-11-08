@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { BadgeCheck, Gift, Trophy } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn, formatDateTime, formatNumber } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Muro de Ganadores | Gadu Sorteos",
-  description:
-    "Todos los sorteos finalizados de Gadu Sorteos con su número y su ganador.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Ganadores");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +34,12 @@ interface DrawnRaffle {
  * Solo el primer nombre y la inicial del apellido: el muro es público, así que
  * el apellido completo nunca sale del servidor.
  */
-function shortWinnerName(fullName: string | null): string {
+function shortWinnerName(
+  fullName: string | null,
+  anonymousLabel: string,
+): string {
   const parts = (fullName ?? "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "Ganador anónimo";
+  if (parts.length === 0) return anonymousLabel;
 
   const first = parts[0];
   if (parts.length === 1) return first;
@@ -43,6 +49,8 @@ function shortWinnerName(fullName: string | null): string {
 }
 
 export default async function GanadoresPage() {
+  const t = await getTranslations("Ganadores");
+  const tc = await getTranslations("Common");
   const supabase = createClient();
 
   const { data: raffles } = await supabase
@@ -84,14 +92,13 @@ export default async function GanadoresPage() {
         <div className="space-y-4">
           <p className="flex items-center gap-2">
             <Trophy className="h-3.5 w-3.5 text-brand-accent" aria-hidden="true" />
-            <span className="eyebrow-gold">Hall of Fame</span>
+            <span className="eyebrow-gold">{t("eyebrow")}</span>
           </p>
           <h1 className="font-display text-[2.2rem] font-semibold leading-tight tracking-[-0.03em] sm:text-5xl">
-            Muro de Ganadores
+            {t("title")}
           </h1>
           <p className="max-w-xl text-[13px] leading-relaxed text-fg-subtle">
-            Todos los sorteos que ya se jugaron, con su número ganador. Solo
-            mostramos el primer nombre y la inicial del apellido.
+            {t("description")}
           </p>
         </div>
         <div className="text-right">
@@ -99,7 +106,7 @@ export default async function GanadoresPage() {
             {String(list.length).padStart(2, "0")}
           </p>
           <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-fg-subtle">
-            sorteos sorteados
+            {t("drawnCount")}
           </p>
         </div>
       </header>
@@ -107,12 +114,15 @@ export default async function GanadoresPage() {
       {list.length === 0 ? (
         <EmptyState
           icon={Trophy}
-          title="Todavía no hay ganadores"
-          description="Cuando se sortee el primer sorteo, el ganador va a aparecer acá."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
-            <Link href="/#sorteos" className={cn(buttonVariants(), "mt-2")}>
-              Ver sorteos activos
-            </Link>
+            <LocaleLink
+              href="/#sorteos"
+              className={cn(buttonVariants(), "mt-2")}
+            >
+              {t("seeActiveRaffles")}
+            </LocaleLink>
           }
         />
       ) : (
@@ -141,17 +151,19 @@ export default async function GanadoresPage() {
                         className="h-6 w-6 text-fg-subtle"
                         aria-hidden="true"
                       />
-                      <span className="eyebrow">Premio entregado</span>
+                      <span className="eyebrow">{t("prizeDelivered")}</span>
                     </div>
                   )}
                   <span className="absolute left-3 top-3">
-                    <Badge variant="success" className="bg-canvas/85 ring-1 ring-emerald-500/20">Sorteado</Badge>
+                    <Badge variant="success" className="bg-canvas/85 ring-1 ring-emerald-500/20">
+                      {tc("status.drawn")}
+                    </Badge>
                   </span>
                   {raffle.numbers_hash && (
                     <span className="absolute right-3 top-3">
                       <Badge variant="secondary" className="bg-canvas/85 ring-1 ring-hairline">
                         <BadgeCheck className="h-3 w-3" />
-                        Verificado
+                        {tc("verified")}
                       </Badge>
                     </span>
                   )}
@@ -172,15 +184,18 @@ export default async function GanadoresPage() {
                   <div className="flex items-end justify-between gap-3 rounded-lg border border-brand-500/20 bg-brand-500/[0.06] p-3">
                     <div className="min-w-0">
                       <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
-                        Ganador
+                        {tc("winner")}
                       </p>
                       <p className="truncate text-[13px] font-medium">
-                        {shortWinnerName(raffle.winner_name)}
+                        {shortWinnerName(
+                          raffle.winner_name,
+                          tc("anonymousWinner"),
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-fg-subtle">
-                        Número
+                        {tc("number")}
                       </p>
                       <p className="font-mono text-2xl font-medium text-brand-accent">
                         {raffle.winner_number != null
@@ -191,21 +206,21 @@ export default async function GanadoresPage() {
                   </div>
 
                   <div className="mt-auto flex gap-2 pt-1">
-                    <Link
+                    <LocaleLink
                       href={`/sorteos/${raffle.id}`}
                       className={cn(
                         buttonVariants({ variant: "outline", size: "sm" }),
                         "flex-1",
                       )}
                     >
-                      Ver el sorteo
-                    </Link>
-                    <Link
+                      {t("seeRaffle")}
+                    </LocaleLink>
+                    <LocaleLink
                       href={`/sorteos/${raffle.id}/verificar`}
                       className={cn(buttonVariants({ size: "sm" }), "flex-1")}
                     >
-                      Verificar
-                    </Link>
+                      {t("verify")}
+                    </LocaleLink>
                   </div>
                 </div>
               </article>
@@ -215,8 +230,7 @@ export default async function GanadoresPage() {
       )}
 
       <p className="border-t border-hairline pt-6 text-center font-mono text-[11px] uppercase tracking-[0.08em] text-fg-subtle">
-        Cada resultado se verifica con la semilla comprometida y las huellas
-        publicadas
+        {t("footerNote")}
       </p>
     </div>
   );

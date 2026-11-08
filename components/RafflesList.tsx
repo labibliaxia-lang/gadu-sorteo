@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { ArrowRight, CalendarDays, Gift, Search } from "lucide-react";
 
+import { Link as LocaleLink } from "@/src/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ShareButton } from "@/components/ShareButton";
@@ -20,14 +21,6 @@ export interface RaffleStats {
   total: number;
 }
 
-const statusLabel: Record<Raffle["status"], string> = {
-  active: "Activo",
-  closed: "Cerrado",
-  drawn: "Sorteado",
-  cancelled: "Cancelado",
-  paused: "Pausado",
-};
-
 const statusVariant: Record<
   Raffle["status"],
   "success" | "warning" | "secondary"
@@ -39,11 +32,11 @@ const statusVariant: Record<
   paused: "warning",
 };
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: "all", label: "Todos" },
-  { key: "active", label: "Activos" },
-  { key: "closed", label: "Cerrados" },
-  { key: "drawn", label: "Sorteados" },
+const FILTERS: { key: Filter; labelKey: string }[] = [
+  { key: "all", labelKey: "filterAll" },
+  { key: "active", labelKey: "filterActive" },
+  { key: "closed", labelKey: "filterClosed" },
+  { key: "drawn", labelKey: "filterDrawn" },
 ];
 
 export function RafflesList({
@@ -53,6 +46,9 @@ export function RafflesList({
   raffles: Raffle[];
   stats?: Record<string, RaffleStats>;
 }) {
+  const t = useTranslations("RafflesList");
+  const tc = useTranslations("Common");
+  const locale = useLocale();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
@@ -71,27 +67,28 @@ export function RafflesList({
     <section id="sorteos" className="scroll-mt-20 space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">Cartelera</p>
+          <p className="eyebrow">{t("eyebrow")}</p>
           <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            Sorteos en juego
+            {t("title")}
           </h2>
           <p className="mt-2 text-[13px] text-fg-subtle">
-            Elegí el que más te guste y asegurá tus números antes de que se
-            agoten.
+            {t("description")}
           </p>
         </div>
         <div className="flex items-center gap-4">
           <span className="font-mono text-[12px] text-fg-subtle">
-            {filtered.length.toLocaleString("es-AR")} de{" "}
-            {raffles.length.toLocaleString("es-AR")}
+            {t("count", {
+              filtered: filtered.length.toLocaleString(locale),
+              total: raffles.length.toLocaleString(locale),
+            })}
           </span>
-          <Link
+          <LocaleLink
             href="/ganadores"
             className="inline-flex items-center gap-1.5 text-[13px] font-medium text-fg-muted transition-colors hover:text-fg"
           >
-            Ver ganadores
+            {t("seeWinners")}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
+          </LocaleLink>
         </div>
       </div>
 
@@ -100,7 +97,7 @@ export function RafflesList({
         <div
           className="grid w-full grid-cols-4 gap-0.5 rounded-lg border border-hairline bg-panel-1 p-1 sm:inline-flex sm:w-auto"
           role="group"
-          aria-label="Filtrar sorteos por estado"
+          aria-label={t("filterAria")}
         >
           {FILTERS.map((f) => {
             const active = filter === f.key;
@@ -123,7 +120,7 @@ export function RafflesList({
                     aria-hidden="true"
                   />
                 )}
-                {f.label}
+                {t(f.labelKey)}
               </button>
             );
           })}
@@ -137,8 +134,8 @@ export function RafflesList({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por título…"
-            aria-label="Buscar sorteos por título"
+            placeholder={t("searchPlaceholder")}
+            aria-label={t("searchAria")}
             className="h-9 pl-9"
           />
         </div>
@@ -146,8 +143,8 @@ export function RafflesList({
 
       {filtered.length === 0 ? (
         <EmptyState
-          title="No encontramos sorteos"
-          description="Probá con otro filtro o buscá por título."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -172,10 +169,10 @@ export function RafflesList({
                 key={raffle.id}
                 className="group flex flex-col overflow-hidden rounded-xl border border-hairline bg-panel-1 transition-colors hover:border-hairline-strong"
               >
-                <Link
+                <LocaleLink
                   href={detailHref}
                   className="relative block aspect-[16/10] overflow-hidden border-b border-hairline bg-panel-2"
-                  aria-label={`Ver ${raffle.title}`}
+                  aria-label={t("viewRaffleAria", { title: raffle.title })}
                 >
                   {raffle.cover_image_url ? (
                     <Image
@@ -191,33 +188,33 @@ export function RafflesList({
                         className="h-6 w-6 text-fg-subtle"
                         aria-hidden="true"
                       />
-                      <span className="eyebrow">Premio en juego</span>
+                      <span className="eyebrow">{t("prizeInPlay")}</span>
                     </div>
                   )}
                   <span className="absolute left-3 top-3">
                     <Badge variant={statusVariant[raffle.status]} className="bg-canvas/85">
-                      {statusLabel[raffle.status]}
+                      {tc(`status.${raffle.status}`)}
                     </Badge>
                   </span>
                   <span className="absolute right-3 top-3 rounded-md bg-canvas/80 px-2 py-1 font-mono text-[11px] uppercase tracking-[0.08em] text-fg-muted ring-1 ring-hairline">
-                    {raffle.auto_draw ? "Automático" : "Manual"}
+                    {raffle.auto_draw ? tc("automatic") : tc("manual")}
                   </span>
-                </Link>
+                </LocaleLink>
 
                 <div className="flex flex-1 flex-col p-5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <h3 className="font-display text-[17px] font-semibold leading-snug tracking-tight">
-                        <Link
+                        <LocaleLink
                           href={detailHref}
                           className="underline-offset-4 hover:underline"
                         >
                           {raffle.title}
-                        </Link>
+                        </LocaleLink>
                       </h3>
                       {raffle.is_featured && raffle.status === "active" && (
                         <span className="mt-1.5 inline-flex rounded-full bg-brand-500/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-brand-accent">
-                          Destacado
+                          {t("featured")}
                         </span>
                       )}
                       <p className="mt-1.5 flex items-center gap-1.5 font-mono text-[12px] text-fg-subtle">
@@ -233,7 +230,7 @@ export function RafflesList({
                   <div className="mt-4 flex items-end justify-between gap-2">
                     <div>
                       <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-fg-subtle">
-                        Por número
+                        {tc("perNumber")}
                       </p>
                       <p className="font-mono text-[17px] text-fg">
                         {formatPrice(Number(raffle.price_per_number))}
@@ -241,8 +238,11 @@ export function RafflesList({
                     </div>
                     {raffleStat && raffleStat.total > 0 && (
                       <p className="font-mono text-[12px] text-fg-subtle">
-                        {raffleStat.sold.toLocaleString("es-AR")} de{" "}
-                        {raffleStat.total.toLocaleString("es-AR")} · {percent}%
+                        {tc("soldOfTotal", {
+                          sold: raffleStat.sold.toLocaleString(locale),
+                          total: raffleStat.total.toLocaleString(locale),
+                          percent,
+                        })}
                       </p>
                     )}
                   </div>
@@ -255,7 +255,7 @@ export function RafflesList({
                   </div>
 
                   <div className="ticket-stub -mx-5 mt-auto flex items-center gap-2 px-5 pt-3">
-                    <Link
+                    <LocaleLink
                       href={detailHref}
                       className={cn(
                         buttonVariants({
@@ -266,15 +266,15 @@ export function RafflesList({
                       )}
                     >
                       {raffle.status === "drawn"
-                        ? "Ver resultado"
+                        ? t("seeResult")
                         : isActive
-                          ? "Participar"
-                          : "Ver detalles"}
+                          ? t("join")
+                          : t("seeDetails")}
                       <ArrowRight
                         className="ml-1.5 h-3.5 w-3.5"
                         aria-hidden="true"
                       />
-                    </Link>
+                    </LocaleLink>
                     <ShareButton
                       sorteoId={raffle.id}
                       titulo={raffle.title}

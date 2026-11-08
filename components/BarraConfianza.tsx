@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, ChevronRight, ShieldCheck, ShieldQuestion } from "lucide-react";
 
-import { ETIQUETA_NIVEL, type Confianza } from "@/lib/confianza";
+import type { Confianza } from "@/lib/confianza";
 import { cn } from "@/lib/utils";
 
 /**
@@ -20,7 +21,70 @@ export function BarraConfianza({
   hrefResenas?: string;
   className?: string;
 }) {
+  const t = useTranslations("BarraConfianza");
   const { nivel, puntaje, motivos, advertencia } = confianza;
+
+  const levelLabel =
+    nivel === "con-problemas"
+      ? t("levelConProblemas")
+      : nivel === "confiable"
+        ? t("levelConfiable")
+        : t("levelSinHistorial");
+
+  /** Los motivos vienen de `lib/confianza` en español; acá se traducen. */
+  function translateReason(reason: string): string {
+    const reviewWithRating = reason.match(
+      /^(\d+) reseñas? de compradores \(([\d.]+)\/5\)$/,
+    );
+    if (reviewWithRating) {
+      return t("reasonReviewsRating", {
+        count: Number(reviewWithRating[1]),
+        rating: reviewWithRating[2],
+      });
+    }
+    const reviews = reason.match(/^(\d+) reseñas? de compradores$/);
+    if (reviews) {
+      return t("reasonReviews", { count: Number(reviews[1]) });
+    }
+    const completed = reason.match(/^(\d+) sorteos? completados?$/);
+    if (completed) {
+      return t("reasonCompleted", { count: Number(completed[1]) });
+    }
+    const cancelled = reason.match(/^(\d+) cancelados?$/);
+    if (cancelled) {
+      return t("reasonCancelled", { count: Number(cancelled[1]) });
+    }
+    const noWeight = reason.match(/^(\d+) reseñas? todavía sin peso$/);
+    if (noWeight) {
+      return t("reasonReviewsNoWeight", { count: Number(noWeight[1]) });
+    }
+    const refunds = reason.match(/^(\d+) devoluciones? sin pagar$/);
+    if (refunds) {
+      return t("reasonRefunds", { count: Number(refunds[1]) });
+    }
+    const reports = reason.match(/^(\d+) denuncias? sin resolver$/);
+    if (reports) {
+      return t("reasonReports", { count: Number(reports[1]) });
+    }
+    const active = reason.match(/^(\d+) sorteos? en curso$/);
+    if (active) {
+      return t("reasonActive", { count: Number(active[1]) });
+    }
+    if (reason.startsWith("Identidad verificada")) {
+      return t("reasonIdentity");
+    }
+    return reason;
+  }
+
+  const warning = advertencia
+    ? advertencia.includes("devoluciones sin pagar")
+      ? t("warningDebt")
+      : advertencia.includes("denuncias sin resolver")
+        ? t("warningReports")
+        : advertencia.includes("todavía no completó")
+          ? t("warningNoHistory")
+          : advertencia
+    : null;
 
   const color =
     nivel === "con-problemas"
@@ -34,7 +98,7 @@ export function BarraConfianza({
 
   return (
     <div className={cn("space-y-2 rounded-xl border bg-card p-3", className)}>
-      {advertencia && (
+      {warning && (
         <p
           className={cn(
             "rounded-lg border p-2 text-xs",
@@ -43,14 +107,14 @@ export function BarraConfianza({
               : "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200",
           )}
         >
-          {advertencia}
+          {warning}
         </p>
       )}
 
       <div className="flex items-center justify-between gap-2">
         <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", color)}>
           <Icono className="h-4 w-4" aria-hidden="true" />
-          {ETIQUETA_NIVEL[nivel]}
+          {levelLabel}
         </span>
         {nivel === "confiable" && (
           <span className="font-mono text-xs text-muted-foreground">{puntaje}/100</span>
@@ -64,8 +128,11 @@ export function BarraConfianza({
         role="img"
         aria-label={
           nivel === "confiable"
-            ? `Confianza ${puntaje} de 100, ${ETIQUETA_NIVEL[nivel].toLowerCase()}`
-            : `Confianza: ${ETIQUETA_NIVEL[nivel].toLowerCase()}`
+            ? t("ariaScore", {
+                score: puntaje,
+                level: levelLabel.toLowerCase(),
+              })
+            : t("ariaLevel", { level: levelLabel.toLowerCase() })
         }
       >
         <div className="absolute inset-0 bg-gradient-to-r from-red-500 via-amber-400 to-emerald-500 opacity-30" />
@@ -83,7 +150,7 @@ export function BarraConfianza({
       {motivos.length > 0 && (
         <ul className="space-y-0.5 text-xs text-muted-foreground">
           {motivos.slice(0, 4).map((motivo) => (
-            <li key={motivo}>· {motivo}</li>
+            <li key={motivo}>· {translateReason(motivo)}</li>
           ))}
         </ul>
       )}
@@ -93,7 +160,7 @@ export function BarraConfianza({
           href={hrefResenas}
           className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline dark:text-brand-300"
         >
-          Ver reseñas y sorteos del organizador
+          {t("reviewsLink")}
           <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         </Link>
       )}

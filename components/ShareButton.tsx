@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Check, Share2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,8 @@ export function ShareButton({
   /** Solo ícono: para talones de tarjeta donde la acción primaria manda. */
   compact?: boolean;
 }) {
+  const t = useTranslations("ShareButton");
+  const locale = useLocale();
   const [copied, setCopied] = useState(false);
 
   /**
@@ -34,15 +37,21 @@ export function ShareButton({
     if (typeof window === "undefined") return "";
     const { origin, pathname, href } = window.location;
     const publicPath = `/sorteos/${sorteoId}`;
-    if (pathname === publicPath || pathname.startsWith(`${publicPath}/`)) {
+    const localizedPath =
+      locale === "es" ? publicPath : `/${locale}${publicPath}`;
+    if (
+      pathname === publicPath ||
+      pathname === localizedPath ||
+      pathname.startsWith(`${localizedPath}/`)
+    ) {
       return href;
     }
-    return `${origin}${publicPath}`;
+    return `${origin}${localizedPath}`;
   }
 
   async function handleShare() {
     const url = buildShareUrl();
-    const text = `¡Participá en "${titulo}" en Gadu Sorteos!`;
+    const text = t("text", { title: titulo });
 
     if (navigator.share) {
       try {
@@ -69,8 +78,8 @@ export function ShareButton({
         variant="outline"
         size="icon"
         onClick={handleShare}
-        aria-label={`Compartir ${titulo}`}
-        title={copied ? "Enlace copiado" : "Compartir"}
+        aria-label={t("aria", { title: titulo })}
+        title={copied ? t("copied") : t("share")}
         className={className}
       >
         {copied ? (
@@ -88,18 +97,18 @@ export function ShareButton({
       variant="outline"
       size="sm"
       onClick={handleShare}
-      aria-label={`Compartir ${titulo}`}
+      aria-label={t("aria", { title: titulo })}
       className={className}
     >
       {copied ? (
         <>
           <Check className="mr-1.5 h-4 w-4 text-emerald-500" />
-          ¡Copiado!
+          {t("copied")}
         </>
       ) : (
         <>
           <Share2 className="mr-1.5 h-4 w-4" />
-          Compartir
+          {t("share")}
         </>
       )}
     </Button>
