@@ -1,0 +1,299 @@
+[
+  {
+    "paso": "F0-entorno-staging",
+    "rol": "sistema",
+    "inicio": "2026-11-07T23:55:12.245Z",
+    "fin": "2026-11-07T23:55:15.287Z",
+    "duracionMs": 3042,
+    "esperado": "la app y los bundles del navegador hablan con dolxvoxyespguvixhkku y nunca con producción",
+    "observado": "HTTP 200; Supabase staging; chunks=17 (staging=2, producción=0); migración 0120",
+    "resultado": "ok",
+    "evidencia": [
+      "F0-entorno.json"
+    ],
+    "nota": "el HTML SSR no imprime la ref de Supabase; se comprobó en los chunks del cliente"
+  },
+  {
+    "paso": "F1-preparacion-cuentas",
+    "rol": "organizador+jA+jB",
+    "inicio": "2026-11-07T23:55:15.288Z",
+    "fin": "2026-11-07T23:55:18.381Z",
+    "duracionMs": 3093,
+    "esperado": "tres cuentas sintéticas listas: organizador admin/premium con KYC aprobado y dos jugadores con dirección completa",
+    "observado": "organizador 2c0c5046 (creado=true), A 398a23d7, B aff45324",
+    "resultado": "ok",
+    "evidencia": [
+      "F1-cuentas.json"
+    ],
+    "nota": "laboratorio: cuentas por Admin API y profiles por service_role; no existe alta por UI"
+  },
+  {
+    "paso": "F2-sorteo-bonus",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:55:18.383Z",
+    "fin": "2026-11-07T23:55:36.986Z",
+    "duracionMs": 18603,
+    "esperado": "sorteo bonus activo, no listado, listo para recibir el número 🎁",
+    "observado": "E2E Full — Bonus 1794095712245 (e2e-full-bonus-1794095712245) estado=active listado=false premios=1",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F02-bonus-creado.png",
+      "F2-bonus.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F3-sorteo-principal-3-premios",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:55:36.988Z",
+    "fin": "2026-11-07T23:56:44.812Z",
+    "duracionMs": 67824,
+    "esperado": "sorteo principal activo con 3 premios, «Invitá y Ganá» mínimo 2 / tope 1 y bonus asignado",
+    "observado": "E2E Full — Principal 1794095712245 (e2e-full-principal-1794095712245); premios=1º premio — Kit Gadu | 2º premio — Auriculares | 3º premio — Voucher; referidos=true/2/1; bonus=3566c22b",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F03-premios.png",
+      "F3-principal.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F3b-referidos-por-edicion",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:56:44.814Z",
+    "fin": "2026-11-07T23:56:51.140Z",
+    "duracionMs": 6326,
+    "esperado": "la edición mantiene la configuración de referidos que el alta ya persistió",
+    "observado": "referidos=true/2/1; bonus=3566c22b",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F03b-referidos-editados.png",
+      "F3b-referidos.json"
+    ],
+    "nota": "idempotente: el alta ya la había guardado"
+  },
+  {
+    "paso": "F4-compromiso-publicado",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:56:51.142Z",
+    "fin": "2026-11-07T23:57:00.676Z",
+    "duracionMs": 9534,
+    "esperado": "el compromiso de la semilla queda publicado antes de vender",
+    "observado": "compromiso 008f9b1033716d82… (2026-11-07T23:56:58.471939+00:00)",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F04-compromiso.png",
+      "F4-compromiso.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F4b-enlace-corto-mis-numeros",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:57:00.679Z",
+    "fin": "2026-11-07T23:57:07.903Z",
+    "duracionMs": 7224,
+    "esperado": "«Mis Números» muestra el enlace de referido corto /r/CODIGO, no el formato largo /sorteos/[slug]?ref=UUID",
+    "observado": "enlace visible: http://localhost:3002/r/YLG4K4; profiles.referral_code=YLG4K4",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F04b-mis-numeros-enlace.png",
+      "F4b-enlace.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F5a-enlace-corto-incognito",
+    "rol": "incognito→jugadorA",
+    "inicio": "2026-11-07T23:57:07.905Z",
+    "fin": "2026-11-07T23:57:25.528Z",
+    "duracionMs": 17623,
+    "esperado": "un navegador nuevo abre /r/CODIGO, redirige a /sorteos/<slug>?ref=CODIGO y, al iniciar sesión, ReferralCapture crea el vínculo",
+    "observado": "abrí http://localhost:3002/r/YLG4K4 (HTTP 200) → http://localhost:3002/sorteos/e2e-full-principal-1794095712245?ref=YLG4K4; redirect correcto=true; vínculo creado por UI=true; errores de consola=0",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F05a-enlace-corto-incognito.png",
+      "capturas/F05a-tras-login.png",
+      "F5a-referido.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F5b-compra-jugadorA",
+    "rol": "jugadorA",
+    "inicio": "2026-11-07T23:57:25.530Z",
+    "fin": "2026-11-07T23:57:28.813Z",
+    "duracionMs": 3283,
+    "esperado": "2 números reservados con prepago (hold 48 h) y modal de comprobante",
+    "observado": "2/2 con status reserved; WhatsApp=sí; modal: Reserva confirmada 2 números reservados en E2E Full — Principal 1794095712245. 001 002 Total a pagar: $ 20 El contador d",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F05-compra-A.png",
+      "F5b-compra-A.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F6-compra-jugadorB",
+    "rol": "jugadorB",
+    "inicio": "2026-11-07T23:57:28.815Z",
+    "fin": "2026-11-07T23:57:40.778Z",
+    "duracionMs": 11963,
+    "esperado": "3 números reservados con prepago, sin usar enlace de referido",
+    "observado": "3/3 con status reserved; WhatsApp=sí",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F06-compra-B.png",
+      "F6-compra-B.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F7a-aprobacion-jugadorA",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:57:40.854Z",
+    "fin": "2026-11-07T23:57:52.578Z",
+    "duracionMs": 11724,
+    "esperado": "la reserva de A pasa a sold y se dispara reward_referral con el número 🎁 del sorteo bonus",
+    "observado": "A vendida=1:sold,2:sold; referral rewarded=true en bonus 3566c22b; número 🎁=32 (sold_to 2c0c5046); notis A=true / org=true",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F07-tras-aprobar-A.png",
+      "F7a-aprobacion-A.json"
+    ],
+    "nota": "regla 0102/0105: el número 🎁 se acredita al referente (organizador); el invitado no lo recibe"
+  },
+  {
+    "paso": "F7b-premio-al-referente",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:57:52.580Z",
+    "fin": "2026-11-07T23:57:52.580Z",
+    "duracionMs": 0,
+    "esperado": "el número 🎁 queda en el sorteo bonus a nombre del organizador (referente)",
+    "observado": "el número 32 quedó para el organizador 2c0c5046; A no lo recibió (correcto)",
+    "resultado": "ok",
+    "evidencia": [
+      "F7b-receptor.json"
+    ],
+    "nota": "regla 0102/0105: premia al referente, no al invitado"
+  },
+  {
+    "paso": "F7c-premio-en-pantalla",
+    "rol": "jugadorA+organizador",
+    "inicio": "2026-11-07T23:57:52.582Z",
+    "fin": "2026-11-07T23:58:16.851Z",
+    "duracionMs": 24269,
+    "esperado": "ver en «Mis números» que el organizador (referente) tiene el bono y A no",
+    "observado": "A: captura tomada; organizador muestra bono=true; número=32",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F07-mis-numeros-A.png",
+      "capturas/F07-mis-numeros-organizador.png"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F7d-aprobacion-jugadorB",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:58:16.882Z",
+    "fin": "2026-11-07T23:58:24.206Z",
+    "duracionMs": 7324,
+    "esperado": "la reserva de B pasa a sold y el total vendido queda en 5",
+    "observado": "5 vendidos: 4,5,1,2,6",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F07-tras-aprobar-B.png",
+      "F7d-aprobacion-B.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F8a-sorteo-en-vivo",
+    "rol": "organizador",
+    "inicio": "2026-11-07T23:58:24.208Z",
+    "fin": "2026-11-07T23:58:36.455Z",
+    "duracionMs": 12247,
+    "esperado": "el botón «Iniciar sorteo» ejecuta el sorteo y la animación lo revela",
+    "observado": "status=drawn; winner_number=5; raffle_winners=3; semilla revelada=true",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F08-live-antes.png",
+      "capturas/F08-live-girando.png",
+      "capturas/F08-live-final.png",
+      "F8-sorteo.json"
+    ],
+    "nota": "laboratorio: draw_date se movió al pasado después del compromiso (auto_draw=false)"
+  },
+  {
+    "paso": "F8b-podio-multipremio",
+    "rol": "sistema",
+    "inicio": "2026-11-07T23:58:36.457Z",
+    "fin": "2026-11-07T23:58:36.458Z",
+    "duracionMs": 1,
+    "esperado": "3 premios generan 3 ganadores distintos en raffle_winners",
+    "observado": "3 ganadores: #1 Nº5 | #2 Nº1 | #3 Nº6",
+    "resultado": "ok",
+    "evidencia": [
+      "F8b-podio.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F9a-pagina-resultados",
+    "rol": "anonimo",
+    "inicio": "2026-11-07T23:58:36.482Z",
+    "fin": "2026-11-07T23:58:40.815Z",
+    "duracionMs": 4333,
+    "esperado": "la página pública de resultados muestra el podio con 3 premios",
+    "observado": "HTTP 200; podio=3 tarjeta(s); texto: Saltar al contenido Inicio Sorteos Ganadores Cómo funciona Planes Ingresar Registrarse Volver al sorteo RESULTADOS OFICIALES E2E Full — Principal 1794095712245 SORTEO FINALIZADO 1 E2E B. 1º premio — Kit Gadu NÚMERO 0005 ",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F09-resultados.png",
+      "F9-resultados.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F9b-hashes",
+    "rol": "verificador",
+    "inicio": "2026-11-07T23:58:40.817Z",
+    "fin": "2026-11-07T23:58:41.127Z",
+    "duracionMs": 310,
+    "esperado": "compromiso, listado, ganador(es) y huellas coinciden con lo publicado, calculados con node:crypto",
+    "observado": "single={\"commitment\":true,\"numbersHash\":true,\"winner\":true,\"resultHash\":true}; multi={\"commitment\":true,\"numbersHash\":true,\"winners\":true,\"resultsHash\":true}; ganadores=3",
+    "resultado": "ok",
+    "evidencia": [
+      "F9b-hashes.json",
+      "hashes.json"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F9c-verificador-publico",
+    "rol": "anonimo",
+    "inicio": "2026-11-07T23:58:41.129Z",
+    "fin": "2026-11-07T23:58:46.900Z",
+    "duracionMs": 5771,
+    "esperado": "la página /verificar recalcula los 3 premios y muestra que coinciden",
+    "observado": "verificador presente; “Todos los premios coinciden”=true",
+    "resultado": "ok",
+    "evidencia": [
+      "capturas/F09-verificar.png"
+    ],
+    "nota": null
+  },
+  {
+    "paso": "F10-consola",
+    "rol": "todas-las-pestanas",
+    "inicio": "2026-11-07T23:58:46.902Z",
+    "fin": "2026-11-07T23:58:46.903Z",
+    "duracionMs": 1,
+    "esperado": "sin errores de consola ni pageerror en el recorrido",
+    "observado": "0 error(es) capturado(s); 0 relevante(s)",
+    "resultado": "ok",
+    "evidencia": [
+      "F10-consola.json"
+    ],
+    "nota": null
+  }
+]

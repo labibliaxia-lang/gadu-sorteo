@@ -1,0 +1,70 @@
+{
+  "numbers": [
+    1,
+    2,
+    4,
+    5,
+    6
+  ],
+  "single": {
+    "commitment": "c2b6f2e6692da150f643644a67dcd9b3150d038f0198659da412a7fc110a943f",
+    "numbersHash": "84e174c4adbbe5adb54608ede2d959b7dff74aa5cccd641034a7dd0e094cc36d",
+    "pick": "baa1bd01a383f2b4e1b20cad30c3c07256de64ce37eab59d8564785b1e8be654",
+    "index": 4,
+    "winner": 6,
+    "resultHash": "556e9e5e119490b2ccb491d533eaca82fc8743089d329a05366f43c50a1bbbe4",
+    "list": "1,2,4,5,6",
+    "sorted": [
+      1,
+      2,
+      4,
+      5,
+      6
+    ]
+  },
+  "singleChecks": {
+    "commitment": true,
+    "numbersHash": true,
+    "winner": true,
+    "resultHash": true
+  },
+  "multi": {
+    "commitment": "c2b6f2e6692da150f643644a67dcd9b3150d038f0198659da412a7fc110a943f",
+    "numbersHash": "84e174c4adbbe5adb54608ede2d959b7dff74aa5cccd641034a7dd0e094cc36d",
+    "winners": [
+      {
+        "position": 1,
+        "number": 6,
+        "hash": "556e9e5e119490b2ccb491d533eaca82fc8743089d329a05366f43c50a1bbbe4"
+      },
+      {
+        "position": 2,
+        "number": 2,
+        "hash": "4825da3302e31291e8b4564362cb47f2b707230b972248f8f8cb830cfdc0f49a"
+      },
+      {
+        "position": 3,
+        "number": 4,
+        "hash": "deed1a8ee1b91fa9449c68a9aff33afd528eb82222246e1eaebf25072ac174ce"
+      }
+    ],
+    "resultsHash": "3bddabc3178009fe842a404f693609dbd098a6dc9eda0fbe25aaf70ac2db4cbb",
+    "list": "1,2,4,5,6",
+    "total": 3
+  },
+  "multiWinnerChecks": [],
+  "multiChecks": {
+    "commitment": true,
+    "numbersHash": true,
+    "winners": false,
+    "resultsHash": false
+  },
+  "publicado": {
+    "commitment": "c2b6f2e6692da150f643644a67dcd9b3150d038f0198659da412a7fc110a943f",
+    "numbersHash": "84e174c4adbbe5adb54608ede2d959b7dff74aa5cccd641034a7dd0e094cc36d",
+    "winner": 6,
+    "resultHash": "556e9e5e119490b2ccb491d533eaca82fc8743089d329a05366f43c50a1bbbe4",
+    "resultsHash": null,
+    "winners": []
+  }
+}

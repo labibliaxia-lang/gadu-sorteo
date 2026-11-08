@@ -1,0 +1,28 @@
+{
+  "main": {
+    "id": "7ec3473e-ada4-4235-ae3a-14277bd1f057",
+    "slug": "e2e-full-principal-1794088990063",
+    "title": "E2E Full — Principal 1794088990063",
+    "status": "active",
+    "winners_count": 3,
+    "referral_enabled": false,
+    "referral_min_numbers": 1,
+    "referral_max_per_user": 0,
+    "bonus_raffle_id": null,
+    "is_listed": false
+  },
+  "prizes": [
+    {
+      "position": 1,
+      "title": "1º premio — Kit Gadu"
+    },
+    {
+      "position": 2,
+      "title": "2º premio — Auriculares"
+    },
+    {
+      "position": 3,
+      "title": "3º premio — Voucher"
+    }
+  ]
+}

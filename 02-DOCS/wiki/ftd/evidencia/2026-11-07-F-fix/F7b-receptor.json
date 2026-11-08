@@ -1,0 +1,11 @@
+{
+  "referenteOk": true,
+  "aRecibioPremio": false,
+  "numeroPremio": {
+    "number": 32,
+    "status": "sold",
+    "sold_to": "2c0c5046-2913-47ef-8004-db662f1eae3f",
+    "origin": "premio"
+  },
+  "regla": "0102/0105: el premio va al referente"
+}

@@ -1,0 +1,11 @@
+{
+  "enlace": "http://localhost:3002/sorteos/e2e-full-principal-1794088990063?ref=bb02574d-e49d-45ec-9e13-7d83916ec4b2",
+  "creadaPorUI": true,
+  "fila": {
+    "id": "4d7db33b-7452-4eff-aaa6-b128478a8b9d",
+    "referrer_id": "bb02574d-e49d-45ec-9e13-7d83916ec4b2",
+    "referred_id": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+    "rewarded": false,
+    "rewarded_number": null
+  }
+}

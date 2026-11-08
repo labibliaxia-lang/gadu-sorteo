@@ -1,0 +1,14 @@
+{
+  "enlacePedido": "http://localhost:3002/r/YLG4K4",
+  "urlFinal": "http://localhost:3002/sorteos/e2e-full-principal-1794095712245?ref=YLG4K4",
+  "esperadoUrl": "http://localhost:3002/sorteos/e2e-full-principal-1794095712245?ref=YLG4K4",
+  "redirigeOk": true,
+  "creadaPorUI": true,
+  "fila": {
+    "id": "72884c3d-323e-477f-97d2-7cf202a10785",
+    "referrer_id": "2c0c5046-2913-47ef-8004-db662f1eae3f",
+    "referred_id": "398a23d7-6dc0-4992-ae1e-7879f7daa19a",
+    "rewarded": false,
+    "rewarded_number": null
+  }
+}

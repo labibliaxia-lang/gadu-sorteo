@@ -1,0 +1,52 @@
+{
+  "notiA": "033f0d1d-48bc-494e-8104-9867e72c0288",
+  "numeros": [
+    {
+      "number": 1,
+      "status": "sold",
+      "sold_to": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+      "origin": "venta"
+    },
+    {
+      "number": 2,
+      "status": "sold",
+      "sold_to": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+      "origin": "venta"
+    }
+  ],
+  "referral": {
+    "id": "4d7db33b-7452-4eff-aaa6-b128478a8b9d",
+    "referrer_id": "bb02574d-e49d-45ec-9e13-7d83916ec4b2",
+    "referred_id": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+    "rewarded": true,
+    "rewarded_raffle_id": "6563708b-eb12-45a8-865e-2491c58beeea",
+    "rewarded_number": 43,
+    "created_at": "2026-11-07T22:05:09.987739+00:00",
+    "rewarded_via_raffle_id": "7ec3473e-ada4-4235-ae3a-14277bd1f057"
+  },
+  "numeroPremio": {
+    "number": 43,
+    "status": "sold",
+    "sold_to": "bb02574d-e49d-45ec-9e13-7d83916ec4b2",
+    "origin": "premio"
+  },
+  "notificaciones": {
+    "aprobada": {
+      "id": "5e604c7a-9bc2-461c-85b3-2e0165c1d3d4",
+      "user_id": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+      "type": "buyer_reservation_approved",
+      "title": "✅ Números aprobados",
+      "message": "Tus números están confirmados. ¡Ya estás participando!",
+      "created_at": "2026-11-07T22:05:55.899991+00:00"
+    },
+    "premio": {
+      "id": "8a7c4de4-fe71-42eb-853b-3d0996466918",
+      "user_id": "bb02574d-e49d-45ec-9e13-7d83916ec4b2",
+      "type": "buyer_referral_reward",
+      "title": "🎁 Número gratis",
+      "message": "Tu invitado compró en E2E Full — Principal 1794088990063 y ganaste el número 43 en E2E Full — Bonus 1794088990063.",
+      "created_at": "2026-11-07T22:05:57.447013+00:00"
+    }
+  },
+  "aRecibioPremio": false
+}

@@ -301,3 +301,72 @@ exporta las variables en el proceso (`preflight.mjs` + `correr-live.mjs`).
    (`evidencia/2026-11-05-b10-verificado/`).
 7. Darle al equipo un entorno de prueba real: es la razón por la que esta corrida terminó escribiendo
    en producción.
+
+## Escenario F — Full E2E (2026-11-07)
+
+Corrida nueva sobre staging (`dolxvoxyespguvixhkku`, migración 0119), app en build de producción
+aislado en el puerto 3002 para no chocar con otra sesión. **19 pasos: 13 `ok`, 6 `falla`.**
+
+Informe completo: [`evidencia/2026-11-07-F/informe.md`](evidencia/2026-11-07-F/informe.md).
+
+| Fase | Resultado |
+|---|---|
+| Preparación y entorno | ✅ staging, 0 refs de producción en bundles |
+| Fase 1 — alta bonus + principal (3 premios) + referidos + compromiso | ⚠️ parcial: 3 premios y compromiso ✅; el wizard **no persiste** `referral_*` ni `bonus_raffle_id` (F3 ❌), la edición sí (F3b ✅) |
+| Fase 2 — Jugador A por `?ref=` + prepago 2 números | ✅ `ReferralCapture` y reserva reales |
+| Fase 3 — aprobación + número 🎁 | ⚠️ aprobación y premio ✅; el 🎁 va al **referente (organizador)**, no al Jugador A (F7b ❌) |
+| Fase 4 — sorteo en `/en-vivo` | ⚠️ sortea y anima ✅; **0** filas en `raffle_winners` (F8b ❌) |
+| Fase 5 — resultados, hashes y consola | ❌ 1 tarjeta en vez de podio de 3; single 4/4 ✅, multi ❌; consola 0 errores ✅ |
+
+Hallazgos accionables: el wizard de alta omite los campos de referidos en el `INSERT`; el botón de
+`/en-vivo` llama `execute_transparent_draw` (que delega en `draw_winner`, un ganador) en vez de
+`draw_winner_multi` cuando `winners_count > 1`; y el premio de referidos queda en el referente, no
+en el invitado. No se modificó código de producción: sólo se agregó el escenario F a
+`01-TOOLS/SIMULADOR/runner.mjs` y la evidencia.
+
+## Auditoría de referidos «destornilladores jacinto» (2026-11-07, noche)
+
+Corrida específica del flujo de referidos sobre staging (`dolxvoxyespguvixhkku`, migración 0120),
+con el sorteo pedido: «destornilladores jacinto», 100 números, «Invitá y Ganá» mínimo 2 / tope 1.
+Informe completo:
+[`evidencia/2026-11-07-F-destornilladores-final/informe.md`](evidencia/2026-11-07-F-destornilladores-final/informe.md).
+
+| Corrida | Resultado |
+|---|---|
+| Final (árbol de trabajo con correcciones) | **20/20 `ok`**, consola 0 errores |
+| Base (`origin/main`) | 14/20 `ok`, 6 `falla` (F3, F8b, F9a, F9b, F9c, F10) |
+
+**Enlace de referido.** La tarjeta de «Mis Números» arma `${siteBase}/r/${referral_code}`
+(`app/mis-numeros/page.tsx:241-242`). En ejecución mostró `http://localhost:3001/r/F6D5W4` y
+`/r/F6D5W4` redirigió a `/sorteos/destornilladores-jacinto-22eb?ref=F6D5W4`. El formato largo
+anterior (`/?ref=<uuid>`) desapareció con la 0120 y el commit `90bd31b`; el `runner.mjs` viejo
+seguía usando `/sorteos/[slug]?ref=<uuid>` a mano, y de ahí venía la confusión. **Riesgo:** el
+código corto resuelve al sorteo activo **más reciente** del organizador, no al sorteo compartido.
+
+**Premio de referidos.** La corrida confirma la regla 0102/0105: el número 🎁 del sorteo bonus
+queda a nombre del **referente** (el organizador que comparte), no del invitado. La jugadora que
+compró 2 números no lo recibe. Si el criterio de negocio es que lo reciba el invitado, hay que
+cambiar la RPC y la UI.
+
+**Consola.** Los 9 `pageerror` de React (#425/#418/#423) estaban aislados en `/en-vivo`; el resto
+del recorrido no emitía errores. Causa: `<style>{CEREMONIA_CSS}</style>` comparaba el CSS escapado
+entre SSR y cliente. Con `dangerouslySetInnerHTML` la consola queda limpia.
+
+**Correcciones en el árbol, no commiteadas.** El árbol de trabajo ya contenía las tres
+correcciones que hacen pasar la corrida final (persistir `referral_*` en el `INSERT` del alta,
+usar `drawWinner`/`draw_winner_multi` desde `/en-vivo`, y el `<style>` con
+`dangerouslySetInnerHTML`). No están en `origin/main`: desplegar sin commitearlas reproduce los
+6 fallos. Todo el recorrido fue en staging; producción no se tocó.
+
+### Fix F-01 / F-03 (2026-11-07)
+
+- **F-01:** el `INSERT` de `app/admin/sorteos/nuevo/page.tsx` persiste `referral_enabled`,
+  `referral_min_numbers`, `referral_max_per_user` y `bonus_raffle_id`.
+- **F-03:** `startDraw()` de `components/LiveDrawAnimation.tsx` usa la Server Action `drawWinner`
+  (misma lógica que el panel: `draw_winner_multi` si hay más de un premio) y anima el podio completo.
+  También se corrigió la hidratación del CSS del «Modo Ceremonia» con `dangerouslySetInnerHTML`.
+- **F-02:** no era un defecto; el test ahora verifica que el 🎁 quede en el **referente** (organizador).
+- **Verificación:** `runner.mjs F` en staging, **20/20 `ok`** (el suite actual sumó F4b/F5a de enlaces
+  cortos), con 3 ganadores, podio de 3 y hashes single/multi 4/4. Informe:
+  [`evidencia/2026-11-07-F-fix/informe.md`](evidencia/2026-11-07-F-fix/informe.md).
+- **Gates:** typecheck ✅ · lint ✅ · test **331/331** ✅ · build ✅.

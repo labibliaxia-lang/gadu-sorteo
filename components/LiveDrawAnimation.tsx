@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ExternalLink, Play, Trophy } from "lucide-react";
 
+import { drawWinner } from "@/app/admin/sorteos/[id]/actions";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 
@@ -529,34 +530,35 @@ export function LiveDrawAnimation({
     setBusy(true);
     setError(null);
 
-    const { data, error: rpcError } = await supabase.rpc(
-      "execute_transparent_draw",
-      { p_raffle_id: raffleId },
-    );
+    try {
+      // Misma lógica que la Server Action drawWinner: usa draw_winner_multi
+      // cuando el sorteo tiene más de un premio y notifica a cada ganador.
+      // Antes llamaba execute_transparent_draw, que delega en draw_winner
+      // (un solo ganador) y por eso el podio multipremio nunca se llenaba.
+      const resultado = await drawWinner(raffleId);
 
-    setBusy(false);
+      if (!resultado.ok) {
+        setError(resultado.error);
+        return;
+      }
 
-    if (rpcError) {
-      setError(rpcError.message);
-      return;
+      const lista = await cargarGanadores();
+      if (lista.length > 0) {
+        runSequence(lista);
+        return;
+      }
+
+      const number = Number(resultado.winningNumber ?? 0);
+      if (!number) {
+        setError("El sorteo se ejecutó pero no se pudo leer el ganador.");
+        return;
+      }
+      runSingle(number);
+    } catch {
+      setError("No se pudo ejecutar el sorteo. Probá de nuevo.");
+    } finally {
+      setBusy(false);
     }
-
-    const row = (Array.isArray(data) ? data[0] : data) as
-      | { winning_number?: number }
-      | null;
-
-    const lista = await cargarGanadores();
-    if (lista.length > 0) {
-      runSequence(lista);
-      return;
-    }
-
-    const number = Number(row?.winning_number ?? 0);
-    if (!number) {
-      setError("El sorteo se ejecutó pero no se pudo leer el ganador.");
-      return;
-    }
-    runSingle(number);
   }
 
   const numberLabel =
@@ -567,7 +569,10 @@ export function LiveDrawAnimation({
 
   return (
     <div className="ceremonia-stage relative isolate space-y-5">
-      <style>{CEREMONIA_CSS}</style>
+      {/* dangerouslySetInnerHTML evita que React compare el texto del CSS
+          entre servidor y cliente: el SSR escapaba las comillas y la
+          hidratación se rompía con "Text content did not match". */}
+      <style dangerouslySetInnerHTML={{ __html: CEREMONIA_CSS }} />
 
       <div className="relative overflow-hidden rounded-xl border border-hairline bg-panel-1 p-5 text-center shadow-[0_24px_70px_-40px_rgba(245,179,1,0.35)] sm:p-8">
         {/* Marco de evento en vivo */}

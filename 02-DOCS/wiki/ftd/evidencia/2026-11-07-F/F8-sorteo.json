@@ -1,0 +1,15 @@
+{
+  "sorteo": {
+    "id": "7ec3473e-ada4-4235-ae3a-14277bd1f057",
+    "status": "drawn",
+    "winner_number": 6,
+    "winners_count": 3,
+    "draw_seed": "ce76d7b358d8416480b4d0d7746a13f672b68ff6f34247069494e4947e99627c",
+    "draw_commitment": "c2b6f2e6692da150f643644a67dcd9b3150d038f0198659da412a7fc110a943f",
+    "numbers_hash": "84e174c4adbbe5adb54608ede2d959b7dff74aa5cccd641034a7dd0e094cc36d",
+    "result_hash": "556e9e5e119490b2ccb491d533eaca82fc8743089d329a05366f43c50a1bbbe4",
+    "results_hash": null,
+    "drawn_at": "2026-11-07T22:06:30.163723+00:00"
+  },
+  "winners": []
+}

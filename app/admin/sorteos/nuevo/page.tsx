@@ -463,6 +463,13 @@ export default function NuevoSorteoPage() {
         min_tickets_required: values.min_tickets_required,
         if_not_met: values.if_not_met,
         winners_count: values.winners_count,
+        // 0102/0105: el wizard ya configura «Invitá y Ganá» en el paso 3; hay
+        // que persistirlo en el alta. Antes sólo lo guardaba la pantalla de
+        // edición y el organizador creía haberlo activado sin efecto.
+        referral_enabled: values.referral_enabled,
+        referral_min_numbers: values.referral_min_numbers,
+        referral_max_per_user: values.referral_max_per_user,
+        bonus_raffle_id: values.bonus_raffle_id || null,
         terms_accepted_by_organizer: true,
         player_terms_text: basesLegales,
       })

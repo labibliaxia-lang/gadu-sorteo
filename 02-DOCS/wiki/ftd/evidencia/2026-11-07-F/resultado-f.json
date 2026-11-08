@@ -1,0 +1,321 @@
+{
+  "escenario": "F",
+  "inicio": "2026-11-07T22:03:08.147Z",
+  "fin": "2026-11-07T22:06:48.119Z",
+  "resumen": {
+    "total": 19,
+    "ok": 13,
+    "falla": 6
+  },
+  "salida": {
+    "entorno": {
+      "base": "http://localhost:3002",
+      "status": 200,
+      "urlSupabase": "https://dolxvoxyespguvixhkku.supabase.co",
+      "usaStaging": true,
+      "usaProduccion": false,
+      "bundles": 17,
+      "bundlesPrueba": 2,
+      "bundlesProduccion": 0,
+      "migracion": "0119",
+      "errorMigracion": null
+    },
+    "cuentas": {
+      "org": {
+        "id": "bb02574d-e49d-45ec-9e13-7d83916ec4b2",
+        "creado": true,
+        "email": "e2e.full.organizador+1794088990063@gadu.test",
+        "nombre": "E2E Full Organizador",
+        "rol": "organizador",
+        "telefono": "+5491155550201"
+      },
+      "a": {
+        "id": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+        "creado": true,
+        "email": "e2e.full.jugadora+1794088990063@gadu.test",
+        "nombre": "E2E Full Jugadora A",
+        "rol": "jugadorA",
+        "telefono": "+5491155550198"
+      },
+      "b": {
+        "id": "dc7e5c80-0360-4216-a41a-b90fae93b57a",
+        "creado": true,
+        "email": "e2e.full.jugadorb+1794088990063@gadu.test",
+        "nombre": "E2E Full Jugador B",
+        "rol": "jugadorB",
+        "telefono": "+5491155550197"
+      }
+    },
+    "sorteos": {
+      "bonusId": "6563708b-eb12-45a8-865e-2491c58beeea",
+      "bonusSlug": "e2e-full-bonus-1794088990063",
+      "bonus": {
+        "id": "6563708b-eb12-45a8-865e-2491c58beeea",
+        "slug": "e2e-full-bonus-1794088990063",
+        "title": "E2E Full — Bonus 1794088990063",
+        "status": "active",
+        "winners_count": 1,
+        "is_listed": false,
+        "draw_date": "2026-11-10T22:03:00+00:00"
+      },
+      "mainId": "7ec3473e-ada4-4235-ae3a-14277bd1f057",
+      "main": {
+        "id": "7ec3473e-ada4-4235-ae3a-14277bd1f057",
+        "slug": "e2e-full-principal-1794088990063",
+        "title": "E2E Full — Principal 1794088990063",
+        "status": "active",
+        "winners_count": 3,
+        "referral_enabled": true,
+        "referral_min_numbers": 2,
+        "referral_max_per_user": 1,
+        "bonus_raffle_id": "6563708b-eb12-45a8-865e-2491c58beeea",
+        "is_listed": false
+      },
+      "mainSlug": "e2e-full-principal-1794088990063",
+      "prizes": [
+        {
+          "position": 1,
+          "title": "1º premio — Kit Gadu"
+        },
+        {
+          "position": 2,
+          "title": "2º premio — Auriculares"
+        },
+        {
+          "position": 3,
+          "title": "3º premio — Voucher"
+        }
+      ],
+      "commitment": "c2b6f2e6692da150f643644a67dcd9b3150d038f0198659da412a7fc110a943f"
+    },
+    "compras": {
+      "enlaceReferido": "http://localhost:3002/sorteos/e2e-full-principal-1794088990063?ref=bb02574d-e49d-45ec-9e13-7d83916ec4b2",
+      "referidoCreadoPorUI": true,
+      "a": {
+        "numeros": [
+          1,
+          2
+        ],
+        "reserva": {
+          "texto": "Reserva confirmada\n\n2 números reservados en E2E Full — Principal 1794088990063.\n\n001\n002\n\nTotal a pagar: $ 20\n\nEl contador de arriba es solo para elegir. La reserva queda guardada 48 h hasta que el organizador confirme el pago.\n\nDatos para transferir\n\nAlias\ne2e.full\nCopiar\nCBU\n0000003100010000000001\nCopiar\nBanco\nBanco de Prueba\nCopiar\n\nTransferí el total y después enviá el comprobante por WhatsApp.\n\nEnviar comprobante por WhatsApp\n\nGuardamos tus números 48 h. Cuando el organizador reciba el comprobante, los marca como pagados. Podés seguir tus números desde «Mis números».\n\nCerrar",
+          "whatsappHref": "https://wa.me/5491155550201?text=Hola!%20Quiero%20participar%20en%20%22E2E%20Full%20%E2%80%94%20Principal%201794088990063%22%20con%20los%20n%C3%BAmeros%3A%201%2C%202.%20Total%3A%20%24%C2%A020"
+        },
+        "filas": [
+          {
+            "number": 1,
+            "status": "reserved",
+            "reserved_by": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+            "reserved_until": "2026-11-09T22:05:17.317733+00:00"
+          },
+          {
+            "number": 2,
+            "status": "reserved",
+            "reserved_by": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+            "reserved_until": "2026-11-09T22:05:17.317733+00:00"
+          }
+        ]
+      },
+      "b": {
+        "numeros": [
+          4,
+          5,
+          6
+        ],
+        "reserva": {
+          "texto": "Reserva confirmada\n\n3 números reservados en E2E Full — Principal 1794088990063.\n\n004\n005\n006\n\nTotal a pagar: $ 30\n\nEl contador de arriba es solo para elegir. La reserva queda guardada 48 h hasta que el organizador confirme el pago.\n\nDatos para transferir\n\nAlias\ne2e.full\nCopiar\nCBU\n0000003100010000000001\nCopiar\nBanco\nBanco de Prueba\nCopiar\n\nTransferí el total y después enviá el comprobante por WhatsApp.\n\nEnviar comprobante por WhatsApp\n\nGuardamos tus números 48 h. Cuando el organizador reciba el comprobante, los marca como pagados. Podés seguir tus números desde «Mis números».\n\nCerrar",
+          "whatsappHref": "https://wa.me/5491155550201?text=Hola!%20Quiero%20participar%20en%20%22E2E%20Full%20%E2%80%94%20Principal%201794088990063%22%20con%20los%20n%C3%BAmeros%3A%204%2C%205%2C%206.%20Total%3A%20%24%C2%A030"
+        },
+        "filas": [
+          {
+            "number": 4,
+            "status": "reserved",
+            "reserved_by": "dc7e5c80-0360-4216-a41a-b90fae93b57a"
+          },
+          {
+            "number": 5,
+            "status": "reserved",
+            "reserved_by": "dc7e5c80-0360-4216-a41a-b90fae93b57a"
+          },
+          {
+            "number": 6,
+            "status": "reserved",
+            "reserved_by": "dc7e5c80-0360-4216-a41a-b90fae93b57a"
+          }
+        ]
+      },
+      "vendidos": [
+        {
+          "number": 4,
+          "status": "sold",
+          "sold_to": "dc7e5c80-0360-4216-a41a-b90fae93b57a"
+        },
+        {
+          "number": 5,
+          "status": "sold",
+          "sold_to": "dc7e5c80-0360-4216-a41a-b90fae93b57a"
+        },
+        {
+          "number": 1,
+          "status": "sold",
+          "sold_to": "7bd625f4-34a6-4707-a5a7-6f7da590c74b"
+        },
+        {
+          "number": 2,
+          "status": "sold",
+          "sold_to": "7bd625f4-34a6-4707-a5a7-6f7da590c74b"
+        },
+        {
+          "number": 6,
+          "status": "sold",
+          "sold_to": "dc7e5c80-0360-4216-a41a-b90fae93b57a"
+        }
+      ]
+    },
+    "premio": {
+      "notiA": "033f0d1d-48bc-494e-8104-9867e72c0288",
+      "numeros": [
+        {
+          "number": 1,
+          "status": "sold",
+          "sold_to": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+          "origin": "venta"
+        },
+        {
+          "number": 2,
+          "status": "sold",
+          "sold_to": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+          "origin": "venta"
+        }
+      ],
+      "referral": {
+        "id": "4d7db33b-7452-4eff-aaa6-b128478a8b9d",
+        "referrer_id": "bb02574d-e49d-45ec-9e13-7d83916ec4b2",
+        "referred_id": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+        "rewarded": true,
+        "rewarded_raffle_id": "6563708b-eb12-45a8-865e-2491c58beeea",
+        "rewarded_number": 43,
+        "created_at": "2026-11-07T22:05:09.987739+00:00",
+        "rewarded_via_raffle_id": "7ec3473e-ada4-4235-ae3a-14277bd1f057"
+      },
+      "numeroPremio": {
+        "number": 43,
+        "status": "sold",
+        "sold_to": "bb02574d-e49d-45ec-9e13-7d83916ec4b2",
+        "origin": "premio"
+      },
+      "notificaciones": {
+        "aprobada": {
+          "id": "5e604c7a-9bc2-461c-85b3-2e0165c1d3d4",
+          "user_id": "7bd625f4-34a6-4707-a5a7-6f7da590c74b",
+          "type": "buyer_reservation_approved",
+          "title": "✅ Números aprobados",
+          "message": "Tus números están confirmados. ¡Ya estás participando!",
+          "created_at": "2026-11-07T22:05:55.899991+00:00"
+        },
+        "premio": {
+          "id": "8a7c4de4-fe71-42eb-853b-3d0996466918",
+          "user_id": "bb02574d-e49d-45ec-9e13-7d83916ec4b2",
+          "type": "buyer_referral_reward",
+          "title": "🎁 Número gratis",
+          "message": "Tu invitado compró en E2E Full — Principal 1794088990063 y ganaste el número 43 en E2E Full — Bonus 1794088990063.",
+          "created_at": "2026-11-07T22:05:57.447013+00:00"
+        }
+      },
+      "aRecibioPremio": false
+    },
+    "sorteo": {
+      "sorteo": {
+        "id": "7ec3473e-ada4-4235-ae3a-14277bd1f057",
+        "status": "drawn",
+        "winner_number": 6,
+        "winners_count": 3,
+        "draw_seed": "ce76d7b358d8416480b4d0d7746a13f672b68ff6f34247069494e4947e99627c",
+        "draw_commitment": "c2b6f2e6692da150f643644a67dcd9b3150d038f0198659da412a7fc110a943f",
+        "numbers_hash": "84e174c4adbbe5adb54608ede2d959b7dff74aa5cccd641034a7dd0e094cc36d",
+        "result_hash": "556e9e5e119490b2ccb491d533eaca82fc8743089d329a05366f43c50a1bbbe4",
+        "results_hash": null,
+        "drawn_at": "2026-11-07T22:06:30.163723+00:00"
+      },
+      "winners": []
+    },
+    "resultados": {
+      "status": 200,
+      "tarjetas": 1,
+      "texto": "Saltar al contenido\nInicio\nSorteos\nGanadores\nCómo funciona\nPlanes\nIngresar\nRegistrarse\nVolver al sorteo\nRESULTADOS OFICIALES\nE2E Full — Principal 1794088990063\nSORTEO FINALIZADO\n1\nE2E B.\nPremio 1\nNÚMERO\n0006\nCompartir Resultados\nVerificar el sorteo\nLos ganadores se calculan en la base con la semilla comprometida antes del sorteo. Se publica solo el nombre y la inicial del apellido.\nSorteos transparentes con premios de todo tipo. Elegí tus números, participá y ganá.\nPago por transferencia y comprobante por WhatsApp.\nTU CUENTA\nMis números\nMis pagos\nMi perfil\nIngresar\nLEGAL\nTérminos y Condiciones\nPolítica de Privacidad\nCONTACTO\nCentro de ayuda\nWhatsApp de ventas\nSoporte por email\nSer organizador\n© 2026 Gadu Sorteos. Todos los derechos reservados.\ndesarrollado por @jacinto.cards",
+      "hashes": {
+        "numbers": [
+          1,
+          2,
+          4,
+          5,
+          6
+        ],
+        "single": {
+          "commitment": "c2b6f2e6692da150f643644a67dcd9b3150d038f0198659da412a7fc110a943f",
+          "numbersHash": "84e174c4adbbe5adb54608ede2d959b7dff74aa5cccd641034a7dd0e094cc36d",
+          "pick": "baa1bd01a383f2b4e1b20cad30c3c07256de64ce37eab59d8564785b1e8be654",
+          "index": 4,
+          "winner": 6,
+          "resultHash": "556e9e5e119490b2ccb491d533eaca82fc8743089d329a05366f43c50a1bbbe4",
+          "list": "1,2,4,5,6",
+          "sorted": [
+            1,
+            2,
+            4,
+            5,
+            6
+          ]
+        },
+        "singleChecks": {
+          "commitment": true,
+          "numbersHash": true,
+          "winner": true,
+          "resultHash": true
+        },
+        "multi": {
+          "commitment": "c2b6f2e6692da150f643644a67dcd9b3150d038f0198659da412a7fc110a943f",
+          "numbersHash": "84e174c4adbbe5adb54608ede2d959b7dff74aa5cccd641034a7dd0e094cc36d",
+          "winners": [
+            {
+              "position": 1,
+              "number": 6,
+              "hash": "556e9e5e119490b2ccb491d533eaca82fc8743089d329a05366f43c50a1bbbe4"
+            },
+            {
+              "position": 2,
+              "number": 2,
+              "hash": "4825da3302e31291e8b4564362cb47f2b707230b972248f8f8cb830cfdc0f49a"
+            },
+            {
+              "position": 3,
+              "number": 4,
+              "hash": "deed1a8ee1b91fa9449c68a9aff33afd528eb82222246e1eaebf25072ac174ce"
+            }
+          ],
+          "resultsHash": "3bddabc3178009fe842a404f693609dbd098a6dc9eda0fbe25aaf70ac2db4cbb",
+          "list": "1,2,4,5,6",
+          "total": 3
+        },
+        "multiWinnerChecks": [],
+        "multiChecks": {
+          "commitment": true,
+          "numbersHash": true,
+          "winners": false,
+          "resultsHash": false
+        },
+        "publicado": {
+          "commitment": "c2b6f2e6692da150f643644a67dcd9b3150d038f0198659da412a7fc110a943f",
+          "numbersHash": "84e174c4adbbe5adb54608ede2d959b7dff74aa5cccd641034a7dd0e094cc36d",
+          "winner": 6,
+          "resultHash": "556e9e5e119490b2ccb491d533eaca82fc8743089d329a05366f43c50a1bbbe4",
+          "resultsHash": null,
+          "winners": []
+        }
+      }
+    },
+    "consola": {
+      "total": 0,
+      "relevantes": []
+    }
+  }
+}

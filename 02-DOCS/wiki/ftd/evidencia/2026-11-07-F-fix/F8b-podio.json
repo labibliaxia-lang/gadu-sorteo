@@ -1,0 +1,29 @@
+{
+  "winners": [
+    {
+      "position": 1,
+      "number": 5,
+      "user_id": "aff45324-854e-4b16-81dc-442b5077947e",
+      "user_name": "E2E Full Jugador B",
+      "prize_title": "1º premio — Kit Gadu",
+      "winner_hash": "932928cacada86be653b2a0fb010e24e96f6b869431dab5f81cfda41ced27787"
+    },
+    {
+      "position": 2,
+      "number": 1,
+      "user_id": "398a23d7-6dc0-4992-ae1e-7879f7daa19a",
+      "user_name": "E2E Full Jugadora A",
+      "prize_title": "2º premio — Auriculares",
+      "winner_hash": "5608606dae010479970bd2ebdcba25d63dc52d0a4d8d40ae40e18d012a83fa27"
+    },
+    {
+      "position": 3,
+      "number": 6,
+      "user_id": "aff45324-854e-4b16-81dc-442b5077947e",
+      "user_name": "E2E Full Jugador B",
+      "prize_title": "3º premio — Voucher",
+      "winner_hash": "ddce525e3fc9b35e885f01d54b74c858954f13a1e1f54b23c9baf901cd6ddb38"
+    }
+  ],
+  "winnersCount": 3
+}

@@ -1,0 +1,99 @@
+{
+  "numbers": [
+    1,
+    2,
+    4,
+    5,
+    6
+  ],
+  "single": {
+    "commitment": "008f9b1033716d82d357e17842c516e2c31a90a3da3cda19b8adf5f2c8e5d937",
+    "numbersHash": "7af000de95242c10dbfb646592301ebfed041f461c9532f78a0660a2a1a221b8",
+    "pick": "55179ae5d0327a7ee5f4e589cdc863871529ea9f959bcfe7e5c7f90b17ceff93",
+    "index": 3,
+    "winner": 5,
+    "resultHash": "932928cacada86be653b2a0fb010e24e96f6b869431dab5f81cfda41ced27787",
+    "list": "1,2,4,5,6",
+    "sorted": [
+      1,
+      2,
+      4,
+      5,
+      6
+    ]
+  },
+  "singleChecks": {
+    "commitment": true,
+    "numbersHash": true,
+    "winner": true,
+    "resultHash": true
+  },
+  "multi": {
+    "commitment": "008f9b1033716d82d357e17842c516e2c31a90a3da3cda19b8adf5f2c8e5d937",
+    "numbersHash": "7af000de95242c10dbfb646592301ebfed041f461c9532f78a0660a2a1a221b8",
+    "winners": [
+      {
+        "position": 1,
+        "number": 5,
+        "hash": "932928cacada86be653b2a0fb010e24e96f6b869431dab5f81cfda41ced27787"
+      },
+      {
+        "position": 2,
+        "number": 1,
+        "hash": "5608606dae010479970bd2ebdcba25d63dc52d0a4d8d40ae40e18d012a83fa27"
+      },
+      {
+        "position": 3,
+        "number": 6,
+        "hash": "ddce525e3fc9b35e885f01d54b74c858954f13a1e1f54b23c9baf901cd6ddb38"
+      }
+    ],
+    "resultsHash": "a8ff85a65b2bccdd454b658d65410bd2cd24218f4e32e852213df95f287dede0",
+    "list": "1,2,4,5,6",
+    "total": 3
+  },
+  "multiWinnerChecks": [
+    {
+      "position": 1,
+      "coincide": true
+    },
+    {
+      "position": 2,
+      "coincide": true
+    },
+    {
+      "position": 3,
+      "coincide": true
+    }
+  ],
+  "multiChecks": {
+    "commitment": true,
+    "numbersHash": true,
+    "winners": true,
+    "resultsHash": true
+  },
+  "publicado": {
+    "commitment": "008f9b1033716d82d357e17842c516e2c31a90a3da3cda19b8adf5f2c8e5d937",
+    "numbersHash": "7af000de95242c10dbfb646592301ebfed041f461c9532f78a0660a2a1a221b8",
+    "winner": 5,
+    "resultHash": "932928cacada86be653b2a0fb010e24e96f6b869431dab5f81cfda41ced27787",
+    "resultsHash": "a8ff85a65b2bccdd454b658d65410bd2cd24218f4e32e852213df95f287dede0",
+    "winners": [
+      {
+        "position": 1,
+        "number": 5,
+        "winner_hash": "932928cacada86be653b2a0fb010e24e96f6b869431dab5f81cfda41ced27787"
+      },
+      {
+        "position": 2,
+        "number": 1,
+        "winner_hash": "5608606dae010479970bd2ebdcba25d63dc52d0a4d8d40ae40e18d012a83fa27"
+      },
+      {
+        "position": 3,
+        "number": 6,
+        "winner_hash": "ddce525e3fc9b35e885f01d54b74c858954f13a1e1f54b23c9baf901cd6ddb38"
+      }
+    ]
+  }
+}

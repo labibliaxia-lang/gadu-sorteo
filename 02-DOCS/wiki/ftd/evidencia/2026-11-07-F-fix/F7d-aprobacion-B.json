@@ -1,0 +1,27 @@
+[
+  {
+    "number": 4,
+    "status": "sold",
+    "sold_to": "aff45324-854e-4b16-81dc-442b5077947e"
+  },
+  {
+    "number": 5,
+    "status": "sold",
+    "sold_to": "aff45324-854e-4b16-81dc-442b5077947e"
+  },
+  {
+    "number": 1,
+    "status": "sold",
+    "sold_to": "398a23d7-6dc0-4992-ae1e-7879f7daa19a"
+  },
+  {
+    "number": 2,
+    "status": "sold",
+    "sold_to": "398a23d7-6dc0-4992-ae1e-7879f7daa19a"
+  },
+  {
+    "number": 6,
+    "status": "sold",
+    "sold_to": "aff45324-854e-4b16-81dc-442b5077947e"
+  }
+]

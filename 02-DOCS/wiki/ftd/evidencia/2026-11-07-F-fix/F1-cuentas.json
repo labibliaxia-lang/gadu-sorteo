@@ -1,0 +1,26 @@
+{
+  "org": {
+    "id": "2c0c5046-2913-47ef-8004-db662f1eae3f",
+    "creado": true,
+    "email": "e2e.full.organizador+1794095712245@gadu.test",
+    "nombre": "E2E Full Organizador",
+    "rol": "organizador",
+    "telefono": "+5491155550201"
+  },
+  "a": {
+    "id": "398a23d7-6dc0-4992-ae1e-7879f7daa19a",
+    "creado": true,
+    "email": "e2e.full.jugadora+1794095712245@gadu.test",
+    "nombre": "E2E Full Jugadora A",
+    "rol": "jugadorA",
+    "telefono": "+5491155550198"
+  },
+  "b": {
+    "id": "aff45324-854e-4b16-81dc-442b5077947e",
+    "creado": true,
+    "email": "e2e.full.jugadorb+1794095712245@gadu.test",
+    "nombre": "E2E Full Jugador B",
+    "rol": "jugadorB",
+    "telefono": "+5491155550197"
+  }
+}

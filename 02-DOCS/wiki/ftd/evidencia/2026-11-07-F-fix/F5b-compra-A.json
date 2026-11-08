@@ -1,0 +1,24 @@
+{
+  "numeros": [
+    1,
+    2
+  ],
+  "reserva": {
+    "texto": "Reserva confirmada\n\n2 números reservados en E2E Full — Principal 1794095712245.\n\n001\n002\n\nTotal a pagar: $ 20\n\nEl contador de arriba es solo para elegir. La reserva queda guardada 48 h hasta que el organizador confirme el pago.\n\nDatos para transferir\n\nAlias\ne2e.full\nCopiar\nCBU\n0000003100010000000001\nCopiar\nBanco\nBanco de Prueba\nCopiar\n\nTransferí el total y después enviá el comprobante por WhatsApp.\n\nEnviar comprobante por WhatsApp\n\nGuardamos tus números 48 h. Cuando el organizador reciba el comprobante, los marca como pagados. Podés seguir tus números desde «Mis números».\n\nCerrar",
+    "whatsappHref": "https://wa.me/5491155550201?text=Hola!%20Quiero%20participar%20en%20%22E2E%20Full%20%E2%80%94%20Principal%201794095712245%22%20con%20los%20n%C3%BAmeros%3A%201%2C%202.%20Total%3A%20%24%C2%A020"
+  },
+  "filas": [
+    {
+      "number": 1,
+      "status": "reserved",
+      "reserved_by": "398a23d7-6dc0-4992-ae1e-7879f7daa19a",
+      "reserved_until": "2026-11-09T23:57:26.912765+00:00"
+    },
+    {
+      "number": 2,
+      "status": "reserved",
+      "reserved_by": "398a23d7-6dc0-4992-ae1e-7879f7daa19a",
+      "reserved_until": "2026-11-09T23:57:26.912765+00:00"
+    }
+  ]
+}

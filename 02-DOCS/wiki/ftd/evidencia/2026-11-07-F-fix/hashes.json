@@ -1,0 +1,25 @@
+{
+  "escenario": "F",
+  "sorteo": "c445d522-4ce4-427e-ac88-52190a3f4edd",
+  "semilla": "46a96c8156954dc6b92a48b0a65e275b01920ac0c1d34e4da933cbd65b3ca823",
+  "commitment": "008f9b1033716d82d357e17842c516e2c31a90a3da3cda19b8adf5f2c8e5d937",
+  "numbersHash": "7af000de95242c10dbfb646592301ebfed041f461c9532f78a0660a2a1a221b8",
+  "winner": 5,
+  "resultHash": "932928cacada86be653b2a0fb010e24e96f6b869431dab5f81cfda41ced27787",
+  "resultsHash": "a8ff85a65b2bccdd454b658d65410bd2cd24218f4e32e852213df95f287dede0",
+  "recalculadoPor": "verify-hash.mjs (node:crypto)",
+  "singleChecks": {
+    "commitment": true,
+    "numbersHash": true,
+    "winner": true,
+    "resultHash": true
+  },
+  "multiChecks": {
+    "commitment": true,
+    "numbersHash": true,
+    "winners": true,
+    "resultsHash": true
+  },
+  "coincideSingle": true,
+  "coincideMulti": true
+}
